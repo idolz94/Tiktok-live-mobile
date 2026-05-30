@@ -16,7 +16,8 @@
       "apiUrl": "http://localhost:8765"
     },
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ]
   }
 }
