@@ -1,6 +1,21 @@
-import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { LinearGradient } from "@/components/linear-gradient";
+import { Separator } from "@/components/separator";
 import { useAuth } from "@/hooks/useAuth";
+import { HairlineWidth } from "@/themes";
+import { createStyles } from "@/utils/createStyles";
+import { isIos } from "@/utils/platform";
+import { useState } from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Mode = "login" | "register";
 
@@ -16,58 +31,118 @@ export default function AuthScreen() {
 
   function submit() {
     const result = isLogin ? login(phone, password) : register(phone, password);
-    if (!result.ok) Alert.alert(isLogin ? "Đăng nhập thất bại" : "Đăng ký thất bại", result.message || "");
+    if (!result.ok)
+      Alert.alert(
+        isLogin ? "Đăng nhập thất bại" : "Đăng ký thất bại",
+        result.message || "",
+      );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={isIos ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.flex}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.banner}>
+            <LinearGradient
+              type="gra_warning"
+              style={StyleSheet.absoluteFill}
+            />
             <Text style={styles.bannerText}>TikTok Live Tools</Text>
             <Text style={styles.bannerSub}>Chốt đơn nhanh từ comment live</Text>
           </View>
 
           <View style={styles.card}>
             <Text style={styles.title}>Trải nghiệm miễn phí</Text>
-            <TouchableOpacity style={styles.registerButton} onPress={() => setMode("register")}>
+            <Pressable
+              style={styles.registerButton}
+              onPress={() => setMode("register")}
+              disabled={mode === "register"}
+            >
               <Text style={styles.registerText}>ĐĂNG KÝ NGAY</Text>
-            </TouchableOpacity>
+            </Pressable>
 
             <View style={styles.dividerRow}>
-              <View style={styles.divider} />
+              <Separator
+                type="horizontal"
+                size={1}
+                containerStyle={styles.flex}
+              />
               <Text style={styles.dividerText}>hoặc đăng nhập</Text>
-              <View style={styles.divider} />
+              <Separator
+                type="horizontal"
+                size={1}
+                containerStyle={styles.flex}
+              />
             </View>
 
             <Text style={styles.label}>Số điện thoại</Text>
             <View style={styles.inputWrap}>
-              <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoCapitalize="none" placeholder="Nhập số điện thoại" style={styles.input} />
+              <TextInput
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+                placeholder="Nhập số điện thoại"
+                style={styles.input}
+              />
               <Text style={styles.check}>✓</Text>
             </View>
 
             <Text style={styles.label}>Mật khẩu</Text>
             <View style={styles.inputWrap}>
-              <TextInput value={password} onChangeText={setPassword} secureTextEntry={!isPasswordVisible} placeholder="Nhập mật khẩu" style={styles.input} />
-              <TouchableOpacity onPress={() => setIsPasswordVisible((value) => !value)}>
-                <Text style={styles.eye}>{isPasswordVisible ? "Ẩn" : "Hiện"}</Text>
-              </TouchableOpacity>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!isPasswordVisible}
+                placeholder="Nhập mật khẩu"
+                style={styles.input}
+              />
+              <Pressable
+                onPress={() => setIsPasswordVisible((value) => !value)}
+              >
+                <Text style={styles.eye}>
+                  {isPasswordVisible ? "Ẩn" : "Hiện"}
+                </Text>
+              </Pressable>
             </View>
 
-            <TouchableOpacity style={styles.rememberRow} onPress={() => setRemember((value) => !value)}>
-              <View style={[styles.checkbox, remember && styles.checkboxActive]}>
+            <Pressable
+              style={styles.rememberRow}
+              onPress={() => setRemember((value) => !value)}
+            >
+              <View
+                style={[styles.checkbox, remember && styles.checkboxActive]}
+              >
                 {remember ? <Text style={styles.checkboxText}>✓</Text> : null}
               </View>
               <Text style={styles.rememberText}>Lưu đăng nhập</Text>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity style={styles.submitButton} onPress={submit}>
-              <Text style={styles.submitText}>{isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"}</Text>
-            </TouchableOpacity>
+            <Pressable style={styles.submitButton} onPress={submit}>
+              <Text style={styles.submitText}>
+                {isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"}
+              </Text>
+            </Pressable>
 
-            <TouchableOpacity onPress={() => setMode((current) => (current === "login" ? "register" : "login"))}>
-              <Text style={styles.toggle}>{isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập"}</Text>
-            </TouchableOpacity>
+            <Pressable
+              onPress={() =>
+                setMode((current) =>
+                  current === "login" ? "register" : "login",
+                )
+              }
+            >
+              <Text style={styles.toggle}>
+                {isLogin
+                  ? "Chưa có tài khoản? Đăng ký"
+                  : "Đã có tài khoản? Đăng nhập"}
+              </Text>
+            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -75,31 +150,108 @@ export default function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createStyles(({ colors, textPresets, shadows }) => ({
   flex: { flex: 1 },
-  safeArea: { flex: 1, backgroundColor: "#f3f4f6" },
-  container: { minHeight: "100%", padding: 14, paddingBottom: 40 },
-  banner: { height: 250, borderRadius: 24, backgroundColor: "#f2c233", alignItems: "center", justifyContent: "center" },
-  bannerText: { fontSize: 30, fontWeight: "900", color: "#273044" },
-  bannerSub: { marginTop: 10, color: "#273044", fontWeight: "800" },
-  card: { marginTop: -55, borderRadius: 28, backgroundColor: "rgba(255,255,255,0.96)", padding: 20, shadowColor: "#0f172a", shadowOpacity: 0.08, shadowRadius: 16, elevation: 3 },
-  title: { textAlign: "center", fontSize: 23, fontWeight: "900", color: "#273044" },
-  registerButton: { marginTop: 24, minHeight: 60, borderRadius: 31, borderWidth: 2, borderColor: "#070f66", backgroundColor: "#fffef5", alignItems: "center", justifyContent: "center" },
-  registerText: { color: "#070f66", fontSize: 18, fontWeight: "900" },
-  dividerRow: { marginTop: 28, flexDirection: "row", alignItems: "center" },
-  divider: { flex: 1, height: 1, backgroundColor: "#d1d5db" },
-  dividerText: { marginHorizontal: 12, color: "#273044", fontWeight: "800" },
-  label: { marginTop: 20, marginBottom: 8, fontSize: 16, fontWeight: "900", color: "#273044" },
-  inputWrap: { minHeight: 56, borderRadius: 13, borderWidth: 1, borderColor: "#a3a8b0", backgroundColor: "#fff", paddingHorizontal: 14, flexDirection: "row", alignItems: "center" },
-  input: { flex: 1, fontSize: 18, color: "#273044" },
-  check: { color: "#4caf50", fontSize: 22, fontWeight: "900" },
-  eye: { color: "#070f66", fontWeight: "900" },
+  safeArea: { flex: 1, backgroundColor: colors.surfaceGray, paddingTop: 72 },
+  banner: {
+    height: 250,
+    marginHorizontal: 14,
+    borderRadius: 24,
+    backgroundColor: colors.warningGold,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    rowGap: 10,
+  },
+  bannerText: { color: colors.text, ...textPresets.display_fs30_black },
+  bannerSub: {
+    color: colors.text,
+    ...textPresets.text_fs14_extrabold,
+  },
+  card: {
+    marginTop: -55,
+    borderRadius: 28,
+    backgroundColor: colors.white,
+    marginHorizontal: 28,
+    padding: 20,
+    ...shadows.sd2,
+  },
+  title: {
+    textAlign: "center",
+    color: colors.text,
+    ...textPresets.title_fs23_black,
+  },
+  registerButton: {
+    marginTop: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: HairlineWidth * 6,
+    borderColor: colors.primaryDark,
+    backgroundColor: colors.warningBgLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  registerText: {
+    color: colors.primaryDark,
+    ...textPresets.title_fs18_black,
+  },
+  dividerRow: {
+    marginTop: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+  },
+  dividerText: {
+    color: colors.text,
+    ...textPresets.text_fs14_extrabold,
+  },
+  label: {
+    marginTop: 20,
+    marginBottom: 8,
+    color: colors.text,
+    ...textPresets.text_fs16_black,
+  },
+  inputWrap: {
+    padding: 12,
+    borderRadius: 13,
+    borderWidth: HairlineWidth * 3,
+    borderColor: colors.text,
+    backgroundColor: colors.white,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  input: { flex: 1, color: colors.text, ...textPresets.title_fs18_bold },
+  check: { color: colors.greenSuccess, ...textPresets.title_fs18_black },
+  eye: { color: colors.primaryDark, ...textPresets.title_fs18_black },
   rememberRow: { marginTop: 18, flexDirection: "row", alignItems: "center" },
-  checkbox: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: "#273044", alignItems: "center", justifyContent: "center" },
-  checkboxActive: { backgroundColor: "#f2c300", borderColor: "#f2c300" },
-  checkboxText: { fontWeight: "900", color: "#273044" },
-  rememberText: { marginLeft: 10, color: "#273044", fontWeight: "700" },
-  submitButton: { marginTop: 22, minHeight: 56, borderRadius: 18, backgroundColor: "#f2c300", alignItems: "center", justifyContent: "center" },
-  submitText: { color: "#273044", fontSize: 17, fontWeight: "900" },
-  toggle: { marginTop: 20, textAlign: "center", color: "#070f66", fontWeight: "900" }
-});
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.text,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxActive: {
+    backgroundColor: colors.warningAlt,
+    borderColor: colors.warningAlt,
+  },
+  checkboxText: { fontWeight: "900", color: colors.text },
+  rememberText: { marginLeft: 10, color: colors.text, fontWeight: "700" },
+  submitButton: {
+    marginTop: 22,
+    minHeight: 56,
+    borderRadius: 18,
+    backgroundColor: colors.warningAlt,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  submitText: { color: colors.text, fontSize: 17, fontWeight: "900" },
+  toggle: {
+    marginTop: 20,
+    textAlign: "center",
+    color: colors.primaryDark,
+    fontWeight: "900",
+  },
+}));
