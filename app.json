@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "TikTok Live Tools",
+    "slug": "tiktok-live-tools",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.idolz94.tiktoklivetools"
+    },
+    "android": {
+      "package": "com.idolz94.tiktoklivetools"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:8765"
+    },
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}

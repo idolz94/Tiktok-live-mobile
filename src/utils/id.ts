@@ -1,0 +1,14 @@
+export function createId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export function createOrderCode() {
+  const now = new Date();
+  const date = now.toISOString().slice(2, 10).replace(/-/g, "");
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+  return `OD${date}${random}`;
+}
