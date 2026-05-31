@@ -1,5 +1,5 @@
+import { theme } from "@/themes";
 import { useMemo } from "react";
-import { theme, AppTheme } from "@/themes";
 
 /**
  * Hook để lấy dữ liệu theme (colors, typography, shadows, v.v.) bên trong component.

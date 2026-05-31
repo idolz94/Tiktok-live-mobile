@@ -1,9 +1,9 @@
-import { LinearGradient } from "@/components/linear-gradient";
-import { Separator } from "@/components/separator";
-import { useAuth } from "@/hooks/useAuth";
-import { HairlineWidth } from "@/themes";
-import { createStyles } from "@/utils/createStyles";
-import { isIos } from "@/utils/platform";
+import { LinearGradient } from "@components/linear-gradient";
+import { Separator } from "@components/separator";
+import { useAuth } from "@hooks/useAuth";
+import { HairlineWidth } from "@themes";
+import { createStyles } from "@utils/createStyles";
+import { isIos } from "@utils/platform";
 import { useState } from "react";
 import {
   Alert,
