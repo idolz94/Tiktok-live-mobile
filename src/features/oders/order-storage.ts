@@ -1,22 +1,14 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Order } from "@types";
+import { loadObject, saveObject, remove, STORAGE_KEYS } from "@utils/storage";
 
-const ORDERS_STORAGE_KEY = "ORDERS";
+export const readOrders = async (): Promise<Order[]> => {
+  return loadObject<Order[]>(STORAGE_KEYS.ORDERS) ?? [];
+};
 
-export async function readOrders(): Promise<Order[]> {
-  try {
-    const raw = await AsyncStorage.getItem(ORDERS_STORAGE_KEY);
-    const parsed = JSON.parse(raw || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
+export const writeOrders = async (orders: Order[]): Promise<void> => {
+  saveObject(STORAGE_KEYS.ORDERS, orders);
+};
 
-export async function writeOrders(orders: Order[]) {
-  await AsyncStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
-}
-
-export async function clearOrdersStorage() {
-  await AsyncStorage.removeItem(ORDERS_STORAGE_KEY);
-}
+export const clearOrdersStorage = async (): Promise<void> => {
+  remove(STORAGE_KEYS.ORDERS);
+};

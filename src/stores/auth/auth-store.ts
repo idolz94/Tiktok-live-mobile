@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, StateStorage, createJSONStorage } from "zustand/middleware";
 import { createId } from "@utils/id";
+import { zustandStorage } from "@utils/storage";
 import { Account, AuthStoreState } from "./auth-types";
 
 const DEFAULT_ACCOUNTS: Account[] = [
@@ -9,7 +10,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
   { id: "phone-demo", username: "0816507286", password: "123456" },
 ];
 
-function mergeDefaultAccounts(accounts: Account[]): Account[] {
+const mergeDefaultAccounts = (accounts: Account[]): Account[] => {
   const map = new Map<string, Account>();
   DEFAULT_ACCOUNTS.forEach((account) =>
     map.set(account.username.toLowerCase(), account),
@@ -22,50 +23,60 @@ function mergeDefaultAccounts(accounts: Account[]): Account[] {
     });
   }
   return Array.from(map.values());
-}
+};
 
 const customPersistStorage: StateStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    const value = await AsyncStorage.getItem(name);
+  getItem: (name: string): string | null | Promise<string | null> => {
+    // 1. Thử đọc từ MMKV (zustandStorage) trước
+    const value = zustandStorage.getItem(name);
     if (value) {
       return value;
     }
 
-    try {
-      const rawUser = await AsyncStorage.getItem("flive_user");
-      const rawAccounts = await AsyncStorage.getItem("flive_accounts");
+    // 2. Nếu MMKV chưa có, đọc và di trú dữ liệu từ AsyncStorage cũ
+    return (async () => {
+      try {
+        const oldVal = await AsyncStorage.getItem(name);
+        if (oldVal) {
+          zustandStorage.setItem(name, oldVal);
+          return oldVal;
+        }
 
-      if (rawUser || rawAccounts) {
-        const user = rawUser ? JSON.parse(rawUser) : null;
-        const savedAccounts = rawAccounts
-          ? JSON.parse(rawAccounts)
-          : DEFAULT_ACCOUNTS;
-        const accounts = mergeDefaultAccounts(savedAccounts);
+        const rawUser = await AsyncStorage.getItem("flive_user");
+        const rawAccounts = await AsyncStorage.getItem("flive_accounts");
 
-        const migratedState = {
-          state: {
-            accounts,
-            user,
-          },
-          version: 0,
-        };
+        if (rawUser || rawAccounts) {
+          const user = rawUser ? JSON.parse(rawUser) : null;
+          const savedAccounts = rawAccounts
+            ? JSON.parse(rawAccounts)
+            : DEFAULT_ACCOUNTS;
+          const accounts = mergeDefaultAccounts(savedAccounts);
 
-        const serialized = JSON.stringify(migratedState);
-        await AsyncStorage.setItem(name, serialized);
+          const migratedState = {
+            state: {
+              accounts,
+              user,
+            },
+            version: 0,
+          };
 
-        return serialized;
+          const serialized = JSON.stringify(migratedState);
+          zustandStorage.setItem(name, serialized);
+
+          return serialized;
+        }
+      } catch (e) {
+        console.warn("Lỗi khi di chuyển dữ liệu cũ sang Zustand MMKV:", e);
       }
-    } catch (e) {
-      console.warn("Lỗi khi di chuyển dữ liệu cũ sang Zustand:", e);
-    }
 
-    return null;
+      return null;
+    })();
   },
-  setItem: async (name: string, value: string): Promise<void> => {
-    await AsyncStorage.setItem(name, value);
+  setItem: (name: string, value: string): void => {
+    zustandStorage.setItem(name, value);
   },
-  removeItem: async (name: string): Promise<void> => {
-    await AsyncStorage.removeItem(name);
+  removeItem: (name: string): void => {
+    zustandStorage.removeItem(name);
   },
 };
 
