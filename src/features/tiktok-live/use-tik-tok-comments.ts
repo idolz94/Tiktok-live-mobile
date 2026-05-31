@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import { MAX_COMMENTS } from "@/constants/config";
-import type { LiveComment } from "@/types";
-import { normalizeComment } from "@/utils/comment";
+import { MAX_COMMENTS } from "@constants/config";
+import type { LiveComment } from "@types";
+import { normalizeComment } from "@utils/comment";
 
 export function useTikTokComments() {
   const [comments, setComments] = useState<LiveComment[]>([]);
@@ -29,5 +29,11 @@ export function useTikTokComments() {
 
   const clearComments = useCallback(() => setComments([]), []);
 
-  return { comments, setComments, addCommentToList, replaceSnapshot, clearComments };
+  return {
+    comments,
+    setComments,
+    addCommentToList,
+    replaceSnapshot,
+    clearComments,
+  };
 }

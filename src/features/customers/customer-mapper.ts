@@ -1,4 +1,4 @@
-import { Order } from "@/types";
+import { Order } from "@types";
 
 export type CustomerItem = {
   username: string;
@@ -8,7 +8,7 @@ export type CustomerItem = {
   latestComment: string;
 };
 
-export function buildCustomersFromOrders(orders: Order[]): CustomerItem[] {
+export const buildCustomersFromOrders = (orders: Order[]): CustomerItem[] => {
   const map = new Map<string, CustomerItem>();
 
   orders.forEach((order) => {
@@ -21,7 +21,7 @@ export function buildCustomersFromOrders(orders: Order[]): CustomerItem[] {
         avatar: order.avatar,
         totalComments: 0,
         totalOrders: 1,
-        latestComment: order.comment || order.latestComment || ""
+        latestComment: order.comment || order.latestComment || "",
       });
       return;
     }
@@ -31,4 +31,4 @@ export function buildCustomersFromOrders(orders: Order[]): CustomerItem[] {
   });
 
   return Array.from(map.values()).sort((a, b) => b.totalOrders - a.totalOrders);
-}
+};

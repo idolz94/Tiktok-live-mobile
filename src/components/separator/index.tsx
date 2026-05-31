@@ -3,8 +3,8 @@ import React, { memo, useMemo } from "react";
 import { View, ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 import { SeparatorProps } from "./type";
-import { useThemes } from "@/hooks/useThemes";
-import { HairlineWidth } from "@/themes";
+import { HairlineWidth } from "@themes";
+import { useThemes } from "@hooks/use-theme";
 
 export const Separator = memo(
   (props: SeparatorProps) => {

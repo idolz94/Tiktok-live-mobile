@@ -1,6 +1,6 @@
 import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
-import { useAuth } from "@hooks/useAuth";
+import { useAuth } from "@hooks/use-auth";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { isIos } from "@utils/platform";
@@ -163,10 +163,10 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     overflow: "hidden",
     rowGap: 10,
   },
-  bannerText: { color: colors.text, ...textPresets.display_fs30_black },
+  bannerText: { color: colors.text, ...textPresets.fs30_900 },
   bannerSub: {
     color: colors.text,
-    ...textPresets.text_fs14_extrabold,
+    ...textPresets.fs14_800,
   },
   card: {
     marginTop: -55,
@@ -179,7 +179,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   title: {
     textAlign: "center",
     color: colors.text,
-    ...textPresets.title_fs23_black,
+    ...textPresets.fs23_900,
   },
   registerButton: {
     marginTop: 24,
@@ -193,7 +193,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   registerText: {
     color: colors.primaryDark,
-    ...textPresets.title_fs18_black,
+    ...textPresets.fs18_900,
   },
   dividerRow: {
     marginTop: 28,
@@ -203,13 +203,13 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   dividerText: {
     color: colors.text,
-    ...textPresets.text_fs14_extrabold,
+    ...textPresets.fs14_800,
   },
   label: {
     marginTop: 20,
     marginBottom: 8,
     color: colors.text,
-    ...textPresets.text_fs16_black,
+    ...textPresets.fs16_900,
   },
   inputWrap: {
     padding: 12,
@@ -220,9 +220,9 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     flexDirection: "row",
     alignItems: "center",
   },
-  input: { flex: 1, color: colors.text, ...textPresets.title_fs18_bold },
-  check: { color: colors.greenSuccess, ...textPresets.title_fs18_black },
-  eye: { color: colors.primaryDark, ...textPresets.title_fs18_black },
+  input: { flex: 1, color: colors.text, ...textPresets.fs18_700 },
+  check: { color: colors.greenSuccess, ...textPresets.fs18_900 },
+  eye: { color: colors.primaryDark, ...textPresets.fs18_900 },
   rememberRow: { marginTop: 18, flexDirection: "row", alignItems: "center" },
   checkbox: {
     width: 24,

@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import EventSource from "react-native-sse";
-import { TIKTOK_USERNAME } from "@/constants/config";
-import { useTikTokComments } from "@/features/tiktok-live/useTikTokComments";
-import { useTikTokLiveSession } from "@/features/tiktok-live/useTikTokLiveSession";
+import { TIKTOK_USERNAME } from "@constants/config";
+import { useTikTokComments } from "@features/tiktok-live/use-tik-tok-comments";
+import { useTikTokLiveSession } from "@features/tiktok-live/use-tik-tok-live-session";
 import {
   getSseBaseUrl,
   stopTikTokLiveApi,
-  subscribeTikTokLiveApi
-} from "@/features/tiktok-live/sseApi";
-import { normalizeTikTokUsername } from "@/utils/comment";
+  subscribeTikTokLiveApi,
+} from "@features/tiktok-live/sse-api";
+import { normalizeTikTokUsername } from "@utils/comment";
 
-function createClientId() {
+const createClientId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
+};
 
-export function useTikTokLiveSocket() {
+export const useTikTokLiveSocket = () => {
   const eventSourceRef = useRef<any>(null);
   const clientIdRef = useRef(createClientId());
   const isManualCloseRef = useRef(false);
@@ -25,9 +25,17 @@ export function useTikTokLiveSocket() {
 
   const [status, setStatus] = useState("Đang kết nối server SSE...");
   const [isConnected, setIsConnected] = useState(false);
-  const [tiktokUsername, setTikTokUsername] = useState(normalizeTikTokUsername(TIKTOK_USERNAME));
+  const [tiktokUsername, setTikTokUsername] = useState(
+    normalizeTikTokUsername(TIKTOK_USERNAME),
+  );
 
-  const { comments, setComments, addCommentToList, replaceSnapshot, clearComments } = useTikTokComments();
+  const {
+    comments,
+    setComments,
+    addCommentToList,
+    replaceSnapshot,
+    clearComments,
+  } = useTikTokComments();
 
   const {
     currentLiveSession,
@@ -39,7 +47,7 @@ export function useTikTokLiveSocket() {
     startSessionFromPayload,
     endSessionFromPayload,
     updateSessionStatusFromPayload,
-    addCommentToCurrentSession
+    addCommentToCurrentSession,
   } = useTikTokLiveSession();
 
   const handleServerEvent = useCallback(
@@ -64,7 +72,9 @@ export function useTikTokLiveSocket() {
 
         const snapshot = payload.comments || [];
         replaceSnapshot(Array.isArray(snapshot) ? snapshot : []);
-        setStatus(`Đã subscribe LIVE ${username}, đang chờ comment đầu tiên...`);
+        setStatus(
+          `Đã subscribe LIVE ${username}, đang chờ comment đầu tiên...`,
+        );
         return;
       }
 
@@ -105,7 +115,9 @@ export function useTikTokLiveSocket() {
 
       if (type === "LIVE_ERROR") {
         void finalizeCurrentSessionLocally("live_error");
-        setStatus(`TikTok lỗi ${payload.username || ""}: ${payload.message || "Không rõ lỗi"}`);
+        setStatus(
+          `TikTok lỗi ${payload.username || ""}: ${payload.message || "Không rõ lỗi"}`,
+        );
         return;
       }
 
@@ -128,8 +140,8 @@ export function useTikTokLiveSocket() {
       replaceSnapshot,
       setComments,
       startSessionFromPayload,
-      updateSessionStatusFromPayload
-    ]
+      updateSessionStatusFromPayload,
+    ],
   );
 
   const handleEventSourceMessage = useCallback(
@@ -141,7 +153,7 @@ export function useTikTokLiveSocket() {
         console.log("SSE parse error:", error);
       }
     },
-    [handleServerEvent]
+    [handleServerEvent],
   );
 
   const connectSse = useCallback(() => {
@@ -156,7 +168,9 @@ export function useTikTokLiveSocket() {
     isManualCloseRef.current = false;
     eventSourceRef.current?.close?.();
 
-    const eventSource = new (EventSource as any)(`${baseUrl}/events?clientId=${encodeURIComponent(clientId)}`);
+    const eventSource = new (EventSource as any)(
+      `${baseUrl}/events?clientId=${encodeURIComponent(clientId)}`,
+    );
     eventSourceRef.current = eventSource;
 
     const eventTypes = [
@@ -171,11 +185,13 @@ export function useTikTokLiveSocket() {
       "LIVE_DISCONNECTED",
       "LIVE_ERROR",
       "SNAPSHOT",
-      "COMMENT"
+      "COMMENT",
     ];
 
     eventTypes.forEach((eventType) => {
-      eventSource.addEventListener(eventType, (event: any) => handleEventSourceMessage(eventType, event));
+      eventSource.addEventListener(eventType, (event: any) =>
+        handleEventSourceMessage(eventType, event),
+      );
     });
 
     eventSource.addEventListener("open", () => {
@@ -209,7 +225,10 @@ export function useTikTokLiveSocket() {
       setStatus(`Đang subscribe LIVE ${nextUsername}...`);
 
       try {
-        await subscribeTikTokLiveApi({ clientId: clientIdRef.current, username: nextUsername });
+        await subscribeTikTokLiveApi({
+          clientId: clientIdRef.current,
+          username: nextUsername,
+        });
         return true;
       } catch (error) {
         console.log("SUBSCRIBE SSE ERROR:", error);
@@ -217,7 +236,7 @@ export function useTikTokLiveSocket() {
         return false;
       }
     },
-    [finalizeCurrentSessionLocally, setComments]
+    [finalizeCurrentSessionLocally, setComments],
   );
 
   const stopLiveSession = useCallback(async () => {
@@ -285,6 +304,6 @@ export function useTikTokLiveSocket() {
     disconnect,
     stopLiveSession,
     changeTikTokUsername: subscribeTikTokUsername,
-    subscribeTikTokUsername
+    subscribeTikTokUsername,
   };
-}
+};

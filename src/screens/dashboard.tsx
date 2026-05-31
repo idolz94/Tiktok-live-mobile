@@ -1,18 +1,19 @@
 import { useCallback, useState } from "react";
-import { SafeAreaView, StyleSheet, View } from "react-native";
-import BottomNav from "@/components/BottomNav";
-import { useAuth } from "@/hooks/useAuth";
-import { useTikTokLiveSocket } from "@/hooks/useTikTokLiveSocket";
-import { BottomTab, LiveComment, TopTab } from "@/types";
-import OrderOverviewScreen from "@/screens/OrderOverviewScreen";
-import CustomersView from "@/screens/dashboard/components/CustomersView";
-import HomeView from "@/screens/dashboard/components/HomeView";
-import ReportsView from "@/screens/dashboard/components/ReportsView";
-import SessionHeader from "@/screens/dashboard/components/SessionHeader";
-import SettingsView from "@/screens/dashboard/components/SettingsView";
-import ShippingView from "@/screens/dashboard/components/ShippingView";
-import TopSegmentTabs from "@/screens/dashboard/components/TopSegmentTabs";
-import { useOrderManager } from "@/screens/dashboard/hooks/useOrderManager";
+import { StyleSheet, View } from "react-native";
+import { BottomNav } from "@components/bottom-navigator";
+import { useTikTokLiveSocket } from "@hooks/use-tiktok-live-socket";
+import { BottomTab, LiveComment, TopTab } from "@types";
+import OrderOverviewScreen from "@screens/order-overview";
+import { HomeView } from "@screens/dashboard/components/home-view";
+import { ReportsView } from "@screens/dashboard/components/reports-view";
+import { SessionHeader } from "@screens/dashboard/components/session-header";
+import { SettingsView } from "@screens/dashboard/components/settings-view";
+import { ShippingView } from "@screens/dashboard/components/shipping-view";
+import { TopSegmentTabs } from "@screens/dashboard/components/top-segment-tabs";
+import { useOrderManager } from "@screens/dashboard/hooks/use-order-manager";
+import { useAuth } from "@hooks/use-auth";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { CustomersView } from "./dashboard/components/customers-view";
 
 export default function DashboardScreen() {
   const { user, logout } = useAuth();
@@ -27,7 +28,7 @@ export default function DashboardScreen() {
     currentLiveSession,
     liveHistory,
     liveDurationSeconds,
-    liveNowText
+    liveNowText,
   } = useTikTokLiveSocket();
 
   const [topTab, setTopTab] = useState<TopTab>("connect");
@@ -35,14 +36,14 @@ export default function DashboardScreen() {
 
   const orderManager = useOrderManager({
     comments,
-    onAfterCreateOrder: () => setBottomTab("home")
+    onAfterCreateOrder: () => setBottomTab("home"),
   });
 
   const handleCreateOrder = useCallback(
     (comment: LiveComment) => {
       orderManager.createOrderFromComment(comment);
     },
-    [orderManager]
+    [orderManager],
   );
 
   const renderCurrentBottomView = useCallback(() => {
@@ -79,8 +80,10 @@ export default function DashboardScreen() {
       );
     }
 
-    if (bottomTab === "customers") return <CustomersView customers={orderManager.customers} />;
-    if (bottomTab === "shipping") return <ShippingView orders={orderManager.orders} />;
+    if (bottomTab === "customers")
+      return <CustomersView customers={orderManager.customers} />;
+    if (bottomTab === "shipping")
+      return <ShippingView orders={orderManager.orders} />;
     if (bottomTab === "reports") {
       return (
         <ReportsView
@@ -115,7 +118,7 @@ export default function DashboardScreen() {
     status,
     tiktokUsername,
     topTab,
-    user?.username
+    user?.username,
   ]);
 
   if (orderManager.selectedOrder) {
@@ -139,7 +142,9 @@ export default function DashboardScreen() {
           liveDurationSeconds={liveDurationSeconds}
           liveNowText={liveNowText}
         />
-        {bottomTab === "home" ? <TopSegmentTabs activeTab={topTab} onChange={setTopTab} /> : null}
+        {bottomTab === "home" ? (
+          <TopSegmentTabs activeTab={topTab} onChange={setTopTab} />
+        ) : null}
         <View style={styles.content}>{renderCurrentBottomView()}</View>
         <BottomNav active={bottomTab} onChange={setBottomTab} />
       </View>
@@ -150,5 +155,5 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#f4f7f8" },
   container: { flex: 1, backgroundColor: "#f4f7f8" },
-  content: { flex: 1 }
+  content: { flex: 1 },
 });

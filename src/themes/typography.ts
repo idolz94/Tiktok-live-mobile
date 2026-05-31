@@ -13,118 +13,119 @@ import { TextStyle } from "react-native";
 // | Black       | 900     |
 
 export const FontStyle = {
-  display_fs40: {
+  fs40_400: {
     fontSize: 40,
   },
-  display_fs30_black: {
+  fs30_900: {
     fontSize: 30,
     fontWeight: "900",
   },
-  display_fs30_extrabold: {
+  fs30_800: {
     fontSize: 30,
     fontWeight: "800",
   },
-  display_fs26_black: {
+  fs26_900: {
     fontSize: 26,
     fontWeight: "900",
   },
-  display_fs26_extrabold: {
+  fs26_800: {
     fontSize: 26,
     fontWeight: "800",
   },
-  display_fs24_black: {
+  fs24_900: {
     fontSize: 24,
     fontWeight: "900",
   },
-  display_fs24_extrabold: {
+  fs24_800: {
     fontSize: 24,
     fontWeight: "800",
   },
 
   // Titles / Subheadings (Sizes 18 - 23)
-  title_fs23_black: {
+  fs23_900: {
     fontSize: 23,
     fontWeight: "900",
   },
-  title_fs22_black: {
+  fs22_900: {
     fontSize: 22,
     fontWeight: "900",
   },
-  title_fs20_black: {
+  fs20_900: {
     fontSize: 20,
     fontWeight: "900",
   },
-  title_fs19_black: {
+  fs19_900: {
     fontSize: 19,
     fontWeight: "900",
   },
-  title_fs18_black: {
+  fs18_900: {
     fontSize: 18,
     fontWeight: "900",
   },
-  title_fs18_bold: {
+  fs18_700: {
     fontSize: 18,
     fontWeight: "700",
   },
 
   // Texts (Sizes 11 - 17)
-  text_fs17_black: {
+  fs17_900: {
     fontSize: 17,
     fontWeight: "900",
   },
-  text_fs17_extrabold: {
+  fs17_800: {
     fontSize: 17,
     fontWeight: "800",
   },
-  text_fs16_black: {
+  fs16_900: {
     fontSize: 16,
     fontWeight: "900",
   },
-  text_fs16_extrabold: {
+  fs16_800: {
     fontSize: 16,
     fontWeight: "800",
   },
-  text_fs16_semibold: {
+  fs16_600: {
     fontSize: 16,
     fontWeight: "600",
   },
-  text_fs16_regular: {
+  fs16_500: {
     fontSize: 16,
+    fontWeight: "500",
   },
-  text_fs15_black: {
+  fs15_900: {
     fontSize: 15,
     fontWeight: "900",
   },
-  text_fs15_extrabold: {
+  fs15_800: {
     fontSize: 15,
     fontWeight: "800",
   },
-  text_fs15_regular: {
+  fs15_400: {
     fontSize: 15,
   },
-  text_fs14_extrabold: {
+  fs14_800: {
     fontSize: 14,
     fontWeight: "800",
   },
-  text_fs14_regular: {
+  fs14_400: {
     fontSize: 14,
   },
-  text_fs12_extrabold: {
+  fs12_800: {
     fontSize: 12,
     fontWeight: "800",
   },
-  text_fs12_regular: {
+  fs12_400: {
     fontSize: 12,
   },
-  text_fs12_italic: {
+  fs12_italic: {
     fontSize: 12,
     fontStyle: "italic",
   },
-  text_fs11_extrabold: {
+  fs11_800: {
     fontSize: 11,
     fontWeight: "800",
   },
-  text_fs11_regular: {
+  fs11_400: {
     fontSize: 11,
   },
 } as const satisfies Record<string, TextStyle>;

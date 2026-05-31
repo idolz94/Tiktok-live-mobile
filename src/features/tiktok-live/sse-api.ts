@@ -1,4 +1,4 @@
-import { DEFAULT_WS_URL } from "@/constants/config";
+import { DEFAULT_WS_URL } from "@constants/config";
 
 export function getSseBaseUrl() {
   const rawUrl = DEFAULT_WS_URL.trim();
@@ -15,16 +15,25 @@ export function getSseBaseUrl() {
 
     return url.toString().replace(/\/$/, "");
   } catch {
-    return rawUrl.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://").replace(/\/$/, "");
+    return rawUrl
+      .replace(/^ws:\/\//, "http://")
+      .replace(/^wss:\/\//, "https://")
+      .replace(/\/$/, "");
   }
 }
 
-export async function subscribeTikTokLiveApi({ clientId, username }: { clientId: string; username: string }) {
+export async function subscribeTikTokLiveApi({
+  clientId,
+  username,
+}: {
+  clientId: string;
+  username: string;
+}) {
   const baseUrl = getSseBaseUrl();
   const res = await fetch(`${baseUrl}/subscribe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ clientId, username })
+    body: JSON.stringify({ clientId, username }),
   });
 
   if (!res.ok) throw new Error(`Subscribe failed: ${res.status}`);
@@ -36,7 +45,7 @@ export async function stopTikTokLiveApi(clientId: string) {
   const res = await fetch(`${baseUrl}/stop`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ clientId })
+    body: JSON.stringify({ clientId }),
   });
 
   if (!res.ok) throw new Error(`Stop failed: ${res.status}`);

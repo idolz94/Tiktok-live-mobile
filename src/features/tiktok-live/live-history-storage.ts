@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { LiveHistoryItem } from "@/features/tiktok-live/types";
+import type { LiveHistoryItem } from "@features/tiktok-live/types";
 
 const LIVE_HISTORY_KEY = "LIVE_HISTORY";
 
@@ -23,17 +23,23 @@ export async function clearLiveHistoryStorage() {
 
 export async function saveHistoryItem(item: LiveHistoryItem) {
   const oldHistory = await readLiveHistory();
-  const existed = oldHistory.find((history) => history.sessionId === item.sessionId);
+  const existed = oldHistory.find(
+    (history) => history.sessionId === item.sessionId,
+  );
 
   const fixedItem: LiveHistoryItem = {
     ...item,
-    comments: item.comments.length > 0 ? item.comments : existed?.comments || [],
-    commentCount: Math.max(item.commentCount || 0, item.comments.length || existed?.comments?.length || 0)
+    comments:
+      item.comments.length > 0 ? item.comments : existed?.comments || [],
+    commentCount: Math.max(
+      item.commentCount || 0,
+      item.comments.length || existed?.comments?.length || 0,
+    ),
   };
 
   const nextHistory = [
     fixedItem,
-    ...oldHistory.filter((history) => history.sessionId !== item.sessionId)
+    ...oldHistory.filter((history) => history.sessionId !== item.sessionId),
   ].slice(0, 300);
 
   await writeLiveHistory(nextHistory);

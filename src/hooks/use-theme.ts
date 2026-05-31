@@ -1,10 +1,10 @@
-import { theme } from "@/themes";
+import { theme } from "@themes";
 import { useMemo } from "react";
 
 /**
  * Hook để lấy dữ liệu theme (colors, typography, shadows, v.v.) bên trong component.
  */
-export function useThemes() {
+export const useThemes = () => {
   // Trả về theme tĩnh hiện tại.
   // Nếu sau này app hỗ trợ Dark Mode, bạn có thể implement logic để return theme tương ứng.
   const currentTheme = useMemo(() => theme, []);
@@ -15,4 +15,4 @@ export function useThemes() {
     shadows: currentTheme.shadows,
     textPresets: currentTheme.textPresets,
   };
-}
+};

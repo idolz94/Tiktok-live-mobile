@@ -1,38 +1,47 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MAX_COMMENTS } from "@/constants/config";
-import type { LiveComment } from "@/types";
-import type { LiveHistoryItem } from "@/features/tiktok-live/types";
+import { MAX_COMMENTS } from "@constants/config";
 import {
   clearLiveHistoryStorage,
   readLiveHistory,
-  saveHistoryItem
-} from "@/features/tiktok-live/liveHistoryStorage";
-import { normalizeLiveSession } from "@/features/tiktok-live/liveSessionMapper";
-import { calcDurationSeconds } from "@/utils/date";
+  saveHistoryItem,
+} from "@features/tiktok-live/live-history-storage";
+import { normalizeLiveSession } from "@features/tiktok-live/live-session-mapper";
+import type { LiveHistoryItem } from "@features/tiktok-live/types";
+import type { LiveComment } from "@types";
+import { calcDurationSeconds } from "@utils/date";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 function formatNowText(nowMs: number) {
   if (!nowMs) return "";
-  return new Date(nowMs).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  return new Date(nowMs).toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function useTikTokLiveSession() {
   const currentLiveSessionRef = useRef<LiveHistoryItem | null>(null);
   const sessionCommentsRef = useRef<LiveComment[]>([]);
 
-  const [currentLiveSession, setCurrentLiveSessionState] = useState<LiveHistoryItem | null>(null);
+  const [currentLiveSession, setCurrentLiveSessionState] =
+    useState<LiveHistoryItem | null>(null);
   const [liveHistory, setLiveHistory] = useState<LiveHistoryItem[]>([]);
   const [nowMs, setNowMs] = useState(0);
 
-  const setCurrentLiveSession = useCallback((session: LiveHistoryItem | null) => {
-    currentLiveSessionRef.current = session;
-    setCurrentLiveSessionState(session);
-  }, []);
+  const setCurrentLiveSession = useCallback(
+    (session: LiveHistoryItem | null) => {
+      currentLiveSessionRef.current = session;
+      setCurrentLiveSessionState(session);
+    },
+    [],
+  );
 
   useEffect(() => {
     readLiveHistory().then(setLiveHistory);
   }, []);
 
-  const isRunning = Boolean(currentLiveSession?.startedAt && !currentLiveSession?.endedAt);
+  const isRunning = Boolean(
+    currentLiveSession?.startedAt && !currentLiveSession?.endedAt,
+  );
 
   useEffect(() => {
     if (!isRunning) return;
@@ -43,7 +52,8 @@ export function useTikTokLiveSession() {
 
   const liveDurationSeconds = useMemo(() => {
     if (!currentLiveSession?.startedAt) return 0;
-    if (currentLiveSession.endedAt) return currentLiveSession.durationSeconds || 0;
+    if (currentLiveSession.endedAt)
+      return currentLiveSession.durationSeconds || 0;
     if (!nowMs) return currentLiveSession.durationSeconds || 0;
 
     const start = new Date(currentLiveSession.startedAt).getTime();
@@ -51,7 +61,10 @@ export function useTikTokLiveSession() {
     return Math.max(0, Math.floor((nowMs - start) / 1000));
   }, [currentLiveSession, nowMs]);
 
-  const liveNowText = useMemo(() => (isRunning ? formatNowText(nowMs) : ""), [isRunning, nowMs]);
+  const liveNowText = useMemo(
+    () => (isRunning ? formatNowText(nowMs) : ""),
+    [isRunning, nowMs],
+  );
 
   const clearLiveHistory = useCallback(async () => {
     setLiveHistory([]);
@@ -77,7 +90,7 @@ export function useTikTokLiveSession() {
         durationSeconds: calcDurationSeconds(session.startedAt, endedAt),
         commentCount: comments.length,
         comments,
-        reason
+        reason,
       };
 
       const nextHistory = await saveHistoryItem(historyItem);
@@ -86,7 +99,7 @@ export function useTikTokLiveSession() {
       setCurrentLiveSession(null);
       setNowMs(0);
     },
-    [setCurrentLiveSession]
+    [setCurrentLiveSession],
   );
 
   const startSessionFromPayload = useCallback(
@@ -96,7 +109,7 @@ export function useTikTokLiveSession() {
       setCurrentLiveSession(session);
       setNowMs(Date.now());
     },
-    [setCurrentLiveSession]
+    [setCurrentLiveSession],
   );
 
   const endSessionFromPayload = useCallback(
@@ -106,7 +119,10 @@ export function useTikTokLiveSession() {
       const historyItem: LiveHistoryItem = {
         ...sessionFromPython,
         comments,
-        commentCount: Math.max(sessionFromPython.commentCount || 0, comments.length)
+        commentCount: Math.max(
+          sessionFromPython.commentCount || 0,
+          comments.length,
+        ),
       };
 
       const nextHistory = await saveHistoryItem(historyItem);
@@ -115,12 +131,15 @@ export function useTikTokLiveSession() {
       setCurrentLiveSession(null);
       setNowMs(0);
     },
-    [setCurrentLiveSession]
+    [setCurrentLiveSession],
   );
 
   const updateSessionStatusFromPayload = useCallback(
     (payload: unknown) => {
-      const data = payload as { startedAt?: string; started_at?: string } | null;
+      const data = payload as {
+        startedAt?: string;
+        started_at?: string;
+      } | null;
 
       if (!data || (!data.startedAt && !data.started_at)) {
         sessionCommentsRef.current = [];
@@ -132,15 +151,20 @@ export function useTikTokLiveSession() {
       const session = normalizeLiveSession(payload);
       setCurrentLiveSession(session);
     },
-    [setCurrentLiveSession]
+    [setCurrentLiveSession],
   );
 
   const addCommentToCurrentSession = useCallback(
     (comment: LiveComment) => {
-      const existed = sessionCommentsRef.current.some((item) => item.id === comment.id);
+      const existed = sessionCommentsRef.current.some(
+        (item) => item.id === comment.id,
+      );
       if (existed) return;
 
-      const nextComments = [comment, ...sessionCommentsRef.current].slice(0, MAX_COMMENTS);
+      const nextComments = [comment, ...sessionCommentsRef.current].slice(
+        0,
+        MAX_COMMENTS,
+      );
       sessionCommentsRef.current = nextComments;
 
       const session = currentLiveSessionRef.current;
@@ -149,10 +173,10 @@ export function useTikTokLiveSession() {
       setCurrentLiveSession({
         ...session,
         commentCount: nextComments.length,
-        comments: nextComments
+        comments: nextComments,
       });
     },
-    [setCurrentLiveSession]
+    [setCurrentLiveSession],
   );
 
   return {
@@ -166,6 +190,6 @@ export function useTikTokLiveSession() {
     endSessionFromPayload,
     updateSessionStatusFromPayload,
     addCommentToCurrentSession,
-    resetCurrentSession
+    resetCurrentSession,
   };
 }

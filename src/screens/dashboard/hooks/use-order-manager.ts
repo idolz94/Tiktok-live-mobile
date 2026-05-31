@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LiveComment, LiveTab, Order, OrderFilter, OrderProduct } from "@/types";
-import { createId, createOrderCode } from "@/utils/id";
-import { createProductFromComment, getOrderTotal, parseOrderFromComment } from "@/utils/order";
-import { readOrders, writeOrders } from "@/features/oders/orderStorage";
-import { buildCustomersFromOrders } from "@/features/customers/customerMapper";
+import { LiveComment, LiveTab, Order, OrderFilter, OrderProduct } from "@types";
+import { createId, createOrderCode } from "@utils/id";
+import {
+  createProductFromComment,
+  getOrderTotal,
+  parseOrderFromComment,
+} from "@utils/order";
+import { readOrders, writeOrders } from "@features/oders/order-storage";
+import { buildCustomersFromOrders } from "@features/customers/customer-mapper";
 
 type UseOrderManagerParams = {
   comments: LiveComment[];
   onAfterCreateOrder?: () => void;
 };
 
-export function useOrderManager({ comments, onAfterCreateOrder }: UseOrderManagerParams) {
+export const useOrderManager = ({
+  comments,
+  onAfterCreateOrder,
+}: UseOrderManagerParams) => {
   const [orders, setOrdersState] = useState<Order[]>([]);
   const [liveTab, setLiveTab] = useState<LiveTab>("live");
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
@@ -21,20 +28,42 @@ export function useOrderManager({ comments, onAfterCreateOrder }: UseOrderManage
     readOrders().then(setOrdersState);
   }, []);
 
-  const setOrders = useCallback((updater: Order[] | ((prev: Order[]) => Order[])) => {
-    setOrdersState((prev) => {
-      const nextOrders = typeof updater === "function" ? updater(prev) : updater;
-      void writeOrders(nextOrders);
-      return nextOrders;
-    });
-  }, []);
+  const setOrders = useCallback(
+    (updater: Order[] | ((prev: Order[]) => Order[])) => {
+      setOrdersState((prev) => {
+        const nextOrders =
+          typeof updater === "function" ? updater(prev) : updater;
+        void writeOrders(nextOrders);
+        return nextOrders;
+      });
+    },
+    [],
+  );
 
-  const buyingCount = useMemo(() => comments.filter((item) => item.intent === "buying").length, [comments]);
-  const unpaidOrders = useMemo(() => orders.filter((item) => item.depositStatus === "unpaid").length, [orders]);
-  const paidOrders = useMemo(() => orders.filter((item) => item.depositStatus === "paid").length, [orders]);
-  const draftOrders = useMemo(() => orders.filter((item) => item.status === "draft").length, [orders]);
-  const confirmedOrders = useMemo(() => orders.filter((item) => item.status === "confirmed").length, [orders]);
-  const orderProductCount = useMemo(() => orders.reduce((sum, order) => sum + (order.products?.length || 0), 0), [orders]);
+  const buyingCount = useMemo(
+    () => comments.filter((item) => item.intent === "buying").length,
+    [comments],
+  );
+  const unpaidOrders = useMemo(
+    () => orders.filter((item) => item.depositStatus === "unpaid").length,
+    [orders],
+  );
+  const paidOrders = useMemo(
+    () => orders.filter((item) => item.depositStatus === "paid").length,
+    [orders],
+  );
+  const draftOrders = useMemo(
+    () => orders.filter((item) => item.status === "draft").length,
+    [orders],
+  );
+  const confirmedOrders = useMemo(
+    () => orders.filter((item) => item.status === "confirmed").length,
+    [orders],
+  );
+  const orderProductCount = useMemo(
+    () => orders.reduce((sum, order) => sum + (order.products?.length || 0), 0),
+    [orders],
+  );
 
   const filteredOrders = useMemo(() => {
     const keyword = orderSearchText.trim().toLowerCase();
@@ -84,7 +113,7 @@ export function useOrderManager({ comments, onAfterCreateOrder }: UseOrderManage
         products: [product],
         status: "draft",
         depositStatus: "unpaid",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       setOrders((prev) => {
@@ -97,7 +126,7 @@ export function useOrderManager({ comments, onAfterCreateOrder }: UseOrderManage
       onAfterCreateOrder?.();
       return order;
     },
-    [onAfterCreateOrder, setOrders]
+    [onAfterCreateOrder, setOrders],
   );
 
   const clearOrders = useCallback(() => setOrders([]), [setOrders]);
@@ -107,40 +136,77 @@ export function useOrderManager({ comments, onAfterCreateOrder }: UseOrderManage
       setOrders((prev) =>
         prev.map((order) => {
           if (order.id !== id) return order;
-          if (field === "quantity" || field === "price") return { ...order, [field]: Number(value || 0) };
+          if (field === "quantity" || field === "price")
+            return { ...order, [field]: Number(value || 0) };
           return { ...order, [field]: value };
-        })
+        }),
       );
     },
-    [setOrders]
+    [setOrders],
   );
 
   const addProductToOrder = useCallback(
     (orderId: string, product: OrderProduct) => {
-      setOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, products: [...(order.products || []), product] } : order)));
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId
+            ? { ...order, products: [...(order.products || []), product] }
+            : order,
+        ),
+      );
     },
-    [setOrders]
+    [setOrders],
   );
 
   const toggleDepositStatus = useCallback(
     (orderId: string) => {
-      setOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, depositStatus: order.depositStatus === "paid" ? "unpaid" : "paid" } : order)));
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                depositStatus:
+                  order.depositStatus === "paid" ? "unpaid" : "paid",
+              }
+            : order,
+        ),
+      );
     },
-    [setOrders]
+    [setOrders],
   );
 
   const confirmOrder = useCallback(
     (orderId: string) => {
-      setOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, status: order.status === "confirmed" ? "draft" : "confirmed" } : order)));
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                status: order.status === "confirmed" ? "draft" : "confirmed",
+              }
+            : order,
+        ),
+      );
     },
-    [setOrders]
+    [setOrders],
   );
 
-  const deleteOrder = useCallback((id: string) => setOrders((prev) => prev.filter((order) => order.id !== id)), [setOrders]);
-  const openOrderOverview = useCallback((orderId: string) => setSelectedOrderId(orderId), []);
+  const deleteOrder = useCallback(
+    (id: string) =>
+      setOrders((prev) => prev.filter((order) => order.id !== id)),
+    [setOrders],
+  );
+  const openOrderOverview = useCallback(
+    (orderId: string) => setSelectedOrderId(orderId),
+    [],
+  );
   const closeOrderOverview = useCallback(() => setSelectedOrderId(null), []);
 
-  const totalRevenue = useMemo(() => orders.reduce((sum, item) => sum + getOrderTotal(item.products || []), 0), [orders]);
+  const totalRevenue = useMemo(
+    () =>
+      orders.reduce((sum, item) => sum + getOrderTotal(item.products || []), 0),
+    [orders],
+  );
 
   return {
     orders,
@@ -168,6 +234,6 @@ export function useOrderManager({ comments, onAfterCreateOrder }: UseOrderManage
     confirmOrder,
     deleteOrder,
     openOrderOverview,
-    closeOrderOverview
+    closeOrderOverview,
   };
-}
+};

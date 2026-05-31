@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Order } from "@/types";
+import { Order } from "@types";
 
 const ORDERS_STORAGE_KEY = "ORDERS";
 

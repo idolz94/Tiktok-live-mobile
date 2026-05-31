@@ -3,7 +3,7 @@ import { useAuthStore } from "@stores/auth/auth-store";
 
 export type AuthResult = { ok: boolean; message?: string };
 
-export function useAuth() {
+export const useAuth = () => {
   const user = useAuthStore((state) => state.user);
   const login = useAuthStore((state) => state.login);
   const register = useAuthStore((state) => state.register);
@@ -34,5 +34,4 @@ export function useAuth() {
     register,
     logout,
   };
-}
-export default useAuth;
+};
