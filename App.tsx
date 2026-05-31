@@ -1,8 +1,9 @@
 import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, SafeAreaView, StyleSheet, View } from "react-native";
-import AuthScreen from "@/screens/AuthScreen";
-import DashboardScreen from "@/screens/DashboardScreen";
-import { useAuth } from "@/hooks/useAuth";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useAuth } from "@hooks/use-auth";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { AuthScreen } from "@screens/auth";
+import { DashboardScreen } from "@screens/dashboard";
 
 export default function App() {
   const { user, isLoading } = useAuth();
@@ -26,12 +27,12 @@ export default function App() {
 const styles = StyleSheet.create({
   app: {
     flex: 1,
-    backgroundColor: "#f4f7f8"
+    backgroundColor: "#f4f7f8",
   },
   loadingScreen: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f4f7f8"
-  }
+    backgroundColor: "#f4f7f8",
+  },
 });

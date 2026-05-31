@@ -1,7 +1,7 @@
-import { createStyles } from "@/utils/createStyles";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { createStyles } from "@utils/createStyles";
+import { Image, Text, View } from "react-native";
 
-export default function Avatar({
+export const Avatar = ({
   uri,
   username,
   size = 46,
@@ -9,7 +9,7 @@ export default function Avatar({
   uri?: string;
   username?: string;
   size?: number;
-}) {
+}) => {
   const initial =
     String(username || "U")
       .replace(/^@/, "")
@@ -40,7 +40,7 @@ export default function Avatar({
       </Text>
     </View>
   );
-}
+};
 
 const styles = createStyles(({ colors, textPresets }) => ({
   image: { backgroundColor: colors.primaryLight },
@@ -49,5 +49,5 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
     backgroundColor: colors.primaryLight,
   },
-  initial: { color: colors.primary, ...textPresets.title_fs18_black },
+  initial: { color: colors.primary, ...textPresets.fs18_900 },
 }));

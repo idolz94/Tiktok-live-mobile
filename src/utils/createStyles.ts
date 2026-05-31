@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { theme, AppTheme } from "@/themes";
+import { theme, AppTheme } from "@themes";
 
 /**
  * Helper to create typed React Native styles with theme integration,
@@ -23,9 +23,12 @@ import { theme, AppTheme } from "@/themes";
  * ```
  */
 export function createStyles<
-  T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>
+  T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>,
 >(
-  styles: T | StyleSheet.NamedStyles<T> | ((theme: AppTheme) => T | StyleSheet.NamedStyles<T>)
+  styles:
+    | T
+    | StyleSheet.NamedStyles<T>
+    | ((theme: AppTheme) => T | StyleSheet.NamedStyles<T>),
 ): T {
   const resolvedStyles = typeof styles === "function" ? styles(theme) : styles;
   return StyleSheet.create(resolvedStyles as T);

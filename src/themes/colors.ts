@@ -24,6 +24,8 @@ export const colors = {
   textDarkGray: "#475569", // Chữ xám đậm (Slate 600)
   muted: "#6b7280", // Màu xám chung (Gray 500)
 
+  mediumGray: "#9ca3af",
+
   border: "#e5e7eb", // Viền tiêu chuẩn (Gray 200)
   borderDark: "#cbd5e1", // Viền đậm hơn (Slate 300)
   borderLight: "#e2e8f0", // Viền nhạt (Slate 200)
@@ -33,6 +35,8 @@ export const colors = {
   success: "#16a34a", // Xanh lá chuẩn (Green 600)
   successActive: "#22c55e", // Xanh lá trạng thái hoạt động (Green 500)
   successText: "#15803d", // Chữ xanh lá đậm (Green 700)
+  successLight: "#86efac", // Xanh lá nhạt (Green 400)
+  successPastel: "#bbf7d0", // Xanh lá nhạt (Green 200)
   successBg: "#dcfce7", // Nền xanh lá nhạt (Green 100)
   successBgLight: "#f0fdf4", // Nền xanh lá cực nhạt (Green 50)
   successMint: "#e9fff2", // Xanh mint nhạt

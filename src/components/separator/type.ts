@@ -1,4 +1,4 @@
-import { Colors } from "@/themes/type";
+import { Colors } from "@themes/type";
 import { StyleProp, ViewProps, ViewStyle } from "react-native";
 
 export type SeparatorProps = Omit<ViewProps, "width" | "height"> & {
@@ -26,4 +26,3 @@ export type SeparatorProps = Omit<ViewProps, "width" | "height"> & {
 
   containerStyle?: StyleProp<ViewStyle>;
 };
-
