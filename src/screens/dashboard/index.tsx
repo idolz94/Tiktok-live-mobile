@@ -13,9 +13,9 @@ import { TopSegmentTabs } from "@screens/dashboard/components/top-segment-tabs";
 import { useOrderManager } from "@screens/dashboard/hooks/use-order-manager";
 import { useAuth } from "@hooks/use-auth";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CustomersView } from "./dashboard/components/customers-view";
+import { CustomersView } from "./components/customers-view";
 
-export default function DashboardScreen() {
+export const DashboardScreen = () => {
   const { user, logout } = useAuth();
 
   const {
@@ -150,7 +150,7 @@ export default function DashboardScreen() {
       </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#f4f7f8" },

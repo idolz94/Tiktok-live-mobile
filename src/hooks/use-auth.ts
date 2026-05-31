@@ -1,7 +1,5 @@
+import { useAuthStore } from "@stores/auth";
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@stores/auth/auth-store";
-
-export type AuthResult = { ok: boolean; message?: string };
 
 export const useAuth = () => {
   const user = useAuthStore((state) => state.user);

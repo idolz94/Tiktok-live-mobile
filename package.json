@@ -29,12 +29,15 @@
     "lodash.throttle": "^4.1.1",
     "react": "19.2.3",
     "react-fast-compare": "^3.2.2",
+    "react-hook-form": "^7.76.1",
     "react-native": "0.85.3",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-sse": "^1.2.1",
     "react-native-worklets": "0.8.3",
-    "zustand": "^5.0.14"
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14",
+    "@hookform/resolvers": "^5.4.0"
   },
   "publishConfig": {
     "executableFiles": [

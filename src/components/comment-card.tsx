@@ -1,4 +1,4 @@
-import { Avatar } from "@components/Avatar";
+import { Avatar } from "@components/avatar";
 import { LiveComment } from "@types";
 import { createStyles } from "@utils/createStyles";
 import { formatTime } from "@utils/date";

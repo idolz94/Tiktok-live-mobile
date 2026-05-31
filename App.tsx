@@ -1,9 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import AuthScreen from "@screens/auth";
-import DashboardScreen from "@screens/dashboard";
 import { useAuth } from "@hooks/use-auth";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AuthScreen } from "@screens/auth";
+import { DashboardScreen } from "@screens/dashboard";
 
 export default function App() {
   const { user, isLoading } = useAuth();

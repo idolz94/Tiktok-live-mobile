@@ -1,4 +1,4 @@
-import { Avatar } from "@components/Avatar";
+import { Avatar } from "@components/avatar";
 import { CustomerItem } from "@features/customers/customer-mapper";
 import { createStyles } from "@utils/createStyles";
 import { ScrollView, Text, View } from "react-native";

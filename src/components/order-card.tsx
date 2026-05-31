@@ -1,4 +1,4 @@
-import { Avatar } from "@components/Avatar";
+import { Avatar } from "@components/avatar";
 import { ProductTable } from "@components/product-table";
 import { Order, OrderProduct } from "@types";
 import { createStyles } from "@utils/createStyles";
