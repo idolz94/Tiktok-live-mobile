@@ -5,6 +5,7 @@ import { useAuth } from "@hooks/use-auth";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthScreen } from "@screens/auth";
 import { DashboardScreen } from "@screens/dashboard";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 export default function App() {
   const { user, isLoading } = useAuth();
@@ -18,10 +19,12 @@ export default function App() {
   }
 
   return (
-    <View style={styles.app}>
-      <StatusBar style="dark" />
-      {user ? <DashboardScreen /> : <AuthScreen />}
-    </View>
+    <KeyboardProvider>
+      <View style={styles.app}>
+        <StatusBar style="dark" />
+        {user ? <DashboardScreen /> : <AuthScreen />}
+      </View>
+    </KeyboardProvider>
   );
 }
 

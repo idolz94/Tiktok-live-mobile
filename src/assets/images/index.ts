@@ -1,8 +1,8 @@
 export const images = {
-  logo_banner: require("./source/logo-banner.png"),
-  logo_facebook: require("./source/logo-facebook.png"),
-  logo_google: require("./source/logo-google.png"),
-  logo_tiktok: require("./source/logo-tiktok.png"),
+  logo_banner: require("./sources/login-banner.png"),
+  logo_facebook: require("./sources/login-facebook.png"),
+  logo_tiktok: require("./sources/login-tiktok.png"),
+  logo_zalo: require("./sources/login-zalo.png"),
 };
 
 export type ImageTypes = keyof typeof images;
