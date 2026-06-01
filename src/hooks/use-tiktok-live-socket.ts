@@ -9,6 +9,7 @@ import {
   subscribeTikTokLiveApi,
 } from "@features/tiktok-live/sse-api";
 import { normalizeTikTokUsername } from "@utils/comment";
+import httpClient from "@utils/http/axios";
 
 const createClientId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -202,9 +203,24 @@ export const useTikTokLiveSocket = () => {
     eventSource.addEventListener("error", () => {
       if (isManualCloseRef.current) return;
       setIsConnected(false);
-      setStatus("SSE mất kết nối, app đang tự kết nối lại...");
+      setStatus("SSE mất kết nối...");
     });
   }, [handleEventSourceMessage]);
+
+  /**
+   * Ping server trước để wake up Render free tier (có thể ngủ sau 15 phút idle),
+   * sau đó mới mở SSE connection.
+   * Lỗi ping được bỏ qua — mục đích chỉ là đánh thức server.
+   */
+  const wakeUpAndConnect = useCallback(async () => {
+    setStatus("Đang kết nối server...");
+    try {
+      await httpClient.get("/health");
+    } catch {
+      // Server có thể không có /health — bỏ qua lỗi, vẫn tiếp tục
+    }
+    connectSse();
+  }, [connectSse]);
 
   const subscribeTikTokUsername = useCallback(
     async (username: string) => {
@@ -257,8 +273,9 @@ export const useTikTokLiveSocket = () => {
     isManualCloseRef.current = false;
     eventSourceRef.current?.close?.();
     eventSourceRef.current = null;
-    connectSse();
-  }, [connectSse, finalizeCurrentSessionLocally]);
+    // Wake up server trước khi reconnect (server có thể đã ngủ)
+    void wakeUpAndConnect();
+  }, [wakeUpAndConnect, finalizeCurrentSessionLocally]);
 
   const disconnect = useCallback(async () => {
     await finalizeCurrentSessionLocally("manual_disconnect");
@@ -277,7 +294,8 @@ export const useTikTokLiveSocket = () => {
   }, [finalizeCurrentSessionLocally]);
 
   useEffect(() => {
-    connectSse();
+    // Ping server để wake up trước, sau đó mới mở SSE
+    void wakeUpAndConnect();
 
     return () => {
       void finalizeCurrentSessionLocally("component_unmount");
@@ -286,7 +304,7 @@ export const useTikTokLiveSocket = () => {
       eventSourceRef.current?.close?.();
       eventSourceRef.current = null;
     };
-  }, [connectSse, finalizeCurrentSessionLocally]);
+  }, [wakeUpAndConnect, finalizeCurrentSessionLocally]);
 
   return {
     status,
