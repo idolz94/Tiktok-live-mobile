@@ -1,10 +1,9 @@
 import { Colors } from "@themes/type";
 import { z } from "zod";
+import { HttpStatusCode } from "axios";
 
 export {};
 
-type IconTypes = string;
-type HttpStatusCode = number;
 declare module "react" {
   // eslint-disable-next-line @typescript-eslint/ban-types
   function forwardRef<T, P = {}>(
@@ -75,11 +74,7 @@ declare global {
 
     subtitle?: string;
 
-    icon?: IconTypes;
-
-    iconColor?: Colors;
-
-    colorTheme?: Colors;
+    color?: Colors;
 
     borderColor?: Colors;
 
