@@ -10,6 +10,7 @@ module.exports = function (api) {
           root: ["./"],
           alias: {
             "@": "./src",
+            "@declare": "./declare",
             "@screens": "./src/screens",
             "@stores": "./src/stores",
             "@hooks": "./src/hooks",

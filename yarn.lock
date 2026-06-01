@@ -1896,6 +1896,25 @@ expo-font@~56.0.5:
   dependencies:
     fontfaceobserver "^2.1.0"
 
+expo-image-loader@~56.0.3:
+  version "56.0.3"
+  resolved "https://registry.yarnpkg.com/expo-image-loader/-/expo-image-loader-56.0.3.tgz#665112665e78d0fd9629f6160e2ca419d7f0c5c6"
+  integrity sha512-JgUo4fUeU1ZC+z8iBFj8v7yoGQnZrLbOVPyNE+DWVrld55F2F6R1ck+rmdm/8TNWLz1LhNQfD7c3XYP1ZikxXA==
+
+expo-image-picker@^56.0.15:
+  version "56.0.15"
+  resolved "https://registry.yarnpkg.com/expo-image-picker/-/expo-image-picker-56.0.15.tgz#186544c1bb4ff9d2d6236997177495cf3416d7d3"
+  integrity sha512-7zmrUcqiNKwGGGL114gC+1aaquhmMbaXCNSHjUcoINdBzvIEVMJDm+DNCxkpftEYeb17X3shqInI4lCgJNVO5g==
+  dependencies:
+    expo-image-loader "~56.0.3"
+
+expo-image@^56.0.9:
+  version "56.0.9"
+  resolved "https://registry.yarnpkg.com/expo-image/-/expo-image-56.0.9.tgz#d5a920ea1ca839c20ef7dcc07adf28ae25ac1df2"
+  integrity sha512-FifiRehXnMul5XeUVHWv+COHFUeCAdsYf5MiCPUBlhr4pRb0sxjA4/floi/TEDpATOIw6GqxbrC4FdZBoyrJmw==
+  dependencies:
+    sf-symbols-typescript "^2.2.0"
+
 expo-keep-awake@~56.0.3:
   version "56.0.3"
   resolved "https://registry.npmjs.org/expo-keep-awake/-/expo-keep-awake-56.0.3.tgz"
@@ -2576,17 +2595,9 @@ metro-file-map@0.84.4:
     nullthrows "^1.1.1"
     walker "^1.0.7"
 
-metro-minify-terser@0.84.4:
+metro-minify-terser@0.84.4, metro-minify-terser@^0.84.4:
   version "0.84.4"
   resolved "https://registry.npmjs.org/metro-minify-terser/-/metro-minify-terser-0.84.4.tgz"
-  integrity sha512-5qpbaVOMC7CPitIpuewzVeGw7E+C3ykbv2mqTjQLl85Z3annSVGlSCTcsZjqXZzjupfK4Ztj3dDc4kc44NZwtQ==
-  dependencies:
-    flow-enums-runtime "^0.0.6"
-    terser "^5.15.0"
-
-metro-minify-terser@^0.84.4:
-  version "0.84.4"
-  resolved "https://registry.yarnpkg.com/metro-minify-terser/-/metro-minify-terser-0.84.4.tgz#e904d63f085d1af33587ff6daf5010243d19eec9"
   integrity sha512-5qpbaVOMC7CPitIpuewzVeGw7E+C3ykbv2mqTjQLl85Z3annSVGlSCTcsZjqXZzjupfK4Ztj3dDc4kc44NZwtQ==
   dependencies:
     flow-enums-runtime "^0.0.6"
@@ -3343,6 +3354,11 @@ setprototypeof@~1.2.0:
   version "1.2.0"
   resolved "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.2.0.tgz"
   integrity sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==
+
+sf-symbols-typescript@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/sf-symbols-typescript/-/sf-symbols-typescript-2.2.0.tgz#926d6e0715e3d8784cadf7658431e36581254208"
+  integrity sha512-TPbeg0b7ylrswdGCji8FRGFAKuqbpQlLbL8SOle3j1iHSs5Ob5mhvMAxWN2UItOjgALAB5Zp3fmMfj8mbWvXKw==
 
 shebang-command@^2.0.0:
   version "2.0.0"

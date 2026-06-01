@@ -1,3 +1,4 @@
+import "@declare";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "@hooks/use-auth";
