@@ -1,44 +1,22 @@
-import { images } from "@/assets/images";
-import { Image } from "@/components/image";
-import { Screen } from "@/components/screen";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@hooks/use-auth";
+import { images } from "@assets/images";
+import { Image } from "@components/image";
+import { Screen } from "@components/screen";
+import { Separator } from "@components/separator";
+import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { BlurView } from "expo-blur";
-import { useCallback, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
-import { Alert, StyleSheet, View } from "react-native";
-import { MainContent } from "./componenst/main-content";
-import { LoginForm, LoginSchema, Mode } from "./type";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { Footer } from "./componenst/footer";
+import { Login } from "./componenst/login";
+import { Register } from "./componenst/register";
+import { Mode } from "./type";
 
 export const AuthScreen = () => {
-  const { login, register } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
 
   const isLogin = mode === "login";
-
-  const formMethod = useForm<LoginForm>({
-    mode: "all",
-    defaultValues: {
-      phone: "0816507286",
-      password: "123456",
-      remember: true,
-    },
-    resolver: zodResolver(LoginSchema),
-  });
-
-  const submit = useCallback(() => {
-    formMethod.handleSubmit(({ phone, password }) => {
-      const action = isLogin ? login : register;
-      const title = isLogin ? "Đăng nhập thất bại" : "Đăng ký thất bại";
-
-      const result = action(phone, password);
-
-      if (!result.ok) {
-        Alert.alert(title, result.message);
-      }
-    })();
-  }, [formMethod, isLogin]);
 
   return (
     <Screen>
@@ -54,20 +32,58 @@ export const AuthScreen = () => {
           tint="light"
           blurMethod="dimezisBlurViewSdk31Plus"
         />
-        <FormProvider {...formMethod}>
-          <MainContent
-            mode={mode}
-            setMode={setMode}
-            isLogin={isLogin}
-            submit={submit}
-          />
-        </FormProvider>
+        <KeyboardAwareScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.banner}>
+            <Image
+              source={images.logo_banner}
+              style={styles.bannerImg}
+              resizeMode="contain"
+            />
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.title}>Trải nghiệm miễn phí</Text>
+            {isLogin ? (
+              <>
+                <Pressable
+                  style={styles.registerButton}
+                  onPress={() => setMode("register")}
+                  disabled={!isLogin}
+                >
+                  <Text style={styles.registerText}>ĐĂNG KÝ NGAY</Text>
+                </Pressable>
+
+                <View style={styles.dividerRow}>
+                  <Separator
+                    type="horizontal"
+                    size={2}
+                    containerStyle={styles.flex}
+                  />
+                  <Text style={styles.dividerText}>hoặc đăng nhập</Text>
+                  <Separator
+                    type="horizontal"
+                    size={2}
+                    containerStyle={styles.flex}
+                  />
+                </View>
+
+                <Login />
+              </>
+            ) : (
+              <Register onRegisterSuccess={() => setMode("login")} />
+            )}
+            <Footer isLogin={isLogin} setMode={setMode} />
+          </View>
+        </KeyboardAwareScrollView>
       </View>
     </Screen>
   );
 };
 
-const styles = createStyles(({ colors }) => ({
+const styles = createStyles(({ colors, shadows, textPresets }) => ({
   safeArea: {
     flex: 1,
     paddingTop: 40,
@@ -78,5 +94,56 @@ const styles = createStyles(({ colors }) => ({
     height: "100%",
     position: "absolute",
     opacity: 0.5,
+  },
+  banner: {
+    borderWidth: HairlineWidth * 2,
+    borderColor: colors.white,
+    height: 266,
+    marginHorizontal: 8,
+    borderRadius: 24,
+    overflow: "hidden",
+    ...shadows.sd1,
+  },
+  bannerImg: {
+    width: "100%",
+    height: "100%",
+  },
+  card: {
+    marginTop: -50,
+    borderRadius: 24,
+    backgroundColor: colors.white,
+    marginHorizontal: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 24,
+    rowGap: 16,
+    ...shadows.sd2,
+  },
+  title: {
+    textAlign: "center",
+    color: colors.text,
+    ...textPresets.fs23_900,
+  },
+  flex: { flex: 1 },
+  registerButton: {
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: HairlineWidth * 4,
+    borderColor: colors.primaryDark,
+    backgroundColor: colors.warningBgLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  registerText: {
+    color: colors.primaryDark,
+    ...textPresets.fs18_900,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+  },
+  dividerText: {
+    color: colors.text,
+    ...textPresets.fs14_800,
   },
 }));

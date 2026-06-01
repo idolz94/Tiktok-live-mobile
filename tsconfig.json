@@ -18,7 +18,8 @@
       "@themes/*": ["./src/themes/*"],
       "@themes": ["./src/themes/index"],
       "@features/*": ["./src/features/*"],
-      "@constants/*": ["./src/constants/*"]
+      "@constants/*": ["./src/constants/*"],
+      "@assets/*": ["./src/assets/*"]
     }
   }
 }

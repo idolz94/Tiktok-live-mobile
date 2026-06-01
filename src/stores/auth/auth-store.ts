@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, StateStorage, createJSONStorage } from "zustand/middleware";
-import { createId } from "@utils/id";
 import { zustandStorage } from "@utils/storage";
 import { Account, AuthStoreState } from "./auth-types";
+import { loginApi, registerApi } from "@/features/auth/services/api";
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: "admin", username: "admin", password: "123456" },
@@ -85,68 +85,69 @@ export const useAuthStore = create<AuthStoreState>()(
     (set, get) => ({
       accounts: DEFAULT_ACCOUNTS,
       user: null,
+      accessToken: null,
+      refreshToken: null,
+      isRemembered: false,
 
-      login: (username, password) => {
-        const cleanUsername = username.trim();
-        if (!cleanUsername || !password) {
-          return { ok: false, message: "Vui lòng nhập tài khoản và mật khẩu" };
+      login: async ({ phone, password, remember }) => {
+        try {
+          const response = await loginApi({
+            phone,
+            password,
+            remember,
+          });
+
+          set({
+            accessToken: response.access_token,
+            refreshToken: response.refresh_token,
+            isRemembered: remember,
+            user: {
+              id: response.user?.id,
+              username: response.user?.user_metadata?.full_name || phone,
+              phone: response.user?.user_metadata?.phone,
+              fullName: response.user?.user_metadata?.full_name,
+              tiktokId: response.user?.user_metadata?.tiktok_id,
+              shopName: response.user?.user_metadata?.shop_name,
+              email: response.user?.email,
+            },
+          });
+
+          return { ok: true };
+        } catch (error) {
+          console.error("Lỗi đăng nhập:", error);
+          return { ok: false, message: "Đăng nhập thất bại" };
         }
-
-        const state = get();
-        const accounts = mergeDefaultAccounts(state.accounts);
-        const account = accounts.find(
-          (item) =>
-            item.username.toLowerCase() === cleanUsername.toLowerCase() &&
-            item.password === password,
-        );
-
-        if (!account) {
-          return { ok: false, message: "Sai tài khoản hoặc mật khẩu" };
-        }
-
-        set({
-          user: { id: account.id, username: account.username },
-        });
-
-        return { ok: true };
       },
 
-      register: (username, password) => {
-        const cleanUsername = username.trim();
-        if (cleanUsername.length < 3) {
-          return { ok: false, message: "Tài khoản cần ít nhất 3 ký tự" };
+      register: async ({ fullName, phone, password, tiktokId }) => {
+        try {
+          const response = await registerApi({
+            fullName,
+            phone,
+            password,
+            tiktokId,
+          });
+
+          return { ok: true, message: "Đăng ký thành công!!" };
+        } catch (error: any) {
+          console.error("Lỗi đăng ký:", error);
+          return {
+            ok: false,
+            message:
+              error?.response?.data?.msg ||
+              error?.message ||
+              "Đăng ký thất bại",
+          };
         }
-        if (password.length < 6) {
-          return { ok: false, message: "Mật khẩu cần ít nhất 6 ký tự" };
-        }
-
-        const state = get();
-        const accounts = mergeDefaultAccounts(state.accounts);
-        const existed = accounts.some(
-          (item) => item.username.toLowerCase() === cleanUsername.toLowerCase(),
-        );
-
-        if (existed) {
-          return { ok: false, message: "Tài khoản đã tồn tại" };
-        }
-
-        const newAccount: Account = {
-          id: createId(),
-          username: cleanUsername,
-          password,
-        };
-
-        const nextAccounts = [newAccount, ...accounts];
-        set({
-          accounts: nextAccounts,
-          user: { id: newAccount.id, username: newAccount.username },
-        });
-
-        return { ok: true };
       },
 
       logout: () => {
-        set({ user: null });
+        set({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          isRemembered: false,
+        });
       },
     }),
     {

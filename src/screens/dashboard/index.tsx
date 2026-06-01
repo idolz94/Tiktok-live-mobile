@@ -11,7 +11,7 @@ import { SettingsView } from "@screens/dashboard/components/settings-view";
 import { ShippingView } from "@screens/dashboard/components/shipping-view";
 import { TopSegmentTabs } from "@screens/dashboard/components/top-segment-tabs";
 import { useOrderManager } from "@screens/dashboard/hooks/use-order-manager";
-import { useAuth } from "@hooks/use-auth";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CustomersView } from "./components/customers-view";
 
@@ -97,8 +97,8 @@ export const DashboardScreen = () => {
 
     return (
       <SettingsView
-        username={user?.username}
-        tiktokUsername={tiktokUsername}
+        username={user?.fullName || user?.username}
+        tiktokUsername={user?.tiktokId || tiktokUsername}
         isConnected={isConnected}
         status={status}
         onChangeTikTokUsername={changeTikTokUsername}
@@ -137,7 +137,7 @@ export const DashboardScreen = () => {
         <SessionHeader
           isConnected={isConnected}
           status={status}
-          tiktokUsername={tiktokUsername}
+          tiktokUsername={user?.tiktokId || tiktokUsername}
           currentLiveSession={currentLiveSession}
           liveDurationSeconds={liveDurationSeconds}
           liveNowText={liveNowText}
