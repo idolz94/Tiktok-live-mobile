@@ -2584,6 +2584,14 @@ metro-minify-terser@0.84.4:
     flow-enums-runtime "^0.0.6"
     terser "^5.15.0"
 
+metro-minify-terser@^0.84.4:
+  version "0.84.4"
+  resolved "https://registry.yarnpkg.com/metro-minify-terser/-/metro-minify-terser-0.84.4.tgz#e904d63f085d1af33587ff6daf5010243d19eec9"
+  integrity sha512-5qpbaVOMC7CPitIpuewzVeGw7E+C3ykbv2mqTjQLl85Z3annSVGlSCTcsZjqXZzjupfK4Ztj3dDc4kc44NZwtQ==
+  dependencies:
+    flow-enums-runtime "^0.0.6"
+    terser "^5.15.0"
+
 metro-resolver@0.84.4:
   version "0.84.4"
   resolved "https://registry.npmjs.org/metro-resolver/-/metro-resolver-0.84.4.tgz"

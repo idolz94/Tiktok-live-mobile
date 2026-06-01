@@ -76,6 +76,8 @@ PODS:
     - ExpoModulesJSI
     - ExpoModulesWorklets
     - RNWorklets
+  - ExpoSecureStore (56.0.4):
+    - ExpoModulesCore
   - FBLazyVector (0.85.3)
   - hermes-engine (250829098.0.10):
     - hermes-engine/Pre-built (= 250829098.0.10)
@@ -2165,6 +2167,7 @@ DEPENDENCIES:
   - ExpoModulesJSI (from `../node_modules/expo-modules-jsi/apple`)
   - ExpoModulesWorklets (from `../node_modules/expo-modules-core/ExpoModulesWorklets.podspec`)
   - ExpoModulesWorkletsAdapter (from `../node_modules/expo-modules-core`)
+  - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - NitroMmkv (from `../node_modules/react-native-mmkv`)
@@ -2278,6 +2281,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/expo-modules-core/ExpoModulesWorklets.podspec"
   ExpoModulesWorkletsAdapter:
     :path: "../node_modules/expo-modules-core"
+  ExpoSecureStore:
+    :path: "../node_modules/expo-secure-store/ios"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2450,12 +2455,13 @@ SPEC CHECKSUMS:
   ExpoKeepAwake: edf05a0a5cdeddbb9fe705b49243ec6aef9cfded
   ExpoLinearGradient: debd4f2a2d56b857517588f61707168c8f0b4ff0
   ExpoLogBox: ae61965ef8e88b08b1496a65ce6cf98e82190574
-  ExpoModulesCore: d820335d18f1241dd53a29fc464eb7a25481925a
+  ExpoModulesCore: bdb15f832231ac7083866d7da74fa1a7252e4420
   ExpoModulesJSI: 3dc06d022a7745e465622a210083fa07a36c98cb
   ExpoModulesWorklets: 3268242d88c2ada46fc5ee0e075c994efffb1a52
   ExpoModulesWorkletsAdapter: 253250ea91e23867ada3fe4778926493daee0caf
+  ExpoSecureStore: 20be7fe1601ed1726afaf04ea1321a2b6ac549fc
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d
-  hermes-engine: 00187821872004e40def30aaa58ac181d79b5e37
+  hermes-engine: 0c7b5902e998dace6b32186cc477705e393b14a6
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
   NitroMmkv: 1ff46eceb958298b1d7c013a6314432438b77a62
   NitroModules: 8308314b644c15567ffad50bb10667e8c1d82666
@@ -2467,7 +2473,7 @@ SPEC CHECKSUMS:
   React: e2dc35338068bbd299c66f043ae0d7f25de8499e
   React-callinvoker: 28b25d21b124c26cebaea713ba7d801b9351dc48
   React-Core: f90d375d3bab515ad00df30605ce1bf02e6db12f
-  React-Core-prebuilt: 31763a7c6201a07c2351c13331e52f8ddcab56b9
+  React-Core-prebuilt: 9bc8f313f105c9e31a5c71c9294b4aac20d715d4
   React-CoreModules: da4f80202ef954bdfb926ca4c9ac5f685900aa5c
   React-cxxreact: 1d1d2a28a5f10e4e2e7cf2bfd54dc9c92c68c672
   React-debug: 92944dc4d89f56d640e75498266cbde557a48189
@@ -2530,11 +2536,11 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: a54c0c9b976766e1b6d5e2bb4d1ad0d15913e9e1
   ReactCodegen: 9af5798e943781fd2318dab7b60f25337388047c
   ReactCommon: 3ec2a55999d296af90c24beb66c8a77dc660d3ef
-  ReactNativeDependencies: 5b843385e61a7ae6e2c528af249d3fa254316279
+  ReactNativeDependencies: 14461f128fd499eed2b32a4a6cc52e16264ffdf3
   RNCAsyncStorage: 0f84413588571e74ef9cff6e3b669346e3abf9cb
   RNReanimated: 59bf185693b7294a0c515e19a6d1be54def61363
   RNWorklets: 32b9ca9e0588b838ce3202a9ea3971f553c9011c
-  Yoga: 77dfa8673de2874e1855002ae59c68b8be9b007b
+  Yoga: 36fee8f1fca3f54a28c3d7f80e69f66d73d3af96
 
 PODFILE CHECKSUM: 9c9349412aed802b27ad77a7f901cdbd0de6d16c
 

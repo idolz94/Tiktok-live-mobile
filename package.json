@@ -29,6 +29,7 @@
     "lodash.omitby": "^4.6.0",
     "lodash.pick": "^4.4.0",
     "lodash.throttle": "^4.1.1",
+    "metro-minify-terser": "^0.84.4",
     "react": "19.2.3",
     "react-fast-compare": "^3.2.2",
     "react-hook-form": "^7.76.1",
