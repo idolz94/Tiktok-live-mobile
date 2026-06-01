@@ -10,6 +10,7 @@ module.exports = function (api) {
           root: ["./"],
           alias: {
             "@": "./src",
+            "@declare": "./declare",
             "@screens": "./src/screens",
             "@stores": "./src/stores",
             "@hooks": "./src/hooks",
@@ -19,6 +20,7 @@ module.exports = function (api) {
             "@themes": "./src/themes",
             "@features": "./src/features",
             "@constants": "./src/constants",
+            "@assets": "./src/assets",
           },
         },
       ],

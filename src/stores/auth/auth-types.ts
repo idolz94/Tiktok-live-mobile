@@ -1,3 +1,4 @@
+import { LoginForm, RegisterForm } from "@screens/auth/type";
 import { AuthUser } from "@types";
 
 export type Account = {
@@ -14,7 +15,10 @@ export interface AuthResult {
 export interface AuthStoreState {
   accounts: Account[];
   user: AuthUser | null;
-  login: (username: string, password: string) => AuthResult;
-  register: (username: string, password: string) => AuthResult;
+  isRemembered: boolean;
+  accessToken: string | null;
+  refreshToken: string | null;
+  login: (data: LoginForm) => Promise<AuthResult>;
+  register: (data: RegisterForm) => Promise<AuthResult>;
   logout: () => void;
 }

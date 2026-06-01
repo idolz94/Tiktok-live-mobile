@@ -61,6 +61,7 @@ session.json
 .env.*.local
 .env.production
 .env.development
+.env.example
 
 # Logs
 *.log

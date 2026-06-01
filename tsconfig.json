@@ -3,8 +3,12 @@
   "compilerOptions": {
     "strict": true,
     "types": ["node"],
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
+      "@declare": ["./declare/index"],
+      "@declare/*": ["./declare/*"],
       "@types": ["./src/types"],
       "@screens/*": ["./src/screens/*"],
       "@stores/*": ["./src/stores/*"],
@@ -14,7 +18,8 @@
       "@themes/*": ["./src/themes/*"],
       "@themes": ["./src/themes/index"],
       "@features/*": ["./src/features/*"],
-      "@constants/*": ["./src/constants/*"]
+      "@constants/*": ["./src/constants/*"],
+      "@assets/*": ["./src/assets/*"]
     }
   }
 }

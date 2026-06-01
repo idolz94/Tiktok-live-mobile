@@ -51,9 +51,19 @@ export type SocketMessage = {
 export type AuthUser = {
   id: string;
   username: string;
+  phone?: string;
+  fullName?: string;
+  tiktokId?: string;
+  shopName?: string;
+  email?: string;
 };
 
 export type LiveTab = "live" | "orders";
 export type TopTab = "connect" | "history";
-export type BottomTab = "home" | "customers" | "shipping" | "reports" | "settings";
+export type BottomTab =
+  | "home"
+  | "customers"
+  | "shipping"
+  | "reports"
+  | "settings";
 export type OrderFilter = "all" | "unpaid" | "paid" | "draft" | "confirmed";
