@@ -1,4 +1,4 @@
-import { OrderProduct } from "@types";
+import { OrderProduct } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
 import { formatMoneyFromK, getOrderTotal, getProductTotal } from "@utils/order";
 import { Text, TouchableOpacity, View } from "react-native";

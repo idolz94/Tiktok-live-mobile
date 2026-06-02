@@ -1,4 +1,4 @@
-import { createStyles } from "@/utils/createStyles";
+import { createStyles } from "@utils/createStyles";
 import { View } from "react-native";
 import { ScreenProps } from "./type";
 

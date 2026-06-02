@@ -1,7 +1,8 @@
-import { LiveComment } from "@/types";
-import { createId } from "@/utils/id";
+import { LiveComment } from "@app-types/index";
+import { createId } from "@utils/id";
 
-const BUYING_RE = /(chốt|mua|lấy|ship|đặt|bao nhiêu|ib|inbox|size|sz|màu|kg|[0-9])/i;
+const BUYING_RE =
+  /(chốt|mua|lấy|ship|đặt|bao nhiêu|ib|inbox|size|sz|màu|kg|[0-9])/i;
 
 export function detectIntent(comment: string): "buying" | "normal" {
   return BUYING_RE.test(comment || "") ? "buying" : "normal";
@@ -13,7 +14,9 @@ export function normalizeComment(input: unknown): LiveComment | null {
 
   if (!text) return null;
 
-  const username = String(data.username || data.nickname || data.uniqueId || "Unknown");
+  const username = String(
+    data.username || data.nickname || data.uniqueId || "Unknown",
+  );
 
   return {
     id: String(data.id || data.commentId || createId()),
@@ -25,7 +28,7 @@ export function normalizeComment(input: unknown): LiveComment | null {
     raw_text: data.raw_text || text,
     intent: data.intent || detectIntent(text),
     createdAt: data.createdAt || data.created_at || new Date().toISOString(),
-    created_at: data.created_at || data.createdAt || new Date().toISOString()
+    created_at: data.created_at || data.createdAt || new Date().toISOString(),
   };
 }
 
@@ -47,7 +50,7 @@ export function formatDate(dateString?: string | null) {
     return new Date(dateString).toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
-      year: "2-digit"
+      year: "2-digit",
     });
   } catch {
     return "";

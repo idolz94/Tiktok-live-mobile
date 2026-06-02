@@ -1,4 +1,4 @@
-import { BottomTab } from "@types";
+import { BottomTab } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
 import { Text, TouchableOpacity, View } from "react-native";
 

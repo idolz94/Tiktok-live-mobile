@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { persist, StateStorage, createJSONStorage } from "zustand/middleware";
 import { zustandStorage } from "@utils/storage";
 import { Account, AuthStoreState } from "./auth-types";
-import { loginApi, registerApi } from "@/features/auth/services/api";
+import { loginApi, registerApi } from "@modules/auth/services/api";
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: "admin", username: "admin", password: "123456" },

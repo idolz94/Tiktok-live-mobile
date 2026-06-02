@@ -1,5 +1,5 @@
-import { LoginForm, RegisterForm } from "@screens/auth/type";
-import { AuthUser } from "@types";
+import { LoginForm, RegisterForm } from "@app-types/auth";
+import { AuthUser } from "@app-types/index";
 
 export type Account = {
   id: string;
