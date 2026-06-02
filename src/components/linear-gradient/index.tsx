@@ -3,7 +3,7 @@ import { memo, useMemo } from "react";
 import isEqual from "react-fast-compare";
 import Animated from "react-native-reanimated";
 import { GradientProps } from "./type";
-import { linearGradients } from "@/themes/colors";
+import { linearGradients } from "@themes/colors";
 
 export const LinearGradient = memo(
   ({ style, type, children, start, end }: GradientProps) => {

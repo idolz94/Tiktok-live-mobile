@@ -4,7 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { getSseBaseUrl } from "@utils/http/base-url";
-import { SUPABASE_ANON_KEY, SUPABASE_URL_ENDPOINT } from "@/constants/config";
+import { SUPABASE_ANON_KEY, SUPABASE_URL_ENDPOINT } from "@constants/config";
 
 // ────────────────────────────────────────────────
 // Axios instance for SSE
@@ -38,19 +38,27 @@ httpClient.interceptors.request.use(
 // Response interceptor
 // ────────────────────────────────────────────────
 httpClient.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error: AxiosError) => {
+  (response) => response,
+  (error) => {
+    const message = error?.message ?? "";
+
+    if (
+      message === "React Native Runtime is shutting down" ||
+      message.includes("Runtime is shutting down")
+    ) {
+      return Promise.reject(error);
+    }
+
     const status = error.response?.status;
 
     if (status === 401) {
-      // TODO: handle unauthorised – e.g. clear session, navigate to login
       console.warn("[HTTP] 401 Unauthorized");
     } else if (status === 403) {
       console.warn("[HTTP] 403 Forbidden");
     } else if (status === 500) {
       console.error("[HTTP] 500 Internal Server Error");
     } else if (!error.response) {
-      console.error("[HTTP] Network error or timeout:", error.message);
+      console.error("[HTTP] Network error or timeout:", message);
     }
 
     return Promise.reject(error);

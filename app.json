@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "router": { "root": "src" },
+    "scheme": "lumilive",
+    "experiments": {
+      "typedRoutes": true
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.idolz94.tiktoklivetools"
@@ -20,7 +25,9 @@
       "expo-font",
       "expo-secure-store",
       "expo-image",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-router",
+      "expo-status-bar"
     ]
   }
 }

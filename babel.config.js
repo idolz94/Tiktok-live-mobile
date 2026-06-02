@@ -4,23 +4,25 @@ module.exports = function (api) {
   return {
     presets: ["babel-preset-expo"],
     plugins: [
+      "expo-router/babel",
       [
         "module-resolver",
         {
           root: ["./"],
           alias: {
-            "@": "./src",
+            "@contexts": "./src/contexts",
             "@declare": "./declare",
             "@screens": "./src/screens",
             "@stores": "./src/stores",
             "@hooks": "./src/hooks",
             "@components": "./src/components",
             "@utils": "./src/utils",
-            "@types": "./src/types",
+            "@app-types": "./src/types",
             "@themes": "./src/themes",
-            "@features": "./src/features",
+            "@modules": "./src/modules",
             "@constants": "./src/constants",
             "@assets": "./src/assets",
+            "@app": "./src/app",
           },
         },
       ],
