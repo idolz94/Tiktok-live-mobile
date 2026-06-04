@@ -11,15 +11,15 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "@modules/auth/hooks/use-auth";
-import { useLiveSocket } from "@contexts/live-socket-context";
+import { useTikTokLiveSocket } from "@modules/tiktok-live/hooks/use-tiktok-live-socket";
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
   const { tiktokUsername, isConnected, status, changeTikTokUsername } =
-    useLiveSocket();
+    useTikTokLiveSocket();
 
   const username = user?.fullName || user?.username;
-  const currentTiktokUsername = user?.tiktokId || tiktokUsername;
+  const currentTiktokUsername = tiktokUsername;
 
   const [inputUsername, setInputUsername] = useState(currentTiktokUsername);
 

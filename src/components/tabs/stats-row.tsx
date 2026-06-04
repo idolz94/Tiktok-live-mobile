@@ -1,5 +1,6 @@
 import { createStyles } from "@utils/createStyles";
-import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { Text, TouchableOpacity, View } from "react-native";
 
 export const StatsRow = ({
   commentsCount,
@@ -16,13 +17,21 @@ export const StatsRow = ({
     { label: "Đơn", value: ordersCount },
   ];
 
+  const testOpenFormSheet = () => {
+    router.push("/(sheets)/test");
+  };
+
   return (
     <View style={styles.row}>
       {items.map((item) => (
-        <View key={item.label} style={styles.card}>
+        <TouchableOpacity
+          onPress={testOpenFormSheet}
+          key={item.label}
+          style={styles.card}
+        >
           <Text style={styles.value}>{item.value}</Text>
           <Text style={styles.label}>{item.label}</Text>
-        </View>
+        </TouchableOpacity>
       ))}
     </View>
   );

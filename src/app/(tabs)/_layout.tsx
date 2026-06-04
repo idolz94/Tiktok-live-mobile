@@ -2,29 +2,26 @@ import { Tabs } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  LiveSocketProvider,
-  useLiveSocket,
-} from "@contexts/live-socket-context";
-import { useOrderStore } from "@stores/order/order-store";
+
 import { useAuth } from "@modules/auth/hooks/use-auth";
 import { SessionHeader } from "../../components/tabs/session-header";
+import { useTikTokLiveSocket } from "@modules/tiktok-live/hooks/use-tiktok-live-socket";
 
-function TabLayoutInner() {
+export default function TabLayout() {
   const { user } = useAuth();
-  const liveSocket = useLiveSocket();
-  const loadOrders = useOrderStore((s) => s.loadOrders);
+  const liveSocket = useTikTokLiveSocket();
+  // const loadOrders = useOrderStore((s) => s.loadOrders);
 
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+  // useEffect(() => {
+  //   loadOrders();
+  // }, [loadOrders]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f4f7f8" }}>
       <SessionHeader
         isConnected={liveSocket.isConnected}
         status={liveSocket.status}
-        tiktokUsername={user?.tiktokId || liveSocket.tiktokUsername}
+        tiktokUsername={liveSocket.tiktokUsername}
         currentLiveSession={liveSocket.currentLiveSession}
         liveDurationSeconds={liveSocket.liveDurationSeconds}
         liveNowText={liveSocket.liveNowText}
@@ -87,13 +84,5 @@ function TabLayoutInner() {
         />
       </Tabs>
     </SafeAreaView>
-  );
-}
-
-export default function TabLayout() {
-  return (
-    <LiveSocketProvider>
-      <TabLayoutInner />
-    </LiveSocketProvider>
   );
 }

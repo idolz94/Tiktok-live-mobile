@@ -16,7 +16,6 @@ export const OrderFilterBar = ({
   activeFilter,
   onChangeFilter,
   productCount,
-  unpaidCount,
   paidCount,
   draftCount,
   confirmedCount,
@@ -26,17 +25,14 @@ export const OrderFilterBar = ({
   activeFilter: OrderFilter;
   onChangeFilter: (filter: OrderFilter) => void;
   productCount: number;
-  unpaidCount: number;
   paidCount: number;
   draftCount: number;
   confirmedCount: number;
 }) => {
   const filters: FilterItem[] = [
-    { key: "all", label: "Tất cả", count: productCount },
-    { key: "unpaid", label: "Chưa cọc", count: unpaidCount },
-    { key: "paid", label: "Đã cọc", count: paidCount },
-    { key: "draft", label: "Nháp", count: draftCount },
-    { key: "confirmed", label: "Đã chốt", count: confirmedCount },
+    { key: "paid", label: "Đã Cọc", count: paidCount },
+    { key: "draft", label: "Đơn Nháp", count: draftCount },
+    { key: "confirmed", label: "Đã Chốt", count: confirmedCount },
   ];
 
   return (
