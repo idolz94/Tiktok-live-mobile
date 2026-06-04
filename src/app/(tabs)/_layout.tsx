@@ -1,20 +1,14 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect } from "react";
-import { Ionicons } from "@expo/vector-icons";
-
-import { useAuth } from "@modules/auth/hooks/use-auth";
+import {
+  TikTokLiveSocketProvider,
+  useTikTokLiveSocketContext,
+} from "@contexts/tiktok-live-socket";
 import { SessionHeader } from "../../components/tabs/session-header";
-import { useTikTokLiveSocket } from "@modules/tiktok-live/hooks/use-tiktok-live-socket";
 
-export default function TabLayout() {
-  const { user } = useAuth();
-  const liveSocket = useTikTokLiveSocket();
-  // const loadOrders = useOrderStore((s) => s.loadOrders);
-
-  // useEffect(() => {
-  //   loadOrders();
-  // }, [loadOrders]);
+function TabContent() {
+  const liveSocket = useTikTokLiveSocketContext();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f4f7f8" }}>
@@ -84,5 +78,13 @@ export default function TabLayout() {
         />
       </Tabs>
     </SafeAreaView>
+  );
+}
+
+export default function TabLayout() {
+  return (
+    <TikTokLiveSocketProvider>
+      <TabContent />
+    </TikTokLiveSocketProvider>
   );
 }

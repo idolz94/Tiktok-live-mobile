@@ -1,4 +1,6 @@
 import { DEFAULT_WS_URL } from "@constants/config";
+import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
+import { useAuth } from "@modules/auth/hooks/use-auth";
 import { normalizeTikTokUsername } from "@utils/comment";
 import { createStyles } from "@utils/createStyles";
 import { useState } from "react";
@@ -10,13 +12,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth } from "@modules/auth/hooks/use-auth";
-import { useTikTokLiveSocket } from "@modules/tiktok-live/hooks/use-tiktok-live-socket";
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
   const { tiktokUsername, isConnected, status, changeTikTokUsername } =
-    useTikTokLiveSocket();
+    useTikTokLiveSocketContext();
 
   const username = user?.fullName || user?.username;
   const currentTiktokUsername = tiktokUsername;

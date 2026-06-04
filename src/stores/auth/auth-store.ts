@@ -106,7 +106,10 @@ export const useAuthStore = create<AuthStoreState>()(
               username: response.user?.user_metadata?.full_name || phone,
               phone: response.user?.user_metadata?.phone,
               fullName: response.user?.user_metadata?.full_name,
-              tiktokId: response.user?.user_metadata?.tiktok_id,
+              tiktokUsername:
+                response.user?.user_metadata?.tiktok_id ||
+                response.user?.user_metadata?.tiktok_username ||
+                "",
               shopName: response.user?.user_metadata?.shop_name,
               email: response.user?.email,
             },
