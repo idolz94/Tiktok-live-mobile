@@ -37,20 +37,20 @@ function getPayloadUsername(payload: Record<string, any>) {
 }
 
 export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
+  // Lấy thông tin user & token trực tiếp từ Auth Store
+  const authUser = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const loggedInTiktokUsername = authUser?.tiktokUsername || "";
   const eventSourceRef = useRef<EventSource | null>(null);
   const clientIdRef = useRef(createClientId());
   const isManualCloseRef = useRef(false);
-  const tiktokUsernameRef = useRef(
-    normalizeTikTokUsername(options.initialUsername || TIKTOK_USERNAME),
-  );
-
+  // Mặc định ban đầu dùng username của user đăng nhập
+  const initialUsername =
+    options.initialUsername || loggedInTiktokUsername || TIKTOK_USERNAME;
+  const tiktokUsernameRef = useRef(normalizeTikTokUsername(initialUsername));
   const [status, setStatus] = useState("Đang kết nối Backend SSE...");
   const [isConnected, setIsConnected] = useState(false);
-  const [tiktokUsername, setTiktokUsername] = useState(
-    options.initialUsername || TIKTOK_USERNAME,
-  );
-
-  const accessToken = useAuthStore((state) => state.accessToken);
+  const [tiktokUsername, setTiktokUsername] = useState(initialUsername);
 
   const {
     comments,
@@ -291,6 +291,16 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
     });
   }, [handleEventSourceMessage]);
+
+  // Tự động cập nhật username mặc định khi thông tin user thay đổi
+  useEffect(() => {
+    if (loggedInTiktokUsername) {
+      tiktokUsernameRef.current = normalizeTikTokUsername(
+        loggedInTiktokUsername,
+      );
+      setTiktokUsername(loggedInTiktokUsername);
+    }
+  }, [loggedInTiktokUsername]);
 
   const subscribeTikTokUsername = useCallback(
     async (username: string) => {
