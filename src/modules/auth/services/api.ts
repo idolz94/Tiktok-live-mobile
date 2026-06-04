@@ -1,6 +1,6 @@
-import { supabaseClient } from "@utils/http/axios";
+import { LoginForm, RegisterForm } from "@app-types/auth";
+import { apiClient } from "@utils/http/axios";
 import { phoneToAuthEmail } from "@utils/string";
-import { LoginForm, RegisterForm } from "@app/(auth)/_type";
 
 export const registerApi = async ({
   phone,
@@ -8,33 +8,30 @@ export const registerApi = async ({
   tiktokId,
   fullName,
 }: RegisterForm) => {
-  const response = await supabaseClient.post("/auth/v1/signup", {
+  const response = await apiClient.post("/auth/register", {
+    defaultTikTokUsername: tiktokId,
     email: phoneToAuthEmail(phone),
-    password: password,
-    data: {
-      full_name: fullName,
-      phone: phone,
-      tiktok_id: tiktokId.startsWith("@") ? tiktokId : `@${tiktokId}`,
-      default_tiktok_username: tiktokId,
-      shop_name: `${fullName}'s Shop`,
-      login_type: "phone_password",
-    },
+    fullName,
+    loginType: "phone_password",
+    password,
+    phone,
+    shopName: `${fullName}'s Shop`,
+    tiktokId: tiktokId.startsWith("@") ? tiktokId : `@${tiktokId}`,
   });
   return response.data;
 };
 
 export const loginApi = async ({ phone, password }: LoginForm) => {
-  const response = await supabaseClient.post(
-    "/auth/v1/token?grant_type=password",
-    {
-      email: phoneToAuthEmail(phone),
-      password: password,
-    },
-  );
+  const response = await apiClient.post("/auth/login", {
+    email: phoneToAuthEmail(phone),
+    loginType: "phone_password",
+    password,
+    phone,
+  });
   return response.data;
 };
 
 export const logoutApi = async () => {
-  const response = await supabaseClient.post("/auth/v1/logout");
+  const response = await apiClient.post("/auth/logout");
   return response.data;
 };

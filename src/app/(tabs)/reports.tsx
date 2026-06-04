@@ -1,18 +1,18 @@
 import { createStyles } from "@utils/createStyles";
 import { formatMoneyFromK } from "@utils/order";
 import { ScrollView, Text, View } from "react-native";
-import { useOrderStats } from "@stores/order/order-store";
-import { useLiveSocket } from "@contexts/live-socket-context";
 
-export default function ReportsTab() {
-  const stats = useOrderStats();
-  const { comments } = useLiveSocket();
-
-  const commentsCount = comments.length;
-  const buyingCount = comments.filter((c) => c.intent === "buying").length;
-  const ordersCount = stats.draftOrders + stats.confirmedOrders;
-  const totalRevenue = stats.totalRevenue;
-
+export default function ReportsTab({
+  commentsCount,
+  buyingCount,
+  ordersCount,
+  totalRevenue,
+}: {
+  commentsCount: number;
+  buyingCount: number;
+  ordersCount: number;
+  totalRevenue: number;
+}) {
   const items = [
     { label: "Comment", value: commentsCount },
     { label: "Có thể chốt", value: buyingCount },

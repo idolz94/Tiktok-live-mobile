@@ -1,11 +1,17 @@
+import { CustomerSummary } from "@app-types/index";
 import { Avatar } from "@components/avatar";
-import { useCustomers } from "@stores/order/order-store";
 import { createStyles } from "@utils/createStyles";
 import { ScrollView, Text, View } from "react-native";
 
-export default function CustomersTab() {
-  const customers = useCustomers();
+type CustomerWithTikTok = CustomerSummary & {
+  customerTikTokUsername?: string;
+};
 
+export default function CustomersTab({
+  customers,
+}: {
+  customers: CustomerWithTikTok[];
+}) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Khách hàng</Text>

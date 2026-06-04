@@ -25,6 +25,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="order-detail" />
+          <Stack.Screen name="(sheets)" />
         </Stack>
         {user ? <Redirect href="/(tabs)" /> : <Redirect href="/(auth)" />}
       </KeyboardProvider>

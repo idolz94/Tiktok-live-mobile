@@ -3,8 +3,8 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { getSseBaseUrl } from "@utils/http/base-url";
-import { SUPABASE_ANON_KEY, SUPABASE_URL_ENDPOINT } from "@constants/config";
+import { API_ANON_KEY, API_URL_ENDPOINT } from "@constants/config";
+import { getSseBaseUrl } from "@modules/tiktok-live/service/sse-api";
 
 // ────────────────────────────────────────────────
 // Axios instance for SSE
@@ -69,13 +69,13 @@ httpClient.interceptors.response.use(
 // Axios instance for Supabase
 // ────────────────────────────────────────────────
 
-export const supabaseClient = axios.create({
-  baseURL: SUPABASE_URL_ENDPOINT,
+export const apiClient = axios.create({
+  baseURL: API_URL_ENDPOINT,
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    apikey: API_ANON_KEY,
+    Authorization: `Bearer ${API_ANON_KEY}`,
   },
 });
 
@@ -84,7 +84,7 @@ export const supabaseClient = axios.create({
 // ────────────────────────────────────────────────
 
 // Request Interceptor: Tự động đính kèm Token nếu user đã đăng nhập
-supabaseClient.interceptors.request.use(
+apiClient.interceptors.request.use(
   async (config) => {
     // Giả sử bạn lưu token trong auth store hoặc AsyncStorage/MMKV
     // const token = await getAccessToken();
@@ -93,7 +93,7 @@ supabaseClient.interceptors.request.use(
     // } else {
     //   config.headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
     // }
-    config.headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
+    config.headers.Authorization = `Bearer ${API_ANON_KEY}`;
     return config;
   },
   (error) => Promise.reject(error),

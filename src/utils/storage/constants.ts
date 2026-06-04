@@ -5,4 +5,6 @@ export const STORAGE_KEYS = {
 
   ORDERS: "orders",
   LIVE_HISTORY: "live_history",
+  AUTH_STORAGE: "tiktok-live-auth-storage",
+  CLIENT_ID: "tiktok_live_client_id",
 } as const;

@@ -1,49 +1,86 @@
-import { useState } from "react";
-import { View } from "react-native";
 import { router } from "expo-router";
-import { useLiveSocket } from "@contexts/live-socket-context";
-import {
-  useOrderStore,
-  useFilteredOrders,
-  useOrderStats,
-} from "@stores/order/order-store";
-import { TopSegmentTabs } from "../../components/tabs/top-segment-tabs";
+import { useRef, useState } from "react";
+import { View } from "react-native";
+import { LiveComment } from "@app-types/index";
+import { useOrderManager } from "@modules/orders/hooks/use-order-manager";
+import { useTikTokLiveSocket } from "@modules/tiktok-live/hooks/use-tiktok-live-socket";
+import { useAuthStore } from "@stores/auth";
+import { createOrderCommentKey } from "@utils/comment";
 import { Home } from "../../components/tabs/home";
+import { TopSegmentTabs } from "../../components/tabs/top-segment-tabs";
 
 export type TopTab = "connect" | "history";
 
 export default function HomeTab() {
   const [topTab, setTopTab] = useState<TopTab>("connect");
-  const live = useLiveSocket();
-  const store = useOrderStore();
-  const filteredOrders = useFilteredOrders();
-  const stats = useOrderStats();
+  const createdCommentKeysRef = useRef<Set<string>>(new Set());
+  const user = useAuthStore((state) => state.user);
+  const registeredTikTokUsername = user?.tiktokUsername || "";
+
+  const { comments, clearComments, currentLiveSessionId, liveHistory } =
+    useTikTokLiveSocket({
+      initialUsername: registeredTikTokUsername,
+    });
+
+  const orderManager = useOrderManager({
+    comments,
+    liveSessionId: currentLiveSessionId,
+    onAfterCreateOrder: () => router.back(),
+  });
+
+  const handleCreateOrder = async (comment: LiveComment) => {
+    const commentKey = createOrderCommentKey(comment);
+
+    if (createdCommentKeysRef.current.has(commentKey)) {
+      alert("Comment này đã tạo đơn rồi.");
+      return false;
+    }
+
+    try {
+      createdCommentKeysRef.current.add(commentKey);
+
+      await orderManager.createOrderFromComment(comment);
+
+      return true;
+    } catch (error) {
+      createdCommentKeysRef.current.delete(commentKey);
+
+      console.log("CREATE ORDER ERROR:", error);
+      alert(error instanceof Error ? error.message : "Tạo đơn thất bại");
+
+      return false;
+    }
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <TopSegmentTabs activeTab={topTab} onChange={setTopTab} />
       <Home
         topTab={topTab}
-        liveTab={store.liveTab}
-        comments={live.comments}
-        orders={store.orders}
-        filteredOrders={filteredOrders}
-        orderFilter={store.orderFilter}
-        orderSearchText={store.orderSearchText}
-        liveHistory={live.liveHistory}
-        buyingCount={live.comments.filter((c) => c.intent === "buying").length}
-        {...stats}
-        onChangeLiveTab={store.setLiveTab}
-        onChangeOrderFilter={store.setOrderFilter}
-        onChangeOrderSearchText={store.setOrderSearchText}
-        onClearComments={live.clearComments}
-        onClearOrders={store.clearOrders}
-        onCreateOrderFromComment={(c) => store.createOrderFromComment(c)}
-        onUpdateOrder={store.updateOrder}
-        onDeleteOrder={store.deleteOrder}
-        onAddProductToOrder={store.addProductToOrder}
-        onToggleDeposit={store.toggleDepositStatus}
-        onConfirmOrder={store.confirmOrder}
+        liveTab={orderManager.liveTab}
+        comments={comments}
+        orders={orderManager.orders}
+        filteredOrders={orderManager.filteredOrders}
+        orderFilter={orderManager.orderFilter}
+        orderSearchText={orderManager.orderSearchText}
+        buyingCount={orderManager.buyingCount}
+        paidOrders={orderManager.paidOrders}
+        draftOrders={orderManager.draftOrders}
+        confirmedOrders={orderManager.confirmedOrders}
+        orderProductCount={orderManager.orderProductCount}
+        onChangeLiveTab={orderManager.setLiveTab}
+        onChangeOrderFilter={orderManager.setOrderFilter}
+        onChangeOrderSearchText={orderManager.setOrderSearchText}
+        onClearComments={clearComments}
+        onClearOrders={orderManager.clearOrders}
+        // onCreateOrderFromComment={orderManager.createOrderFromComment}
+        onCreateOrderFromComment={handleCreateOrder}
+        onUpdateOrder={orderManager.updateOrder}
+        onDeleteOrder={orderManager.deleteOrder}
+        onAddProductToOrder={orderManager.addProductToOrder}
+        onToggleDeposit={orderManager.toggleDepositStatus}
+        onConfirmOrder={orderManager.confirmOrder}
+        liveHistory={liveHistory}
         onOpenOrderOverview={(id) => router.push(`/order-detail?id=${id}`)}
       />
     </View>

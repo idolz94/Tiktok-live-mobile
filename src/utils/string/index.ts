@@ -333,3 +333,28 @@ export function phoneToAuthEmail(phone: string) {
 
   return `phone.${safeHash}@phone-auth.lumi.app`;
 }
+
+export function toStringArray(value: unknown): string[] {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item)).filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+export function toNumber(value: unknown, fallback = 0) {
+  const nextValue = Number(value);
+
+  if (Number.isNaN(nextValue)) return fallback;
+
+  return nextValue;
+}

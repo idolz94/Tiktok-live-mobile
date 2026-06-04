@@ -25,7 +25,6 @@ export const Home = ({
   orderFilter,
   orderSearchText,
   buyingCount,
-  unpaidOrders,
   paidOrders,
   draftOrders,
   confirmedOrders,
@@ -52,7 +51,6 @@ export const Home = ({
   orderFilter: OrderFilter;
   orderSearchText: string;
   buyingCount: number;
-  unpaidOrders: number;
   paidOrders: number;
   draftOrders: number;
   confirmedOrders: number;
@@ -146,7 +144,6 @@ export const Home = ({
             activeFilter={orderFilter}
             onChangeFilter={onChangeOrderFilter}
             productCount={orderProductCount}
-            unpaidCount={unpaidOrders}
             paidCount={paidOrders}
             draftCount={draftOrders}
             confirmedCount={confirmedOrders}
