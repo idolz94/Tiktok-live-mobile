@@ -1,10 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
   TikTokLiveSocketProvider,
   useTikTokLiveSocketContext,
 } from "@contexts/tiktok-live-socket";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@modules/auth/hooks/use-auth";
+import { Redirect, Tabs } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { SessionHeader } from "../../components/tabs/session-header";
 
 function TabContent() {
@@ -82,6 +83,12 @@ function TabContent() {
 }
 
 export default function TabLayout() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Redirect href="/(auth)" />;
+  }
+
   return (
     <TikTokLiveSocketProvider>
       <TabContent />
