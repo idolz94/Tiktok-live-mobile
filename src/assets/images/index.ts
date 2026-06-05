@@ -1,4 +1,5 @@
 export const images = {
+  logo_app: require("./sources/logo-app.png"),
   logo_banner: require("./sources/login-banner.png"),
   logo_facebook: require("./sources/login-facebook.png"),
   logo_tiktok: require("./sources/login-tiktok.png"),
