@@ -18,11 +18,11 @@ import {
 
 export default function AuthScreen() {
   const params = useLocalSearchParams<{ mode?: Mode }>();
-  const progress = useSharedValue(0);
+  const initialMode = params.mode === "register" ? "register" : "login";
 
-  const [mode, setMode] = useState<Mode>(
-    params.mode === "register" ? params.mode : "login",
-  );
+  const progress = useSharedValue(initialMode === "register" ? 1 : 0);
+
+  const [mode, setMode] = useState<Mode>(initialMode);
 
   const isLogin = mode === "login";
 
@@ -36,7 +36,6 @@ export default function AuthScreen() {
 
   const switchToRegister = () => {
     setMode("register");
-    console.log("first");
 
     progress.value = withTiming(1, {
       duration: 300,
@@ -62,13 +61,7 @@ export default function AuthScreen() {
               {isLogin ? "Đăng nhập" : "Đăng ký"}
             </Text>
             {!isLogin && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+              <View style={styles.titleContent}>
                 <Text style={styles.registerText}>Bạn đã có tài khoản?</Text>
                 <Pressable onPress={switchToLogin}>
                   <Text style={styles.loginTextNav}>{` Đăng nhập ngay!`}</Text>
@@ -133,5 +126,10 @@ const styles = createStyles(({ colors, shadows, textPresets }) => ({
   },
   loginTextNav: {
     color: colors.primary,
+  },
+  titleContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 }));
