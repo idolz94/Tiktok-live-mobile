@@ -1,5 +1,6 @@
 import { LoginForm, LoginSchema } from "@app-types/auth";
 import { images } from "@assets/images";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Image } from "@components/image";
 import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
@@ -20,6 +21,7 @@ import {
 } from "react-native";
 import Animated from "react-native-reanimated";
 import { AnimatedStyleHandle } from "react-native-reanimated/lib/typescript/hook/commonTypes";
+import { ForgotPass } from "./forgot-pass";
 
 const socialLogins = [
   {
@@ -50,6 +52,7 @@ type Props = {
 export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
   const { login } = useAuthStore();
   const { colors } = useThemes();
+  const { show, hide, isVisible } = useBottomSheet();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,6 +70,13 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
   const handleSocialLogin = (
     type: "phone" | "facebook" | "tiktok" | "zalo",
   ) => {};
+
+  const forgotPass = () =>
+    show({
+      snapPoints: [{ height: 264 }],
+      content: <ForgotPass />,
+      showDragIndicator: false,
+    });
 
   const submit = useCallback(() => {
     formMethod.handleSubmit(async ({ phone, password, remember }) => {
@@ -115,7 +125,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
             }}
           >
             <Text style={styles.label}>Mật khẩu</Text>
-            <Pressable onPress={() => {}}>
+            <Pressable onPress={forgotPass}>
               <Text style={styles.forgotPass}>Quên mật khẩu?</Text>
             </Pressable>
           </View>
