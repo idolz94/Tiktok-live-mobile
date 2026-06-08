@@ -43,7 +43,7 @@ export const BottomSheetProvider = ({ children }: Props) => {
         onClose={hide}
         snapPoints={options?.snapPoints}
         showDragIndicator={options?.showDragIndicator}
-        testID={options?.testID}
+        backgroundStyle={options?.backgroundStyle}
       >
         {options?.content}
       </AppBottomSheet>

@@ -52,7 +52,7 @@ type Props = {
 export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
   const { login } = useAuthStore();
   const { colors } = useThemes();
-  const { show, hide, isVisible } = useBottomSheet();
+  const { show, hide } = useBottomSheet();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -73,8 +73,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
 
   const forgotPass = () =>
     show({
-      snapPoints: [{ height: 264 }],
-      content: <ForgotPass />,
+      content: <ForgotPass onClose={hide} />,
       showDragIndicator: false,
     });
 

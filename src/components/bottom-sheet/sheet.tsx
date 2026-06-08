@@ -1,5 +1,7 @@
-import { BottomSheet, SnapPoint } from "@expo/ui";
+import { BottomSheet } from "@expo/ui/community/bottom-sheet";
+import { useThemes } from "@hooks/use-theme";
 import { memo, ReactNode } from "react";
+import { StyleProp, ViewStyle } from "react-native";
 
 type Props = {
   open: boolean;
@@ -8,11 +10,11 @@ type Props = {
 
   children: ReactNode;
 
-  snapPoints?: SnapPoint[];
+  snapPoints?: (string | number)[];
 
   showDragIndicator?: boolean;
 
-  testID?: string;
+  backgroundStyle?: StyleProp<ViewStyle>;
 };
 
 export const AppBottomSheet = memo(
@@ -22,15 +24,20 @@ export const AppBottomSheet = memo(
     children,
     snapPoints,
     showDragIndicator = true,
-    testID,
+    backgroundStyle,
   }: Props) => {
+    const { colors } = useThemes();
+
     return (
       <BottomSheet
-        isPresented={open}
-        onDismiss={onClose}
+        index={open ? 0 : -1}
+        onClose={onClose}
         snapPoints={snapPoints}
-        showDragIndicator={showDragIndicator}
-        testID={testID}
+        handleComponent={showDragIndicator ? undefined : null}
+        backgroundStyle={backgroundStyle || { backgroundColor: colors.white }}
+        enablePanDownToClose
+        enableDynamicSizing
+        style={{ zIndex: 99 }}
       >
         {children}
       </BottomSheet>

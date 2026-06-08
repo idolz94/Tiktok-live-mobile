@@ -3,11 +3,13 @@ import React from "react";
 import { createStyles } from "@utils/createStyles";
 import { LinearGradient } from "@components/linear-gradient";
 import { useThemes } from "@hooks/use-theme";
-import { useBottomSheet } from "@components/bottom-sheet/hook";
 
-export const ForgotPass = () => {
+type Props = {
+  onClose: () => void;
+};
+
+export const ForgotPass = ({ onClose }: Props) => {
   const { colors } = useThemes();
-  const { hide } = useBottomSheet();
 
   return (
     <View style={styles.container}>
@@ -25,7 +27,7 @@ export const ForgotPass = () => {
         </Pressable>
         <Pressable
           style={[styles.btn, { borderWidth: 1, borderColor: colors.border10 }]}
-          onPress={hide}
+          onPress={onClose}
         >
           <Text style={styles.textBtn}>Bỏ qua</Text>
         </Pressable>

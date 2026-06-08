@@ -1,8 +1,8 @@
 diff --git a/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx b/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx
-index bcf5e6e..d8d8862 100644
+index bcf5e6e..4b75fac 100644
 --- a/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx
 +++ b/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx
-@@ -60,7 +60,7 @@ export function BottomSheet({
+@@ -60,12 +60,12 @@ export function BottomSheet({
      return null;
    }
  
@@ -11,8 +11,14 @@ index bcf5e6e..d8d8862 100644
    if (shouldFillMaxHeight(snapPoints)) contentModifiers.push(fillMaxHeight());
    if (testID) contentModifiers.push(testIDModifier(testID));
  
+   return (
+-    <Host style={{ position: 'absolute' }} pointerEvents="none">
++    <Host style={{ position: 'absolute' }} pointerEvents="box-none">
+       <ModalBottomSheet
+         ref={sheetRef}
+         onDismissRequest={onDismiss}
 diff --git a/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx b/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx
-index e237c14..05c1412 100644
+index e237c14..b9c3b9e 100644
 --- a/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx
 +++ b/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx
 @@ -4,6 +4,7 @@ import {
@@ -36,6 +42,15 @@ index e237c14..05c1412 100644
    ];
    if (snapPoints && snapPoints.length > 0) {
      presentationModifiers.push(presentationDetents(snapPoints.map(snapPointToDetent)));
+@@ -38,7 +40,7 @@ export function BottomSheet({
+   }
+ 
+   return (
+-    <Host style={{ position: 'absolute' }} pointerEvents="none">
++    <Host style={{ position: 'absolute' }} pointerEvents="box-none">
+       <SwiftUIBottomSheet
+         isPresented={isPresented}
+         onIsPresentedChange={(presented) => {
 diff --git a/node_modules/@expo/ui/src/universal/BottomSheet/index.tsx b/node_modules/@expo/ui/src/universal/BottomSheet/index.tsx
 index 414fbb8..5a59206 100644
 --- a/node_modules/@expo/ui/src/universal/BottomSheet/index.tsx
