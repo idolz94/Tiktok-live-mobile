@@ -17,12 +17,27 @@ export const FontStyle = {
     fontSize: 40,
     fontWeight: "600",
   },
+  fs20_600: {
+    fontSize: 20,
+    fontWeight: "600",
+  },
   fs18_500: {
     fontSize: 18,
     fontWeight: "500",
   },
   fs16_500: {
     fontSize: 16,
+    fontWeight: "500",
+  },
+  fs14_500: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  fs14_400: {
+    fontSize: 14,
+  },
+  fs12_500: {
+    fontSize: 12,
     fontWeight: "500",
   },
 
@@ -118,9 +133,7 @@ export const FontStyle = {
     fontSize: 14,
     fontWeight: "800",
   },
-  fs14_400: {
-    fontSize: 14,
-  },
+
   fs12_800: {
     fontSize: 12,
     fontWeight: "800",

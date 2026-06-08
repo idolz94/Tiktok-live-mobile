@@ -15,6 +15,7 @@ export const RegisterSchema = z.object({
   phone: z.string().min(3),
   password: z.string().min(5),
   tiktokId: z.string().min(3),
+  agreePolicy: z.boolean(),
 });
 
 export type RegisterForm = z.infer<typeof RegisterSchema>;
