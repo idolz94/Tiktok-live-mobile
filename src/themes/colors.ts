@@ -1,8 +1,15 @@
 export const colors = {
   neutral900: "#000000",
+  neutral400: "#484848",
+  neutral300: "#787878",
+  neutral100: "#ffffff",
+
+  primary: "#FF6B8A",
+
+  border10: "rgba(0, 0, 0, 0.1)",
+  border20: "rgba(0, 0, 0, 0.2)",
 
   // Brand & Primary
-  primary: "#2563eb", // Xanh dương chủ đạo (Brand Blue)
   primaryLight: "#dbeafe", // Xanh dương nhạt (Avatar background, highlights)
   primaryDark: "#070f66", // Xanh dương đậm (Deep navy, text tiêu đề lớn)
   link: "#3478f6", // Xanh dương liên kết / Highlight text
