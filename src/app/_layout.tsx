@@ -8,6 +8,7 @@ import { StyleSheet, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Splash from "./splash";
+import { BottomSheetProvider } from "@components/bottom-sheet/provider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,27 +46,29 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <KeyboardProvider>
-        <StatusBar style="dark" />
-        <View style={{ flex: 1 }}>
-          {showStack && (
-            <View style={{ flex: 1 }} onLayout={handleRootLayout}>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="order-detail" />
-                <Stack.Screen name="(sheets)" />
-              </Stack>
-            </View>
-          )}
+        <BottomSheetProvider>
+          <StatusBar style="dark" />
+          <View style={{ flex: 1 }}>
+            {showStack && (
+              <View style={{ flex: 1 }} onLayout={handleRootLayout}>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="onboarding" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="order-detail" />
+                  <Stack.Screen name="(sheets)" />
+                </Stack>
+              </View>
+            )}
 
-          {showSplashOverlay && (
-            <View style={StyleSheet.absoluteFill} pointerEvents="none">
-              <Splash />
-            </View>
-          )}
-        </View>
+            {showSplashOverlay && (
+              <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                <Splash />
+              </View>
+            )}
+          </View>
+        </BottomSheetProvider>
       </KeyboardProvider>
     </SafeAreaProvider>
   );

@@ -29,6 +29,9 @@ export const FontStyle = {
     fontSize: 16,
     fontWeight: "500",
   },
+  fs16_400: {
+    fontSize: 16,
+  },
   fs14_500: {
     fontSize: 14,
     fontWeight: "500",

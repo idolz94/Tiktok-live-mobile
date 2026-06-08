@@ -95,7 +95,7 @@ PODS:
     - ExpoModulesCore
   - ExpoSymbols (56.0.5):
     - ExpoModulesCore
-  - ExpoUI (56.0.15):
+  - ExpoUI (56.0.16):
     - ExpoModulesCore
     - ExpoModulesWorklets
     - React-RCTFabric
@@ -2687,7 +2687,7 @@ SPEC CHECKSUMS:
   ExpoSecureStore: 20be7fe1601ed1726afaf04ea1321a2b6ac549fc
   ExpoSplashScreen: 6deba2c0000d89a38dc192ebbee1656a0fbb0b70
   ExpoSymbols: 773655e2ad7b6bd6672b9c177a57f60cbc70eed8
-  ExpoUI: 3c4244759c58c403b9379fdb29ba095d4f6c2b4f
+  ExpoUI: e2f49a47554a3d0976486ef0f6d03860faa6ce69
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d
   hermes-engine: 0c7b5902e998dace6b32186cc477705e393b14a6
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa

@@ -1,0 +1,67 @@
+diff --git a/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx b/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx
+index bcf5e6e..d8d8862 100644
+--- a/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx
++++ b/node_modules/@expo/ui/src/universal/BottomSheet/index.android.tsx
+@@ -60,7 +60,7 @@ export function BottomSheet({
+     return null;
+   }
+ 
+-  const contentModifiers: ModifierConfig[] = [padding(16, showDragIndicator ? 0 : 16, 16, 0)];
++  const contentModifiers: ModifierConfig[] = [padding(0, showDragIndicator ? 0 : 0, 0, 0)];
+   if (shouldFillMaxHeight(snapPoints)) contentModifiers.push(fillMaxHeight());
+   if (testID) contentModifiers.push(testIDModifier(testID));
+ 
+diff --git a/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx b/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx
+index e237c14..05c1412 100644
+--- a/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx
++++ b/node_modules/@expo/ui/src/universal/BottomSheet/index.ios.tsx
+@@ -4,6 +4,7 @@ import {
+   padding,
+   presentationDetents,
+   presentationDragIndicator,
++  ignoreSafeArea,
+   type ModifierConfig,
+   type PresentationDetent,
+ } from '@expo/ui/swift-ui/modifiers';
+@@ -26,9 +27,10 @@ export function BottomSheet({
+   modifiers,
+ }: BottomSheetProps) {
+   const presentationModifiers: ModifierConfig[] = [
+-    frame({ maxWidth: Infinity, alignment: 'topLeading' }),
+-    padding({ top: 16, leading: 16, trailing: 16 }),
++    frame({ maxWidth: Infinity, maxHeight: Infinity, alignment: 'topLeading' }),
++    padding({ top: 0, leading: 0, trailing: 0, bottom: 0 }),
+     presentationDragIndicator(showDragIndicator ? 'visible' : 'hidden'),
++    ignoreSafeArea({ regions: 'all', edges: 'bottom' }),
+   ];
+   if (snapPoints && snapPoints.length > 0) {
+     presentationModifiers.push(presentationDetents(snapPoints.map(snapPointToDetent)));
+diff --git a/node_modules/@expo/ui/src/universal/BottomSheet/index.tsx b/node_modules/@expo/ui/src/universal/BottomSheet/index.tsx
+index 414fbb8..5a59206 100644
+--- a/node_modules/@expo/ui/src/universal/BottomSheet/index.tsx
++++ b/node_modules/@expo/ui/src/universal/BottomSheet/index.tsx
+@@ -98,13 +98,22 @@ const noSnapPointContentStyle: React.CSSProperties = {
+   maxHeight: '85vh',
+ };
+ 
++// const innerStyle: React.CSSProperties = {
++//   padding: 16,
++//   overflow: 'auto',
++// };
+ const innerStyle: React.CSSProperties = {
+-  padding: 16,
++  padding: 0,
+   overflow: 'auto',
++  display: 'flex',
++  flex: 1,
+ };
+ 
++// const dragIndicatorSpacing: React.CSSProperties = {
++//   paddingTop: 16,
++// };
+ const dragIndicatorSpacing: React.CSSProperties = {
+-  paddingTop: 16,
++  paddingTop: 0,
+ };
+ 
+ export * from './types';
