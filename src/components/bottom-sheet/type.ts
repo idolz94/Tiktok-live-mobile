@@ -1,14 +1,14 @@
-import { SnapPoint } from "@expo/ui";
 import { ReactNode } from "react";
+import { StyleProp, ViewStyle } from "react-native";
 
 export type BottomSheetOptions = {
   content: ReactNode;
 
-  snapPoints?: SnapPoint[];
+  snapPoints?: (string | number)[];
 
   showDragIndicator?: boolean;
 
-  testID?: string;
+  backgroundStyle?: StyleProp<ViewStyle>;
 };
 
 export type BottomSheetContextType = {
