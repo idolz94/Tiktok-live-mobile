@@ -13,6 +13,20 @@ import { TextStyle } from "react-native";
 // | Black       | 900     |
 
 export const FontStyle = {
+  fs40_600: {
+    fontSize: 40,
+    fontWeight: "600",
+  },
+  fs18_500: {
+    fontSize: 18,
+    fontWeight: "500",
+  },
+  fs16_500: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  // base
   fs40_400: {
     fontSize: 40,
   },
@@ -88,10 +102,7 @@ export const FontStyle = {
     fontSize: 16,
     fontWeight: "600",
   },
-  fs16_500: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
+
   fs15_900: {
     fontSize: 15,
     fontWeight: "900",

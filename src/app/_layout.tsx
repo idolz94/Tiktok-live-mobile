@@ -51,8 +51,9 @@ export default function RootLayout() {
             <View style={{ flex: 1 }} onLayout={handleRootLayout}>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" />
-                <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="(auth)" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="order-detail" />
                 <Stack.Screen name="(sheets)" />
               </Stack>

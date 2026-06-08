@@ -91,6 +91,8 @@ PODS:
     - RNScreens
   - ExpoSecureStore (56.0.4):
     - ExpoModulesCore
+  - ExpoSplashScreen (56.0.10):
+    - ExpoModulesCore
   - ExpoSymbols (56.0.5):
     - ExpoModulesCore
   - ExpoUI (56.0.15):
@@ -2307,6 +2309,7 @@ DEPENDENCIES:
   - ExpoModulesWorkletsAdapter (from `../node_modules/expo-modules-core`)
   - ExpoRouter (from `../node_modules/expo-router/ios`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
+  - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
   - "ExpoUI (from `../node_modules/@expo/ui/ios`)"
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -2439,6 +2442,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-router/ios"
   ExpoSecureStore:
     :path: "../node_modules/expo-secure-store/ios"
+  ExpoSplashScreen:
+    :path: "../node_modules/expo-splash-screen/ios"
   ExpoSymbols:
     :path: "../node_modules/expo-symbols/ios"
   ExpoUI:
@@ -2632,6 +2637,7 @@ SPEC CHECKSUMS:
   ExpoModulesWorkletsAdapter: 253250ea91e23867ada3fe4778926493daee0caf
   ExpoRouter: c3023f1e6a702674e1f2973fe434058c16aba275
   ExpoSecureStore: 20be7fe1601ed1726afaf04ea1321a2b6ac549fc
+  ExpoSplashScreen: 6deba2c0000d89a38dc192ebbee1656a0fbb0b70
   ExpoSymbols: 773655e2ad7b6bd6672b9c177a57f60cbc70eed8
   ExpoUI: 3c4244759c58c403b9379fdb29ba095d4f6c2b4f
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d

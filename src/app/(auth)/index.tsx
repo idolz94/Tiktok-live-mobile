@@ -1,20 +1,24 @@
+import { Mode } from "@app-types/auth";
 import { images } from "@assets/images";
+import { Footer } from "@components/auth/footer";
+import { Login } from "@components/auth/login";
+import { Register } from "@components/auth/register";
 import { Image } from "@components/image";
 import { Screen } from "@components/screen";
 import { Separator } from "@components/separator";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { BlurView } from "expo-blur";
+import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { Login } from "@components/auth/login";
-import { Register } from "@components/auth/register";
-import { Footer } from "@components/auth/footer";
-import { Mode } from "@app-types/auth";
 
 export default function AuthScreen() {
-  const [mode, setMode] = useState<Mode>("login");
+  const params = useLocalSearchParams<{ mode?: Mode }>();
+  const [mode, setMode] = useState<Mode>(
+    params.mode === "register" ? params.mode : "login",
+  );
 
   const isLogin = mode === "login";
 
