@@ -149,12 +149,14 @@ export const Register = ({ onRegisterSuccess, animatedStyle }: Props) => {
               <View style={[styles.checkbox, value && styles.checkboxActive]}>
                 {value ? <Text style={styles.checkboxText}>✓</Text> : null}
               </View>
-              <Text style={styles.rememberText}>
-                Bấm nút đăng kí bạn đồng ý với{" "}
-                <Text style={styles.highLightText}>điều kiện</Text> và{" "}
-                <Text style={styles.highLightText}>điều khoản</Text> của chúng
-                tôi.
-              </Text>
+              <View style={{ flexShrink: 1 }}>
+                <Text style={styles.rememberText}>
+                  Bấm nút đăng kí bạn đồng ý với{" "}
+                  <Text style={styles.highLightText}>điều kiện</Text> và{" "}
+                  <Text style={styles.highLightText}>điều khoản</Text> của chúng
+                  tôi.
+                </Text>
+              </View>
             </Pressable>
           )}
         />

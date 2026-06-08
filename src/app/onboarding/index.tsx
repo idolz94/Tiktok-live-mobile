@@ -1,3 +1,4 @@
+import { Mode } from "@app-types/auth";
 import { images } from "@assets/images";
 import { Image } from "@components/image";
 import { LinearGradient } from "@components/linear-gradient";
@@ -8,7 +9,7 @@ import { router } from "expo-router";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function Onboarding() {
-  const nextFlow = (mode?: "login" | "register") => {
+  const nextFlow = (mode?: Mode) => {
     saveBoolean(STORAGE_KEYS.ONBOARDING_COMPLETED, true);
 
     const route = {
