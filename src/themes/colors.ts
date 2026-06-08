@@ -1,4 +1,6 @@
 export const colors = {
+  neutral900: "#000000",
+
   // Brand & Primary
   primary: "#2563eb", // Xanh dương chủ đạo (Brand Blue)
   primaryLight: "#dbeafe", // Xanh dương nhạt (Avatar background, highlights)
@@ -64,7 +66,7 @@ export const colors = {
 };
 
 export const linearGradients = {
-  gra_primary: ["#667EEA", "#764BA2"],
+  gra_primary: ["#FF6B8A", "#FFA66D", "#FFC86A"],
   gra_info: ["#4FACFE", "#00F2FE"],
   gra_success: ["#43E97B", "#38F9D7"],
   gra_warning: ["#FA709A", "#FEE140"],

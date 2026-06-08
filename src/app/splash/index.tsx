@@ -44,6 +44,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   logoTitle: {
     color: colors.text,
-    ...textPresets.fs18_700,
+    ...textPresets.fs18_500,
   },
 }));
