@@ -1,5 +1,9 @@
-import { DEFAULT_WS_URL } from "@constants/config";
-import { loadObject, secureStorage, STORAGE_KEYS } from "@utils/storage";
+import {
+  DEFAULT_WS_URL,
+  MOBILE_APP_KEY,
+  WEB_URL_ORIGIN,
+} from "@constants/config";
+import { secureStorage } from "@utils/storage";
 
 export type RequestParams = Record<
   string,
@@ -28,10 +32,6 @@ export class ApiError extends Error {
 export async function getAuthToken() {
   // Đọc accessToken từ secure store
   try {
-    // const parsed = loadObject<{ state?: { accessToken?: string } }>(
-    //   STORAGE_KEYS.AUTH_STORAGE,
-    // );
-    // return parsed?.state?.accessToken || "";
     const token = await secureStorage.getAccessToken();
     return token;
   } catch (error) {
@@ -161,12 +161,15 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return result as T;
 }
 
-function buildHeaders(options?: RequestOptions, hasBody = false) {
+async function buildHeaders(options?: RequestOptions, hasBody = false) {
   const token =
-    options?.token ?? (options?.includeAuth === false ? "" : getAuthToken());
+    options?.token ??
+    (options?.includeAuth === false ? "" : await getAuthToken());
 
   return {
     ...(hasBody ? { "Content-Type": "application/json" } : {}),
+    ...(MOBILE_APP_KEY ? { "x-app-key": MOBILE_APP_KEY } : {}),
+    ...(WEB_URL_ORIGIN ? { Origin: WEB_URL_ORIGIN } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options?.headers,
   };
@@ -179,7 +182,7 @@ export async function getRequest<T>(
 ): Promise<T> {
   const response = await fetch(buildUrl(path, params), {
     method: "GET",
-    headers: buildHeaders(options),
+    headers: await buildHeaders(options),
     cache: "no-store",
     credentials: options?.credentials || "include",
   });
@@ -194,7 +197,7 @@ export async function postRequest<T>(
 ): Promise<T> {
   const response = await fetch(buildUrl(path), {
     method: "POST",
-    headers: buildHeaders(options, true),
+    headers: await buildHeaders(options, true),
     body: JSON.stringify(data || {}),
     credentials: options?.credentials || "include",
   });
@@ -209,7 +212,7 @@ export async function patchRequest<T>(
 ): Promise<T> {
   const response = await fetch(buildUrl(path), {
     method: "PATCH",
-    headers: buildHeaders(options, true),
+    headers: await buildHeaders(options, true),
     body: JSON.stringify(data || {}),
     credentials: options?.credentials || "include",
   });
@@ -224,7 +227,7 @@ export async function deleteRequest<T>(
 ): Promise<T> {
   const response = await fetch(buildUrl(path, params), {
     method: "DELETE",
-    headers: buildHeaders(options),
+    headers: await buildHeaders(options),
     credentials: options?.credentials || "include",
   });
 

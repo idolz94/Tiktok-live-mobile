@@ -245,18 +245,6 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     isManualCloseRef.current = false;
     eventSourceRef.current?.close();
 
-    console.log("[SSE] TOKEN =", accessToken);
-    console.log("[SSE] TYPE =", typeof accessToken);
-    console.log(
-      "[SSE] SEGMENTS =",
-      typeof accessToken === "string"
-        ? accessToken.split(".").length
-        : "not-string",
-    );
-
-    console.log("[SSE] URL =", url);
-    console.log("[SSE] Authorization =", `Bearer ${accessToken}`);
-
     const eventSource = new EventSource(url, {
       headers: {
         Accept: "text/event-stream",

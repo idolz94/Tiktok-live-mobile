@@ -16,69 +16,71 @@ function TabContent() {
   const liveSocket = useTikTokLiveSocketContext();
 
   return (
-    // <SessionHeader
-    //   isConnected={liveSocket.isConnected}
-    //   status={liveSocket.status}
-    //   tiktokUsername={liveSocket.tiktokUsername}
-    //   currentLiveSession={liveSocket.currentLiveSession}
-    //   liveDurationSeconds={liveSocket.liveDurationSeconds}
-    //   liveNowText={liveSocket.liveNowText}
-    // />
-    <Tabs
-      // screenListeners={{
-      //   state: (e) => {
-      //     console.log(
-      //       "TAB ROUTES",
-      //       e.data.state.routes.map((r) => r.name),
-      //     );
-      //   },
-      // }}
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: styles.tabBarStyle,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={tabOptions({
-          title: "Home",
-          icon: "house",
-          tabBarActiveTintColor: colors.primary,
-        })}
+    <>
+      <SessionHeader
+        isConnected={liveSocket.isConnected}
+        status={liveSocket.status}
+        tiktokUsername={liveSocket.tiktokUsername}
+        currentLiveSession={liveSocket.currentLiveSession}
+        liveDurationSeconds={liveSocket.liveDurationSeconds}
+        liveNowText={liveSocket.liveNowText}
       />
-      <Tabs.Screen
-        name="customers"
-        options={tabOptions({
-          title: "Khách hàng",
-          icon: "group_user",
-          tabBarActiveTintColor: colors.primary,
-        })}
-      />
-      <Tabs.Screen
-        name="shipping"
-        options={tabOptions({
-          title: "Vận đơn",
-          icon: "truck",
-          tabBarActiveTintColor: colors.primary,
-        })}
-      />
-      <Tabs.Screen
-        name="reports"
-        options={tabOptions({
-          title: "Báo cáo",
-          icon: "chart_pie",
-          tabBarActiveTintColor: colors.primary,
-        })}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={tabOptions({
-          title: "Cài đặt",
-          icon: "settings",
-          tabBarActiveTintColor: colors.primary,
-        })}
-      />
-    </Tabs>
+      <Tabs
+        // screenListeners={{
+        //   state: (e) => {
+        //     console.log(
+        //       "TAB ROUTES",
+        //       e.data.state.routes.map((r) => r.name),
+        //     );
+        //   },
+        // }}
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: styles.tabBarStyle,
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={tabOptions({
+            title: "Home",
+            icon: "house",
+            tabBarActiveTintColor: colors.primary,
+          })}
+        />
+        <Tabs.Screen
+          name="customers"
+          options={tabOptions({
+            title: "Khách hàng",
+            icon: "group_user",
+            tabBarActiveTintColor: colors.primary,
+          })}
+        />
+        <Tabs.Screen
+          name="shipping"
+          options={tabOptions({
+            title: "Vận đơn",
+            icon: "truck",
+            tabBarActiveTintColor: colors.primary,
+          })}
+        />
+        <Tabs.Screen
+          name="reports"
+          options={tabOptions({
+            title: "Báo cáo",
+            icon: "chart_pie",
+            tabBarActiveTintColor: colors.primary,
+          })}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={tabOptions({
+            title: "Cài đặt",
+            icon: "settings",
+            tabBarActiveTintColor: colors.primary,
+          })}
+        />
+      </Tabs>
+    </>
   );
 }
 
