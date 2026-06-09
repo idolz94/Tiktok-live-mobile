@@ -1,7 +1,7 @@
 import { IconsTypes } from "@assets/icons";
 import { Colors } from "@themes/type";
 import { Tabs } from "expo-router";
-import { Icon } from "./icon";
+import { Icon } from "../icon";
 
 type BaseScreenProps = React.ComponentProps<typeof Tabs.Screen>;
 

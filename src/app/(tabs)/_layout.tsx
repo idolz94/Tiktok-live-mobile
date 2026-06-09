@@ -7,9 +7,10 @@ import { useAuth } from "@modules/auth/hooks/use-auth";
 import { Redirect, Tabs } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SessionHeader } from "../../components/tabs/session-header";
-import { tabOptions } from "@components/tabs-screen-options";
+import { tabOptions } from "@components/bottom-tab/tabs-screen-options";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { CustomTabBar } from "@components/bottom-tab";
 
 function TabContent() {
   const { colors } = useThemes();
@@ -34,6 +35,7 @@ function TabContent() {
         //     );
         //   },
         // }}
+        tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{
           headerShown: false,
           tabBarStyle: styles.tabBarStyle,
@@ -44,7 +46,6 @@ function TabContent() {
           options={tabOptions({
             title: "Home",
             icon: "house",
-            tabBarActiveTintColor: colors.primary,
           })}
         />
         <Tabs.Screen
@@ -52,7 +53,6 @@ function TabContent() {
           options={tabOptions({
             title: "Khách hàng",
             icon: "group_user",
-            tabBarActiveTintColor: colors.primary,
           })}
         />
         <Tabs.Screen
@@ -60,7 +60,6 @@ function TabContent() {
           options={tabOptions({
             title: "Vận đơn",
             icon: "truck",
-            tabBarActiveTintColor: colors.primary,
           })}
         />
         <Tabs.Screen
@@ -68,7 +67,6 @@ function TabContent() {
           options={tabOptions({
             title: "Báo cáo",
             icon: "chart_pie",
-            tabBarActiveTintColor: colors.primary,
           })}
         />
         <Tabs.Screen
@@ -76,7 +74,6 @@ function TabContent() {
           options={tabOptions({
             title: "Cài đặt",
             icon: "settings",
-            tabBarActiveTintColor: colors.primary,
           })}
         />
       </Tabs>
@@ -101,8 +98,6 @@ export default function TabLayout() {
 const styles = createStyles(({ shadows }) => ({
   tabBarStyle: {
     paddingTop: 10,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
     ...shadows.sd4,
   },
 }));
