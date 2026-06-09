@@ -1,12 +1,8 @@
-import PulsingDot from "@components/pulsing-dot";
-import { useEffect, useState } from "react";
-import {
-  LayoutChangeEvent,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Icon } from "@components/icon";
+import { PulsingDot } from "@components/pulsing-dot";
+import { createStyles } from "@utils/createStyles";
+import { memo, useEffect, useState } from "react";
+import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -14,64 +10,72 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-interface SegmentControlProps {
+type SegmentControlProps = {
   tabs: string[];
   activeIndex: number;
   onTabPress: (index: number) => void;
-}
+};
 
-export function SegmentControl({
-  tabs,
-  activeIndex,
-  onTabPress,
-}: SegmentControlProps) {
-  const [tabWidth, setTabWidth] = useState(0);
-  const translateX = useSharedValue(0);
+export const SegmentControl = memo(
+  ({ tabs, activeIndex, onTabPress }: SegmentControlProps) => {
+    const [tabWidth, setTabWidth] = useState(0);
+    const translateX = useSharedValue(0);
 
-  useEffect(() => {
-    if (tabWidth > 0) {
-      translateX.value = withTiming(activeIndex * tabWidth, {
-        duration: 200,
-        easing: Easing.linear,
-      });
-    }
-  }, [activeIndex, tabWidth]);
+    useEffect(() => {
+      if (tabWidth > 0) {
+        translateX.value = withTiming(activeIndex * tabWidth, {
+          duration: 200,
+          easing: Easing.linear,
+        });
+      }
+    }, [activeIndex, tabWidth]);
 
-  const onContainerLayout = (e: LayoutChangeEvent) => {
-    const containerWidth = e.nativeEvent.layout.width;
-    setTabWidth((containerWidth - 8) / tabs.length);
-  };
+    const onContainerLayout = (e: LayoutChangeEvent) => {
+      const containerWidth = e.nativeEvent.layout.width;
+      setTabWidth((containerWidth - 8) / tabs.length);
+    };
 
-  const animatedIndicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-    width: tabWidth,
-  }));
+    const animatedIndicatorStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: translateX.value }],
+      width: tabWidth,
+    }));
 
-  return (
-    <View style={styles.container} onLayout={onContainerLayout}>
-      <Animated.View style={[styles.indicator, animatedIndicatorStyle]} />
-      {tabs.map((tab, i) => (
-        <Pressable key={tab} onPress={() => onTabPress(i)} style={styles.tab}>
-          {i === 0 && <PulsingDot size={10} color="white" ringCount={2} />}
-          <Text
-            style={[styles.tabText, activeIndex === i && styles.tabTextActive]}
-          >
-            {tab}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
+    return (
+      <View style={styles.container} onLayout={onContainerLayout}>
+        <Animated.View style={[styles.indicator, animatedIndicatorStyle]} />
+        {tabs.map((tab, i) => (
+          <Pressable key={tab} onPress={() => onTabPress(i)} style={styles.tab}>
+            {i === 0 ? (
+              <PulsingDot size={10} color="white" ringCount={2} />
+            ) : (
+              <Icon
+                name="clipboard_check"
+                size={20}
+                tintColor={activeIndex === i ? "white" : "neutral300"}
+              />
+            )}
+            <Text
+              style={[
+                styles.tabText,
+                activeIndex === i && styles.tabTextActive,
+              ]}
+            >
+              {tab}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    );
+  },
+);
 
-const styles = StyleSheet.create({
+const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     flexDirection: "row",
     alignItems: "center",
     padding: 4,
     borderRadius: 99,
-    backgroundColor: "white",
-    position: "relative",
+    backgroundColor: colors.neutral100,
   },
   indicator: {
     position: "absolute",
@@ -79,7 +83,7 @@ const styles = StyleSheet.create({
     left: 4,
     bottom: 4,
     borderRadius: 99,
-    backgroundColor: "pink",
+    backgroundColor: colors.primary,
   },
   tab: {
     flex: 1,
@@ -90,9 +94,11 @@ const styles = StyleSheet.create({
     columnGap: 8,
   },
   tabText: {
-    fontWeight: "400",
+    ...textPresets.fs14_500,
+    color: colors.neutral300,
   },
   tabTextActive: {
-    fontWeight: "700",
+    ...textPresets.fs14_500,
+    color: colors.neutral100,
   },
-});
+}));

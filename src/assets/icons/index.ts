@@ -5,6 +5,7 @@ export const icons = {
   group_user: require("./sources/group-user.png"),
   chart_pie: require("./sources/chart-pie.png"),
   truck: require("./sources/truck.png"),
+  clipboard_check: require("./sources/clipboard-check.png"),
 };
 
 export type IconsTypes = keyof typeof icons;

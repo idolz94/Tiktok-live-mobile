@@ -1,11 +1,12 @@
-import { useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { createStyles } from "@utils/createStyles";
+import { memo, useRef, useState } from "react";
+import { Text, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import { SegmentControl } from "./segment";
 
 const SUB_TABS = ["Live", "Đơn đã tạo"];
 
-export function TiktokPage() {
+export const TiktokPage = memo(() => {
   const pagerRef = useRef<PagerView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -21,7 +22,6 @@ export function TiktokPage() {
         activeIndex={activeIndex}
         onTabPress={onTabPress}
       />
-
       <PagerView
         ref={pagerRef}
         style={styles.pager}
@@ -37,9 +37,9 @@ export function TiktokPage() {
       </PagerView>
     </View>
   );
-}
+});
 
-const styles = StyleSheet.create({
+const styles = createStyles(() => ({
   container: {
     flex: 1,
     paddingHorizontal: 16,
@@ -53,4 +53,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-});
+}));
