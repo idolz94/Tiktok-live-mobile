@@ -17,14 +17,14 @@ function TabContent() {
 
   return (
     <>
-      <SessionHeader
+      {/* <SessionHeader
         isConnected={liveSocket.isConnected}
         status={liveSocket.status}
         tiktokUsername={liveSocket.tiktokUsername}
         currentLiveSession={liveSocket.currentLiveSession}
         liveDurationSeconds={liveSocket.liveDurationSeconds}
         liveNowText={liveSocket.liveNowText}
-      />
+      /> */}
       <Tabs
         // screenListeners={{
         //   state: (e) => {

@@ -9,7 +9,7 @@ export const LinearGradient = memo(
   ({ style, type, children, start, end }: GradientProps) => {
     const _styles = useMemo(() => {
       let _start = start ?? { x: 0, y: 0 };
-      let _end = end ?? { x: 1, y: 0 };
+      let _end = end ?? { x: 1, y: 0.3 };
 
       return { colors: linearGradients[type], start: _start, end: _end };
     }, [type, start, end]);
