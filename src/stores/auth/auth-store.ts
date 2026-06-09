@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, StateStorage, createJSONStorage } from "zustand/middleware";
-import { zustandStorage } from "@utils/storage";
+import { secureStorage, zustandStorage } from "@utils/storage";
 import { Account, AuthStoreState } from "./auth-types";
 import { loginApi, registerApi } from "@modules/auth/services/api";
 
@@ -85,8 +85,6 @@ export const useAuthStore = create<AuthStoreState>()(
     (set, get) => ({
       accounts: DEFAULT_ACCOUNTS,
       user: null,
-      accessToken: null,
-      refreshToken: null,
       isRemembered: false,
 
       login: async ({ phone, password, remember }) => {
@@ -98,9 +96,7 @@ export const useAuthStore = create<AuthStoreState>()(
           });
 
           set({
-            accessToken: response.access_token,
-            refreshToken: response.refresh_token,
-            isRemembered: remember,
+            isRemembered: remember ?? true,
             user: {
               id: response.user?.id,
               username: response.user?.user_metadata?.full_name || phone,
@@ -124,11 +120,13 @@ export const useAuthStore = create<AuthStoreState>()(
 
       register: async ({ fullName, phone, password, tiktokId }) => {
         try {
-          const response = await registerApi({
+          await registerApi({
             fullName,
             phone,
             password,
             tiktokId,
+            //@ts-ignore
+            agreePolicy,
           });
 
           return { ok: true, message: "Đăng ký thành công!!" };
@@ -144,11 +142,10 @@ export const useAuthStore = create<AuthStoreState>()(
         }
       },
 
-      logout: () => {
+      logout: async () => {
+        await secureStorage.clearAuth();
         set({
           user: null,
-          accessToken: null,
-          refreshToken: null,
           isRemembered: false,
         });
       },

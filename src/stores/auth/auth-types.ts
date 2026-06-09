@@ -16,8 +16,6 @@ export interface AuthStoreState {
   accounts: Account[];
   user: AuthUser | null;
   isRemembered: boolean;
-  accessToken: string | null;
-  refreshToken: string | null;
   login: (data: LoginForm) => Promise<AuthResult>;
   register: (data: RegisterForm) => Promise<AuthResult>;
   logout: () => void;

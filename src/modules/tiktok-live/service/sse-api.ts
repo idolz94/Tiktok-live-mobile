@@ -23,13 +23,10 @@ export function getSseBaseUrl() {
 }
 
 export function buildLiveStreamEventsUrl(clientId: string) {
-  const accessToken = getAuthToken();
   const url = buildApiUrl("/live-stream/events");
 
   return appendParams(url, {
     clientId,
-    // EventSource không gửi được Authorization header nên truyền token qua query.
-    accessToken: accessToken || undefined,
   });
 }
 
@@ -63,7 +60,7 @@ export async function stopTikTokLiveApi(
   });
 }
 
-export function sendStopBeacon({
+export async function sendStopBeacon({
   username,
 }: {
   clientId?: string;
@@ -71,7 +68,7 @@ export function sendStopBeacon({
 }) {
   if (typeof navigator === "undefined") return;
 
-  const accessToken = getAuthToken();
+  const accessToken = await getAuthToken();
   const url = appendParams(buildApiUrl("/live-stream/stop"), {
     accessToken: accessToken || undefined,
   });

@@ -1,4 +1,4 @@
-import { TIKTOK_USERNAME } from "@constants/config";
+import { TIKTOK_USERNAME, WEB_URL_ORIGIN } from "@constants/config";
 import {
   normalizeTikTokUsername,
   unwrapSseCommentPayload,
@@ -13,6 +13,7 @@ import {
 } from "../service/sse-api";
 import EventSource from "react-native-sse";
 import { useAuthStore } from "@stores/auth";
+import { secureStorage } from "@utils/storage";
 
 function createClientId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -39,7 +40,7 @@ function getPayloadUsername(payload: Record<string, any>) {
 export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   // Lấy thông tin user & token trực tiếp từ Auth Store
   const authUser = useAuthStore((state) => state.user);
-  const accessToken = useAuthStore((state) => state.accessToken);
+
   const loggedInTiktokUsername = authUser?.tiktokUsername || "";
   const eventSourceRef = useRef<EventSource | null>(null);
   const clientIdRef = useRef(createClientId());
@@ -226,9 +227,15 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     [handleServerEvent],
   );
 
-  const connectSse = useCallback(() => {
+  const connectSse = useCallback(async () => {
     const clientId = clientIdRef.current;
     const url = buildLiveStreamEventsUrl(clientId);
+    const accessToken = await secureStorage.getAccessToken();
+
+    if (!accessToken) {
+      console.warn("[SSE] Missing access token");
+      return;
+    }
 
     if (!url) {
       setStatus("Thiếu Backend SSE URL");
@@ -238,9 +245,23 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     isManualCloseRef.current = false;
     eventSourceRef.current?.close();
 
+    console.log("[SSE] TOKEN =", accessToken);
+    console.log("[SSE] TYPE =", typeof accessToken);
+    console.log(
+      "[SSE] SEGMENTS =",
+      typeof accessToken === "string"
+        ? accessToken.split(".").length
+        : "not-string",
+    );
+
+    console.log("[SSE] URL =", url);
+    console.log("[SSE] Authorization =", `Bearer ${accessToken}`);
+
     const eventSource = new EventSource(url, {
       headers: {
         Accept: "text/event-stream",
+        Authorization: `Bearer ${accessToken}`,
+        Origin: WEB_URL_ORIGIN,
       },
     });
 
@@ -414,7 +435,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       eventSourceRef.current?.close();
       eventSourceRef.current = null;
     };
-  }, [connectSse, accessToken]);
+  }, [connectSse]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

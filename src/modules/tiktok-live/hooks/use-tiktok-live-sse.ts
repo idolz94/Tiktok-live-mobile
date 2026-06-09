@@ -1,5 +1,3 @@
-"use client";
-
 import { normalizeComment, unwrapSseCommentPayload } from "@utils/comment";
 import { loadString, saveString, STORAGE_KEYS } from "@utils/storage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

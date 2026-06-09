@@ -1,10 +1,12 @@
-import axios, {
-  AxiosError,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from "axios";
-import { API_ANON_KEY, API_URL_ENDPOINT } from "@constants/config";
+import {
+  API_URL_ENDPOINT,
+  MOBILE_APP_KEY,
+  WEB_URL_ORIGIN,
+  WEB_URL_REFERER,
+} from "@constants/config";
 import { getSseBaseUrl } from "@modules/tiktok-live/service/sse-api";
+import { secureStorage } from "@utils/storage";
+import axios, { InternalAxiosRequestConfig } from "axios";
 
 // ────────────────────────────────────────────────
 // Axios instance for SSE
@@ -14,7 +16,8 @@ export const httpClient = axios.create({
   timeout: 15_000,
   headers: {
     "Content-Type": "application/json",
-    Accept: "application/json",
+    "x-app-key": MOBILE_APP_KEY,
+    Origin: WEB_URL_ORIGIN,
   },
 });
 
@@ -22,10 +25,14 @@ export const httpClient = axios.create({
 // Request interceptor
 // ────────────────────────────────────────────────
 httpClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    // TODO: attach auth token if needed
-    // const token = getAuthToken();
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+  async (config: InternalAxiosRequestConfig) => {
+    const token = await secureStorage.getAccessToken();
+
+    config.headers.Accept = "text/event-stream";
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   async function (error) {
@@ -74,8 +81,8 @@ export const apiClient = axios.create({
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
-    apikey: API_ANON_KEY,
-    Authorization: `Bearer ${API_ANON_KEY}`,
+    Origin: WEB_URL_ORIGIN,
+    Referer: WEB_URL_REFERER,
   },
 });
 
@@ -86,17 +93,32 @@ export const apiClient = axios.create({
 // Request Interceptor: Tự động đính kèm Token nếu user đã đăng nhập
 apiClient.interceptors.request.use(
   async (config) => {
-    // Giả sử bạn lưu token trong auth store hoặc AsyncStorage/MMKV
-    // const token = await getAccessToken();
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // } else {
-    //   config.headers.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
-    // }
-    config.headers.Authorization = `Bearer ${API_ANON_KEY}`;
+    const token = await secureStorage.getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error) => Promise.reject(error),
+);
+
+// ────────────────────────────────────────────────
+// Response interceptor
+// ────────────────────────────────────────────────
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.log("===== ERROR =====");
+    console.log("URL:", error.config?.url);
+    console.log("STATUS:", error.response?.status);
+    console.log("RESPONSE:", JSON.stringify(error.response?.data, null, 2));
+    console.log("HEADERS:", JSON.stringify(error.response?.headers, null, 2));
+    console.log("=================");
+
+    return Promise.reject(error);
+  },
 );
 
 export default httpClient;
