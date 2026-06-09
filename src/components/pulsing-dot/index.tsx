@@ -1,31 +1,35 @@
-import React, { useEffect, memo } from "react";
+import { Colors } from "@themes/type";
+import { memo, useEffect } from "react";
 import { View, ViewStyle } from "react-native";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  withDelay,
+  cancelAnimation,
   Easing,
   interpolate,
-  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
 } from "react-native-reanimated";
 
 const DURATION = 1000;
 const RING_STEP = 5;
 
-interface PulsingDotProps {
+type PulsingDotProps = {
   size?: number;
-  color?: string;
+  color?: Colors | string;
+  /**
+   * @param {number} ringCount - The number of rings excepted dot core.
+   */
   ringCount?: number;
   style?: ViewStyle;
-}
+};
 
-interface RingProps {
+type RingProps = {
   size: number;
-  color: string;
+  color: Colors | string;
   delay: number;
-}
+};
 
 const RingView = ({ size, color, delay }: RingProps) => {
   const progress = useSharedValue(0);
@@ -71,7 +75,7 @@ const RingView = ({ size, color, delay }: RingProps) => {
 export const PulsingDot = memo(
   ({
     size = 8.3,
-    color = "#F06292",
+    color = "primary",
     ringCount = 3,
     style,
   }: PulsingDotProps) => {
@@ -116,5 +120,3 @@ export const PulsingDot = memo(
     );
   },
 );
-
-export default PulsingDot;

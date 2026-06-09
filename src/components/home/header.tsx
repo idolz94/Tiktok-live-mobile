@@ -1,6 +1,7 @@
 import { images } from "@assets/images";
 import { Image } from "@components/image";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { createStyles } from "@utils/createStyles";
+import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const PLATFORM_TABS = ["Tiktok", "Facebook"];
@@ -10,7 +11,7 @@ type Props = {
   onTabPress: (index: number) => void;
 };
 
-export function HomeHeader({ activeIndex, onTabPress }: Props) {
+export const HomeHeader = ({ activeIndex, onTabPress }: Props) => {
   const { top } = useSafeAreaInsets();
 
   return (
@@ -45,9 +46,9 @@ export function HomeHeader({ activeIndex, onTabPress }: Props) {
       </Pressable>
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
+const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     flexDirection: "row",
     paddingBottom: 12,
@@ -79,16 +80,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabText: {
-    fontWeight: "400",
+    ...textPresets.fs16_500,
+    color: colors.transparent50,
   },
   tabTextActive: {
-    fontWeight: "700",
+    ...textPresets.fs16_500,
+    color: colors.primary,
   },
   tabIndicator: {
-    height: 2,
+    height: 3,
     backgroundColor: "transparent",
   },
   tabIndicatorActive: {
-    backgroundColor: "pink",
+    backgroundColor: colors.primary,
   },
-});
+}));

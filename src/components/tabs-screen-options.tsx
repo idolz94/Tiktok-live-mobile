@@ -1,27 +1,7 @@
-import { icons, IconsTypes } from "@assets/icons";
+import { IconsTypes } from "@assets/icons";
 import { Colors } from "@themes/type";
-import { Image } from "./image";
 import { Tabs } from "expo-router";
-
-type Props = {
-  name: IconsTypes;
-  size?: number;
-  tintColor?: Colors;
-};
-
-export function Icon({ name, size, tintColor }: Props) {
-  return (
-    <Image
-      source={icons[name]}
-      resizeMode="contain"
-      style={{
-        width: size,
-        height: size,
-        tintColor,
-      }}
-    />
-  );
-}
+import { Icon } from "./icon";
 
 type BaseScreenProps = React.ComponentProps<typeof Tabs.Screen>;
 

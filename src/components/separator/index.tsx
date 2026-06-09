@@ -1,10 +1,10 @@
+import { useThemes } from "@hooks/use-theme";
+import { HairlineWidth } from "@themes";
 import isNil from "lodash.isnil";
-import React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { View, ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 import { SeparatorProps } from "./type";
-import { HairlineWidth } from "@themes";
-import { useThemes } from "@hooks/use-theme";
 
 export const Separator = memo(
   (props: SeparatorProps) => {
@@ -13,7 +13,7 @@ export const Separator = memo(
       height,
       width,
       opacity,
-      color = "borderGray",
+      color = "border20",
       size = 3,
       style: customStyle,
       containerStyle,
