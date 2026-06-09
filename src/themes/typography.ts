@@ -43,6 +43,10 @@ export const FontStyle = {
     fontSize: 12,
     fontWeight: "500",
   },
+  fs10_500: {
+    fontSize: 10,
+    fontWeight: "500",
+  },
 
   // base
   fs40_400: {
