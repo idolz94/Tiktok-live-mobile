@@ -7,78 +7,78 @@ import { useAuth } from "@modules/auth/hooks/use-auth";
 import { Redirect, Tabs } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SessionHeader } from "../../components/tabs/session-header";
+import { tabOptions } from "@components/tabs-screen-options";
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
 
 function TabContent() {
+  const { colors } = useThemes();
   const liveSocket = useTikTokLiveSocketContext();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f4f7f8" }}>
-      <SessionHeader
-        isConnected={liveSocket.isConnected}
-        status={liveSocket.status}
-        tiktokUsername={liveSocket.tiktokUsername}
-        currentLiveSession={liveSocket.currentLiveSession}
-        liveDurationSeconds={liveSocket.liveDurationSeconds}
-        liveNowText={liveSocket.liveNowText}
+    // <SessionHeader
+    //   isConnected={liveSocket.isConnected}
+    //   status={liveSocket.status}
+    //   tiktokUsername={liveSocket.tiktokUsername}
+    //   currentLiveSession={liveSocket.currentLiveSession}
+    //   liveDurationSeconds={liveSocket.liveDurationSeconds}
+    //   liveNowText={liveSocket.liveNowText}
+    // />
+    <Tabs
+      // screenListeners={{
+      //   state: (e) => {
+      //     console.log(
+      //       "TAB ROUTES",
+      //       e.data.state.routes.map((r) => r.name),
+      //     );
+      //   },
+      // }}
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: styles.tabBarStyle,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={tabOptions({
+          title: "Home",
+          icon: "house",
+          tabBarActiveTintColor: colors.primary,
+        })}
       />
-      <Tabs
-        // screenListeners={{
-        //   state: (e) => {
-        //     console.log(
-        //       "TAB ROUTES",
-        //       e.data.state.routes.map((r) => r.name),
-        //     );
-        //   },
-        // }}
-        screenOptions={{ headerShown: false }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "Live",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="radio" size={22} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="customers"
-          options={{
-            title: "Khách",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="people" size={22} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="shipping"
-          options={{
-            title: "Vận đơn",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="cube" size={22} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="reports"
-          options={{
-            title: "Báo cáo",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="bar-chart" size={22} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: "Cài đặt",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="settings" size={22} color={color} />
-            ),
-          }}
-        />
-      </Tabs>
-    </SafeAreaView>
+      <Tabs.Screen
+        name="customers"
+        options={tabOptions({
+          title: "Khách hàng",
+          icon: "group_user",
+          tabBarActiveTintColor: colors.primary,
+        })}
+      />
+      <Tabs.Screen
+        name="shipping"
+        options={tabOptions({
+          title: "Vận đơn",
+          icon: "truck",
+          tabBarActiveTintColor: colors.primary,
+        })}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={tabOptions({
+          title: "Báo cáo",
+          icon: "chart_pie",
+          tabBarActiveTintColor: colors.primary,
+        })}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={tabOptions({
+          title: "Cài đặt",
+          icon: "settings",
+          tabBarActiveTintColor: colors.primary,
+        })}
+      />
+    </Tabs>
   );
 }
 
@@ -95,3 +95,12 @@ export default function TabLayout() {
     </TikTokLiveSocketProvider>
   );
 }
+
+const styles = createStyles(({ shadows }) => ({
+  tabBarStyle: {
+    paddingTop: 10,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    ...shadows.sd4,
+  },
+}));
