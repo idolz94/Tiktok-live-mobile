@@ -1,5 +1,6 @@
 import { LoginForm, RegisterForm } from "@app-types/auth";
 import { apiClient } from "@utils/http/axios";
+import { secureStorage } from "@utils/storage";
 import { phoneToAuthEmail } from "@utils/string";
 
 export const registerApi = async ({
@@ -7,6 +8,7 @@ export const registerApi = async ({
   password,
   tiktokId,
   fullName,
+  agreePolicy,
 }: RegisterForm) => {
   const response = await apiClient.post("/auth/register", {
     defaultTikTokUsername: tiktokId,
@@ -21,14 +23,33 @@ export const registerApi = async ({
   return response.data;
 };
 
-export const loginApi = async ({ phone, password }: LoginForm) => {
+export const loginApi = async ({ phone, password, remember }: LoginForm) => {
   const response = await apiClient.post("/auth/login", {
-    email: phoneToAuthEmail(phone),
-    loginType: "phone_password",
-    password,
     phone,
+    email: phoneToAuthEmail(phone),
+    password,
+    remember: remember ?? true,
+    loginType: "phone_password",
   });
-  return response.data;
+
+  const payload = response.data?.data;
+
+  const token = String(
+    payload?.accessToken ||
+      payload?.access_token ||
+      payload?.token ||
+      payload?.session?.accessToken ||
+      payload?.session?.access_token ||
+      "",
+  ).trim();
+
+  if (!token) {
+    throw new Error("No access token received");
+  }
+
+  await secureStorage.setAccessToken(token);
+
+  return payload;
 };
 
 export const logoutApi = async () => {

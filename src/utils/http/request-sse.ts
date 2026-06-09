@@ -1,5 +1,5 @@
 import { DEFAULT_WS_URL } from "@constants/config";
-import { loadObject, STORAGE_KEYS } from "@utils/storage";
+import { loadObject, secureStorage, STORAGE_KEYS } from "@utils/storage";
 
 export type RequestParams = Record<
   string,
@@ -25,16 +25,21 @@ export class ApiError extends Error {
   }
 }
 
-export function getAuthToken() {
-  // Đọc accessToken từ MMKV (Zustand auth storage)
+export async function getAuthToken() {
+  // Đọc accessToken từ secure store
   try {
-    const parsed = loadObject<{ state?: { accessToken?: string } }>(
-      STORAGE_KEYS.AUTH_STORAGE,
-    );
-    return parsed?.state?.accessToken || "";
+    // const parsed = loadObject<{ state?: { accessToken?: string } }>(
+    //   STORAGE_KEYS.AUTH_STORAGE,
+    // );
+    // return parsed?.state?.accessToken || "";
+    const token = await secureStorage.getAccessToken();
+    return token;
   } catch (error) {
     if (__DEV__) {
-      console.error("[Request SSE] Lỗi khi lấy auth token từ MMKV:", error);
+      console.error(
+        "[Request SSE] Lỗi khi lấy auth token từ secure store:",
+        error,
+      );
     }
     return "";
   }
@@ -44,13 +49,17 @@ export function setAuthToken(token?: string | null) {
   // Tránh ghi đè trực tiếp để không làm lệch trạng thái của Zustand useAuthStore.
   // Nếu cần thay đổi token, hãy sử dụng store login/logout.
   if (__DEV__) {
-    console.warn("[Request SSE] Không nên sử dụng setAuthToken trực tiếp trên Mobile. Hãy dùng useAuthStore.");
+    console.warn(
+      "[Request SSE] Không nên sử dụng setAuthToken trực tiếp trên Mobile. Hãy dùng useAuthStore.",
+    );
   }
 }
 
 export function clearAuthToken() {
   if (__DEV__) {
-    console.warn("[Request SSE] Không nên sử dụng clearAuthToken trực tiếp trên Mobile. Hãy dùng useAuthStore.");
+    console.warn(
+      "[Request SSE] Không nên sử dụng clearAuthToken trực tiếp trên Mobile. Hãy dùng useAuthStore.",
+    );
   }
 }
 
