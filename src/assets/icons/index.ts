@@ -6,6 +6,7 @@ export const icons = {
   chart_pie: require("./sources/chart-pie.png"),
   truck: require("./sources/truck.png"),
   clipboard_check: require("./sources/clipboard-check.png"),
+  plus_circle: require("./sources/plus-circle.png"),
 };
 
 export type IconsTypes = keyof typeof icons;
