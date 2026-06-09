@@ -1,18 +1,79 @@
 import { createStyles } from "@utils/createStyles";
-import { memo, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import PagerView from "react-native-pager-view";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+
+import { AccountConnected } from "./account-connected";
 import { SegmentControl } from "./segment";
+import { UnConnectLive } from "./unconnect-live";
 
 const SUB_TABS = ["Live", "Đơn đã tạo"];
 
+const ANIMATION_DURATION = 250;
+const INITIAL_OFFSET = 48;
+
 export const TiktokPage = memo(() => {
   const pagerRef = useRef<PagerView>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
 
-  const onTabPress = (i: number) => {
-    setActiveIndex(i);
-    pagerRef.current?.setPage(i);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [visible, setVisible] = useState(false);
+
+  const translateY = useSharedValue(INITIAL_OFFSET);
+  const opacity = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [
+      {
+        translateY: translateY.value,
+      },
+    ],
+  }));
+
+  const onConnectAccount = useCallback(() => {
+    if (visible) return;
+
+    setVisible(true);
+
+    opacity.value = 0;
+    translateY.value = INITIAL_OFFSET;
+
+    opacity.value = withTiming(1, {
+      duration: ANIMATION_DURATION,
+    });
+
+    translateY.value = withTiming(0, {
+      duration: ANIMATION_DURATION,
+    });
+  }, [visible]);
+
+  const onDisconnectAccount = useCallback(() => {
+    opacity.value = withTiming(0, {
+      duration: ANIMATION_DURATION,
+    });
+
+    translateY.value = withTiming(
+      INITIAL_OFFSET,
+      {
+        duration: ANIMATION_DURATION,
+      },
+      (finished) => {
+        if (finished) {
+          runOnJS(setVisible)(false);
+        }
+      },
+    );
+  }, []);
+
+  const onTabPress = (index: number) => {
+    setActiveIndex(index);
+    pagerRef.current?.setPage(index);
   };
 
   return (
@@ -22,35 +83,48 @@ export const TiktokPage = memo(() => {
         activeIndex={activeIndex}
         onTabPress={onTabPress}
       />
+
       <PagerView
         ref={pagerRef}
         style={styles.pager}
         initialPage={0}
         onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
       >
-        <View style={styles.page} key="live">
-          <Text>live here</Text>
+        <View style={{ flex: 1 }} key="live">
+          <UnConnectLive onConnect={onConnectAccount} />
         </View>
-        <View style={styles.page} key="orders">
+
+        <View style={{ flex: 1 }} key="orders">
           <Text>order here</Text>
         </View>
       </PagerView>
+
+      {visible && (
+        <Animated.View
+          pointerEvents="box-none"
+          style={[styles.accountOverlay, animatedStyle]}
+        >
+          <AccountConnected onClose={onDisconnectAccount} />
+        </Animated.View>
+      )}
     </View>
   );
 });
 
-const styles = createStyles(() => ({
+const styles = createStyles(({ shadows }) => ({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 16,
   },
   pager: {
     flex: 1,
   },
-  page: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  accountOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
+    ...shadows.sd3,
   },
 }));

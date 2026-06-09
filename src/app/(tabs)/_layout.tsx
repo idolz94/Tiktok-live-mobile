@@ -11,6 +11,9 @@ import { tabOptions } from "@components/bottom-tab/tabs-screen-options";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { CustomTabBar } from "@components/bottom-tab";
+import { useState } from "react";
+import Animated from "react-native-reanimated";
+import { AccountConnected } from "@components/home/account-connected";
 
 function TabContent() {
   const { colors } = useThemes();
