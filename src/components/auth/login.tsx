@@ -93,12 +93,15 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
       <Animated.View style={[{ rowGap: 20 }, animatedStyle]}>
         <View style={{ rowGap: 8 }}>
           <Text style={styles.label}>Số điện thoại</Text>
-          <View style={styles.inputWrap}>
-            <Controller
-              control={formMethod.control}
-              name="phone"
-              render={({ field: { onChange, value } }) => {
-                return (
+          <Controller
+            control={formMethod.control}
+            name="phone"
+            render={({
+              field: { onChange, value },
+              fieldState: { invalid },
+            }) => {
+              return (
+                <View style={styles.inputWrap}>
                   <TextInput
                     value={value}
                     onChangeText={onChange}
@@ -108,11 +111,13 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
                     placeholderTextColor={colors.neutral300}
                     style={styles.input}
                   />
-                );
-              }}
-            />
-            <Text style={styles.check}>✓</Text>
-          </View>
+                  {!invalid && value.length > 0 && (
+                    <Text style={styles.check}>✓</Text>
+                  )}
+                </View>
+              );
+            }}
+          />
         </View>
 
         <View style={{ rowGap: 8 }}>
@@ -223,12 +228,12 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderRadius: 8,
     borderWidth: HairlineWidth * 3,
     borderColor: colors.border10,
-    backgroundColor: colors.white,
+    backgroundColor: colors.neutral100,
     flexDirection: "row",
     alignItems: "center",
   },
   input: { flex: 1, color: colors.neutral900, ...textPresets.fs14_400 },
-  check: { color: colors.greenSuccess, ...textPresets.fs18_900 },
+  check: { color: colors.greenSuccess, ...textPresets.fs14_500 },
   eye: { color: colors.primaryDark, ...textPresets.fs14_400 },
   rememberRow: { flexDirection: "row", alignItems: "center", columnGap: 10 },
   checkbox: {
