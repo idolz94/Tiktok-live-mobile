@@ -74,6 +74,12 @@ export const colors = {
 
 export const linearGradients = {
   gra_primary: ["#FF6B8A", "#FFA66D", "#FFC86A"],
+  gra_background: [
+    "rgba(255, 107, 138, 0.3)",
+    "rgba(255, 166, 109, 0.2)",
+    "rgba(255, 255, 255, 0)",
+  ],
+
   gra_info: ["#4FACFE", "#00F2FE"],
   gra_success: ["#43E97B", "#38F9D7"],
   gra_warning: ["#FA709A", "#FEE140"],
