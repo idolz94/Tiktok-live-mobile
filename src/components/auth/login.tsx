@@ -1,4 +1,4 @@
-import { LoginForm, LoginSchema } from "@app-types/auth";
+import { LoginForm, LoginSchema } from "src/schemas/auth";
 import { images } from "@assets/images";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Image } from "@components/image";
@@ -6,7 +6,7 @@ import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
-import { useAuthStore } from "@stores/auth";
+import { useAuth } from "@modules/auth/hooks/use-auth";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useState } from "react";
@@ -50,7 +50,7 @@ type Props = {
 };
 
 export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
-  const { login } = useAuthStore();
+  const { login } = useAuth();
   const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
 

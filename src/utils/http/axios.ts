@@ -7,6 +7,7 @@ import {
 import { getSseBaseUrl } from "@modules/tiktok-live/service/sse-api";
 import { secureStorage } from "@utils/storage";
 import axios, { InternalAxiosRequestConfig } from "axios";
+import { sessionExpiredEmitter } from "./session-event";
 
 // ────────────────────────────────────────────────
 // Axios instance for SSE
@@ -60,6 +61,10 @@ httpClient.interceptors.response.use(
 
     if (status === 401) {
       console.warn("[HTTP] 401 Unauthorized");
+      const url = error.config?.url || "";
+      if (!url.includes("/auth/login")) {
+        sessionExpiredEmitter.emit();
+      }
     } else if (status === 403) {
       console.warn("[HTTP] 403 Forbidden");
     } else if (status === 500) {
@@ -116,6 +121,13 @@ apiClient.interceptors.response.use(
     console.log("RESPONSE:", JSON.stringify(error.response?.data, null, 2));
     console.log("HEADERS:", JSON.stringify(error.response?.headers, null, 2));
     console.log("=================");
+
+    const status = error.response?.status;
+    const url = error.config?.url || "";
+
+    if (status === 401 && !url.includes("/auth/login")) {
+      sessionExpiredEmitter.emit();
+    }
 
     return Promise.reject(error);
   },

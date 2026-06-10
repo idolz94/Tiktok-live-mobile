@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRegister } from "@modules/auth/hooks/use-register";
-import { RegisterForm, RegisterSchema } from "@app-types/auth";
+import { RegisterForm, RegisterSchema } from "src/schemas/auth";
 import Animated from "react-native-reanimated";
 import { AnimatedStyleHandle } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 import { useThemes } from "@hooks/use-theme";
@@ -205,13 +205,13 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderRadius: 8,
     borderWidth: HairlineWidth * 3,
     borderColor: colors.border10,
-    backgroundColor: colors.white,
+    backgroundColor: colors.neutral100,
     flexDirection: "row",
     alignItems: "center",
   },
   input: { flex: 1, color: colors.neutral900, ...textPresets.fs14_400 },
-  check: { color: colors.greenSuccess, ...textPresets.fs14_500 },
-  eye: { color: colors.primaryDark, ...textPresets.fs14_400 },
+  check: { color: colors.success, ...textPresets.fs14_500 },
+  eye: { color: colors.neutral900, ...textPresets.fs14_400 },
   submitButton: {
     paddingVertical: 16,
     borderRadius: 99,

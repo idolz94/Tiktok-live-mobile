@@ -1,6 +1,7 @@
 import { LiveComment } from "@app-types/index";
 import { MAX_COMMENTS } from "@constants/config";
 import { normalizeComment } from "@utils/comment";
+import isEmpty from "lodash.isempty";
 import { useCallback, useState } from "react";
 
 function getCommentText(comment: LiveComment) {
