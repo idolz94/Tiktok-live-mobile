@@ -55,7 +55,7 @@ export const UnConnectLive = ({ onConnect }: { onConnect: () => void }) => {
         </View>
       </View>
       {/* call api để lấy data account ở đây */}
-      <View style={{ height: 1000, backgroundColor: "red" }} />
+      {/* <View style={{ height: 1000, backgroundColor: "red" }} /> */}
       {/* nếu data account rỗng thì hiển thị button add mới */}
       <View style={{ rowGap: 8 }}>
         <DashedButton title="Thêm mới" icon="plus_circle" onPress={onConnect} />
@@ -95,6 +95,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   //button dash
   buttonContainer: {
+    flex: 1,
     height: 48,
   },
   content: {

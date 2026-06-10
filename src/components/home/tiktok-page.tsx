@@ -114,7 +114,6 @@ export const TiktokPage = memo(() => {
 const styles = createStyles(({ shadows }) => ({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
   },
   pager: {
     flex: 1,

@@ -67,7 +67,7 @@ export default function HomeTab() {
     <Screen>
       <LinearGradient
         type="gra_background"
-        style={StyleSheet.absoluteFill}
+        style={{ height: 290, ...StyleSheet.absoluteFill }}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
