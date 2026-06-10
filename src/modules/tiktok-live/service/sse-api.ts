@@ -61,10 +61,11 @@ export async function stopTikTokLiveApi(
     };
   }
 
-  return postRequest<any>("/live-stream/stop", {
-    clientId,
-    username: removeAt(username),
-  });
+  return postRequest<any>(
+    "/live-stream/stop",
+    { clientId, username: removeAt(username) },
+    { timeout: 60_000 }, // stop có thể mất lâu hơn (server cleanup TikTok connection)
+  );
 }
 
 export async function sendStopBeacon({
