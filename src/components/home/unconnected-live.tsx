@@ -14,7 +14,8 @@ import {
   View,
 } from "react-native";
 import Svg, { Rect } from "react-native-svg";
-import { fakeDataChannel, FakeDataType } from "./fake";
+import { images } from "@assets/images";
+import { TikTokLiveChannel } from "./tiktok-page";
 
 function DashedButton({
   title,
@@ -56,8 +57,8 @@ export const UnConnectedLive = ({
   channels,
   onConnect,
 }: {
-  channels: FakeDataType[];
-  onConnect: (item: FakeDataType) => void;
+  channels: TikTokLiveChannel[];
+  onConnect: (item: TikTokLiveChannel) => void;
 }) => {
   const itemSeparator = () => (
     <Separator
@@ -67,14 +68,14 @@ export const UnConnectedLive = ({
     />
   );
 
-  const renderItem: ListRenderItem<FakeDataType> = ({ item }) => {
+  const renderItem: ListRenderItem<TikTokLiveChannel> = ({ item }) => {
     return (
       <View style={styles.itemContainer}>
         <View style={styles.leftItem}>
-          <Image source={item.logo} style={styles.avatar} />
+          <Image source={images.logo_app} style={styles.avatar} />
           <View style={{ rowGap: 2 }}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.txtId}>{`ID: ${item.tiktokId}`}</Text>
+            <Text style={styles.name}>{item.username}</Text>
+            <Text style={styles.txtId}>{`ID: @${item.username}`}</Text>
           </View>
         </View>
         <Pressable onPress={() => onConnect(item)} style={styles.btnConnect}>
@@ -90,11 +91,11 @@ export const UnConnectedLive = ({
         <Text style={styles.pickAccount}>Chọn tài khoản</Text>
         <View style={{ flexShrink: 1 }}>
           <Text style={styles.description} numberOfLines={2}>
-            {fakeDataChannel.length > 0
+            {channels.length > 0
               ? `Chọn kênh tiktok rồi bấm`
               : `Bạn chưa liên kết kênh TikTok. Hãy`}{" "}
             <Text style={styles.des2Light}>
-              {fakeDataChannel.length > 0 ? `"kết nối"` : `"Thêm mới"`}
+              {channels.length > 0 ? `"kết nối"` : `"Thêm mới"`}
             </Text>{" "}
             tài khoản để bắt đầu nhận bình luận.
           </Text>
@@ -104,7 +105,7 @@ export const UnConnectedLive = ({
       <FlatList
         data={channels}
         scrollEnabled={false}
-        keyExtractor={(_, idx) => idx.toString()}
+        keyExtractor={(item) => item.id}
         ItemSeparatorComponent={itemSeparator}
         renderItem={renderItem}
         contentContainerStyle={styles.containerFlatlistStyle}

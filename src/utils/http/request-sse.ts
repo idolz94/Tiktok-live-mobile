@@ -195,14 +195,29 @@ export async function postRequest<T>(
   data?: unknown,
   options?: RequestOptions,
 ): Promise<T> {
-  const response = await fetch(buildUrl(path), {
-    method: "POST",
-    headers: await buildHeaders(options, true),
-    body: JSON.stringify(data || {}),
-    credentials: options?.credentials || "include",
-  });
+  const url = buildUrl(path);
+  if (__DEV__) {
+    console.log(`[postRequest] Fetching: ${url} with body:`, data);
+  }
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: await buildHeaders(options, true),
+      body: JSON.stringify(data || {}),
+      credentials: options?.credentials || "include",
+    });
 
-  return handleResponse<T>(response);
+    const res = await handleResponse<T>(response);
+    if (__DEV__) {
+      console.log(`[postRequest] Success ${path} response:`, res);
+    }
+    return res;
+  } catch (error) {
+    if (__DEV__) {
+      console.error(`[postRequest] Error fetching ${path}:`, error);
+    }
+    throw error;
+  }
 }
 
 export async function patchRequest<T>(

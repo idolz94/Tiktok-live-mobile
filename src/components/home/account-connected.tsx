@@ -7,13 +7,13 @@ import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { Pressable, Text, View } from "react-native";
 import { ListChannels } from "./list-channels";
-import { FakeDataType } from "./fake";
+import { TikTokLiveChannel } from "./tiktok-page";
 
 type Props = {
   onClose: () => void;
-  selectedChannel?: FakeDataType;
-  channels: FakeDataType[];
-  onSelectChannel: (item: FakeDataType) => void;
+  selectedChannel?: TikTokLiveChannel;
+  channels: TikTokLiveChannel[];
+  onSelectChannel: (item: TikTokLiveChannel) => void;
 };
 
 export const AccountConnected = ({
@@ -43,11 +43,11 @@ export const AccountConnected = ({
     <View style={styles.container}>
       <View style={styles.left}>
         <Image
-          source={selectedChannel ? selectedChannel.logo : images.logo_app}
+          source={images.logo_app}
           style={styles.avatar}
         />
         <View style={{ rowGap: 2 }}>
-          <Text style={styles.name}>{selectedChannel?.name ?? ""}</Text>
+          <Text style={styles.name}>{selectedChannel?.username ?? ""}</Text>
           <View style={styles.info}>
             <View
               style={{

@@ -4,12 +4,12 @@ import { Image } from "@components/image";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { FlatList, ListRenderItem, Pressable, Text, View } from "react-native";
-import { FakeDataType } from "./fake";
+import { TikTokLiveChannel } from "./tiktok-page";
 
 type Props = {
-  channels: FakeDataType[];
+  channels: TikTokLiveChannel[];
   onClose: () => void;
-  onSelected: (item: FakeDataType) => void;
+  onSelected: (item: TikTokLiveChannel) => void;
 };
 
 export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
@@ -17,13 +17,13 @@ export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
 
   const itemSeparator = () => <View style={{ height: 12 }} />;
 
-  const renderItem: ListRenderItem<FakeDataType> = ({ item }) => {
+  const renderItem: ListRenderItem<TikTokLiveChannel> = ({ item }) => {
     return (
       <Pressable onPress={() => onSelected(item)} style={styles.itemContainer}>
         <View style={styles.leftItem}>
-          <Image source={item.logo} style={styles.avatar} />
+          <Image source={images.logo_app} style={styles.avatar} />
           <View>
-            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.name}>{item.username}</Text>
             <View style={styles.nameArea}>
               <Image
                 source={images.logo_tiktok}
@@ -35,7 +35,7 @@ export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
           </View>
         </View>
 
-        {item.isSelected && <Text>✓</Text>}
+        {item.isDefault && <Text>✓</Text>}
       </Pressable>
     );
   };
@@ -50,7 +50,7 @@ export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
       </View>
       <FlatList
         data={channels}
-        keyExtractor={(_, idx) => idx.toString()}
+        keyExtractor={(item) => item.id}
         ItemSeparatorComponent={itemSeparator}
         renderItem={renderItem}
         ListFooterComponentStyle={{ paddingTop: 16 }}
