@@ -6,17 +6,33 @@ import {
   stopTikTokLiveApi,
   subscribeTikTokLiveApi,
 } from "../service/sse-api";
-import { LiveComment, LiveStatus } from "@app-types/index";
+import { LiveComment } from "@app-types/index";
+import { LiveStatus } from "@app-types/live-comment";
+import { createClientId } from "./use-tiktok-live-socket";
+
+// function getOrCreateClientId() {
+//   const existing = loadString(STORAGE_KEYS.CLIENT_ID);
+
+//   if (existing) return existing;
+
+//   const nextId = `app_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+//   saveString(STORAGE_KEYS.CLIENT_ID, nextId);
+
+//   return nextId;
+// }
 
 function getOrCreateClientId() {
-  const existing = loadString(STORAGE_KEYS.CLIENT_ID);
+  const existingClientId = loadString(STORAGE_KEYS.CLIENT_ID);
 
-  if (existing) return existing;
+  if (existingClientId) {
+    return existingClientId;
+  }
 
-  const nextId = `app_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  saveString(STORAGE_KEYS.CLIENT_ID, nextId);
+  const clientId = createClientId();
 
-  return nextId;
+  saveString(STORAGE_KEYS.CLIENT_ID, clientId);
+
+  return clientId;
 }
 
 export function normalizeUpdatedComment(raw: any) {

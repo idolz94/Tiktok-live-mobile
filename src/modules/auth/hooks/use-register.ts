@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "@modules/auth/hooks/use-auth";
-import { RegisterForm } from "@app/(auth)/_type";
+import { RegisterForm } from "src/schemas/auth";
 
 export const useRegister = (onRegisterSuccess?: () => void) => {
   const { register } = useAuth();

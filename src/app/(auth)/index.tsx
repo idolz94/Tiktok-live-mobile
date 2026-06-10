@@ -1,4 +1,4 @@
-import { Mode } from "@app-types/auth";
+import { Mode } from "src/schemas/auth";
 import { Header } from "@components/auth/header";
 import { Login } from "@components/auth/login";
 import { Register } from "@components/auth/register";
@@ -109,16 +109,6 @@ const styles = createStyles(({ colors, shadows, textPresets }) => ({
     color: colors.neutral900,
     ...textPresets.fs18_500,
   },
-  registerButton: {
-    paddingVertical: 12,
-    borderRadius: 24,
-    borderWidth: HairlineWidth * 4,
-    borderColor: colors.primaryDark,
-    backgroundColor: colors.warningBgLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
   registerText: {
     color: colors.neutral900,
     ...textPresets.fs14_400,

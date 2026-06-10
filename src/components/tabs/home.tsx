@@ -5,6 +5,8 @@ import { LiveHistoryItem } from "@modules/tiktok-live/types";
 import { PlaceholderView } from "./placeholder-view";
 import { SectionHeader } from "./section-header";
 import { StatsRow } from "./stats-row";
+import { createStyles } from "@utils/createStyles";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import {
   LiveComment,
   LiveTab,
@@ -13,8 +15,6 @@ import {
   OrderProduct,
   TopTab,
 } from "@app-types/index";
-import { createStyles } from "@utils/createStyles";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export const Home = ({
   topTab,
@@ -185,7 +185,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   liveTabs: {
     minHeight: 58,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: colors.neutral100,
     borderBottomWidth: 1,
     borderBottomColor: colors.primaryLight,
   },
@@ -196,10 +196,10 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderBottomWidth: 3,
     borderBottomColor: "transparent",
   },
-  activeLiveTab: { borderBottomColor: colors.warningAlt },
-  liveTabText: { ...textPresets.fs17_800, color: colors.dustyTealLight },
-  activeLiveTabText: { color: colors.warningAlt },
+  activeLiveTab: { borderBottomColor: colors.success },
+  liveTabText: { ...textPresets.fs17_800, color: colors.successLight },
+  activeLiveTabText: { color: colors.success },
   content: { paddingHorizontal: 12, paddingBottom: 28 },
   empty: { padding: 36, alignItems: "center" },
-  emptyText: { color: colors.textMuted, textAlign: "center", lineHeight: 22 },
+  emptyText: { color: colors.neutral900, textAlign: "center", lineHeight: 22 },
 }));

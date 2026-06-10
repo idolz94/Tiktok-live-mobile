@@ -89,25 +89,30 @@ export const useAuthStore = create<AuthStoreState>()(
 
       login: async ({ phone, password, remember }) => {
         try {
-          const response = await loginApi({
-            phone,
-            password,
-            remember,
-          });
+          // loginApi → lưu token vào SecureStore, trả về payload từ server
+          const payload = await loginApi({ phone, password, remember });
 
+          // Phase 1: Set user cơ bản NGAY để AuthLayout thấy user != null → navigate
+          // Tại sao không chờ bootstrap?
+          //   → Bootstrap gọi thêm 1 API → chậm hơn, có thể fail
+          //   → Navigation không nên phụ thuộc vào bootstrap thành công
+          // Phase 2 (enrich với shop/license/tiktokChannels) sẽ chạy async trong useAuth hook
           set({
             isRemembered: remember ?? true,
             user: {
-              id: response.user?.id,
-              username: response.user?.user_metadata?.full_name || phone,
-              phone: response.user?.user_metadata?.phone,
-              fullName: response.user?.user_metadata?.full_name,
+              id: payload?.user?.id || payload?.id || "",
+              email: payload?.user?.email || null,
+              fullName:
+                payload?.user?.user_metadata?.full_name ||
+                payload?.user?.user_metadata?.fullName ||
+                null,
+              phone:
+                payload?.user?.user_metadata?.phone || phone,
               tiktokUsername:
-                response.user?.user_metadata?.tiktok_id ||
-                response.user?.user_metadata?.tiktok_username ||
-                "",
-              shopName: response.user?.user_metadata?.shop_name,
-              email: response.user?.email,
+                payload?.user?.user_metadata?.tiktok_id ||
+                payload?.user?.user_metadata?.tiktok_username ||
+                null,
+              shopName: payload?.user?.user_metadata?.shop_name || null,
             },
           });
 
@@ -117,6 +122,7 @@ export const useAuthStore = create<AuthStoreState>()(
           return { ok: false, message: "Đăng nhập thất bại" };
         }
       },
+
 
       register: async ({ fullName, phone, password, tiktokId }) => {
         try {
@@ -144,10 +150,46 @@ export const useAuthStore = create<AuthStoreState>()(
 
       logout: async () => {
         await secureStorage.clearAuth();
-        set({
-          user: null,
-          isRemembered: false,
-        });
+
+        const currentUser = get().user;
+
+        // Giữ lại username để pre-fill form đăng nhập lần sau,
+        // nhưng xóa password vì lý do bảo mật
+        if (currentUser?.phone) {
+          const existingAccounts = get().accounts;
+          const updatedAccounts = existingAccounts.map((acc) =>
+            acc.username === currentUser.phone
+              ? { ...acc, password: "" } // xóa password, giữ username
+              : acc,
+          );
+
+          // Nếu chưa có trong danh sách (login lần đầu), thêm vào
+          const alreadyExists = existingAccounts.some(
+            (acc) => acc.username === currentUser.phone,
+          );
+          if (!alreadyExists) {
+            updatedAccounts.push({
+              id: currentUser.id,
+              username: currentUser.phone,
+              password: "",
+            });
+          }
+
+          set({
+            user: null,
+            isRemembered: false,
+            accounts: updatedAccounts,
+          });
+        } else {
+          set({ user: null, isRemembered: false });
+        }
+      },
+
+      // Được gọi bởi bootstrap flow trong useAuth hook.
+      // Không liên quan đến login — chỉ để cập nhật user từ /me/bootstrap khi app khởi động
+      // hoặc khi gọi refreshAuth().
+      setUserFromBootstrap: (user) => {
+        set({ user });
       },
     }),
     {

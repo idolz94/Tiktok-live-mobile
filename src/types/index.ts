@@ -1,3 +1,5 @@
+import { ShopTikTokChannel } from "./database";
+
 export type AiStatus = "none" | "pending" | "done" | "error";
 
 export type CommentPriorityLevel = "high" | "medium" | "low" | "normal";
@@ -17,22 +19,6 @@ export type CommentIntent =
   | "spam"
   | "unknown"
   | string;
-
-export type PaymentStatus = "unpaid" | "partial" | "paid" | "refunded";
-
-export type ShippingStatus =
-  | "not_shipped"
-  | "waiting_pickup"
-  | "shipping"
-  | "delivered"
-  | "failed"
-  | "returned";
-
-export type LiveStatus = {
-  status: string;
-  message: string;
-  createdAt?: string;
-};
 
 export type LiveComment = {
   id: string;
@@ -58,8 +44,53 @@ export type LiveComment = {
   orderId?: string;
   dbId?: string;
   createdAt?: string;
-  raw?: unknown;
+  raw?: RawComment;
 };
+
+export type RawComment = {
+  id: string;
+  shop_id: string;
+  live_session_id: string;
+  customer_id: any;
+  tiktok_comment_id: string;
+  tiktok_username: string;
+  tiktok_unique_id: string;
+  display_name: string;
+  avatar_url: string;
+  text: string;
+  raw_text: string;
+  intent: string;
+  has_number: boolean;
+  can_create_order: boolean;
+  is_order_created: boolean;
+  order_id: any;
+  created_at: string;
+  inserted_at: string;
+  external_comment_id: string;
+  comment_text: string;
+  priority_level: string;
+  final_score: number;
+  updated_at: string;
+  liveSessionId: string;
+  dbLiveSessionId: string;
+  collectorSessionId: string;
+  liveUsername: string;
+  rawSsePayload: RawSsePayload;
+};
+
+export interface RawSsePayload {
+  eventId: string;
+  eventType: string;
+  source: string;
+  shopId: string;
+  liveSessionId: string;
+  live_session_id: string;
+  externalSessionId: string;
+  collectorSessionId: string;
+  liveUsername: string;
+  comment: Comment;
+  createdAt: string;
+}
 
 export type OrderProduct = {
   id: string;
@@ -74,13 +105,30 @@ export type OrderProduct = {
   rawCommentText?: string;
 };
 
-export type OrderStatus = "draft" | "confirmed";
-export type DepositStatus = "unpaid" | "paid";
+export type OrderStatus =
+  | "draft"
+  | "confirmed"
+  | "packed"
+  | "shipping"
+  | "completed"
+  | "canceled"
+  | "returned";
+
+export type DepositStatus = "unpaid" | "paid" | "deposited" | "refunded";
+export type PaymentStatus = "unpaid" | "partial" | "paid" | "refunded";
+export type ShippingStatus =
+  | "not_shipped"
+  | "waiting_pickup"
+  | "shipping"
+  | "delivered"
+  | "failed"
+  | "returned";
 
 export type Order = {
   id: string;
   orderCode: string;
   username: string;
+  customerId?: string | null;
   customerName?: string;
   customerTikTokUsername?: string;
   customerTikTokName?: string;
@@ -118,6 +166,11 @@ export type SocketMessage = {
   data?: any;
 };
 
+// export type AuthUser = {
+//   id: string;
+//   username: string;
+// };
+
 export type AuthUser = {
   id: string;
   email?: string | null;
@@ -127,40 +180,19 @@ export type AuthUser = {
   shopId?: string | null;
   shopName?: string | null;
   tiktokUsername?: string | null;
-  role?: string | null;
-  canUseApp?: boolean;
+  tiktokChannels?: ShopTikTokChannel[];
+  role?: string | null;          // "owner" | "staff" | ...
+  canUseApp?: boolean;           // false = hết hạn hoặc chưa đăng ký license
+  licenseStatus?: string | null; // "trial" | "trialing" | "active" | "expired" | null
 };
 
 export type LiveTab = "live" | "orders";
-export type TopTab = "connect" | "history";
+export type TopTab = "tiktok" | "facebook";
 export type BottomTab =
   | "home"
   | "customers"
   | "shipping"
   | "reports"
+  | "history"
   | "settings";
 export type OrderFilter = "all" | "unpaid" | "paid" | "draft" | "confirmed";
-
-export type SaveLiveStartedPayload = {
-  sessionId: string;
-  username: string;
-  startedAt: string;
-};
-
-export type SaveLiveEndedPayload = {
-  sessionId: string;
-  username: string;
-  startedAt?: string | null;
-  endedAt: string;
-  durationSeconds?: number;
-  commentCount?: number;
-  reason?: string;
-};
-
-export type CustomerSummary = {
-  username: string;
-  avatar?: string;
-  totalComments: number;
-  totalOrders: number;
-  latestComment: string;
-};

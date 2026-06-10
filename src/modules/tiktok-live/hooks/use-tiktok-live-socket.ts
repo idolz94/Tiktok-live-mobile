@@ -15,12 +15,21 @@ import EventSource from "react-native-sse";
 import { useAuthStore } from "@stores/auth";
 import { secureStorage } from "@utils/storage";
 
-function createClientId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
+// export function createClientId() {
+//   if (typeof crypto !== "undefined" && crypto.randomUUID) {
+//     return crypto.randomUUID();
+//   }
 
-  return `${Date.now()}-${Math.random()}`;
+//   return `${Date.now()}-${Math.random()}`;
+// }
+
+export function createClientId() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = char === "x" ? random : (random & 0x3) | 0x8;
+
+    return value.toString(16);
+  });
 }
 
 type UseTikTokLiveSocketOptions = {

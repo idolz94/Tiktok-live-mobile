@@ -1,4 +1,3 @@
-import { LiveComment } from "@app-types/index";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
 import { useOrderManager } from "@modules/orders/hooks/use-order-manager";
 import { createOrderCommentKey } from "@utils/comment";
@@ -16,6 +15,7 @@ import { Image } from "@components/image";
 import { images } from "@assets/images";
 import { HomeHeader } from "@components/home/header";
 import { TiktokPage } from "@components/home/tiktok-page";
+import { LiveComment } from "@app-types/index";
 
 export type TopTab = "connect" | "history";
 
