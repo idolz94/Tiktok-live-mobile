@@ -11,7 +11,8 @@ import Animated, {
 
 import { AccountConnected } from "./account-connected";
 import { SegmentControl } from "./segment";
-import { UnConnectLive } from "./unconnect-live";
+import { UnConnectedLive } from "./unconnected-live";
+import { fakeDataChannel, FakeDataType } from "./fake";
 
 const SUB_TABS = ["Live", "Đơn đã tạo"];
 
@@ -23,6 +24,9 @@ export const TiktokPage = memo(() => {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [channels, setChannels] = useState<FakeDataType[]>(fakeDataChannel);
+
+  const selectedChannel = channels.find((c) => c.isSelected);
 
   const translateY = useSharedValue(INITIAL_OFFSET);
   const opacity = useSharedValue(0);
@@ -36,22 +40,36 @@ export const TiktokPage = memo(() => {
     ],
   }));
 
-  const onConnectAccount = useCallback(() => {
-    if (visible) return;
+  const onSelectChannel = useCallback((selectedItem: FakeDataType) => {
+    setChannels((prev) =>
+      prev.map((c) => ({
+        ...c,
+        isSelected: c.key === selectedItem.key,
+      })),
+    );
+  }, []);
 
-    setVisible(true);
+  const onConnectAccount = useCallback(
+    (selectedItem: FakeDataType) => {
+      onSelectChannel(selectedItem);
 
-    opacity.value = 0;
-    translateY.value = INITIAL_OFFSET;
+      if (visible) return;
 
-    opacity.value = withTiming(1, {
-      duration: ANIMATION_DURATION,
-    });
+      setVisible(true);
 
-    translateY.value = withTiming(0, {
-      duration: ANIMATION_DURATION,
-    });
-  }, [visible]);
+      opacity.value = 0;
+      translateY.value = INITIAL_OFFSET;
+
+      opacity.value = withTiming(1, {
+        duration: ANIMATION_DURATION,
+      });
+
+      translateY.value = withTiming(0, {
+        duration: ANIMATION_DURATION,
+      });
+    },
+    [visible, onSelectChannel],
+  );
 
   const onDisconnectAccount = useCallback(() => {
     opacity.value = withTiming(0, {
@@ -66,6 +84,9 @@ export const TiktokPage = memo(() => {
       (finished) => {
         if (finished) {
           runOnJS(setVisible)(false);
+          runOnJS(setChannels)(
+            fakeDataChannel.map((c) => ({ ...c, isSelected: false })),
+          );
         }
       },
     );
@@ -91,7 +112,7 @@ export const TiktokPage = memo(() => {
         onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
       >
         <View style={{ flex: 1 }} key="live">
-          <UnConnectLive onConnect={onConnectAccount} />
+          <UnConnectedLive channels={channels} onConnect={onConnectAccount} />
         </View>
 
         <View style={{ flex: 1 }} key="orders">
@@ -104,7 +125,12 @@ export const TiktokPage = memo(() => {
           pointerEvents="box-none"
           style={[styles.accountOverlay, animatedStyle]}
         >
-          <AccountConnected onClose={onDisconnectAccount} />
+          <AccountConnected
+            onClose={onDisconnectAccount}
+            selectedChannel={selectedChannel}
+            channels={channels}
+            onSelectChannel={onSelectChannel}
+          />
         </Animated.View>
       )}
     </View>

@@ -233,8 +233,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "center",
   },
   input: { flex: 1, color: colors.neutral900, ...textPresets.fs14_400 },
-  check: { color: colors.greenSuccess, ...textPresets.fs14_500 },
-  eye: { color: colors.primaryDark, ...textPresets.fs14_400 },
+  check: { color: colors.success, ...textPresets.fs14_500 },
+  eye: { color: colors.primary, ...textPresets.fs14_400 },
   rememberRow: { flexDirection: "row", alignItems: "center", columnGap: 10 },
   checkbox: {
     width: 20,

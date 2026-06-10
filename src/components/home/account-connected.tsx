@@ -1,22 +1,53 @@
 import { images } from "@assets/images";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { Pressable, Text, View } from "react-native";
+import { ListChannels } from "./list-channels";
+import { FakeDataType } from "./fake";
 
 type Props = {
   onClose: () => void;
+  selectedChannel?: FakeDataType;
+  channels: FakeDataType[];
+  onSelectChannel: (item: FakeDataType) => void;
 };
 
-export const AccountConnected = ({ onClose }: Props) => {
+export const AccountConnected = ({
+  onClose,
+  selectedChannel,
+  channels,
+  onSelectChannel,
+}: Props) => {
+  const { show, hide } = useBottomSheet();
+
+  const showListChannels = () =>
+    show({
+      content: (
+        <ListChannels
+          channels={channels}
+          onClose={hide}
+          onSelected={(item) => {
+            onSelectChannel(item);
+            hide();
+          }}
+        />
+      ),
+      showDragIndicator: false,
+    });
+
   return (
     <View style={styles.container}>
       <View style={styles.left}>
-        <Image source={images.logo_app} style={styles.avatar} />
+        <Image
+          source={selectedChannel ? selectedChannel.logo : images.logo_app}
+          style={styles.avatar}
+        />
         <View style={{ rowGap: 2 }}>
-          <Text style={styles.name}>Nguyễn Văn A</Text>
+          <Text style={styles.name}>{selectedChannel?.name ?? ""}</Text>
           <View style={styles.info}>
             <View
               style={{
@@ -49,7 +80,7 @@ export const AccountConnected = ({ onClose }: Props) => {
         <Pressable>
           <Icon name="filter" size={24} tintColor="neutral900" />
         </Pressable>
-        <Pressable>
+        <Pressable onPress={showListChannels}>
           <Icon name="arrow_down" size={24} tintColor="neutral900" />
         </Pressable>
       </View>

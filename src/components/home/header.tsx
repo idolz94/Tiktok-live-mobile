@@ -1,4 +1,5 @@
 import { images } from "@assets/images";
+import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { createStyles } from "@utils/createStyles";
 import { Pressable, Text, View } from "react-native";
@@ -42,7 +43,7 @@ export const HomeHeader = ({ activeIndex, onTabPress }: Props) => {
       </View>
 
       <Pressable style={styles.logoButton}>
-        <Image source={images.logo_app} style={styles.logo} />
+        <Icon name="search" size={20} tintColor="#000000" />
       </Pressable>
     </View>
   );
@@ -57,8 +58,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "center",
   },
   logoButton: {
-    width: 44,
-    height: 44,
+    padding: 8,
     borderRadius: 99,
     justifyContent: "center",
     alignItems: "center",
