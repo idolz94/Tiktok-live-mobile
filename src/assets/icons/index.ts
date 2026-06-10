@@ -12,6 +12,8 @@ export const icons = {
   filter: require("./sources/filter.png"),
   disconnect: require("./sources/disconnect.png"),
   arrow_down: require("./sources/arrow-down.png"),
+  close: require("./sources/close.png"),
+  search: require("./sources/search.png"),
 };
 
 export type IconsTypes = keyof typeof icons;

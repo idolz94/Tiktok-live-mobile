@@ -34,7 +34,9 @@ export const AppBottomSheet = memo(
         onClose={onClose}
         snapPoints={snapPoints}
         handleComponent={showDragIndicator ? undefined : null}
-        backgroundStyle={backgroundStyle || { backgroundColor: colors.white }}
+        backgroundStyle={
+          backgroundStyle || { backgroundColor: colors.neutral100 }
+        }
         enablePanDownToClose
         enableDynamicSizing
         style={{ zIndex: 99 }}
