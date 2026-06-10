@@ -5,6 +5,8 @@ import {
   postRequest,
 } from "@utils/http/request-sse";
 
+import { removeAt } from "@utils/comment";
+
 function appendParams(url: string, params: Record<string, string | undefined>) {
   const searchParams = new URLSearchParams();
 
@@ -31,13 +33,15 @@ export function buildLiveStreamEventsUrl(clientId: string) {
 }
 
 export async function subscribeTikTokLiveApi({
+  clientId,
   username,
 }: {
   clientId?: string;
   username: string;
 }) {
   return postRequest<any>("/live-stream/start", {
-    username,
+    clientId,
+    username: removeAt(username),
   });
 }
 
@@ -46,6 +50,8 @@ export async function stopTikTokLiveApi(
 ) {
   const username =
     typeof input === "string" ? "" : String(input.username || "").trim();
+  const clientId =
+    typeof input === "string" ? "" : String(input.clientId || "").trim();
 
   if (!username) {
     return {
@@ -56,7 +62,8 @@ export async function stopTikTokLiveApi(
   }
 
   return postRequest<any>("/live-stream/stop", {
-    username,
+    clientId,
+    username: removeAt(username),
   });
 }
 

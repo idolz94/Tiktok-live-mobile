@@ -1,4 +1,4 @@
-import { LiveComment } from "../types";
+import { LiveComment } from "@app-types/index";
 import { createId } from "./id";
 import { getCommentTikTokUsername } from "./tiktok";
 

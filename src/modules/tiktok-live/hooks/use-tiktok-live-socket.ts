@@ -54,9 +54,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const clientIdRef = useRef(createClientId());
   const isManualCloseRef = useRef(false);
-  // Mặc định ban đầu dùng username của user đăng nhập
+  // Mặc định ban đầu dùng username của user đăng nhập.
+  // Nếu user đã login nhưng tiktokUsername chưa load xong (bootstrap đang chạy),
+  // dùng chuỗi rỗng và để useEffect cập nhật sau.
+  // Chỉ dùng TIKTOK_USERNAME hardcoded khi chưa có user nào đăng nhập (dev/test).
   const initialUsername =
-    options.initialUsername || loggedInTiktokUsername || TIKTOK_USERNAME;
+    options.initialUsername || loggedInTiktokUsername || (authUser ? "" : TIKTOK_USERNAME);
   const tiktokUsernameRef = useRef(normalizeTikTokUsername(initialUsername));
   const [status, setStatus] = useState("Đang kết nối Backend SSE...");
   const [isConnected, setIsConnected] = useState(false);
@@ -342,6 +345,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         `Đang yêu cầu Backend start Python collector: ${nextUsername}...`,
       );
 
+      if (__DEV__) {
+        console.log(
+          `[useTikTokLiveSocket] subscribeTikTokUsername: calling API for "${nextUsername}" (clientId: ${clientIdRef.current})`,
+        );
+      }
+
       try {
         await subscribeTikTokLiveApi({
           clientId: clientIdRef.current,
@@ -353,7 +362,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         );
         return true;
       } catch (error) {
-        if (process.env.NODE_ENV === "development") {
+        if (__DEV__) {
           console.error("START LIVE STREAM ERROR:", error);
         }
 
@@ -371,13 +380,19 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const stopLiveSession = useCallback(async () => {
     setStatus("Đang dừng nhận comment...");
 
+    if (__DEV__) {
+      console.log(
+        `[useTikTokLiveSocket] stopLiveSession: calling API for "${tiktokUsernameRef.current}" (clientId: ${clientIdRef.current})`,
+      );
+    }
+
     try {
       await stopTikTokLiveApi({
         clientId: clientIdRef.current,
         username: tiktokUsernameRef.current,
       });
     } catch (error) {
-      if (process.env.NODE_ENV === "development") {
+      if (__DEV__) {
         console.error("STOP LIVE STREAM ERROR:", error);
       }
     }
@@ -403,13 +418,19 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
     isManualCloseRef.current = true;
 
+    if (__DEV__) {
+      console.log(
+        `[useTikTokLiveSocket] disconnect: calling API for "${tiktokUsernameRef.current}" (clientId: ${clientIdRef.current})`,
+      );
+    }
+
     try {
       await stopTikTokLiveApi({
         clientId: clientIdRef.current,
         username: tiktokUsernameRef.current,
       });
     } catch (error) {
-      if (process.env.NODE_ENV === "development") {
+      if (__DEV__) {
         console.error("DISCONNECT LIVE STREAM ERROR:", error);
       }
     }

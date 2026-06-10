@@ -1,6 +1,6 @@
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Text, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import Animated, {
   runOnJS,
@@ -12,7 +12,16 @@ import Animated, {
 import { AccountConnected } from "./account-connected";
 import { SegmentControl } from "./segment";
 import { UnConnectedLive } from "./unconnected-live";
-import { fakeDataChannel, FakeDataType } from "./fake";
+import { images } from "@assets/images";
+import { useAuth } from "@modules/auth/hooks/use-auth";
+import { normalizeTikTokUsername } from "@utils/comment";
+import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
+
+export type TikTokLiveChannel = {
+  id: string;
+  username: string;
+  isDefault: boolean;
+};
 
 const SUB_TABS = ["Live", "Đơn đã tạo"];
 
@@ -22,14 +31,49 @@ const INITIAL_OFFSET = 48;
 export const TiktokPage = memo(() => {
   const pagerRef = useRef<PagerView>(null);
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [visible, setVisible] = useState(false);
-  const [channels, setChannels] = useState<FakeDataType[]>(fakeDataChannel);
-
-  const selectedChannel = channels.find((c) => c.isSelected);
-
   const translateY = useSharedValue(INITIAL_OFFSET);
   const opacity = useSharedValue(0);
+
+  const { user } = useAuth();
+  const { tiktokUsername, changeTikTokUsername, stopLiveSession } = useTikTokLiveSocketContext();
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [visible, setVisible] = useState(false);
+
+  const channelOptions = useMemo<TikTokLiveChannel[]>(() => {
+    const options: TikTokLiveChannel[] = user?.tiktokChannels?.map((channel) => ({
+      id: channel.id,
+      username: normalizeTikTokUsername(channel.tiktokUsername),
+      isDefault: channel.isDefault,
+    })) || [];
+
+    const normalizedCurrent = normalizeTikTokUsername(
+      user?.tiktokUsername ?? "",
+    );
+
+    if (
+      normalizedCurrent &&
+      !options.some((option) => option.username === normalizedCurrent)
+    ) {
+      options.unshift({
+        id: "current",
+        username: normalizedCurrent,
+        isDefault: true,
+      });
+    }
+
+    return options;
+  }, [user]);
+
+  const [channels, setChannels] = useState<TikTokLiveChannel[] | undefined>(
+    channelOptions,
+  );
+
+  useEffect(() => {
+    setChannels(channelOptions);
+  }, [channelOptions]);
+
+  const selectedChannel = channels?.find((c) => c.isDefault);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -40,18 +84,42 @@ export const TiktokPage = memo(() => {
     ],
   }));
 
-  const onSelectChannel = useCallback((selectedItem: FakeDataType) => {
+  const onSelectChannel = useCallback((selectedItem: TikTokLiveChannel) => {
     setChannels((prev) =>
-      prev.map((c) => ({
+      prev?.map((c) => ({
         ...c,
-        isSelected: c.key === selectedItem.key,
+        isDefault: c.id === selectedItem.id,
       })),
     );
-  }, []);
 
-  const onConnectAccount = useCallback(
-    (selectedItem: FakeDataType) => {
-      onSelectChannel(selectedItem);
+    const targetUsername = selectedItem.username;
+    const nextUsername = normalizeTikTokUsername(targetUsername);
+    if (nextUsername) {
+      changeTikTokUsername(nextUsername).catch((err) => {
+        if (__DEV__) console.error("Change channel error:", err);
+      });
+    }
+  }, [changeTikTokUsername]);
+
+  const connectSelectedChannel = useCallback(async (item?: TikTokLiveChannel) => {
+    const targetUsername = item ? item.username : tiktokUsername;
+    const nextUsername = normalizeTikTokUsername(targetUsername);
+
+    if (!nextUsername) return;
+
+    try {
+      const success = await changeTikTokUsername(nextUsername);
+      if (!success) {
+        Alert.alert("Lỗi", "Không thể kết nối đến TikTok Live. Vui lòng kiểm tra lại username.");
+        return;
+      }
+
+      setChannels((prev) =>
+        prev?.map((c) => ({
+          ...c,
+          isDefault: normalizeTikTokUsername(c.username) === nextUsername,
+        })),
+      );
 
       if (visible) return;
 
@@ -67,11 +135,22 @@ export const TiktokPage = memo(() => {
       translateY.value = withTiming(0, {
         duration: ANIMATION_DURATION,
       });
-    },
-    [visible, onSelectChannel],
-  );
+    } catch (error) {
+      if (__DEV__) {
+        console.error("Connect channel error:", error);
+      }
+    }
+  }, [tiktokUsername, visible, changeTikTokUsername]);
 
-  const onDisconnectAccount = useCallback(() => {
+  const onDisconnectAccount = useCallback(async () => {
+    try {
+      await stopLiveSession();
+    } catch (error) {
+      if (__DEV__) {
+        console.error("Disconnect error:", error);
+      }
+    }
+
     opacity.value = withTiming(0, {
       duration: ANIMATION_DURATION,
     });
@@ -85,12 +164,12 @@ export const TiktokPage = memo(() => {
         if (finished) {
           runOnJS(setVisible)(false);
           runOnJS(setChannels)(
-            fakeDataChannel.map((c) => ({ ...c, isSelected: false })),
+            channelOptions?.map((c) => ({ ...c, isDefault: false })),
           );
         }
       },
     );
-  }, []);
+  }, [stopLiveSession, channelOptions]);
 
   const onTabPress = (index: number) => {
     setActiveIndex(index);
@@ -112,7 +191,10 @@ export const TiktokPage = memo(() => {
         onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
       >
         <View style={{ flex: 1 }} key="live">
-          <UnConnectedLive channels={channels} onConnect={onConnectAccount} />
+          <UnConnectedLive
+            channels={channels || []}
+            onConnect={connectSelectedChannel}
+          />
         </View>
 
         <View style={{ flex: 1 }} key="orders">
@@ -128,7 +210,7 @@ export const TiktokPage = memo(() => {
           <AccountConnected
             onClose={onDisconnectAccount}
             selectedChannel={selectedChannel}
-            channels={channels}
+            channels={channels || []}
             onSelectChannel={onSelectChannel}
           />
         </Animated.View>
