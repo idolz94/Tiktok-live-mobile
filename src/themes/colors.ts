@@ -3,13 +3,27 @@ export const colors = {
   neutral400: "#484848",
   neutral300: "#787878",
   neutral100: "#ffffff",
+  neutral50: "rgba(242, 242, 242, 1)",
 
   primary: "#FF6B8A",
+  primaryLight: "rgba(255, 232, 232, 1)",
 
   border10: "rgba(0, 0, 0, 0.1)",
   border20: "rgba(0, 0, 0, 0.2)",
 
   transparent50: "rgba(0, 0, 0, 0.5)",
+
+  blueLight: "rgba(233, 242, 255, 1)",
+  pinkLight: "rgba(255, 239, 228, 1)",
+
+  success: "rgba(44, 168, 123, 1)",
+  successDark: "rgba(217, 255, 238, 1)",
+  successLight: "rgba(237, 250, 244, 1)",
+
+  info: "rgba(70, 138, 223, 1)",
+  infoLight: "rgba(233, 242, 255, 1)",
+
+  error: "rgba(255, 66, 66, 1)",
 };
 
 export const linearGradients = {

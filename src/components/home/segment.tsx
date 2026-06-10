@@ -76,6 +76,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     padding: 4,
     borderRadius: 99,
     backgroundColor: colors.neutral100,
+    marginHorizontal: 16,
   },
   indicator: {
     position: "absolute",
