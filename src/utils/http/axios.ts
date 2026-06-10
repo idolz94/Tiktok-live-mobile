@@ -4,16 +4,17 @@ import {
   WEB_URL_ORIGIN,
   WEB_URL_REFERER,
 } from "@constants/config";
-import { getSseBaseUrl } from "@modules/tiktok-live/service/sse-api";
 import { secureStorage } from "@utils/storage";
-import axios, { InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
+import { ApiError } from "./request-sse";
 import { sessionExpiredEmitter } from "./session-event";
 
 // ────────────────────────────────────────────────
 // Axios instance for SSE
 // ────────────────────────────────────────────────
-export const httpClient = axios.create({
-  baseURL: getSseBaseUrl(),
+export const sseClient = axios.create({
+  baseURL: API_URL_ENDPOINT,
+  withCredentials: true,
   timeout: 15_000,
   headers: {
     "Content-Type": "application/json",
@@ -25,55 +26,56 @@ export const httpClient = axios.create({
 // ────────────────────────────────────────────────
 // Request interceptor
 // ────────────────────────────────────────────────
-httpClient.interceptors.request.use(
-  async (config: InternalAxiosRequestConfig) => {
+sseClient.interceptors.request.use(
+  async (config) => {
     const token = await secureStorage.getAccessToken();
 
-    config.headers.Accept = "text/event-stream";
+    config.headers["x-app-key"] = MOBILE_APP_KEY;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // if (__DEV__) {
+    //   console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
+    // }
+
     return config;
   },
-  async function (error) {
-    console.log("🚀 ~ httpClient.interceptors.request: ~ error:", error);
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
 // ────────────────────────────────────────────────
 // Response interceptor
 // ────────────────────────────────────────────────
-httpClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const message = error?.message ?? "";
+sseClient.interceptors.response.use(
+  (response) => {
+    const data = response.data;
 
     if (
-      message === "React Native Runtime is shutting down" ||
-      message.includes("Runtime is shutting down")
+      data &&
+      typeof data === "object" &&
+      (("ok" in data && !data.ok) || ("success" in data && !data.success))
     ) {
-      return Promise.reject(error);
+      throw new ApiError(
+        data.message || "Request failed",
+        response.status,
+        data,
+      );
     }
 
-    const status = error.response?.status;
-
-    if (status === 401) {
-      console.warn("[HTTP] 401 Unauthorized");
-      const url = error.config?.url || "";
-      if (!url.includes("/auth/login")) {
-        sessionExpiredEmitter.emit();
-      }
-    } else if (status === 403) {
-      console.warn("[HTTP] 403 Forbidden");
-    } else if (status === 500) {
-      console.error("[HTTP] 500 Internal Server Error");
-    } else if (!error.response) {
-      console.error("[HTTP] Network error or timeout:", message);
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      throw new ApiError(
+        error.response.data?.message || error.message,
+        error.response.status,
+        error.response.data,
+      );
     }
 
-    return Promise.reject(error);
+    throw error;
   },
 );
 
@@ -133,4 +135,4 @@ apiClient.interceptors.response.use(
   },
 );
 
-export default httpClient;
+export default sseClient;
