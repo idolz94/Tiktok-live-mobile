@@ -13,3 +13,7 @@ export const MOBILE_APP_KEY = process.env.EXPO_PUBLIC_MOBILE_APP_KEY || "";
 
 export const WEB_URL_ORIGIN = process.env.EXPO_PUBLIC_WEB_URL_ORIGIN || "";
 export const WEB_URL_REFERER = process.env.EXPO_PUBLIC_WEB_URL_REFERER || "";
+
+export const CLERK_PUBLISHABLE_KEY =
+  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
+

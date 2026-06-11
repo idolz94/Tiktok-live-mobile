@@ -86,11 +86,23 @@ export const useAuthStore = create<AuthStoreState>()(
       accounts: DEFAULT_ACCOUNTS,
       user: null,
       isRemembered: false,
+      lastUsername: "",
 
-      login: async ({ phone, password, remember }) => {
+      setLoginState: (username, remember) => {
+        set({
+          lastUsername: username,
+          isRemembered: remember,
+        });
+      },
+
+      login: async ({ username: phone, password, remember }) => {
         try {
           // loginApi → lưu token vào SecureStore, trả về payload từ server
-          const payload = await loginApi({ phone, password, remember });
+          const payload = await loginApi({
+            username: phone,
+            password,
+            remember,
+          });
 
           // Phase 1: Set user cơ bản NGAY để AuthLayout thấy user != null → navigate
           // Tại sao không chờ bootstrap?
@@ -106,8 +118,7 @@ export const useAuthStore = create<AuthStoreState>()(
                 payload?.user?.user_metadata?.full_name ||
                 payload?.user?.user_metadata?.fullName ||
                 null,
-              phone:
-                payload?.user?.user_metadata?.phone || phone,
+              phone: payload?.user?.user_metadata?.phone || phone,
               tiktokUsername:
                 payload?.user?.user_metadata?.tiktok_id ||
                 payload?.user?.user_metadata?.tiktok_username ||
@@ -123,12 +134,11 @@ export const useAuthStore = create<AuthStoreState>()(
         }
       },
 
-
-      register: async ({ fullName, phone, password, tiktokId }) => {
+      register: async ({ fullName, username: phone, password, tiktokId }) => {
         try {
           await registerApi({
             fullName,
-            phone,
+            username: phone,
             password,
             tiktokId,
             //@ts-ignore
@@ -150,39 +160,7 @@ export const useAuthStore = create<AuthStoreState>()(
 
       logout: async () => {
         await secureStorage.clearAuth();
-
-        const currentUser = get().user;
-
-        // Giữ lại username để pre-fill form đăng nhập lần sau,
-        // nhưng xóa password vì lý do bảo mật
-        if (currentUser?.phone) {
-          const existingAccounts = get().accounts;
-          const updatedAccounts = existingAccounts.map((acc) =>
-            acc.username === currentUser.phone
-              ? { ...acc, password: "" } // xóa password, giữ username
-              : acc,
-          );
-
-          // Nếu chưa có trong danh sách (login lần đầu), thêm vào
-          const alreadyExists = existingAccounts.some(
-            (acc) => acc.username === currentUser.phone,
-          );
-          if (!alreadyExists) {
-            updatedAccounts.push({
-              id: currentUser.id,
-              username: currentUser.phone,
-              password: "",
-            });
-          }
-
-          set({
-            user: null,
-            isRemembered: false,
-            accounts: updatedAccounts,
-          });
-        } else {
-          set({ user: null, isRemembered: false });
-        }
+        set({ user: null });
       },
 
       // Được gọi bởi bootstrap flow trong useAuth hook.

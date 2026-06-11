@@ -7,9 +7,11 @@ import { Separator } from "@components/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
 import { useAuth } from "@modules/auth/hooks/use-auth";
+import { useAuthStore } from "@stores/auth";
+import { useSignIn } from "@clerk/clerk-expo";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import {
   Alert,
@@ -50,22 +52,36 @@ type Props = {
 };
 
 export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
-  const { login } = useAuth();
+  const {
+    signIn,
+    setActive: signInActive,
+    isLoaded: isSignInLoaded,
+  } = useSignIn();
   const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const { isRemembered, lastUsername } = useAuthStore();
+
   const formMethod = useForm<LoginForm>({
     mode: "all",
     defaultValues: {
-      phone: "",
+      username: lastUsername || "",
       password: "",
-      remember: false,
+      remember: isRemembered ?? false,
     },
     resolver: zodResolver(LoginSchema),
   });
+
+  useEffect(() => {
+    formMethod.reset({
+      username: lastUsername || "",
+      password: "",
+      remember: isRemembered ?? false,
+    });
+  }, [lastUsername, isRemembered]);
 
   const handleSocialLogin = (
     type: "phone" | "facebook" | "tiktok" | "zalo",
@@ -78,24 +94,57 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
     });
 
   const submit = useCallback(() => {
-    formMethod.handleSubmit(async ({ phone, password, remember }) => {
+    formMethod.handleSubmit(async ({ username, password, remember }) => {
+      if (!isSignInLoaded || !signIn) return;
+
       setLoading(true);
-      const result = await login({ phone, password, remember });
-      setLoading(false);
-      if (!result.ok) {
-        Alert.alert("Đăng nhập thất bại", result.message || "Đã có lỗi xảy ra");
+      try {
+        const result = await signIn.create({
+          identifier: username.trim(),
+          password,
+        });
+
+        if (result.status === "complete") {
+          useAuthStore.getState().setLoginState(username.trim(), remember);
+          await signInActive({ session: result.createdSessionId });
+        } else {
+          Alert.alert(
+            "Yêu cầu xác minh",
+            "Vui lòng hoàn tất xác minh tài khoản.",
+          );
+        }
+      } catch (error: any) {
+        const clerkErrors = error?.errors;
+        if (clerkErrors?.length) {
+          const firstErr = clerkErrors[0];
+          let errMsg =
+            firstErr.longMessage || firstErr.message || "Đăng nhập thất bại";
+          if (firstErr.code === "form_password_incorrect") {
+            errMsg = "Mật khẩu không đúng.";
+          } else if (firstErr.code === "form_identifier_not_found") {
+            errMsg = "Tên đăng nhập không tồn tại.";
+          }
+          Alert.alert("Đăng nhập thất bại", errMsg);
+        } else {
+          Alert.alert(
+            "Đăng nhập thất bại",
+            error instanceof Error ? error.message : "Đã có lỗi xảy ra",
+          );
+        }
+      } finally {
+        setLoading(false);
       }
     })();
-  }, [formMethod, login]);
+  }, [formMethod, signIn, signInActive, isSignInLoaded]);
 
   return (
     <FormProvider {...formMethod}>
       <Animated.View style={[{ rowGap: 20 }, animatedStyle]}>
         <View style={{ rowGap: 8 }}>
-          <Text style={styles.label}>Số điện thoại</Text>
+          <Text style={styles.label}>Tài khoản</Text>
           <Controller
             control={formMethod.control}
-            name="phone"
+            name="username"
             render={({
               field: { onChange, value },
               fieldState: { invalid },
@@ -105,9 +154,9 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
                   <TextInput
                     value={value}
                     onChangeText={onChange}
-                    keyboardType="phone-pad"
+                    keyboardType="default"
                     autoCapitalize="none"
-                    placeholder="Nhập số điện thoại"
+                    placeholder="Nhập tài khoản"
                     placeholderTextColor={colors.neutral300}
                     style={styles.input}
                   />

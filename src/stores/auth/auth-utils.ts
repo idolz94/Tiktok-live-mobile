@@ -24,7 +24,7 @@ export function isLicenseUsable(license: ShopLicense | null) {
   return true;
 }
 
-function normalizeUser(user: any): BootstrapUser | null {
+export function normalizeUser(user: any): BootstrapUser | null {
   if (!user) return null;
 
   const metadata = user.user_metadata || user.metadata || {};
@@ -53,7 +53,7 @@ function normalizeUser(user: any): BootstrapUser | null {
   };
 }
 
-function normalizeProfile(
+export function normalizeProfile(
   raw: any,
   user: BootstrapUser | null,
 ): Profile | null {
@@ -77,7 +77,7 @@ function normalizeProfile(
   };
 }
 
-function normalizeTikTokChannel(raw: any): ShopTikTokChannel | null {
+export function normalizeTikTokChannel(raw: any): ShopTikTokChannel | null {
   if (!raw) return null;
 
   const id = raw.id;
@@ -96,7 +96,7 @@ function normalizeTikTokChannel(raw: any): ShopTikTokChannel | null {
   };
 }
 
-function normalizeTikTokChannels(raw: any): ShopTikTokChannel[] {
+export function normalizeTikTokChannels(raw: any): ShopTikTokChannel[] {
   if (!Array.isArray(raw)) return [];
 
   return raw
@@ -145,8 +145,15 @@ export function normalizeMeBootstrap(raw: any): MeBootstrapResponse {
 export function mapBootstrapToAuthUser(
   response: MeBootstrapResponse,
 ): AuthUser | null {
-  const { user, profile, shop, shopMember, license, tiktokChannels, canUseApp } =
-    response;
+  const {
+    user,
+    profile,
+    shop,
+    shopMember,
+    license,
+    tiktokChannels,
+    canUseApp,
+  } = response;
 
   // Nếu không có user object → server xác nhận chưa đăng nhập
   if (!user) return null;

@@ -1,10 +1,8 @@
-import { Mode } from "src/schemas/auth";
 import { Header } from "@components/auth/header";
 import { Login } from "@components/auth/login";
 import { Register } from "@components/auth/register";
 import { LinearGradient } from "@components/linear-gradient";
 import { Screen } from "@components/screen";
-import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -15,6 +13,7 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { Mode } from "src/schemas/auth";
 
 export default function AuthScreen() {
   const params = useLocalSearchParams<{ mode?: Mode }>();
@@ -78,10 +77,7 @@ export default function AuthScreen() {
               switchToRegister={switchToRegister}
               animatedStyle={loginStyle}
             />
-            <Register
-              animatedStyle={registerStyle}
-              onRegisterSuccess={switchToLogin}
-            />
+            <Register animatedStyle={registerStyle} />
           </KeyboardAwareScrollView>
         </View>
       </View>

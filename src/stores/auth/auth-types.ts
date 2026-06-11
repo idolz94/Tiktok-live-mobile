@@ -23,12 +23,14 @@ export interface AuthStoreState {
   accounts: Account[];
   user: AuthUser | null;
   isRemembered: boolean;
+  lastUsername?: string;
   login: (data: LoginForm) => Promise<AuthResult>;
   register: (data: RegisterForm) => Promise<AuthResult>;
   logout: () => void;
   // Được gọi bởi bootstrap flow để cập nhật user sau khi GET /me/bootstrap thành công.
   // Không cần credentials, chỉ cần kết quả đã map từ mapBootstrapToAuthUser().
   setUserFromBootstrap: (user: AuthUser | null) => void;
+  setLoginState: (username: string, remember: boolean) => void;
 }
 
 export type BootstrapUser = {
