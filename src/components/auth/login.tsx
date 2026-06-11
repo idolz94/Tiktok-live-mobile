@@ -6,7 +6,6 @@ import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
-import { useAuth } from "@modules/auth/hooks/use-auth";
 import { useAuthStore } from "@stores/auth";
 import { useSignIn } from "@clerk/clerk-expo";
 import { HairlineWidth } from "@themes";

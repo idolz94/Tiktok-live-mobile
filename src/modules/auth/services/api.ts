@@ -1,6 +1,3 @@
-import { LoginForm, RegisterForm } from "src/schemas/auth";
-import { secureStorage } from "@utils/storage";
-import { phoneToAuthEmail } from "@utils/string";
 import { MeBootstrapResponse } from "@stores/auth";
 import {
   normalizeMeBootstrap,
@@ -13,58 +10,6 @@ import {
   UpdateTikTokChannelPayload,
 } from "@app-types/payload";
 import { apiClient } from "@utils/http/axios";
-
-export const registerApi = async ({
-  username: phone,
-  password,
-  tiktokId,
-  fullName,
-}: RegisterForm) => {
-  const response = await apiClient.post("/auth/register", {
-    defaultTikTokUsername: tiktokId,
-    email: phoneToAuthEmail(phone),
-    fullName,
-    loginType: "phone_password",
-    password,
-    phone,
-    shopName: `${fullName}'s Shop`,
-    tiktokId: tiktokId.startsWith("@") ? tiktokId : `@${tiktokId}`,
-  });
-  return response.data;
-};
-
-export const loginApi = async ({
-  username: phone,
-  password,
-  remember,
-}: LoginForm) => {
-  const response = await apiClient.post("/auth/login", {
-    phone,
-    email: phoneToAuthEmail(phone),
-    password,
-    remember: remember ?? true,
-    loginType: "phone_password",
-  });
-
-  const payload = response.data?.data;
-
-  const token = String(
-    payload?.accessToken ||
-      payload?.access_token ||
-      payload?.token ||
-      payload?.session?.accessToken ||
-      payload?.session?.access_token ||
-      "",
-  ).trim();
-
-  if (!token) {
-    throw new Error("No access token received");
-  }
-
-  await secureStorage.setAccessToken(token);
-
-  return payload;
-};
 
 export const logoutApi = async () => {
   return apiClient.post("/auth/logout");
