@@ -39,7 +39,7 @@ export async function subscribeTikTokLiveApi({
   clientId?: string;
   username: string;
 }) {
-  return postRequest<any>("/live-stream/start", {
+  return postRequest<any>(buildApiUrl("/live-stream/start"), {
     clientId,
     username: removeAt(username),
   });
@@ -62,9 +62,9 @@ export async function stopTikTokLiveApi(
   }
 
   return postRequest<any>(
-    "/live-stream/stop",
+    buildApiUrl("/live-stream/stop"),
     { clientId, username: removeAt(username) },
-    { timeout: 60_000 }, // stop có thể mất lâu hơn (server cleanup TikTok connection)
+    { timeout: 60_000 },
   );
 }
 

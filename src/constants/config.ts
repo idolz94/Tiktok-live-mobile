@@ -16,4 +16,3 @@ export const WEB_URL_REFERER = process.env.EXPO_PUBLIC_WEB_URL_REFERER || "";
 
 export const CLERK_PUBLISHABLE_KEY =
   process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
-

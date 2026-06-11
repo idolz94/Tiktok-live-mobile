@@ -1,5 +1,16 @@
 import type { LiveComment, OrderWithTikTok } from "@app-types/index";
 
+export type UserJoinedEvent = {
+  shopId?: string;
+  liveUsername?: string;
+  nickname?: string;
+  joinUsername?: string;
+  joinDisplayName?: string;
+  joinAvatarUrl?: string;
+  createdAt?: string;
+  displayName: string;
+};
+
 export type LiveHistoryItem = {
   id: string; // DB live_sessions.id
   sessionId: string; // Python external session id
