@@ -13,7 +13,7 @@ import {
 } from "../service/sse-api";
 import EventSource from "react-native-sse";
 import { useAuthStore } from "@stores/auth";
-import { secureStorage } from "@utils/storage";
+import { getAuthToken } from "@utils/http/request-sse";
 
 // export function createClientId() {
 //   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -242,7 +242,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const connectSse = useCallback(async () => {
     const clientId = clientIdRef.current;
     const url = buildLiveStreamEventsUrl(clientId);
-    const accessToken = await secureStorage.getAccessToken();
+    const accessToken = await getAuthToken();
 
     if (!accessToken) {
       console.warn("[SSE] Missing access token");
@@ -357,6 +357,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           username: nextUsername,
         });
 
+        // Đảm bảo SSE /live-stream/events được kết nối để nhận comment
+        await connectSse();
+
         setStatus(
           `Đã gửi lệnh start collector cho ${nextUsername}, đang chờ comment...`,
         );
@@ -374,7 +377,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         return false;
       }
     },
-    [finalizeCurrentSessionLocally, setComments],
+    [finalizeCurrentSessionLocally, setComments, connectSse],
   );
 
   const stopLiveSession = useCallback(async () => {
@@ -397,7 +400,14 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
     }
 
+    // Đóng SSE connection để dừng nhận comment
+    isManualCloseRef.current = true;
+    eventSourceRef.current?.close();
+    eventSourceRef.current = null;
+
     finalizeCurrentSessionLocally("manual_stop");
+    setIsConnected(false);
+    setStatus("Đã dừng nhận comment");
 
     return true;
   }, [finalizeCurrentSessionLocally]);

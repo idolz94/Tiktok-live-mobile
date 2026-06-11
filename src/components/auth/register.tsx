@@ -1,24 +1,31 @@
+import { useAuth as useClerkAuth, useSignUp } from "@clerk/clerk-expo";
+import { LinearGradient } from "@components/linear-gradient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useThemes } from "@hooks/use-theme";
+import { createTikTokChannelApi } from "@modules/auth/services/api";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useRegister } from "@modules/auth/hooks/use-register";
-import { RegisterForm, RegisterSchema } from "src/schemas/auth";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import { AnimatedStyleHandle } from "react-native-reanimated/lib/typescript/hook/commonTypes";
-import { useThemes } from "@hooks/use-theme";
-import { LinearGradient } from "@components/linear-gradient";
+import { RegisterForm, RegisterSchema } from "src/schemas/auth";
 
 type Props = {
-  onRegisterSuccess: () => void;
   animatedStyle: AnimatedStyleHandle<{
     opacity: number;
   }>;
 };
 
-export const Register = ({ onRegisterSuccess, animatedStyle }: Props) => {
+export const Register = ({ animatedStyle }: Props) => {
   const { colors } = useThemes();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -27,7 +34,7 @@ export const Register = ({ onRegisterSuccess, animatedStyle }: Props) => {
     mode: "all",
     defaultValues: {
       password: "",
-      phone: "",
+      username: "",
       fullName: "",
       tiktokId: "",
       agreePolicy: false,
@@ -35,11 +42,76 @@ export const Register = ({ onRegisterSuccess, animatedStyle }: Props) => {
     resolver: zodResolver(RegisterSchema),
   });
 
-  const { handleRegister, isLoading } = useRegister(onRegisterSuccess);
+  const {
+    signUp,
+    setActive: signUpActive,
+    isLoaded: isSignUpLoaded,
+  } = useSignUp();
+  const { signOut } = useClerkAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   const submit = useCallback(() => {
-    formMethod.handleSubmit(handleRegister)();
-  }, [formMethod, handleRegister]);
+    formMethod.handleSubmit(
+      async ({ username: phone, password, fullName, tiktokId }) => {
+        if (!isSignUpLoaded || !signUp) return;
+
+        setIsLoading(true);
+        try {
+          const result = await signUp.create({
+            username: phone.trim(),
+            password,
+            firstName: fullName.trim(),
+            unsafeMetadata: {
+              tiktokId: tiktokId.trim(),
+            },
+          });
+
+          if (result.status === "complete") {
+            await signUpActive({ session: result.createdSessionId });
+
+            try {
+              await createTikTokChannelApi({
+                tiktokUsername: tiktokId.trim(),
+                isDefault: true,
+              });
+            } catch (error) {
+              console.warn(
+                "[Register] Lỗi tạo TikTok channel ở backend:",
+                error,
+              );
+              //@ts-ignore
+              Alert.alert("Lỗi rồi!!", error?.message || "Có lỗi xảy ra");
+            }
+          } else {
+            Alert.alert(
+              "Yêu cầu xác minh",
+              "Vui lòng hoàn tất xác minh tài khoản.",
+            );
+          }
+        } catch (error: any) {
+          const clerkErrors = error?.errors;
+          if (clerkErrors?.length) {
+            const firstErr = clerkErrors[0];
+            let errMsg =
+              firstErr.longMessage || firstErr.message || "Đăng ký thất bại";
+            if (firstErr.code === "form_identifier_exists") {
+              errMsg = "Tên đăng nhập này đã được sử dụng.";
+            } else if (firstErr.code === "form_password_pwned") {
+              errMsg = "Mật khẩu này đã bị lộ. Vui lòng sử dụng mật khẩu khác.";
+            }
+            Alert.alert("Đăng ký thất bại", errMsg);
+          } else {
+            Alert.alert(
+              "Đăng ký thất bại",
+              error instanceof Error ? error.message : "Đã có lỗi xảy ra",
+            );
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    )();
+  }, [formMethod, signUp, signUpActive, signOut, isSignUpLoaded]);
 
   return (
     <FormProvider {...formMethod}>
@@ -74,10 +146,10 @@ export const Register = ({ onRegisterSuccess, animatedStyle }: Props) => {
           />
         </View>
         <View style={{ rowGap: 8 }}>
-          <Text style={styles.label}>Số điện thoại</Text>
+          <Text style={styles.label}>Tên đăng nhập</Text>
           <Controller
             control={formMethod.control}
-            name="phone"
+            name="username"
             render={({
               field: { onChange, value },
               fieldState: { invalid },
@@ -89,7 +161,7 @@ export const Register = ({ onRegisterSuccess, animatedStyle }: Props) => {
                     onChangeText={onChange}
                     keyboardType="phone-pad"
                     autoCapitalize="none"
-                    placeholder="Nhập số điện thoại"
+                    placeholder="Nhập tên đăng nhập"
                     placeholderTextColor={colors.neutral300}
                     style={styles.input}
                   />

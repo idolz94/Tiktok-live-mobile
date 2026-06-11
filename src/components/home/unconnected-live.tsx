@@ -102,15 +102,17 @@ export const UnConnectedLive = ({
         </View>
       </View>
       {/* call api để lấy data account ở đây */}
-      <FlatList
-        data={channels}
-        scrollEnabled={false}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={itemSeparator}
-        renderItem={renderItem}
-        contentContainerStyle={styles.containerFlatlistStyle}
-        ListFooterComponentStyle={{ paddingTop: 16 }}
-      />
+      {channels?.length > 0 && (
+        <FlatList
+          data={channels}
+          scrollEnabled={false}
+          keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={itemSeparator}
+          renderItem={renderItem}
+          contentContainerStyle={styles.containerFlatlistStyle}
+          ListFooterComponentStyle={{ paddingTop: 16 }}
+        />
+      )}
       <View style={{ rowGap: 8 }}>
         <DashedButton
           title="Thêm mới"

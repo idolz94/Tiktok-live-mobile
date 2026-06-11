@@ -6,8 +6,9 @@ import {
 } from "@constants/config";
 import { secureStorage } from "@utils/storage";
 import axios from "axios";
-import { ApiError } from "./request-sse";
 import { sessionExpiredEmitter } from "./session-event";
+import { getClerkToken } from "./clerk-token-bridge";
+import { ApiError } from "./api-error";
 
 // ────────────────────────────────────────────────
 // Axios instance for SSE
@@ -28,7 +29,8 @@ export const sseClient = axios.create({
 // ────────────────────────────────────────────────
 sseClient.interceptors.request.use(
   async (config) => {
-    const token = await secureStorage.getAccessToken();
+    const clerkToken = await getClerkToken();
+    const token = clerkToken || (await secureStorage.getAccessToken());
 
     config.headers["x-app-key"] = MOBILE_APP_KEY;
 
@@ -100,7 +102,8 @@ export const apiClient = axios.create({
 // Request Interceptor: Tự động đính kèm Token nếu user đã đăng nhập
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await secureStorage.getAccessToken();
+    const clerkToken = await getClerkToken();
+    const token = clerkToken || (await secureStorage.getAccessToken());
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

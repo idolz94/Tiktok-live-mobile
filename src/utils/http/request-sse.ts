@@ -3,6 +3,7 @@ import { secureStorage } from "@utils/storage";
 import { AxiosResponse } from "axios";
 
 import { sseClient } from "./axios";
+import { getClerkToken } from "./clerk-token-bridge";
 
 export type RequestParams = Record<
   string,
@@ -15,27 +16,13 @@ export type RequestOptions = {
   timeout?: number;
 };
 
-export class ApiError extends Error {
-  status: number;
-  data: any;
-
-  constructor(message: string, status: number, data?: any) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.data = data;
-  }
-}
-
 export async function getAuthToken() {
   try {
-    return await secureStorage.getAccessToken();
+    const clerkToken = await getClerkToken();
+    return clerkToken || (await secureStorage.getAccessToken()) || "";
   } catch (error) {
     if (__DEV__) {
-      console.error(
-        "[Request SSE] Lỗi khi lấy auth token từ secure store:",
-        error,
-      );
+      console.error("[Request SSE] Lỗi khi lấy auth token:", error);
     }
 
     return "";
