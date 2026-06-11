@@ -35,17 +35,19 @@ export const TiktokPage = memo(() => {
   const opacity = useSharedValue(0);
 
   const { user } = useAuth();
-  const { tiktokUsername, changeTikTokUsername, stopLiveSession } = useTikTokLiveSocketContext();
+  const { tiktokUsername, changeTikTokUsername, stopLiveSession } =
+    useTikTokLiveSocketContext();
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
 
   const channelOptions = useMemo<TikTokLiveChannel[]>(() => {
-    const options: TikTokLiveChannel[] = user?.tiktokChannels?.map((channel) => ({
-      id: channel.id,
-      username: normalizeTikTokUsername(channel.tiktokUsername),
-      isDefault: channel.isDefault,
-    })) || [];
+    const options: TikTokLiveChannel[] =
+      user?.tiktokChannels?.map((channel) => ({
+        id: channel.id,
+        username: normalizeTikTokUsername(channel.tiktokUsername),
+        isDefault: channel.isDefault,
+      })) || [];
 
     const normalizedCurrent = normalizeTikTokUsername(
       user?.tiktokUsername ?? "",
@@ -84,63 +86,72 @@ export const TiktokPage = memo(() => {
     ],
   }));
 
-  const onSelectChannel = useCallback((selectedItem: TikTokLiveChannel) => {
-    setChannels((prev) =>
-      prev?.map((c) => ({
-        ...c,
-        isDefault: c.id === selectedItem.id,
-      })),
-    );
-
-    const targetUsername = selectedItem.username;
-    const nextUsername = normalizeTikTokUsername(targetUsername);
-    if (nextUsername) {
-      changeTikTokUsername(nextUsername).catch((err) => {
-        if (__DEV__) console.error("Change channel error:", err);
-      });
-    }
-  }, [changeTikTokUsername]);
-
-  const connectSelectedChannel = useCallback(async (item?: TikTokLiveChannel) => {
-    const targetUsername = item ? item.username : tiktokUsername;
-    const nextUsername = normalizeTikTokUsername(targetUsername);
-
-    if (!nextUsername) return;
-
-    try {
-      const success = await changeTikTokUsername(nextUsername);
-      if (!success) {
-        Alert.alert("Lỗi", "Không thể kết nối đến TikTok Live. Vui lòng kiểm tra lại username.");
-        return;
-      }
-
+  const onSelectChannel = useCallback(
+    (selectedItem: TikTokLiveChannel) => {
       setChannels((prev) =>
         prev?.map((c) => ({
           ...c,
-          isDefault: normalizeTikTokUsername(c.username) === nextUsername,
+          isDefault: c.id === selectedItem.id,
         })),
       );
 
-      if (visible) return;
-
-      setVisible(true);
-
-      opacity.value = 0;
-      translateY.value = INITIAL_OFFSET;
-
-      opacity.value = withTiming(1, {
-        duration: ANIMATION_DURATION,
-      });
-
-      translateY.value = withTiming(0, {
-        duration: ANIMATION_DURATION,
-      });
-    } catch (error) {
-      if (__DEV__) {
-        console.error("Connect channel error:", error);
+      const targetUsername = selectedItem.username;
+      const nextUsername = normalizeTikTokUsername(targetUsername);
+      if (nextUsername) {
+        changeTikTokUsername(nextUsername).catch((err) => {
+          if (__DEV__) console.error("Change channel error:", err);
+        });
       }
-    }
-  }, [tiktokUsername, visible, changeTikTokUsername]);
+    },
+    [changeTikTokUsername],
+  );
+
+  const connectSelectedChannel = useCallback(
+    async (item?: TikTokLiveChannel) => {
+      const targetUsername = item ? item.username : tiktokUsername;
+      const nextUsername = normalizeTikTokUsername(targetUsername);
+
+      if (!nextUsername) return;
+
+      try {
+        const success = await changeTikTokUsername(nextUsername);
+        if (!success) {
+          Alert.alert(
+            "Lỗi",
+            "Không thể kết nối đến TikTok Live. Vui lòng kiểm tra lại username.",
+          );
+          return;
+        }
+
+        setChannels((prev) =>
+          prev?.map((c) => ({
+            ...c,
+            isDefault: normalizeTikTokUsername(c.username) === nextUsername,
+          })),
+        );
+
+        if (visible) return;
+
+        setVisible(true);
+
+        opacity.value = 0;
+        translateY.value = INITIAL_OFFSET;
+
+        opacity.value = withTiming(1, {
+          duration: ANIMATION_DURATION,
+        });
+
+        translateY.value = withTiming(0, {
+          duration: ANIMATION_DURATION,
+        });
+      } catch (error) {
+        if (__DEV__) {
+          console.error("Connect channel error:", error);
+        }
+      }
+    },
+    [tiktokUsername, visible, changeTikTokUsername],
+  );
 
   const onDisconnectAccount = useCallback(async () => {
     try {

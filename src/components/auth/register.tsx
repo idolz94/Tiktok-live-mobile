@@ -1,8 +1,9 @@
-import { useAuth as useClerkAuth, useSignUp } from "@clerk/clerk-expo";
+import { useSignUp } from "@clerk/clerk-expo";
 import { LinearGradient } from "@components/linear-gradient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
 import { createTikTokChannelApi } from "@modules/auth/services/api";
+import { useAuth } from "@modules/auth/hooks/use-auth";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { useCallback, useState } from "react";
@@ -47,7 +48,7 @@ export const Register = ({ animatedStyle }: Props) => {
     setActive: signUpActive,
     isLoaded: isSignUpLoaded,
   } = useSignUp();
-  const { signOut } = useClerkAuth();
+  const { refreshAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const submit = useCallback(() => {
@@ -68,6 +69,7 @@ export const Register = ({ animatedStyle }: Props) => {
 
           if (result.status === "complete") {
             await signUpActive({ session: result.createdSessionId });
+            await refreshAuth({ force: true });
 
             try {
               await createTikTokChannelApi({
@@ -111,7 +113,7 @@ export const Register = ({ animatedStyle }: Props) => {
         }
       },
     )();
-  }, [formMethod, signUp, signUpActive, signOut, isSignUpLoaded]);
+  }, [formMethod, signUp, signUpActive, refreshAuth, isSignUpLoaded]);
 
   return (
     <FormProvider {...formMethod}>

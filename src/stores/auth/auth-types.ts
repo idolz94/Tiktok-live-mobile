@@ -6,29 +6,12 @@ import {
   ShopTikTokChannel,
 } from "@app-types/database";
 import { AuthUser } from "@app-types/index";
-import { LoginForm, RegisterForm } from "src/schemas/auth";
-
-export type Account = {
-  id: string;
-  username: string;
-  password: string;
-};
-
-export interface AuthResult {
-  ok: boolean;
-  message?: string;
-}
 
 export interface AuthStoreState {
-  accounts: Account[];
   user: AuthUser | null;
   isRemembered: boolean;
   lastUsername?: string;
-  login: (data: LoginForm) => Promise<AuthResult>;
-  register: (data: RegisterForm) => Promise<AuthResult>;
   logout: () => void;
-  // Được gọi bởi bootstrap flow để cập nhật user sau khi GET /me/bootstrap thành công.
-  // Không cần credentials, chỉ cần kết quả đã map từ mapBootstrapToAuthUser().
   setUserFromBootstrap: (user: AuthUser | null) => void;
   setLoginState: (username: string, remember: boolean) => void;
 }

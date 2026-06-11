@@ -59,11 +59,17 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   // dùng chuỗi rỗng và để useEffect cập nhật sau.
   // Chỉ dùng TIKTOK_USERNAME hardcoded khi chưa có user nào đăng nhập (dev/test).
   const initialUsername =
-    options.initialUsername || loggedInTiktokUsername || (authUser ? "" : TIKTOK_USERNAME);
-  const tiktokUsernameRef = useRef(normalizeTikTokUsername(initialUsername));
+    options.initialUsername ||
+    loggedInTiktokUsername ||
+    (authUser ? "" : TIKTOK_USERNAME);
+  const tiktokUsernameRef = useRef(
+    normalizeTikTokUsername(initialUsername || TIKTOK_USERNAME),
+  );
   const [status, setStatus] = useState("Đang kết nối Backend SSE...");
   const [isConnected, setIsConnected] = useState(false);
-  const [tiktokUsername, setTiktokUsername] = useState(initialUsername);
+  const [tiktokUsername, setTiktokUsername] = useState(
+    initialUsername || TIKTOK_USERNAME,
+  );
 
   const {
     comments,

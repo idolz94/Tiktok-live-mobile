@@ -110,13 +110,16 @@ export const useAuth = () => {
     }
   }, [signOut, logoutStore]);
 
-  const refreshAuth = useCallback(async () => {
-    if (!isSignedIn) return;
-    setIsBootstrapping(true);
-    await bootstrapAuth(setUserFromBootstrap);
-    bootstrappedUserId = clerkUser?.id || null;
-    setIsBootstrapping(false);
-  }, [isSignedIn, clerkUser?.id, setUserFromBootstrap]);
+  const refreshAuth = useCallback(
+    async ({ force = false }: { force?: boolean } = {}) => {
+      if (!force && !isSignedIn) return;
+      setIsBootstrapping(true);
+      await bootstrapAuth(setUserFromBootstrap);
+      bootstrappedUserId = clerkUser?.id || null;
+      setIsBootstrapping(false);
+    },
+    [isSignedIn, clerkUser?.id, setUserFromBootstrap],
+  );
 
   // Hợp nhất dữ liệu Clerk User (Tên, Email) và dữ liệu Shop/License từ Backend
   // Dùng useMemo để tránh tạo object reference mới mỗi render
@@ -144,16 +147,5 @@ export const useAuth = () => {
       !isHydrated || !isClerkLoaded || !isClerkUserLoaded || isBootstrapping,
     logout,
     refreshAuth,
-    // Giữ lại stub để tránh break import của login/register ở các file cũ chưa update
-    login: async () => {
-      throw new Error(
-        "loginApi is deprecated — use Clerk useSignIn hook instead",
-      );
-    },
-    register: async () => {
-      throw new Error(
-        "registerApi is deprecated — use Clerk useSignUp hook instead",
-      );
-    },
   };
 };
