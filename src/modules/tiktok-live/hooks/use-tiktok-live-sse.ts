@@ -1,5 +1,4 @@
 import { normalizeComment, unwrapSseCommentPayload } from "@utils/comment";
-import { loadString, saveString, STORAGE_KEYS } from "@utils/storage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildLiveStreamEventsUrl,
@@ -8,32 +7,7 @@ import {
 } from "../service/sse-api";
 import { LiveComment } from "@app-types/index";
 import { LiveStatus } from "@app-types/live-comment";
-import { createClientId } from "./use-tiktok-live-socket";
-
-// function getOrCreateClientId() {
-//   const existing = loadString(STORAGE_KEYS.CLIENT_ID);
-
-//   if (existing) return existing;
-
-//   const nextId = `app_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-//   saveString(STORAGE_KEYS.CLIENT_ID, nextId);
-
-//   return nextId;
-// }
-
-function getOrCreateClientId() {
-  const existingClientId = loadString(STORAGE_KEYS.CLIENT_ID);
-
-  if (existingClientId) {
-    return existingClientId;
-  }
-
-  const clientId = createClientId();
-
-  saveString(STORAGE_KEYS.CLIENT_ID, clientId);
-
-  return clientId;
-}
+import { getOrCreateClientId } from "./use-tiktok-live-socket";
 
 export function normalizeUpdatedComment(raw: any) {
   return normalizeComment(unwrapSseCommentPayload(raw));

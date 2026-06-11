@@ -16,6 +16,7 @@ import { images } from "@assets/images";
 import { useAuth } from "@modules/auth/hooks/use-auth";
 import { normalizeTikTokUsername } from "@utils/comment";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
+import { TIKTOK_USERNAME } from "@constants/config";
 
 export type TikTokLiveChannel = {
   id: string;
@@ -62,6 +63,19 @@ export const TiktokPage = memo(() => {
         username: normalizedCurrent,
         isDefault: true,
       });
+    }
+
+    // DEV fallback: remove this block after backend returns tiktokChannels/default channel on login.
+    if (__DEV__ && options.length === 0) {
+      const devUsername = normalizeTikTokUsername(TIKTOK_USERNAME);
+
+      if (devUsername) {
+        options.unshift({
+          id: "dev-current",
+          username: devUsername,
+          isDefault: true,
+        });
+      }
     }
 
     return options;

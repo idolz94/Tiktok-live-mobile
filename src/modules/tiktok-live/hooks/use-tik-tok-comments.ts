@@ -167,6 +167,20 @@ export function useTikTokComments() {
     return comment;
   }, []);
 
+  // Bulk version: nhận mảng comment, chỉ gọi setComments 1 lần duy nhất
+  // Dùng cho batch flush để tránh N renders khi flush N comment cùng lúc
+  const addCommentsToList = useCallback((rawComments: any[]) => {
+    const normalized = rawComments
+      .map(normalizeComment)
+      .filter((c): c is LiveComment => Boolean(c));
+
+    if (normalized.length === 0) return [];
+
+    setComments((prev) => dedupComments([...normalized, ...prev]));
+
+    return normalized;
+  }, []);
+
   const replaceSnapshot = useCallback((rawComments: any[]) => {
     const normalized = rawComments
       .map(normalizeComment)
@@ -209,6 +223,7 @@ export function useTikTokComments() {
     comments,
     setComments,
     addCommentToList,
+    addCommentsToList,
     updateCommentInList,
     replaceSnapshot,
     clearComments,

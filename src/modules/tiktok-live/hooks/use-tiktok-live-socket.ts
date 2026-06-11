@@ -4,6 +4,7 @@ import {
   unwrapSseCommentPayload,
 } from "@utils/comment";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 import { useTikTokComments } from "./use-tik-tok-comments";
 import { useTikTokLiveSession } from "./use-tik-tok-live-session";
 import {
@@ -11,9 +12,11 @@ import {
   stopTikTokLiveApi,
   subscribeTikTokLiveApi,
 } from "../service/sse-api";
-import EventSource from "react-native-sse";
 import { useAuthStore } from "@stores/auth";
 import { getAuthToken } from "@utils/http/request-sse";
+import { UserJoinedEvent } from "../types";
+import { loadString, saveString, STORAGE_KEYS } from "@utils/storage";
+import { fetchSse } from "@utils/http/fetch-sse";
 
 // export function createClientId() {
 //   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -30,6 +33,17 @@ export function createClientId() {
 
     return value.toString(16);
   });
+}
+
+export function getOrCreateClientId() {
+  const existing = loadString(STORAGE_KEYS.CLIENT_ID);
+
+  if (existing) return existing;
+
+  const clientId = createClientId();
+  saveString(STORAGE_KEYS.CLIENT_ID, clientId);
+
+  return clientId;
 }
 
 type UseTikTokLiveSocketOptions = {
@@ -51,9 +65,20 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const authUser = useAuthStore((state) => state.user);
 
   const loggedInTiktokUsername = authUser?.tiktokUsername || "";
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const clientIdRef = useRef(createClientId());
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const clientIdRef = useRef(getOrCreateClientId());
   const isManualCloseRef = useRef(false);
+  const isAuthFailedRef = useRef(false);
+
+  // Batch: gom comment vào queue, flush vào state mỗi 200ms
+  const pendingCommentsRef = useRef<any[]>([]);
+  const batchFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Retry với exponential backoff khi SSE mất kết nối
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const RETRY_DELAYS = [1000, 2000, 5000, 10000, 30000];
+
   // Mặc định ban đầu dùng username của user đăng nhập.
   // Nếu user đã login nhưng tiktokUsername chưa load xong (bootstrap đang chạy),
   // dùng chuỗi rỗng và để useEffect cập nhật sau.
@@ -65,16 +90,21 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const tiktokUsernameRef = useRef(
     normalizeTikTokUsername(initialUsername || TIKTOK_USERNAME),
   );
+  const joinEventTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [status, setStatus] = useState("Đang kết nối Backend SSE...");
   const [isConnected, setIsConnected] = useState(false);
   const [tiktokUsername, setTiktokUsername] = useState(
     initialUsername || TIKTOK_USERNAME,
   );
+  const [joinEvent, setJoinEvent] = useState<UserJoinedEvent | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
 
   const {
     comments,
     setComments,
     addCommentToList,
+    addCommentsToList,
     updateCommentInList,
     replaceSnapshot,
     clearComments,
@@ -177,12 +207,52 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
 
       if (type === "LIVE_ERROR") {
+        const message = payload.message || "Không rõ lỗi";
+        const errorText = `TikTok lỗi ${getPayloadUsername(payload)}: ${message}`;
+
         finalizeCurrentSessionLocally("live_error");
-        setStatus(
-          `TikTok lỗi ${getPayloadUsername(payload)}: ${
-            payload.message || "Không rõ lỗi"
-          }`,
-        );
+        setIsConnected(false);
+        setComments([]);
+        if (joinEventTimerRef.current) {
+          clearTimeout(joinEventTimerRef.current);
+          joinEventTimerRef.current = null;
+        }
+        setJoinEvent(null);
+        setLiveError(errorText);
+        setStatus(errorText);
+        return;
+      }
+
+      if (type === "USER_JOINED") {
+        const displayName =
+          payload.joinDisplayName || payload.nickname || payload.joinUsername || "Người xem";
+        const joinAvatarUrl =
+          payload.joinAvatarUrl ||
+          payload.avatarUrl ||
+          payload.avatar ||
+          payload.comment?.avatarUrl ||
+          payload.comment?.avatar;
+
+        if (joinEventTimerRef.current) {
+          clearTimeout(joinEventTimerRef.current);
+        }
+
+        setJoinEvent({
+          shopId: payload.shopId,
+          liveUsername: payload.liveUsername,
+          nickname: payload.nickname,
+          joinUsername: payload.joinUsername,
+          joinDisplayName: payload.joinDisplayName,
+          joinAvatarUrl,
+          createdAt: payload.createdAt,
+          displayName,
+        });
+
+        joinEventTimerRef.current = setTimeout(() => {
+          setJoinEvent(null);
+          joinEventTimerRef.current = null;
+        }, 3000);
+
         return;
       }
 
@@ -208,14 +278,10 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
 
       if (type === "COMMENT" || type === "COMMENT_SAVED") {
-        // Backend mới bắn payload dạng { liveSessionId, comment }.
-        // unwrapSseCommentPayload sẽ lấy phần payload.comment để UI không bị "[object Object]".
         startSessionFromPayload(payload);
-        const comment = addCommentToList(unwrapSseCommentPayload(payload));
-
-        if (comment) {
-          addCommentToCurrentSession(comment);
-        }
+        // Đưa vào queue, batch flush interval sẽ gọi addCommentToList + addCommentToCurrentSession
+        // sau 200ms — tránh setComments chạy 50+ lần/s khi live đông người
+        pendingCommentsRef.current.push(unwrapSseCommentPayload(payload));
       }
     },
     [
@@ -231,24 +297,15 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     ],
   );
 
-  const handleEventSourceMessage = useCallback(
-    (type: string, event: any) => {
-      try {
-        const payload = JSON.parse(event?.data ?? "{}");
-        handleServerEvent(type, payload);
-      } catch (error) {
-        if (__DEV__) {
-          console.error("SSE parse error:", error);
-        }
-      }
-    },
-    [handleServerEvent],
-  );
-
   const connectSse = useCallback(async () => {
     const clientId = clientIdRef.current;
     const url = buildLiveStreamEventsUrl(clientId);
     const accessToken = await getAuthToken();
+
+    if (isAuthFailedRef.current) {
+      setStatus("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+      return;
+    }
 
     if (!accessToken) {
       console.warn("[SSE] Missing access token");
@@ -260,64 +317,52 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       return;
     }
 
-    isManualCloseRef.current = false;
-    eventSourceRef.current?.close();
+    // Cancel retry timer cũ để tránh double connect
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
 
-    const eventSource = new EventSource(url, {
+    isManualCloseRef.current = false;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
+    fetchSse(url, {
       headers: {
-        Accept: "text/event-stream",
         Authorization: `Bearer ${accessToken}`,
         Origin: WEB_URL_ORIGIN,
       },
+      signal: abortControllerRef.current.signal,
+      onOpen: () => {
+        retryCountRef.current = 0; // reset khi kết nối thành công
+        setIsConnected(true);
+        setStatus("Đã kết nối Backend SSE");
+      },
+      onEvent: (type, data) => {
+        try {
+          const payload = JSON.parse(data || "{}");
+          handleServerEvent(type, payload);
+        } catch (err) {
+          if (__DEV__) console.error("[SSE parse error]:", err);
+        }
+      },
+      onError: (error) => {
+        if (isManualCloseRef.current) return;
+        setIsConnected(false);
+
+        const attempt = retryCountRef.current;
+        const delay = RETRY_DELAYS[Math.min(attempt, RETRY_DELAYS.length - 1)];
+
+        retryCountRef.current += 1;
+        setStatus(`SSE mất kết nối, thử lại sau ${delay / 1000}s (lần ${attempt + 1})...`);
+        if (__DEV__) console.error("[SSE Connection Error]:", error);
+
+        retryTimerRef.current = setTimeout(() => {
+          if (!isManualCloseRef.current) connectSse();
+        }, delay);
+      },
     });
-
-    eventSourceRef.current = eventSource;
-
-    const eventTypes = [
-      "CONNECTED",
-      "PING",
-      "SUBSCRIBING",
-      "SUBSCRIBED",
-      "LIVE_TIME_STARTED",
-      "LIVE_TIME_ENDED",
-      "LIVE_TIME_STATUS",
-      "UNSUBSCRIBED",
-      "LIVE_CONNECTED",
-      "LIVE_DISCONNECTED",
-      "LIVE_ERROR",
-      "SNAPSHOT",
-      "COMMENT",
-      "COMMENT_SAVED",
-      "COMMENT_UPDATED",
-    ] as const;
-
-    type CustomEventType = (typeof eventTypes)[number];
-
-    eventTypes.forEach((eventType: CustomEventType) => {
-      eventSource.addEventListener(eventType as any, (event: any) => {
-        handleEventSourceMessage(eventType, event);
-      });
-    });
-
-    eventSource.addEventListener("open", () => {
-      setIsConnected(true);
-      setStatus("Đã kết nối Backend SSE");
-    });
-
-    eventSource.addEventListener("error", (error: any) => {
-      if (isManualCloseRef.current) return;
-      setIsConnected(false);
-      setStatus("SSE Backend mất kết nối, đang thử kết nối lại...");
-
-      if (__DEV__) {
-        console.error("[SSE Connection Error]:", {
-          message: error?.message,
-          statusCode: error?.xhrStatus,
-          type: error?.type,
-        });
-      }
-    });
-  }, [handleEventSourceMessage]);
+  }, [handleServerEvent]);
 
   // Tự động cập nhật username mặc định khi thông tin user thay đổi
   useEffect(() => {
@@ -339,13 +384,26 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
 
       const oldUsername = tiktokUsernameRef.current;
+      const oldUsernameWithoutAt = oldUsername.replace(/^@/, "");
 
       if (oldUsername && oldUsername !== nextUsername) {
         finalizeCurrentSessionLocally("change_username");
+        // Clear retry timer cũ để tránh reconnect vào stream của username cũ
+        if (retryTimerRef.current) {
+          clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = null;
+        }
+        retryCountRef.current = 0;
+        try {
+          await stopTikTokLiveApi({ clientId: clientIdRef.current, username: oldUsernameWithoutAt });
+        } catch {
+          // best-effort: bỏ qua lỗi khi dừng collector cũ
+        }
       }
 
       tiktokUsernameRef.current = nextUsername;
       setTiktokUsername(nextUsername);
+      setLiveError(null);
       setComments([]);
       setStatus(
         `Đang yêu cầu Backend start Python collector: ${nextUsername}...`,
@@ -358,33 +416,36 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
 
       try {
-        await subscribeTikTokLiveApi({
+        const result = await subscribeTikTokLiveApi({
           clientId: clientIdRef.current,
-          username: nextUsername,
+          username: nextUsername.replace(/^@/, ""),
         });
 
-        // Đảm bảo SSE /live-stream/events được kết nối để nhận comment
-        await connectSse();
+        if (result?.username) {
+          tiktokUsernameRef.current = result.username;
+          setTiktokUsername(result.username);
+        }
 
-        setStatus(
-          `Đã gửi lệnh start collector cho ${nextUsername}, đang chờ comment...`,
-        );
-        return true;
+        connectSse();
+        setStatus(result?.message || `Đã gửi lệnh start collector cho ${nextUsername}, đang chờ comment...`);
+        return result?.success ?? true;
       } catch (error) {
         if (__DEV__) {
           console.error("START LIVE STREAM ERROR:", error);
         }
 
-        setStatus(
-          error instanceof Error
-            ? error.message
-            : "Không gọi được API start collector ở Backend",
-        );
+        const message = error instanceof Error ? error.message : "Không gọi được API start collector ở Backend";
+        setLiveError(message);
+        setStatus(message);
         return false;
       }
     },
     [finalizeCurrentSessionLocally, setComments, connectSse],
   );
+
+  const clearLiveError = useCallback(() => {
+    setLiveError(null);
+  }, []);
 
   const stopLiveSession = useCallback(async () => {
     setStatus("Đang dừng nhận comment...");
@@ -408,8 +469,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
     // Đóng SSE connection để dừng nhận comment
     isManualCloseRef.current = true;
-    eventSourceRef.current?.close();
-    eventSourceRef.current = null;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
 
     finalizeCurrentSessionLocally("manual_stop");
     setIsConnected(false);
@@ -423,8 +484,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
     isManualCloseRef.current = false;
 
-    eventSourceRef.current?.close();
-    eventSourceRef.current = null;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
 
     connectSse();
   }, [connectSse, finalizeCurrentSessionLocally]);
@@ -451,25 +512,57 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
     }
 
-    eventSourceRef.current?.close();
-    eventSourceRef.current = null;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
 
     setIsConnected(false);
     setStatus("Đã ngắt kết nối");
   }, [finalizeCurrentSessionLocally]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      connectSse();
-    }, 0);
+    // Batch flush: mỗi 200ms gom tất cả comment pending vào state 1 lần duy nhất
+    batchFlushTimerRef.current = setInterval(() => {
+      if (pendingCommentsRef.current.length === 0) return;
+      const batch = pendingCommentsRef.current.splice(0);
+      const added = addCommentsToList(batch);
+      added.forEach((c) => addCommentToCurrentSession(c));
+    }, 200);
+
+    // AppState: iOS suspend network khi app vào background
+    // delay 500ms khi quay lại foreground để network stack kịp sẵn sàng
+    const appStateSub = AppState.addEventListener(
+      "change",
+      (nextState: string) => {
+        if (nextState === "active" && !isManualCloseRef.current) {
+          setTimeout(() => {
+            if (isManualCloseRef.current) return;
+            abortControllerRef.current?.abort();
+            abortControllerRef.current = null;
+            connectSse();
+          }, 500);
+        }
+      },
+    );
 
     return () => {
-      clearTimeout(timer);
       isManualCloseRef.current = true;
-      eventSourceRef.current?.close();
-      eventSourceRef.current = null;
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+      if (batchFlushTimerRef.current) {
+        clearInterval(batchFlushTimerRef.current);
+        batchFlushTimerRef.current = null;
+      }
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+      if (joinEventTimerRef.current) {
+        clearTimeout(joinEventTimerRef.current);
+        joinEventTimerRef.current = null;
+      }
+      appStateSub.remove();
     };
-  }, [connectSse]);
+  }, [connectSse, addCommentsToList, addCommentToCurrentSession]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -493,6 +586,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     isConnected,
     comments,
     tiktokUsername,
+    joinEvent,
+    liveError,
 
     currentLiveSession,
     currentLiveSessionId,
@@ -508,6 +603,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     reconnect,
     disconnect,
     stopLiveSession,
+    clearLiveError,
 
     changeTikTokUsername: subscribeTikTokUsername,
     subscribeTikTokUsername,
