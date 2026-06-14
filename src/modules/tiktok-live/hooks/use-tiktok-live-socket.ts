@@ -1,4 +1,8 @@
-import { TIKTOK_USERNAME, WEB_URL_ORIGIN } from "@constants/config";
+import {
+  TIKTOK_USERNAME,
+  WEB_URL_ORIGIN,
+  MOBILE_APP_KEY,
+} from "@constants/config";
 import {
   normalizeTikTokUsername,
   unwrapSseCommentPayload,
@@ -72,7 +76,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
   // Batch: gom comment vào queue, flush vào state mỗi 200ms
   const pendingCommentsRef = useRef<any[]>([]);
-  const batchFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const batchFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
 
   // Retry với exponential backoff khi SSE mất kết nối
   const retryCountRef = useRef(0);
@@ -210,6 +216,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         const message = payload.message || "Không rõ lỗi";
         const errorText = `TikTok lỗi ${getPayloadUsername(payload)}: ${message}`;
 
+        if (__DEV__)
+          console.log(
+            "[handleServerEvent] LIVE_ERROR full payload:",
+            JSON.stringify(payload),
+          );
+
         finalizeCurrentSessionLocally("live_error");
         setIsConnected(false);
         setComments([]);
@@ -223,9 +235,25 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         return;
       }
 
+      if (type === "COLLECTOR_STOPPED") {
+        if (__DEV__)
+          console.log(
+            "[handleServerEvent] COLLECTOR_STOPPED full payload:",
+            JSON.stringify(payload),
+          );
+        const message = payload.message || "Collector đã dừng";
+        finalizeCurrentSessionLocally("collector_stopped");
+        setIsConnected(false);
+        setStatus(message);
+        return;
+      }
+
       if (type === "USER_JOINED") {
         const displayName =
-          payload.joinDisplayName || payload.nickname || payload.joinUsername || "Người xem";
+          payload.joinDisplayName ||
+          payload.nickname ||
+          payload.joinUsername ||
+          "Người xem";
         const joinAvatarUrl =
           payload.joinAvatarUrl ||
           payload.avatarUrl ||
@@ -302,6 +330,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     const url = buildLiveStreamEventsUrl(clientId);
     const accessToken = await getAuthToken();
 
+    if (__DEV__) {
+      console.log(
+        `[connectSse] url=${url} hasToken=${!!accessToken} isAuthFailed=${isAuthFailedRef.current}`,
+      );
+    }
+
     if (isAuthFailedRef.current) {
       setStatus("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
       return;
@@ -331,14 +365,18 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Origin: WEB_URL_ORIGIN,
+        "x-app-key": MOBILE_APP_KEY,
       },
       signal: abortControllerRef.current.signal,
       onOpen: () => {
-        retryCountRef.current = 0; // reset khi kết nối thành công
+        retryCountRef.current = 0;
+        if (__DEV__)
+          console.log("[connectSse] SSE onOpen — connection established");
         setIsConnected(true);
         setStatus("Đã kết nối Backend SSE");
       },
       onEvent: (type, data) => {
+        if (__DEV__) console.log(`[connectSse] SSE event type=${type}`, data);
         try {
           const payload = JSON.parse(data || "{}");
           handleServerEvent(type, payload);
@@ -354,7 +392,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         const delay = RETRY_DELAYS[Math.min(attempt, RETRY_DELAYS.length - 1)];
 
         retryCountRef.current += 1;
-        setStatus(`SSE mất kết nối, thử lại sau ${delay / 1000}s (lần ${attempt + 1})...`);
+        setStatus(
+          `SSE mất kết nối, thử lại sau ${delay / 1000}s (lần ${attempt + 1})...`,
+        );
         if (__DEV__) console.error("[SSE Connection Error]:", error);
 
         retryTimerRef.current = setTimeout(() => {
@@ -395,7 +435,10 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         }
         retryCountRef.current = 0;
         try {
-          await stopTikTokLiveApi({ clientId: clientIdRef.current, username: oldUsernameWithoutAt });
+          await stopTikTokLiveApi({
+            clientId: clientIdRef.current,
+            username: oldUsernameWithoutAt,
+          });
         } catch {
           // best-effort: bỏ qua lỗi khi dừng collector cũ
         }
@@ -421,20 +464,33 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           username: nextUsername.replace(/^@/, ""),
         });
 
+        if (__DEV__) {
+          console.log(
+            `[useTikTokLiveSocket] subscribeTikTokLiveApi result:`,
+            JSON.stringify(result),
+          );
+        }
+
         if (result?.username) {
           tiktokUsernameRef.current = result.username;
           setTiktokUsername(result.username);
         }
 
         connectSse();
-        setStatus(result?.message || `Đã gửi lệnh start collector cho ${nextUsername}, đang chờ comment...`);
+        setStatus(
+          result?.message ||
+            `Đã gửi lệnh start collector cho ${nextUsername}, đang chờ comment...`,
+        );
         return result?.success ?? true;
       } catch (error) {
         if (__DEV__) {
           console.error("START LIVE STREAM ERROR:", error);
         }
 
-        const message = error instanceof Error ? error.message : "Không gọi được API start collector ở Backend";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Không gọi được API start collector ở Backend";
         setLiveError(message);
         setStatus(message);
         return false;
