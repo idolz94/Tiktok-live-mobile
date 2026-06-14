@@ -16,7 +16,7 @@ type SegmentControlProps = {
   onTabPress: (index: number) => void;
 };
 
-export const SegmentControl = memo(
+export const Segment = memo(
   ({ tabs, activeIndex, onTabPress }: SegmentControlProps) => {
     const [tabWidth, setTabWidth] = useState(0);
     const translateX = useSharedValue(0);

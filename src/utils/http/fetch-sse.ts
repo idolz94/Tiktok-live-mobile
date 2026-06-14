@@ -107,7 +107,12 @@ export async function fetchSse(url: string, options: FetchSseOptions): Promise<v
       }
     }
   } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") return;
+    if (err instanceof Error) {
+      // AbortError = browser/Node cancel; FetchRequestCanceledException = Expo cancel
+      if (err.name === "AbortError") return;
+      if (err.message?.includes("FetchRequestCanceledException")) return;
+      if ((err as any).code === "FetchRequestCanceledException") return;
+    }
     onError?.(err);
   } finally {
     if (heartbeatTimer) clearTimeout(heartbeatTimer);

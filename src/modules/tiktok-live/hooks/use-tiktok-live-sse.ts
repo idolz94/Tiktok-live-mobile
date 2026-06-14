@@ -98,11 +98,27 @@ export function useTikTokLiveSSE() {
     });
     eventSourceRef.current = eventSource;
 
+    // Guard: tránh setState sau khi cleanup đã close EventSource
+    let closed = false;
+
+    const safeSetStatus: typeof setStatus = (s) => {
+      if (!closed) setStatus(s);
+    };
+    const safeSetComments: typeof setComments = (fn) => {
+      if (!closed) setComments(fn);
+    };
+    const safeSetIsSSEConnected = (v: boolean) => {
+      if (!closed) setIsSSEConnected(v);
+    };
+    const safeSetSubscribedUsername = (v: string) => {
+      if (!closed) setSubscribedUsername(v);
+    };
+
     eventSource.addEventListener("CONNECTED", (event) => {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
 
-      setIsSSEConnected(true);
-      setStatus({
+      safeSetIsSSEConnected(true);
+      safeSetStatus({
         status: "connected",
         message: "Backend SSE đã kết nối",
         createdAt: payload.connectedAt || payload.serverTime,
@@ -110,13 +126,13 @@ export function useTikTokLiveSSE() {
     });
 
     eventSource.addEventListener("PING", () => {
-      setIsSSEConnected(true);
+      safeSetIsSSEConnected(true);
     });
 
     eventSource.addEventListener("SUBSCRIBING", (event) => {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
 
-      setStatus({
+      safeSetStatus({
         status: "subscribing",
         message: `Đang chuyển sang ${getPayloadUsername(payload)}`,
         createdAt: payload.createdAt,
@@ -129,10 +145,10 @@ export function useTikTokLiveSSE() {
         ? payload.comments.map(normalizeUpdatedComment).filter(Boolean)
         : [];
 
-      setSubscribedUsername(getPayloadUsername(payload));
-      setComments(latestComments as LiveComment[]);
+      safeSetSubscribedUsername(getPayloadUsername(payload));
+      safeSetComments(latestComments as LiveComment[]);
 
-      setStatus({
+      safeSetStatus({
         status: "subscribed",
         message: `Đã subscribe ${getPayloadUsername(payload)}`,
         createdAt: payload.createdAt,
@@ -143,8 +159,8 @@ export function useTikTokLiveSSE() {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
       const username = getPayloadUsername(payload);
 
-      setSubscribedUsername(username);
-      setStatus({
+      safeSetSubscribedUsername(username);
+      safeSetStatus({
         status: "live_connected",
         message: `Đã kết nối LIVE ${username}`,
         createdAt: payload.createdAt,
@@ -154,7 +170,7 @@ export function useTikTokLiveSSE() {
     eventSource.addEventListener("LIVE_ERROR", (event) => {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
 
-      setStatus({
+      safeSetStatus({
         status: "live_error",
         message: payload.message || "TikTok LIVE lỗi",
         createdAt: payload.createdAt,
@@ -164,7 +180,7 @@ export function useTikTokLiveSSE() {
     eventSource.addEventListener("LIVE_DISCONNECTED", (event) => {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
 
-      setStatus({
+      safeSetStatus({
         status: "live_disconnected",
         message: `LIVE ${getPayloadUsername(payload)} đã ngắt`,
         createdAt: payload.createdAt,
@@ -178,7 +194,7 @@ export function useTikTokLiveSSE() {
 
       if (!payload) return;
 
-      setComments((prev) => {
+      safeSetComments((prev) => {
         const exists = prev.some((item) => item.id === payload.id);
         if (exists) return prev;
 
@@ -193,7 +209,7 @@ export function useTikTokLiveSSE() {
 
       if (!payload) return;
 
-      setComments((prev) => {
+      safeSetComments((prev) => {
         const exists = prev.some((item) => item.id === payload.id);
         if (exists) return prev;
 
@@ -206,7 +222,7 @@ export function useTikTokLiveSSE() {
       const commentId = payload.commentId || payload.comment_id;
       const patch = payload.patch || {};
 
-      setComments((prev) =>
+      safeSetComments((prev) =>
         prev.map((item) => {
           if (item.id !== commentId) return item;
 
@@ -223,7 +239,7 @@ export function useTikTokLiveSSE() {
     eventSource.addEventListener("LIVE_TIME_STARTED", (event) => {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
 
-      setStatus({
+      safeSetStatus({
         status: "live_time_started",
         message: `Bắt đầu tính phiên live: ${getPayloadUsername(payload)}`,
         createdAt: payload.createdAt,
@@ -233,7 +249,7 @@ export function useTikTokLiveSSE() {
     eventSource.addEventListener("LIVE_TIME_ENDED", (event) => {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
 
-      setStatus({
+      safeSetStatus({
         status: "live_time_ended",
         message: `Kết thúc phiên: ${payload.commentCount || 0} comment`,
         createdAt: payload.endedAt || payload.createdAt,
@@ -243,8 +259,8 @@ export function useTikTokLiveSSE() {
     eventSource.addEventListener("UNSUBSCRIBED", (event) => {
       const payload = JSON.parse(String((event as MessageEvent).data || "{}"));
 
-      setSubscribedUsername("");
-      setStatus({
+      safeSetSubscribedUsername("");
+      safeSetStatus({
         status: "unsubscribed",
         message: `Đã dừng ${getPayloadUsername(payload)}`,
         createdAt: payload.createdAt,
@@ -252,14 +268,18 @@ export function useTikTokLiveSSE() {
     });
 
     eventSource.onerror = () => {
-      setIsSSEConnected(false);
-      setStatus({
+      // Bỏ qua lỗi do chủ động close() trong cleanup
+      if (closed) return;
+
+      safeSetIsSSEConnected(false);
+      safeSetStatus({
         status: "sse_error",
         message: "Backend SSE bị ngắt, trình duyệt sẽ tự reconnect",
       });
     };
 
     return () => {
+      closed = true;
       eventSource.close();
       eventSourceRef.current = null;
     };
