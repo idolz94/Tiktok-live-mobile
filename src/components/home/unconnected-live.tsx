@@ -7,7 +7,7 @@ import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { Dispatch, memo, SetStateAction, useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import {
   FlatList,
   ListRenderItem,
@@ -61,11 +61,11 @@ export const UnConnectedLive = memo(
   ({
     channels,
     onConnect,
-    setChannels,
+    onAddChannel,
   }: {
     channels: TikTokLiveChannel[];
     onConnect: (item: TikTokLiveChannel) => Promise<boolean>;
-    setChannels: Dispatch<SetStateAction<TikTokLiveChannel[] | undefined>>;
+    onAddChannel: (name: string) => Promise<boolean>;
   }) => {
     const { show, hide } = useBottomSheet();
     const [loadingConnect, setLoadingConnect] = useState(false);
@@ -86,17 +86,14 @@ export const UnConnectedLive = memo(
       [onConnect, hide],
     );
 
-    const onAddChannel = useCallback(
+    const _onAddChannel = useCallback(
       async (name: string) => {
-        const newChannel: TikTokLiveChannel = {
-          id: name,
-          username: name,
-          isDefault: false,
-        };
-        setChannels((prev) => [...(prev || []), newChannel]);
-        await _onConnect(newChannel);
+        const success = await onAddChannel(name);
+        if (success) {
+          hide();
+        }
       },
-      [_onConnect, setChannels],
+      [onAddChannel, hide],
     );
 
     const itemSeparator = () => (
@@ -163,7 +160,7 @@ export const UnConnectedLive = memo(
             icon="plus_circle"
             onPress={() => {
               show({
-                content: <AddChannel onClose={hide} onSave={onAddChannel} />,
+                content: <AddChannel onClose={hide} onSave={_onAddChannel} />,
                 showDragIndicator: false,
               });
             }}

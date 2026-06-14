@@ -1,5 +1,5 @@
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Text, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import Animated, {
@@ -11,7 +11,10 @@ import Animated, {
 
 import { TIKTOK_USERNAME } from "@constants/config";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
-import { useAuth } from "@modules/auth/hooks/use-auth";
+import {
+  createTikTokChannelApi,
+  getTikTokChannelsApi,
+} from "@modules/auth/services/api";
 import { normalizeTikTokUsername } from "@utils/comment";
 import { AccountConnected } from "./account-connected";
 import { SegmentControl } from "./segment";
@@ -34,61 +37,55 @@ export const TiktokPage = memo(() => {
   const translateY = useSharedValue(INITIAL_OFFSET);
   const opacity = useSharedValue(0);
 
-  const { user } = useAuth();
   const { tiktokUsername, changeTikTokUsername, stopLiveSession } =
     useTikTokLiveSocketContext();
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [channels, setChannels] = useState<TikTokLiveChannel[]>([]);
 
-  const channelOptions = useMemo<TikTokLiveChannel[]>(() => {
-    const options: TikTokLiveChannel[] =
-      user?.tiktokChannels?.map((channel) => ({
+  const fetchChannels = useCallback(async (): Promise<TikTokLiveChannel[]> => {
+    try {
+      const data = await getTikTokChannelsApi();
+      const options: TikTokLiveChannel[] = data.map((channel) => ({
         id: channel.id,
         username: normalizeTikTokUsername(channel.tiktokUsername),
         isDefault: channel.isDefault,
-      })) || [];
+      }));
 
-    const normalizedCurrent = normalizeTikTokUsername(
-      user?.tiktokUsername ?? "",
-    );
-
-    if (
-      normalizedCurrent &&
-      !options.some((option) => option.username === normalizedCurrent)
-    ) {
-      options.unshift({
-        id: "current",
-        username: normalizedCurrent,
-        isDefault: true,
-      });
-    }
-
-    // DEV fallback: remove this block after backend returns tiktokChannels/default channel on login.
-    if (__DEV__ && options.length === 0) {
-      const devUsername = normalizeTikTokUsername(TIKTOK_USERNAME);
-
-      if (devUsername) {
-        options.unshift({
-          id: "dev-current",
-          username: devUsername,
-          isDefault: true,
-        });
+      if (options.length > 0) {
+        setChannels(options);
+        return options;
       }
+
+      if (__DEV__) {
+        const devUsername = normalizeTikTokUsername(TIKTOK_USERNAME);
+        if (devUsername) {
+          setChannels((prev) => {
+            if (prev.length > 0) return prev;
+            return [
+              { id: "dev-current", username: devUsername, isDefault: true },
+            ];
+          });
+        }
+      }
+
+      return options;
+    } catch (error) {
+      if (__DEV__) console.error("fetchChannels error:", error);
+      return [];
     }
-
-    return options;
-  }, [user]);
-
-  const [channels, setChannels] = useState<TikTokLiveChannel[] | undefined>(
-    channelOptions,
-  );
+  }, []);
 
   useEffect(() => {
-    setChannels(channelOptions);
-  }, [channelOptions]);
+    fetchChannels();
+  }, [fetchChannels]);
 
-  const selectedChannel = channels?.find((c) => c.isDefault);
+  const selectedChannel = channels?.find(
+    (c) =>
+      normalizeTikTokUsername(c.username) ===
+      normalizeTikTokUsername(tiktokUsername),
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -169,6 +166,33 @@ export const TiktokPage = memo(() => {
     [tiktokUsername, visible, changeTikTokUsername],
   );
 
+  const onAddChannel = useCallback(
+    async (name: string): Promise<boolean> => {
+      const created = await createTikTokChannelApi({
+        tiktokUsername: name,
+        isDefault: false,
+      });
+      const freshChannels = await fetchChannels();
+      const normalizedName = normalizeTikTokUsername(name);
+
+      let newChannel = freshChannels.find(
+        (c) => normalizeTikTokUsername(c.username) === normalizedName,
+      );
+
+      if (!newChannel) {
+        newChannel = {
+          id: created.id,
+          username: normalizeTikTokUsername(created.tiktokUsername),
+          isDefault: false,
+        };
+        setChannels((prev) => [...prev, newChannel!]);
+      }
+
+      return connectSelectedChannel(newChannel);
+    },
+    [fetchChannels, connectSelectedChannel],
+  );
+
   const onDisconnectAccount = useCallback(async () => {
     try {
       await stopLiveSession();
@@ -190,13 +214,10 @@ export const TiktokPage = memo(() => {
       (finished) => {
         if (finished) {
           runOnJS(setVisible)(false);
-          runOnJS(setChannels)(
-            channelOptions?.map((c) => ({ ...c, isDefault: false })),
-          );
         }
       },
     );
-  }, [stopLiveSession, channelOptions]);
+  }, [stopLiveSession]);
 
   const onTabPress = (index: number) => {
     setActiveIndex(index);
@@ -221,7 +242,7 @@ export const TiktokPage = memo(() => {
           <UnConnectedLive
             channels={channels || []}
             onConnect={connectSelectedChannel}
-            setChannels={setChannels}
+            onAddChannel={onAddChannel}
           />
         </View>
 
