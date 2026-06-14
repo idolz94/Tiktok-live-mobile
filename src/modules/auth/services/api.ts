@@ -53,7 +53,9 @@ export const createTikTokChannelApi = async (
 ): Promise<ShopTikTokChannel> => {
   const response = await apiClient.post("/me/tiktok-channels", payload);
 
-  const channel = normalizeTikTokChannel(response.data?.data ?? response.data);
+  const raw =
+    response.data?.data?.channel ?? response.data?.data ?? response.data;
+  const channel = normalizeTikTokChannel(raw);
 
   if (!channel) {
     throw new Error("Dữ liệu kênh TikTok không hợp lệ");
@@ -74,7 +76,7 @@ export const updateTikTokChannelApi = async (
   const channel = normalizeTikTokChannel(response.data?.data ?? response.data);
 
   if (!channel) {
-    throw new Error("Dữ liệu kênh TikTok không hợp lệ");
+    throw new Error("Update dữ liệu kênh TikTok không thành công!!");
   }
 
   return channel;

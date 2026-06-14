@@ -59,7 +59,6 @@ export const AddChannel = ({ onClose, onSave }: Props) => {
       <Button
         title="Lưu và kết nối"
         loading={loading}
-        loadingColor="neutral100"
         onPress={() => onAddChannel(name)}
         disabled={!name}
         gradientType="gra_primary"

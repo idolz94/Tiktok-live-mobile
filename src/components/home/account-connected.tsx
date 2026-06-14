@@ -42,10 +42,7 @@ export const AccountConnected = ({
   return (
     <View style={styles.container}>
       <View style={styles.left}>
-        <Image
-          source={images.logo_app}
-          style={styles.avatar}
-        />
+        <Image source={images.logo_app} style={styles.avatar} />
         <View style={{ rowGap: 2 }}>
           <Text style={styles.name}>{selectedChannel?.username ?? ""}</Text>
           <View style={styles.info}>
