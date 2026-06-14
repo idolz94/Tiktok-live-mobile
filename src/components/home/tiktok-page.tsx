@@ -9,14 +9,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { TIKTOK_USERNAME } from "@constants/config";
+import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
+import { useAuth } from "@modules/auth/hooks/use-auth";
+import { normalizeTikTokUsername } from "@utils/comment";
 import { AccountConnected } from "./account-connected";
 import { SegmentControl } from "./segment";
 import { UnConnectedLive } from "./unconnected-live";
-import { images } from "@assets/images";
-import { useAuth } from "@modules/auth/hooks/use-auth";
-import { normalizeTikTokUsername } from "@utils/comment";
-import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
-import { TIKTOK_USERNAME } from "@constants/config";
 
 export type TikTokLiveChannel = {
   id: string;
@@ -121,11 +120,11 @@ export const TiktokPage = memo(() => {
   );
 
   const connectSelectedChannel = useCallback(
-    async (item?: TikTokLiveChannel) => {
+    async (item?: TikTokLiveChannel): Promise<boolean> => {
       const targetUsername = item ? item.username : tiktokUsername;
       const nextUsername = normalizeTikTokUsername(targetUsername);
 
-      if (!nextUsername) return;
+      if (!nextUsername) return false;
 
       try {
         const success = await changeTikTokUsername(nextUsername);
@@ -134,7 +133,7 @@ export const TiktokPage = memo(() => {
             "Lỗi",
             "Không thể kết nối đến TikTok Live. Vui lòng kiểm tra lại username.",
           );
-          return;
+          return false;
         }
 
         setChannels((prev) =>
@@ -144,7 +143,7 @@ export const TiktokPage = memo(() => {
           })),
         );
 
-        if (visible) return;
+        if (visible) return true;
 
         setVisible(true);
 
@@ -158,10 +157,13 @@ export const TiktokPage = memo(() => {
         translateY.value = withTiming(0, {
           duration: ANIMATION_DURATION,
         });
+
+        return true;
       } catch (error) {
         if (__DEV__) {
           console.error("Connect channel error:", error);
         }
+        return false;
       }
     },
     [tiktokUsername, visible, changeTikTokUsername],
@@ -219,6 +221,7 @@ export const TiktokPage = memo(() => {
           <UnConnectedLive
             channels={channels || []}
             onConnect={connectSelectedChannel}
+            setChannels={setChannels}
           />
         </View>
 
