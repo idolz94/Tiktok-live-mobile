@@ -68,11 +68,11 @@ export const UnConnectedLive = memo(
     onAddChannel: (name: string) => Promise<boolean>;
   }) => {
     const { show, hide } = useBottomSheet();
-    const [loadingConnect, setLoadingConnect] = useState(false);
+    const [loadingId, setLoadingId] = useState<string | null>(null);
 
     const _onConnect = useCallback(
       async (item: TikTokLiveChannel) => {
-        setLoadingConnect(true);
+        setLoadingId(item.id);
         try {
           const success = await onConnect(item);
           if (success) {
@@ -80,7 +80,7 @@ export const UnConnectedLive = memo(
           }
         } catch (error) {
         } finally {
-          setLoadingConnect(false);
+          setLoadingId(null);
         }
       },
       [onConnect, hide],
@@ -118,7 +118,7 @@ export const UnConnectedLive = memo(
             title="Kết nối"
             onPress={() => _onConnect(item)}
             loadingType="center"
-            loading={loadingConnect}
+            loading={loadingId === item.id}
             containerStyle={styles.btnConnect}
             txtBtnStyle={styles.txtConnect}
           />

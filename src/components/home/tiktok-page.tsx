@@ -19,6 +19,7 @@ import { normalizeTikTokUsername } from "@utils/comment";
 import { AccountConnected } from "./account-connected";
 import { SegmentControl } from "./segment";
 import { UnConnectedLive } from "./unconnected-live";
+import { ConnectedLive } from "./connected-live";
 
 export type TikTokLiveChannel = {
   id: string;
@@ -37,12 +38,54 @@ export const TiktokPage = memo(() => {
   const translateY = useSharedValue(INITIAL_OFFSET);
   const opacity = useSharedValue(0);
 
-  const { tiktokUsername, changeTikTokUsername, stopLiveSession } =
-    useTikTokLiveSocketContext();
+  const {
+    tiktokUsername,
+    changeTikTokUsername,
+    stopLiveSession,
+    fatalEvent,
+    clearFatalEvent,
+  } = useTikTokLiveSocketContext();
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [channels, setChannels] = useState<TikTokLiveChannel[]>([]);
+
+  const alertShownRef = useRef(false);
+
+  const resetToInitial = useCallback(() => {
+    opacity.value = withTiming(0, { duration: ANIMATION_DURATION });
+    translateY.value = withTiming(
+      INITIAL_OFFSET,
+      { duration: ANIMATION_DURATION },
+      (finished) => {
+        if (finished) runOnJS(setVisible)(false);
+      },
+    );
+  }, [opacity, translateY]);
+
+  useEffect(() => {
+    if (!fatalEvent || alertShownRef.current) return;
+
+    alertShownRef.current = true;
+
+    const titles: Record<string, string> = {
+      LIVE_DISCONNECTED: "TikTok Live đã ngắt kết nối",
+      LIVE_ERROR: "Lỗi TikTok Live",
+      COLLECTOR_STOPPED: "Collector đã dừng",
+    };
+    const title = titles[fatalEvent.type] ?? "Lỗi kết nối";
+
+    Alert.alert(title, fatalEvent.message, [
+      {
+        text: "OK",
+        onPress: () => {
+          alertShownRef.current = false;
+          clearFatalEvent();
+          resetToInitial();
+        },
+      },
+    ]);
+  }, [fatalEvent, clearFatalEvent, resetToInitial]);
 
   const fetchChannels = useCallback(async (): Promise<TikTokLiveChannel[]> => {
     try {
@@ -239,11 +282,15 @@ export const TiktokPage = memo(() => {
         onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
       >
         <View style={{ flex: 1 }} key="live">
-          <UnConnectedLive
-            channels={channels || []}
-            onConnect={connectSelectedChannel}
-            onAddChannel={onAddChannel}
-          />
+          {visible ? (
+            <ConnectedLive />
+          ) : (
+            <UnConnectedLive
+              channels={channels || []}
+              onConnect={connectSelectedChannel}
+              onAddChannel={onAddChannel}
+            />
+          )}
         </View>
 
         <View style={{ flex: 1 }} key="orders">

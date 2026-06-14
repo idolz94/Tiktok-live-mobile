@@ -105,6 +105,10 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   );
   const [joinEvent, setJoinEvent] = useState<UserJoinedEvent | null>(null);
   const [liveError, setLiveError] = useState<string | null>(null);
+  const [fatalEvent, setFatalEvent] = useState<{
+    type: string;
+    message: string;
+  } | null>(null);
 
   const {
     comments,
@@ -208,7 +212,11 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
       if (type === "LIVE_DISCONNECTED") {
         endSessionFromPayload(payload);
-        setStatus(`TikTok Live đã ngắt: ${getPayloadUsername(payload)}`);
+        const disconnectMsg =
+          payload.message ||
+          `TikTok Live đã ngắt kết nối: ${getPayloadUsername(payload)}`;
+        setStatus(disconnectMsg);
+        setFatalEvent({ type, message: disconnectMsg });
         return;
       }
 
@@ -232,6 +240,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         setJoinEvent(null);
         setLiveError(errorText);
         setStatus(errorText);
+        setFatalEvent({ type, message: errorText });
         return;
       }
 
@@ -245,6 +254,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         finalizeCurrentSessionLocally("collector_stopped");
         setIsConnected(false);
         setStatus(message);
+        setFatalEvent({ type, message });
         return;
       }
 
@@ -503,6 +513,10 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     setLiveError(null);
   }, []);
 
+  const clearFatalEvent = useCallback(() => {
+    setFatalEvent(null);
+  }, []);
+
   const stopLiveSession = useCallback(async () => {
     setStatus("Đang dừng nhận comment...");
 
@@ -660,6 +674,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     disconnect,
     stopLiveSession,
     clearLiveError,
+
+    fatalEvent,
+    clearFatalEvent,
 
     changeTikTokUsername: subscribeTikTokUsername,
     subscribeTikTokUsername,
