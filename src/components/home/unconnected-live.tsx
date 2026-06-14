@@ -1,9 +1,13 @@
 import { IconsTypes } from "@assets/icons";
+import { images } from "@assets/images";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Button } from "@components/button";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { Dispatch, memo, SetStateAction, useCallback, useState } from "react";
 import {
   FlatList,
   ListRenderItem,
@@ -14,7 +18,7 @@ import {
   View,
 } from "react-native";
 import Svg, { Rect } from "react-native-svg";
-import { images } from "@assets/images";
+import { AddChannel } from "./add-channel";
 import { TikTokLiveChannel } from "./tiktok-page";
 
 function DashedButton({
@@ -53,86 +57,128 @@ function DashedButton({
   );
 }
 
-export const UnConnectedLive = ({
-  channels,
-  onConnect,
-}: {
-  channels: TikTokLiveChannel[];
-  onConnect: (item: TikTokLiveChannel) => void;
-}) => {
-  const itemSeparator = () => (
-    <Separator
-      type="horizontal"
-      size={1}
-      style={{ paddingVertical: 16, marginLeft: 56 }}
-    />
-  );
+export const UnConnectedLive = memo(
+  ({
+    channels,
+    onConnect,
+    setChannels,
+  }: {
+    channels: TikTokLiveChannel[];
+    onConnect: (item: TikTokLiveChannel) => Promise<boolean>;
+    setChannels: Dispatch<SetStateAction<TikTokLiveChannel[] | undefined>>;
+  }) => {
+    const { show, hide } = useBottomSheet();
+    const [loadingConnect, setLoadingConnect] = useState(false);
 
-  const renderItem: ListRenderItem<TikTokLiveChannel> = ({ item }) => {
+    const _onConnect = useCallback(
+      async (item: TikTokLiveChannel) => {
+        setLoadingConnect(true);
+        try {
+          const success = await onConnect(item);
+          if (success) {
+            hide();
+          }
+        } catch (error) {
+        } finally {
+          setLoadingConnect(false);
+        }
+      },
+      [onConnect, hide],
+    );
+
+    const onAddChannel = useCallback(
+      async (name: string) => {
+        const newChannel: TikTokLiveChannel = {
+          id: name,
+          username: name,
+          isDefault: false,
+        };
+        setChannels((prev) => [...(prev || []), newChannel]);
+        await _onConnect(newChannel);
+      },
+      [_onConnect, setChannels],
+    );
+
+    const itemSeparator = () => (
+      <Separator
+        type="horizontal"
+        size={1}
+        style={{ paddingVertical: 16, marginLeft: 56 }}
+      />
+    );
+
+    const renderItem: ListRenderItem<TikTokLiveChannel> = ({ item }) => {
+      return (
+        <View style={styles.itemContainer}>
+          <View style={styles.leftItem}>
+            <Image source={images.logo_app} style={styles.avatar} />
+            <View style={{ rowGap: 2 }}>
+              <Text style={styles.name}>{item.username}</Text>
+              <Text style={styles.txtId}>{`ID: @${item.username}`}</Text>
+            </View>
+          </View>
+          <Button
+            title="Kết nối"
+            onPress={() => _onConnect(item)}
+            loadingType="center"
+            loading={loadingConnect}
+            containerStyle={styles.btnConnect}
+            txtBtnStyle={styles.txtConnect}
+          />
+        </View>
+      );
+    };
+
     return (
-      <View style={styles.itemContainer}>
-        <View style={styles.leftItem}>
-          <Image source={images.logo_app} style={styles.avatar} />
-          <View style={{ rowGap: 2 }}>
-            <Text style={styles.name}>{item.username}</Text>
-            <Text style={styles.txtId}>{`ID: @${item.username}`}</Text>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={{ rowGap: 4 }}>
+          <Text style={styles.pickAccount}>Chọn tài khoản</Text>
+          <View style={{ flexShrink: 1 }}>
+            <Text style={styles.description} numberOfLines={2}>
+              {channels.length > 0
+                ? `Chọn kênh tiktok rồi bấm`
+                : `Bạn chưa liên kết kênh TikTok. Hãy`}{" "}
+              <Text style={styles.des2Light}>
+                {channels.length > 0 ? `"kết nối"` : `"Thêm mới"`}
+              </Text>{" "}
+              tài khoản để bắt đầu nhận bình luận.
+            </Text>
           </View>
         </View>
-        <Pressable onPress={() => onConnect(item)} style={styles.btnConnect}>
-          <Text style={styles.txtConnect}>Kết nối</Text>
-        </Pressable>
-      </View>
+        {/* call api để lấy data account ở đây */}
+        {channels?.length > 0 && (
+          <FlatList
+            data={channels}
+            scrollEnabled={false}
+            keyExtractor={(item) => item.id}
+            ItemSeparatorComponent={itemSeparator}
+            renderItem={renderItem}
+            contentContainerStyle={styles.containerFlatlistStyle}
+            ListFooterComponentStyle={{ paddingTop: 16 }}
+          />
+        )}
+        <View style={{ rowGap: 8 }}>
+          <DashedButton
+            title="Thêm mới"
+            icon="plus_circle"
+            onPress={() => {
+              show({
+                content: <AddChannel onClose={hide} onSave={onAddChannel} />,
+                showDragIndicator: false,
+              });
+            }}
+          />
+          <View style={{ flexShrink: 1 }}>
+            <Text style={styles.desAdd} numberOfLines={2}>
+              Tên người dùng chỉ có thể chứa chữ thường, số, dấu gạch dưới và
+              dấu chấm.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
     );
-  };
-
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={{ rowGap: 4 }}>
-        <Text style={styles.pickAccount}>Chọn tài khoản</Text>
-        <View style={{ flexShrink: 1 }}>
-          <Text style={styles.description} numberOfLines={2}>
-            {channels.length > 0
-              ? `Chọn kênh tiktok rồi bấm`
-              : `Bạn chưa liên kết kênh TikTok. Hãy`}{" "}
-            <Text style={styles.des2Light}>
-              {channels.length > 0 ? `"kết nối"` : `"Thêm mới"`}
-            </Text>{" "}
-            tài khoản để bắt đầu nhận bình luận.
-          </Text>
-        </View>
-      </View>
-      {/* call api để lấy data account ở đây */}
-      {channels?.length > 0 && (
-        <FlatList
-          data={channels}
-          scrollEnabled={false}
-          keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={itemSeparator}
-          renderItem={renderItem}
-          contentContainerStyle={styles.containerFlatlistStyle}
-          ListFooterComponentStyle={{ paddingTop: 16 }}
-        />
-      )}
-      <View style={{ rowGap: 8 }}>
-        <DashedButton
-          title="Thêm mới"
-          icon="plus_circle"
-          onPress={() => {
-            if (channels.length > 0) {
-              onConnect(channels[0]);
-            }
-          }}
-        />
-        <View style={{ flexShrink: 1 }}>
-          <Text style={styles.desAdd} numberOfLines={2}>
-            Tên người dùng chỉ có thể chứa chữ thường, số, dấu gạch dưới và dấu
-            chấm.
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
-  );
-};
+  },
+);
 
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
@@ -190,8 +236,10 @@ const styles = createStyles(({ colors, textPresets }) => ({
   btnConnect: {
     paddingVertical: 9,
     paddingHorizontal: 16,
-    borderRadius: 40,
+    maxWidth: 80,
     backgroundColor: colors.primaryLight,
+    borderRadius: 40,
+    opacity: 1,
   },
   name: {
     color: colors.neutral900,
