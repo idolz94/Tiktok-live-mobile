@@ -1,13 +1,23 @@
+import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
+import { useTikTokComments } from "@modules/tiktok-live/hooks/use-tik-tok-comments";
 import { createStyles } from "@utils/createStyles";
-import { Text, View } from "react-native";
+import { memo } from "react";
+import { Text, View, FlatList } from "react-native";
 
-export const ConnectedLive = () => {
+export const ConnectedLive = memo(() => {
+  const { comments } = useTikTokLiveSocketContext();
+
   return (
     <View style={styles.container}>
       <Text>ConnectedLive</Text>
+      <FlatList
+        data={comments}
+        renderItem={({ item }) => <Text>{item.comment}</Text>}
+        keyExtractor={(item) => item.id}
+      />
     </View>
   );
-};
+});
 
 const styles = createStyles(({}) => ({
   container: {
