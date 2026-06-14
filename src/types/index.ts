@@ -1,5 +1,3 @@
-import { ShopTikTokChannel } from "./database";
-
 export type AiStatus = "none" | "pending" | "done" | "error";
 
 export type CommentPriorityLevel = "high" | "medium" | "low" | "normal";
@@ -22,6 +20,7 @@ export type CommentIntent =
 
 export type LiveComment = {
   id: string;
+  type?: "comment" | "user_joined";
   username: string;
   displayName?: string;
   customerTikTokUsername?: string;
@@ -124,12 +123,28 @@ export type ShippingStatus =
   | "failed"
   | "returned";
 
+export type OrderAddressData = {
+  id: string;
+  name?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  province?: string | null;
+  district?: string | null;
+  ward?: string | null;
+  label?: string | null;
+  isDefault?: boolean | null;
+};
+
 export type Order = {
   id: string;
   orderCode: string;
   username: string;
   customerId?: string | null;
   customerName?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  customerAddressId?: string | null;
+  customerAddressData?: OrderAddressData | null;
   customerTikTokUsername?: string;
   customerTikTokName?: string;
   uniqueId?: string;
@@ -166,24 +181,9 @@ export type SocketMessage = {
   data?: any;
 };
 
-// export type AuthUser = {
-//   id: string;
-//   username: string;
-// };
-
 export type AuthUser = {
   id: string;
-  email?: string | null;
-  username?: string | null;
-  fullName?: string | null;
-  phone?: string | null;
-  shopId?: string | null;
-  shopName?: string | null;
-  tiktokUsername?: string | null;
-  tiktokChannels?: ShopTikTokChannel[];
-  role?: string | null;          // "owner" | "staff" | ...
-  canUseApp?: boolean;           // false = hết hạn hoặc chưa đăng ký license
-  licenseStatus?: string | null; // "trial" | "trialing" | "active" | "expired" | null
+  username: string;
 };
 
 export type LiveTab = "live" | "orders";

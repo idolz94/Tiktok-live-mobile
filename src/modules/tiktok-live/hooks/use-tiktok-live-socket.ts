@@ -68,7 +68,6 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   // Lấy thông tin user & token trực tiếp từ Auth Store
   const authUser = useAuthStore((state) => state.user);
 
-  const loggedInTiktokUsername = authUser?.tiktokUsername || "";
   const abortControllerRef = useRef<AbortController | null>(null);
   const clientIdRef = useRef(getOrCreateClientId());
   const isManualCloseRef = useRef(false);
@@ -90,9 +89,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   // dùng chuỗi rỗng và để useEffect cập nhật sau.
   // Chỉ dùng TIKTOK_USERNAME hardcoded khi chưa có user nào đăng nhập (dev/test).
   const initialUsername =
-    options.initialUsername ||
-    loggedInTiktokUsername ||
-    (authUser ? "" : TIKTOK_USERNAME);
+    options.initialUsername || (authUser ? "" : TIKTOK_USERNAME);
   const tiktokUsernameRef = useRef(
     normalizeTikTokUsername(initialUsername || TIKTOK_USERNAME),
   );
@@ -211,18 +208,38 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
 
       if (type === "LIVE_DISCONNECTED") {
+        const eventUsername = getPayloadUsername(payload);
+        const currentUsername = tiktokUsernameRef.current.replace(/^@/, "");
+        // Bỏ qua event từ channel cũ sau khi đã switch
+        if (
+          eventUsername &&
+          currentUsername &&
+          eventUsername.replace(/^@/, "") !== currentUsername
+        ) {
+          return;
+        }
         endSessionFromPayload(payload);
         const disconnectMsg =
           payload.message ||
-          `TikTok Live đã ngắt kết nối: ${getPayloadUsername(payload)}`;
+          `TikTok Live đã ngắt kết nối: ${eventUsername}`;
         setStatus(disconnectMsg);
         setFatalEvent({ type, message: disconnectMsg });
         return;
       }
 
       if (type === "LIVE_ERROR") {
+        const eventUsername = getPayloadUsername(payload);
+        const currentUsername = tiktokUsernameRef.current.replace(/^@/, "");
+        // Bỏ qua event từ channel cũ sau khi đã switch
+        if (
+          eventUsername &&
+          currentUsername &&
+          eventUsername.replace(/^@/, "") !== currentUsername
+        ) {
+          return;
+        }
         const message = payload.message || "Không rõ lỗi";
-        const errorText = `TikTok lỗi ${getPayloadUsername(payload)}: ${message}`;
+        const errorText = `TikTok lỗi ${eventUsername}: ${message}`;
 
         if (__DEV__)
           console.log(
@@ -271,25 +288,15 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           payload.comment?.avatarUrl ||
           payload.comment?.avatar;
 
-        if (joinEventTimerRef.current) {
-          clearTimeout(joinEventTimerRef.current);
-        }
-
-        setJoinEvent({
-          shopId: payload.shopId,
-          liveUsername: payload.liveUsername,
-          nickname: payload.nickname,
-          joinUsername: payload.joinUsername,
-          joinDisplayName: payload.joinDisplayName,
-          joinAvatarUrl,
-          createdAt: payload.createdAt,
+        addCommentToList({
+          id: `join_${payload.joinUsername || payload.nickname || Date.now()}_${payload.createdAt || Date.now()}`,
+          type: "user_joined",
+          username: payload.joinUsername || payload.nickname || "",
           displayName,
+          avatarUrl: joinAvatarUrl,
+          comment: "",
+          createdAt: payload.createdAt,
         });
-
-        joinEventTimerRef.current = setTimeout(() => {
-          setJoinEvent(null);
-          joinEventTimerRef.current = null;
-        }, 3000);
 
         return;
       }
@@ -415,14 +422,14 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   }, [handleServerEvent]);
 
   // Tự động cập nhật username mặc định khi thông tin user thay đổi
-  useEffect(() => {
-    if (loggedInTiktokUsername) {
-      tiktokUsernameRef.current = normalizeTikTokUsername(
-        loggedInTiktokUsername,
-      );
-      setTiktokUsername(loggedInTiktokUsername);
-    }
-  }, [loggedInTiktokUsername]);
+  // useEffect(() => {
+  //   if (loggedInTiktokUsername) {
+  //     tiktokUsernameRef.current = normalizeTikTokUsername(
+  //       loggedInTiktokUsername,
+  //     );
+  //     setTiktokUsername(loggedInTiktokUsername);
+  //   }
+  // }, [loggedInTiktokUsername]);
 
   const subscribeTikTokUsername = useCallback(
     async (username: string) => {
@@ -457,6 +464,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       tiktokUsernameRef.current = nextUsername;
       setTiktokUsername(nextUsername);
       setLiveError(null);
+      setFatalEvent(null);
       setComments([]);
       setStatus(
         `Đang yêu cầu Backend start Python collector: ${nextUsername}...`,

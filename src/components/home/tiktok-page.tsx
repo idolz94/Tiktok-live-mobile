@@ -17,7 +17,7 @@ import {
 } from "@modules/auth/services/api";
 import { normalizeTikTokUsername } from "@utils/comment";
 import { AccountConnected } from "./account-connected";
-import { SegmentControl } from "./segment";
+import { Segment } from "./segment";
 import { UnConnectedLive } from "./unconnected-live";
 import { ConnectedLive } from "./connected-live";
 
@@ -269,7 +269,7 @@ export const TiktokPage = memo(() => {
 
   return (
     <View style={styles.container}>
-      <SegmentControl
+      <Segment
         tabs={SUB_TABS}
         activeIndex={activeIndex}
         onTabPress={onTabPress}
