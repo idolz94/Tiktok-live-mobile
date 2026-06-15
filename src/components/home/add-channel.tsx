@@ -47,6 +47,7 @@ export const AddChannel = ({ onClose, onSave }: Props) => {
               onChangeText={setName}
               style={styles.input}
               autoFocus
+              autoCapitalize="none"
               placeholderTextColor={colors.neutral300}
             />
           </View>
