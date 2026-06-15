@@ -1,5 +1,5 @@
 import type { OrderProduct, OrderWithTikTok } from "../types";
-import { cleanTikTokUsername } from "./comment";
+import { cleanTikTokUsername } from "./tiktok";
 import { createId } from "./id";
 import { getOrderTikTokUsername } from "./tiktok";
 

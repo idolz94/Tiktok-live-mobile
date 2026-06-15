@@ -173,6 +173,14 @@ export type Order = {
   updatedAt?: string;
 };
 
+export type CustomerSummary = {
+  username: string;
+  avatar?: string;
+  totalComments: number;
+  totalOrders: number;
+  latestComment: string;
+};
+
 export type OrderWithTikTok = Order;
 
 export type SocketMessage = {
