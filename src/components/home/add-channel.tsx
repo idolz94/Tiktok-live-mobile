@@ -1,70 +1,107 @@
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Button } from "@components/button";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
-import { useCallback, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 type Props = {
   onClose: () => void;
   onSave: (name: string) => Promise<void>;
+  onCancel?: () => void;
 };
 
-export const AddChannel = ({ onClose, onSave }: Props) => {
+export const AddChannel = ({ onClose, onSave, onCancel }: Props) => {
   const { colors } = useThemes();
+  const { update } = useBottomSheet();
 
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const cancelledRef = useRef(false);
 
   const onAddChannel = useCallback(
     async (inputName: string) => {
+      cancelledRef.current = false;
       setLoading(true);
+      update({ enablePanDownToClose: false });
       try {
         await onSave(inputName);
       } finally {
         setLoading(false);
+        update({ enablePanDownToClose: true });
       }
     },
-    [onSave],
+    [onSave, update],
   );
+
+  const handleCancel = useCallback(() => {
+    cancelledRef.current = true;
+    setLoading(false);
+    update({ enablePanDownToClose: true });
+    onCancel?.();
+  }, [update, onCancel]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>Thêm mới kênh Tiktok</Text>
-        <Pressable style={styles.btnClose} onPress={onClose}>
-          <Icon name="close" size={16} tintColor={colors.neutral900} />
-        </Pressable>
-      </View>
-      <View style={{ paddingVertical: 8, rowGap: 8 }}>
-        <Text style={styles.label}>Tiktok ID</Text>
-        <View style={{ rowGap: 4 }}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Nhập Tiktok ID của bạn"
-              value={name}
-              onChangeText={setName}
-              style={styles.input}
-              autoFocus
-              autoCapitalize="none"
-              placeholderTextColor={colors.neutral300}
-            />
-          </View>
-          <Text style={styles.des}>
-            Tên người dùng chỉ có thể chứa chữ thường, số, dấu gạch dưới và dấu
-            chấm.
+      {loading ? (
+        <View style={styles.connectingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.connectingText}>
+            Đang kết nối với phòng live, pop-up sẽ tự đóng khi kết nối hoàn tất.
           </Text>
+          <Button
+            title="Huỷ kết nối"
+            onPress={handleCancel}
+            containerStyle={styles.btnCancel}
+            txtBtnStyle={styles.txtCancel}
+          />
         </View>
-      </View>
-      <Button
-        title="Lưu và kết nối"
-        loading={loading}
-        onPress={() => onAddChannel(name)}
-        disabled={!name}
-        gradientType="gra_primary"
-        containerStyle={styles.btnSave}
-      />
+      ) : (
+        <>
+          <View style={styles.headerContainer}>
+            <Text style={styles.title}>Thêm mới kênh Tiktok</Text>
+            <Pressable style={styles.btnClose} onPress={onClose}>
+              <Icon name="close" size={16} tintColor={colors.neutral900} />
+            </Pressable>
+          </View>
+          <View style={{ paddingVertical: 8, rowGap: 8 }}>
+            <Text style={styles.label}>Tiktok ID</Text>
+            <View style={{ rowGap: 4 }}>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  placeholder="Nhập Tiktok ID của bạn"
+                  value={name}
+                  onChangeText={setName}
+                  style={styles.input}
+                  autoFocus
+                  autoCapitalize="none"
+                  placeholderTextColor={colors.neutral300}
+                />
+              </View>
+              <Text style={styles.des}>
+                Tên người dùng chỉ có thể chứa chữ thường, số, dấu gạch dưới và
+                dấu chấm.
+              </Text>
+            </View>
+          </View>
+          <Button
+            title="Lưu và kết nối"
+            loading={false}
+            onPress={() => onAddChannel(name)}
+            disabled={!name}
+            gradientType="gra_primary"
+            containerStyle={styles.btnSave}
+          />
+        </>
+      )}
     </View>
   );
 };
@@ -118,5 +155,27 @@ const styles = createStyles(({ colors, textPresets }) => ({
   btnSave: {
     borderRadius: 40,
     overflow: "hidden",
+  },
+  connectingContainer: {
+    alignItems: "center",
+    paddingVertical: 32,
+    gap: 16,
+  },
+  connectingText: {
+    color: colors.neutral900,
+    ...textPresets.fs14_400,
+    textAlign: "center",
+    paddingHorizontal: 16,
+  },
+  btnCancel: {
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: colors.border10,
+  },
+  txtCancel: {
+    color: colors.neutral900,
+    ...textPresets.fs14_500,
   },
 }));

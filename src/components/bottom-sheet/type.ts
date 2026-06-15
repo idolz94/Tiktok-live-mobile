@@ -9,12 +9,16 @@ export type BottomSheetOptions = {
   showDragIndicator?: boolean;
 
   backgroundStyle?: StyleProp<ViewStyle>;
+
+  enablePanDownToClose?: boolean;
 };
 
 export type BottomSheetContextType = {
   show: (options: BottomSheetOptions) => void;
 
   hide: () => void;
+
+  update: (options: Partial<BottomSheetOptions>) => void;
 
   isVisible: boolean;
 };

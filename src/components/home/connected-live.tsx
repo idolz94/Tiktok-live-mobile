@@ -1,41 +1,89 @@
 import { LiveComment } from "@app-types/index";
+import { Avatar } from "@components/avatar";
+import { Button } from "@components/button";
+import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
+import { isPriorityComment } from "@utils/comment";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback } from "react";
-import { ActivityIndicator, Platform, Text, View, FlatList } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  Text,
+  View,
+} from "react-native";
 
 interface CommentItemProps {
   item: LiveComment;
 }
 
+const UserJoinedRow = memo(({ username }: { username: string }) => (
+  <View style={styles.dividerRow}>
+    <Separator type="horizontal" size={1} containerStyle={styles.dividerFlex} />
+    <View style={styles.dividerCenter}>
+      <Text>New</Text>
+      <Text style={styles.dividerText}>{username} đã vào live</Text>
+    </View>
+    <Separator type="horizontal" size={1} containerStyle={styles.dividerFlex} />
+  </View>
+));
+
+const CommentCardContent = memo(({ item }: CommentItemProps) => (
+  <>
+    <View style={styles.leftCard}>
+      <Avatar
+        uri={item.avatar || item.avatarUrl}
+        username={item.username}
+        size={40}
+      />
+      <View style={styles.commentTextGroup}>
+        <Text style={styles.nameTiktok}>
+          {item.displayName || item.username || "Unknown user"}
+        </Text>
+        <Text numberOfLines={4} style={styles.comment}>
+          {item.comment}
+        </Text>
+      </View>
+    </View>
+    <Button
+      title="Tạo đơn"
+      onPress={() => {}}
+      loadingType="center"
+      containerStyle={styles.btnCreateOrder}
+      txtBtnStyle={styles.txtCreateOrder}
+    />
+  </>
+));
+
 const CommentItem = memo(
   ({ item }: CommentItemProps) => {
     if (item.type === "user_joined") {
+      return <UserJoinedRow username={item.username} />;
+    }
+
+    const isOwner = item?.raw?.liveUsername === item?.raw?.tiktok_username;
+    const hasPriorityBorder = !isOwner && isPriorityComment(item);
+
+    if (hasPriorityBorder) {
       return (
-        <View style={styles.dividerRow}>
-          <Separator type="horizontal" size={1} containerStyle={{ flex: 1 }} />
-          <View style={{ alignItems: "center", justifyContent: "center" }}>
-            <Text>New</Text>
-            <Text style={styles.dividerText}>{item.username} đã vào live</Text>
+        <LinearGradient
+          type="gra_border_animated"
+          start={{ x: 0, y: 1 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientContainer}
+        >
+          <View style={styles.innerCardBorderAnimated}>
+            <CommentCardContent item={item} />
           </View>
-          <Separator type="horizontal" size={1} containerStyle={{ flex: 1 }} />
-        </View>
+        </LinearGradient>
       );
     }
 
     return (
-      <View
-        style={{
-          width: "100%",
-          height: 50,
-          borderWidth: 1,
-          borderRadius: 16,
-          overflow: "hidden",
-          padding: 16,
-        }}
-      >
-        <Text>{item.comment}</Text>
+      <View style={styles.cardContainer}>
+        <CommentCardContent item={item} />
       </View>
     );
   },
@@ -46,6 +94,8 @@ const CommentItem = memo(
     prev.item.priorityLevel === next.item.priorityLevel &&
     prev.item.isOrderCreated === next.item.isOrderCreated,
 );
+
+const ItemSeparator = () => <View style={styles.separator} />;
 
 export const ConnectedLive = memo(() => {
   const { comments, isConnected } = useTikTokLiveSocketContext();
@@ -74,22 +124,28 @@ export const ConnectedLive = memo(() => {
         data={comments}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        inverted
         scrollEnabled
         windowSize={5}
         maxToRenderPerBatch={8}
         updateCellsBatchingPeriod={50}
         initialNumToRender={12}
         removeClippedSubviews={Platform.OS === "ios"}
-        inverted={true}
+        ItemSeparatorComponent={ItemSeparator}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
 });
 
 const styles = createStyles(({ colors, textPresets }) => ({
+  // Layout
   container: {
     flex: 1,
-    paddingBottom: 100,
+    paddingBottom: 48 * 2 - 16,
+  },
+  listContent: {
+    paddingHorizontal: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -97,19 +153,96 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
     gap: 12,
   },
-  loadingText: {
-    color: colors.neutral900,
-    ...textPresets.fs12_500,
-    textAlign: "center",
-  },
+
+  // Divider row (user_joined)
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
     columnGap: 10,
     paddingTop: 4,
   },
+  dividerFlex: {
+    flex: 1,
+  },
+  dividerCenter: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Cards
+  cardContainer: {
+    flex: 1,
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    columnGap: 16,
+  },
+  gradientContainer: {
+    borderRadius: 16,
+    padding: 1,
+  },
+  innerCardBorderAnimated: {
+    backgroundColor: colors.neutral100,
+    borderRadius: 15,
+    overflow: "hidden",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    columnGap: 16,
+    padding: 12,
+  },
+
+  // Card internals
+  leftCard: {
+    flex: 1,
+    columnGap: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  commentTextGroup: {
+    rowGap: 8,
+    flex: 1,
+  },
+  separator: {
+    height: 8,
+  },
+
+  // Typography
+  loadingText: {
+    color: colors.neutral900,
+    ...textPresets.fs12_500,
+    textAlign: "center",
+  },
   dividerText: {
     color: colors.neutral900,
+    ...textPresets.fs12_500,
+  },
+  nameTiktok: {
+    color: colors.neutral900,
+    ...textPresets.fs14_500,
+  },
+  comment: {
+    color: colors.neutral400,
+    ...textPresets.fs14_400,
+  },
+
+  // Button
+  btnCreateOrder: {
+    flex: 1,
+    maxWidth: 80,
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    backgroundColor: colors.primaryLight,
+    borderRadius: 40,
+    opacity: 1,
+  },
+  txtCreateOrder: {
+    color: colors.primary,
     ...textPresets.fs12_500,
   },
 }));

@@ -7,7 +7,7 @@ import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import {
   FlatList,
   ListRenderItem,
@@ -69,6 +69,7 @@ export const UnConnectedLive = memo(
   }) => {
     const { show, hide } = useBottomSheet();
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const isCancelledRef = useRef(false);
 
     const _onConnect = useCallback(
       async (item: TikTokLiveChannel) => {
@@ -88,13 +89,18 @@ export const UnConnectedLive = memo(
 
     const _onAddChannel = useCallback(
       async (name: string) => {
+        isCancelledRef.current = false;
         const success = await onAddChannel(name);
-        if (success) {
+        if (success && !isCancelledRef.current) {
           hide();
         }
       },
       [onAddChannel, hide],
     );
+
+    const _onCancelAddChannel = useCallback(() => {
+      isCancelledRef.current = true;
+    }, []);
 
     const itemSeparator = () => (
       <Separator
@@ -160,7 +166,13 @@ export const UnConnectedLive = memo(
             icon="plus_circle"
             onPress={() => {
               show({
-                content: <AddChannel onClose={hide} onSave={_onAddChannel} />,
+                content: (
+                  <AddChannel
+                    onClose={hide}
+                    onSave={_onAddChannel}
+                    onCancel={_onCancelAddChannel}
+                  />
+                ),
                 showDragIndicator: false,
               });
             }}

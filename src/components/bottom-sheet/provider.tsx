@@ -25,13 +25,18 @@ export const BottomSheetProvider = ({ children }: Props) => {
     }, 200);
   }, []);
 
+  const update = useCallback((patch: Partial<BottomSheetOptions>) => {
+    setOptions((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
   const value = useMemo<BottomSheetContextType>(
     () => ({
       show,
       hide,
+      update,
       isVisible: visible,
     }),
-    [show, hide, visible],
+    [show, hide, update, visible],
   );
 
   return (
@@ -44,6 +49,7 @@ export const BottomSheetProvider = ({ children }: Props) => {
         snapPoints={options?.snapPoints}
         showDragIndicator={options?.showDragIndicator}
         backgroundStyle={options?.backgroundStyle}
+        enablePanDownToClose={options?.enablePanDownToClose ?? true}
       >
         {options?.content}
       </AppBottomSheet>
