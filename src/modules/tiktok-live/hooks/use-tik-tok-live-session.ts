@@ -3,7 +3,6 @@ import { LiveHistoryItem } from "../types";
 import { LiveComment } from "@app-types/index";
 import { normalizeLiveSession } from "../live-session-mapper";
 import { calcDurationSeconds } from "@utils/date";
-import { MAX_COMMENTS } from "@constants/config";
 import { getLiveHistoryApi } from "../service/live-history-api";
 
 function formatNowText(nowMs: number) {
@@ -45,7 +44,7 @@ function mergeSession(
 export function useTikTokLiveSession() {
   const currentLiveSessionRef = useRef<LiveHistoryItem | null>(null);
   const currentDbLiveSessionIdRef = useRef<string | null>(null);
-  const sessionCommentsRef = useRef<LiveComment[]>([]);
+  const sessionCommentIdsRef = useRef<Set<string>>(new Set());
 
   const [currentLiveSession, setCurrentLiveSessionState] =
     useState<LiveHistoryItem | null>(null);
@@ -132,7 +131,7 @@ export function useTikTokLiveSession() {
   }, []);
 
   const resetCurrentSession = useCallback(() => {
-    sessionCommentsRef.current = [];
+    sessionCommentIdsRef.current = new Set();
     setCurrentLiveSession(null);
     setDbLiveSessionId(null);
     setNowMs(0);
@@ -156,7 +155,7 @@ export function useTikTokLiveSession() {
         return mergedSession;
       }
 
-      sessionCommentsRef.current = [];
+      sessionCommentIdsRef.current = new Set();
       setCurrentLiveSession(nextSession);
       setDbLiveSessionId(dbLiveSessionId);
       setNowMs(Date.now());
@@ -172,15 +171,15 @@ export function useTikTokLiveSession() {
       if (!session?.startedAt) return;
 
       const endedAt = new Date().toISOString();
-      const comments = sessionCommentsRef.current;
       const durationSeconds = calcDurationSeconds(session.startedAt, endedAt);
 
       const localSession: LiveHistoryItem = {
         ...session,
         endedAt,
         durationSeconds,
-        commentCount: comments.length,
-        comments,
+        commentCount: sessionCommentIdsRef.current.size,
+        // Don't store full comments array in history to prevent RAM growth
+        comments: [],
         reason,
         status: reason === "live_error" ? "error" : "ended",
       };
@@ -192,7 +191,7 @@ export function useTikTokLiveSession() {
           : filtered;
       });
 
-      sessionCommentsRef.current = [];
+      sessionCommentIdsRef.current = new Set();
       setCurrentLiveSession(null);
       setDbLiveSessionId(null);
       setNowMs(0);
@@ -208,7 +207,6 @@ export function useTikTokLiveSession() {
     (payload: unknown) => {
       const sessionFromServer = normalizeLiveSession(payload);
       const currentSession = currentLiveSessionRef.current;
-      const comments = sessionCommentsRef.current;
       const startedAt =
         currentSession?.startedAt ||
         sessionFromServer.startedAt ||
@@ -219,7 +217,7 @@ export function useTikTokLiveSession() {
         calcDurationSeconds(startedAt, endedAt);
       const finalCommentCount = Math.max(
         sessionFromServer.commentCount || 0,
-        comments.length,
+        sessionCommentIdsRef.current.size,
       );
 
       const localSession: LiveHistoryItem = {
@@ -228,7 +226,8 @@ export function useTikTokLiveSession() {
         endedAt,
         durationSeconds,
         commentCount: finalCommentCount,
-        comments,
+        // Don't store full comments array in history to prevent RAM growth
+        comments: [],
         status: sessionFromServer.status || "ended",
       };
 
@@ -239,7 +238,7 @@ export function useTikTokLiveSession() {
           : filtered;
       });
 
-      sessionCommentsRef.current = [];
+      sessionCommentIdsRef.current = new Set();
       setCurrentLiveSession(null);
       setDbLiveSessionId(null);
       setNowMs(0);
@@ -278,23 +277,13 @@ export function useTikTokLiveSession() {
 
   const addCommentToCurrentSession = useCallback(
     (comment: LiveComment) => {
-      const existed = sessionCommentsRef.current.some(
-        (item) => item.id === comment.id,
-      );
-      const nextComments = existed
-        ? sessionCommentsRef.current.map((item) =>
-            item.id === comment.id ? { ...item, ...comment } : item,
-          )
-        : [comment, ...sessionCommentsRef.current].slice(0, MAX_COMMENTS);
-
-      sessionCommentsRef.current = nextComments;
+      sessionCommentIdsRef.current.add(comment.id);
 
       const session = currentLiveSessionRef.current;
       if (session) {
         const nextSession: LiveHistoryItem = {
           ...session,
-          commentCount: nextComments.length,
-          comments: nextComments,
+          commentCount: sessionCommentIdsRef.current.size,
         };
 
         setCurrentLiveSession(nextSession);
