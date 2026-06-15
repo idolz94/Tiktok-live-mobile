@@ -3,7 +3,7 @@ import { Separator } from "@components/separator";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback } from "react";
-import { Platform, Text, View, FlatList } from "react-native";
+import { ActivityIndicator, Platform, Text, View, FlatList } from "react-native";
 
 interface CommentItemProps {
   item: LiveComment;
@@ -48,7 +48,7 @@ const CommentItem = memo(
 );
 
 export const ConnectedLive = memo(() => {
-  const { comments } = useTikTokLiveSocketContext();
+  const { comments, isConnected } = useTikTokLiveSocketContext();
 
   const keyExtractor = useCallback((item: LiveComment) => item.id, []);
 
@@ -56,6 +56,17 @@ export const ConnectedLive = memo(() => {
     ({ item }: { item: LiveComment }) => <CommentItem item={item} />,
     [],
   );
+
+  if (isConnected && comments.length === 0) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>
+          Đang lấy comment, vui lòng chờ trong giây lát
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -79,6 +90,17 @@ const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     flex: 1,
     paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  loadingText: {
+    color: colors.neutral900,
+    ...textPresets.fs12_500,
+    textAlign: "center",
   },
   dividerRow: {
     flexDirection: "row",
