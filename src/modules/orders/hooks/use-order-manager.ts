@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
-  CustomerSummary,
   LiveComment,
   LiveTab,
   Order,
@@ -8,6 +7,7 @@ import type {
   OrderProduct,
   OrderWithTikTok,
 } from "../../../types";
+import { CustomerSummary } from "@app-types/index";
 import { getOrderTotal } from "../../../utils/order";
 import {
   createOrderFromCommentApi,
@@ -59,6 +59,7 @@ export function useOrderManager({
   const [orders, setOrders] = useState<OrderWithTikTok[]>([]);
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState("");
+  const [depositLoadingIds, setDepositLoadingIds] = useState<Set<string>>(new Set());
 
   const [liveTab, setLiveTab] = useState<LiveTab>("live");
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
@@ -71,10 +72,9 @@ export function useOrderManager({
       setOrderError("");
 
       const nextOrders = await getOrdersApi();
-      console.log("nextOrders : ", nextOrders);
       setOrders(nextOrders);
     } catch (error) {
-      console.log("LOAD ORDERS ERROR:", error);
+      if (__DEV__) console.error("LOAD ORDERS ERROR:", error);
       setOrderError(
         error instanceof Error ? error.message : "Không tải được đơn hàng.",
       );
@@ -241,34 +241,25 @@ export function useOrderManager({
   const createOrderFromComment = useCallback(
     async (item: LiveComment) => {
       try {
-        const savedOrder = await createOrderFromCommentApi({
+        const result = await createOrderFromCommentApi({
           comment: item,
           liveSessionId,
-          price: 20,
           quantity: 1,
         });
 
-        const nextOrder = savedOrder.uiOrder;
-
-        setOrders((prev) => {
-          const existed = prev.some((oldOrder) => oldOrder.id === nextOrder.id);
-          if (existed) return prev;
-          return [nextOrder, ...prev];
-        });
-
-        setLiveTab("orders");
+        await reloadOrders();
         onAfterCreateOrder?.();
 
-        return nextOrder;
+        return result;
       } catch (error) {
-        console.log("CREATE ORDER ERROR:", error);
+        if (__DEV__) console.error("CREATE ORDER ERROR:", error);
         setOrderError(
           error instanceof Error ? error.message : "Tạo đơn thất bại.",
         );
         throw error;
       }
     },
-    [liveSessionId, onAfterCreateOrder],
+    [liveSessionId, onAfterCreateOrder, reloadOrders],
   );
 
   const clearOrders = useCallback(() => {
@@ -304,27 +295,72 @@ export function useOrderManager({
     [],
   );
 
-  const toggleDepositStatus = useCallback(
-    async (orderId: string) => {
-      const currentOrder = orders.find((order) => order.id === orderId);
-      if (!currentOrder) return;
-
-      const nextDepositStatus =
-        currentOrder.depositStatus === "paid" ? "unpaid" : "paid";
-
-      await updateOrderDepositStatusApi({
-        orderId,
-        depositStatus: nextDepositStatus,
-      });
-
+  const removeProductFromOrder = useCallback(
+    (orderId: string, itemId: string) => {
       setOrders((prev) =>
         prev.map((order) => {
           if (order.id !== orderId) return order;
-          return { ...order, depositStatus: nextDepositStatus };
+          return {
+            ...order,
+            products: order.products.filter((p) => p.id !== itemId),
+          };
         }),
       );
     },
-    [orders],
+    [],
+  );
+
+  const updateProductInOrder = useCallback(
+    (orderId: string, itemId: string, updates: Partial<OrderProduct>) => {
+      setOrders((prev) =>
+        prev.map((order) => {
+          if (order.id !== orderId) return order;
+          return {
+            ...order,
+            products: order.products.map((p) =>
+              p.id === itemId ? { ...p, ...updates } : p,
+            ),
+          };
+        }),
+      );
+    },
+    [],
+  );
+
+  const toggleDepositStatus = useCallback(
+    async (orderId: string) => {
+      const currentOrder = orders.find((order) => order.id === orderId);
+      if (!currentOrder || depositLoadingIds.has(orderId)) return;
+
+      const nextDepositStatus =
+        currentOrder.depositStatus === "paid" ||
+        currentOrder.depositStatus === "deposited"
+          ? "unpaid"
+          : "paid";
+
+      setDepositLoadingIds((prev) => new Set(prev).add(orderId));
+
+      try {
+        await updateOrderDepositStatusApi({
+          orderId,
+          depositStatus: nextDepositStatus,
+        });
+
+        setOrders((prev) =>
+          prev.map((order) => {
+            if (order.id !== orderId) return order;
+            return { ...order, depositStatus: nextDepositStatus };
+          }),
+        );
+      } finally {
+        setDepositLoadingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(orderId);
+          return next;
+        });
+      }
+    },
+    [depositLoadingIds, orders],
   );
 
   const confirmOrder = useCallback(
@@ -350,10 +386,13 @@ export function useOrderManager({
     [orders],
   );
 
-  const deleteOrder = useCallback(async (id: string) => {
-    await deleteOrderApi(id);
-    setOrders((prev) => prev.filter((order) => order.id !== id));
-  }, []);
+  const deleteOrder = useCallback(
+    async (id: string) => {
+      await deleteOrderApi(id);
+      await reloadOrders();
+    },
+    [reloadOrders],
+  );
 
   const openOrderOverview = useCallback(
     (orderId: string) => setSelectedOrderId(orderId),
@@ -390,7 +429,10 @@ export function useOrderManager({
     clearOrders,
     updateOrder,
     addProductToOrder,
+    removeProductFromOrder,
+    updateProductInOrder,
     toggleDepositStatus,
+    depositLoadingIds,
     confirmOrder,
     deleteOrder,
     openOrderOverview,

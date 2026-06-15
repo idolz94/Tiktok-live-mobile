@@ -4,9 +4,11 @@ import { Button } from "@components/button";
 import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
-import { isPriorityComment } from "@utils/comment";
+import { useOrderManager } from "@modules/orders/hooks/use-order-manager";
+import { createOrderCommentKey, isPriorityComment } from "@utils/comment";
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback } from "react";
+import { router } from "expo-router";
+import { memo, useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -17,6 +19,10 @@ import {
 
 interface CommentItemProps {
   item: LiveComment;
+  onCreateOrder: (
+    item: LiveComment,
+  ) => Promise<{ success: boolean; orderId: string }>;
+  isCommentOrderCreated: (item: LiveComment) => boolean;
 }
 
 const UserJoinedRow = memo(({ username }: { username: string }) => (
@@ -30,41 +36,65 @@ const UserJoinedRow = memo(({ username }: { username: string }) => (
   </View>
 ));
 
-const CommentCardContent = memo(({ item }: CommentItemProps) => (
-  <>
-    <View style={styles.leftCard}>
-      <Avatar
-        uri={item.avatar || item.avatarUrl}
-        username={item.username}
-        size={40}
-      />
-      <View style={styles.commentTextGroup}>
-        <Text style={styles.nameTiktok}>
-          {item.displayName || item.username || "Unknown user"}
-        </Text>
-        <Text numberOfLines={4} style={styles.comment}>
-          {item.comment}
-        </Text>
+const CommentCardContent = memo(({ item, onCreateOrder }: CommentItemProps) => {
+  return (
+    <>
+      <View style={styles.leftCard}>
+        <Avatar
+          uri={item.avatar || item.avatarUrl}
+          username={item.username}
+          size={40}
+        />
+        <View style={styles.commentTextGroup}>
+          <Text style={styles.nameTiktok}>
+            {item.displayName || item.username || "Unknown user"}
+          </Text>
+          <Text numberOfLines={4} style={styles.comment}>
+            {item.comment}
+          </Text>
+        </View>
       </View>
-    </View>
-    <Button
-      title="Tạo đơn"
-      onPress={() => {}}
-      loadingType="center"
-      containerStyle={styles.btnCreateOrder}
-      txtBtnStyle={styles.txtCreateOrder}
-    />
-  </>
-));
+      <Button
+        title="Tạo đơn"
+        onPress={async () => await onCreateOrder(item)}
+        loadingType="center"
+        containerStyle={styles.btnCreateOrder}
+        txtBtnStyle={styles.txtCreateOrder}
+      />
+    </>
+  );
+});
 
 const CommentItem = memo(
-  ({ item }: CommentItemProps) => {
+  ({ item, onCreateOrder, isCommentOrderCreated }: CommentItemProps) => {
+    const [localOrderId, setLocalOrderId] = useState("");
+
+    const isCreatedOrder = Boolean(
+      isCommentOrderCreated(item) ||
+      item.isOrderCreated ||
+      item.orderId ||
+      localOrderId,
+    );
+
     if (item.type === "user_joined") {
       return <UserJoinedRow username={item.username} />;
     }
 
     const isOwner = item?.raw?.liveUsername === item?.raw?.tiktok_username;
     const hasPriorityBorder = !isOwner && isPriorityComment(item);
+
+    const handleCreateOrder = async (
+      commentItem: LiveComment,
+    ): Promise<{ success: boolean; orderId: string }> => {
+      if (isCreatedOrder) return { success: false, orderId: "" };
+      try {
+        const result = await onCreateOrder(commentItem);
+        if (result.success) setLocalOrderId(result.orderId);
+        return result;
+      } catch {
+        return { success: false, orderId: "" };
+      }
+    };
 
     if (hasPriorityBorder) {
       return (
@@ -75,7 +105,11 @@ const CommentItem = memo(
           style={styles.gradientContainer}
         >
           <View style={styles.innerCardBorderAnimated}>
-            <CommentCardContent item={item} />
+            <CommentCardContent
+              item={item}
+              onCreateOrder={handleCreateOrder}
+              isCommentOrderCreated={isCommentOrderCreated}
+            />
           </View>
         </LinearGradient>
       );
@@ -83,7 +117,11 @@ const CommentItem = memo(
 
     return (
       <View style={styles.cardContainer}>
-        <CommentCardContent item={item} />
+        <CommentCardContent
+          item={item}
+          onCreateOrder={handleCreateOrder}
+          isCommentOrderCreated={isCommentOrderCreated}
+        />
       </View>
     );
   },
@@ -98,13 +136,78 @@ const CommentItem = memo(
 const ItemSeparator = () => <View style={styles.separator} />;
 
 export const ConnectedLive = memo(() => {
-  const { comments, isConnected } = useTikTokLiveSocketContext();
+  const { comments, isConnected, currentLiveSessionId } =
+    useTikTokLiveSocketContext();
+
+  const createdCommentKeysRef = useRef<Set<string>>(new Set());
+  const [createdCommentKeys, setCreatedCommentKeys] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const orderManager = useOrderManager({
+    comments,
+    liveSessionId: currentLiveSessionId,
+    onAfterCreateOrder: () => router.back(),
+  });
+
+  const isCommentOrderCreated = useCallback(
+    (comment: LiveComment) => {
+      return Boolean(
+        comment.isOrderCreated ||
+        comment.orderId ||
+        createdCommentKeys.has(createOrderCommentKey(comment)),
+      );
+    },
+    [createdCommentKeys],
+  );
+
+  const handleCreateOrder = useCallback(
+    async (comment: LiveComment) => {
+      const commentKey = createOrderCommentKey(comment);
+
+      if (createdCommentKeysRef.current.has(commentKey)) {
+        alert("Comment này đã tạo đơn rồi.");
+        return { success: false, orderId: "" };
+      }
+
+      try {
+        createdCommentKeysRef.current.add(commentKey);
+        const result = await orderManager.createOrderFromComment(comment);
+        setCreatedCommentKeys((prev) => new Set(prev).add(commentKey));
+
+        if (result?.message) {
+          alert(result.message);
+        }
+
+        return { success: true, orderId: result?.orderId ?? "" };
+      } catch (error) {
+        createdCommentKeysRef.current.delete(commentKey);
+        setCreatedCommentKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(commentKey);
+          return next;
+        });
+
+        if (__DEV__) console.error("CREATE ORDER ERROR:", error);
+        alert(error instanceof Error ? error.message : "Tạo đơn thất bại");
+
+        return { success: false, orderId: "" };
+      }
+    },
+    [orderManager],
+  );
 
   const keyExtractor = useCallback((item: LiveComment) => item.id, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: LiveComment }) => <CommentItem item={item} />,
-    [],
+    ({ item }: { item: LiveComment }) => (
+      <CommentItem
+        item={item}
+        onCreateOrder={handleCreateOrder}
+        isCommentOrderCreated={isCommentOrderCreated}
+      />
+    ),
+    [handleCreateOrder, isCommentOrderCreated],
   );
 
   if (isConnected && comments.length === 0) {
