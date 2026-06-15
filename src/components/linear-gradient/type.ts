@@ -8,6 +8,7 @@ export const GradientType = {
   gra_warning: "gra_warning",
   gra_social: "gra_social",
   gra_neutralDark: "gra_neutralDark",
+  gra_border_animated: "gra_border_animated",
 } as const;
 
 export type GradientType = keyof typeof GradientType;

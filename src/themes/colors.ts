@@ -33,6 +33,7 @@ export const linearGradients = {
     "rgba(255, 166, 109, 0.2)",
     "rgba(255, 255, 255, 0)",
   ],
+  gra_border_animated: ["#2CA87B", "#FFA66D", "#FF6B8A", "#FFA66D", "#2CA87B"],
 
   gra_info: ["#4FACFE", "#00F2FE"],
   gra_success: ["#43E97B", "#38F9D7"],

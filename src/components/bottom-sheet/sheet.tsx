@@ -15,6 +15,8 @@ type Props = {
   showDragIndicator?: boolean;
 
   backgroundStyle?: StyleProp<ViewStyle>;
+
+  enablePanDownToClose?: boolean;
 };
 
 export const AppBottomSheet = memo(
@@ -25,6 +27,7 @@ export const AppBottomSheet = memo(
     snapPoints,
     showDragIndicator = true,
     backgroundStyle,
+    enablePanDownToClose = true,
   }: Props) => {
     const { colors } = useThemes();
 
@@ -37,7 +40,7 @@ export const AppBottomSheet = memo(
         backgroundStyle={
           backgroundStyle || { backgroundColor: colors.neutral100 }
         }
-        enablePanDownToClose
+        enablePanDownToClose={enablePanDownToClose}
         enableDynamicSizing
         style={{ zIndex: 99 }}
       >
