@@ -33,4 +33,6 @@ export type MeBootstrapResponse = {
   tiktokChannels: ShopTikTokChannel[];
   canUseApp: boolean;
   reason?: string | null;
+  hasOrders: boolean;
+  hasHistory: boolean;
 };

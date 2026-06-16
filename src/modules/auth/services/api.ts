@@ -24,6 +24,8 @@ const EMPTY_ME: MeBootstrapResponse = {
   tiktokChannels: [],
   canUseApp: false,
   reason: "NO_USER",
+  hasOrders: false,
+  hasHistory: false,
 };
 
 export const getMeBootstrapApi = async (): Promise<MeBootstrapResponse> => {
