@@ -1,5 +1,6 @@
 import { Icon } from "@components/icon";
 import { PulsingDot } from "@components/pulsing-dot";
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { memo, useEffect, useState } from "react";
 import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
@@ -18,8 +19,10 @@ type SegmentControlProps = {
 
 export const Segment = memo(
   ({ tabs, activeIndex, onTabPress }: SegmentControlProps) => {
-    const [tabWidth, setTabWidth] = useState(0);
+    const { colors } = useThemes();
     const translateX = useSharedValue(0);
+
+    const [tabWidth, setTabWidth] = useState(0);
 
     useEffect(() => {
       if (tabWidth > 0) {
@@ -46,7 +49,11 @@ export const Segment = memo(
         {tabs.map((tab, i) => (
           <Pressable key={tab} onPress={() => onTabPress(i)} style={styles.tab}>
             {i === 0 ? (
-              <PulsingDot size={10} color="white" ringCount={2} />
+              <PulsingDot
+                size={10}
+                color={activeIndex === 0 ? colors.neutral100 : colors.primary}
+                ringCount={2}
+              />
             ) : (
               <Icon
                 name="clipboard_check"
