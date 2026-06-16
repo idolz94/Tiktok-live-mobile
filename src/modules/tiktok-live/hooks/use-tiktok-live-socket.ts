@@ -310,7 +310,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     }
 
     isManualCloseRef.current = false;
-    abortControllerRef.current?.abort();
+    try {
+      abortControllerRef.current?.abort();
+    } catch {}
     abortControllerRef.current = new AbortController();
 
     fetchSse(url, {
@@ -504,7 +506,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       if (nextState === "active" && !isManualCloseRef.current) {
         setTimeout(() => {
           if (isManualCloseRef.current) return;
-          abortControllerRef.current?.abort();
+          try {
+            abortControllerRef.current?.abort();
+          } catch {}
           abortControllerRef.current = null;
           connectSse();
         }, 500);
@@ -513,7 +517,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
     return () => {
       isManualCloseRef.current = true;
-      abortControllerRef.current?.abort();
+      try {
+        abortControllerRef.current?.abort();
+      } catch {}
       abortControllerRef.current = null;
       if (batchFlushTimerRef.current) {
         clearInterval(batchFlushTimerRef.current);
