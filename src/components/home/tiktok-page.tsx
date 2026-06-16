@@ -15,11 +15,14 @@ import {
   createTikTokChannelApi,
   getTikTokChannelsApi,
 } from "@modules/auth/services/api";
+import { useOrderManager } from "@modules/orders/hooks/use-order-manager";
+import { useAuth } from "@modules/auth/hooks/use-auth";
 import { normalizeTikTokUsername } from "@utils/comment";
 import { AccountConnected } from "./account-connected";
 import { Segment } from "./segment";
 import { UnConnectedLive } from "./unconnected-live";
 import { ConnectedLive } from "./connected-live";
+import { Orders } from "./orders";
 
 export type TikTokLiveChannel = {
   id: string;
@@ -44,7 +47,17 @@ export const TiktokPage = memo(() => {
     stopLiveSession,
     liveError,
     clearLiveError,
+    comments,
+    currentLiveSessionId,
   } = useTikTokLiveSocketContext();
+
+  const { user } = useAuth();
+
+  const orderManager = useOrderManager({
+    comments,
+    liveSessionId: currentLiveSessionId,
+    hasOrders: user?.hasOrders ?? false,
+  });
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -276,7 +289,13 @@ export const TiktokPage = memo(() => {
       >
         <View style={{ flex: 1 }} key="live">
           {visible ? (
-            <ConnectedLive />
+            <ConnectedLive
+              orderManager={orderManager}
+              onNavigateToOrders={() => {
+                setActiveIndex(1);
+                pagerRef.current?.setPage(1);
+              }}
+            />
           ) : (
             <UnConnectedLive
               channels={channels || []}
@@ -287,7 +306,7 @@ export const TiktokPage = memo(() => {
         </View>
 
         <View style={{ flex: 1 }} key="orders">
-          <Text>order here</Text>
+          <Orders orderManager={orderManager} />
         </View>
       </PagerView>
 

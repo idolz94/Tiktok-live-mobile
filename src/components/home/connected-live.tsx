@@ -4,13 +4,13 @@ import { Button } from "@components/button";
 import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
-import { useOrderManager } from "@modules/orders/hooks/use-order-manager";
+import { OrderManager } from "@modules/orders/hooks/use-order-manager";
 import { createOrderCommentKey, isPriorityComment } from "@utils/comment";
 import { createStyles } from "@utils/createStyles";
-import { router } from "expo-router";
 import { memo, useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Platform,
   Text,
@@ -24,6 +24,11 @@ interface CommentItemProps {
   ) => Promise<{ success: boolean; orderId: string }>;
   isCommentOrderCreated: (item: LiveComment) => boolean;
 }
+
+export type ConnectedLiveProps = {
+  orderManager: OrderManager;
+  onNavigateToOrders?: () => void;
+};
 
 const UserJoinedRow = memo(({ username }: { username: string }) => (
   <View style={styles.dividerRow}>
@@ -135,111 +140,112 @@ const CommentItem = memo(
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
-export const ConnectedLive = memo(() => {
-  const { comments, isConnected, currentLiveSessionId } =
-    useTikTokLiveSocketContext();
+export const ConnectedLive = memo(
+  ({ orderManager, onNavigateToOrders }: ConnectedLiveProps) => {
+    const { comments, isConnected } =
+      useTikTokLiveSocketContext();
 
-  const createdCommentKeysRef = useRef<Set<string>>(new Set());
-  const [createdCommentKeys, setCreatedCommentKeys] = useState<Set<string>>(
-    new Set(),
-  );
+    const createdCommentKeysRef = useRef<Set<string>>(new Set());
+    const [createdCommentKeys, setCreatedCommentKeys] = useState<Set<string>>(
+      new Set(),
+    );
 
-  const orderManager = useOrderManager({
-    comments,
-    liveSessionId: currentLiveSessionId,
-    onAfterCreateOrder: () => router.back(),
-  });
+    const isCommentOrderCreated = useCallback(
+      (comment: LiveComment) => {
+        return Boolean(
+          comment.isOrderCreated ||
+          comment.orderId ||
+          createdCommentKeys.has(createOrderCommentKey(comment)),
+        );
+      },
+      [createdCommentKeys],
+    );
 
-  const isCommentOrderCreated = useCallback(
-    (comment: LiveComment) => {
-      return Boolean(
-        comment.isOrderCreated ||
-        comment.orderId ||
-        createdCommentKeys.has(createOrderCommentKey(comment)),
-      );
-    },
-    [createdCommentKeys],
-  );
+    const handleCreateOrder = useCallback(
+      async (comment: LiveComment) => {
+        const commentKey = createOrderCommentKey(comment);
 
-  const handleCreateOrder = useCallback(
-    async (comment: LiveComment) => {
-      const commentKey = createOrderCommentKey(comment);
-
-      if (createdCommentKeysRef.current.has(commentKey)) {
-        alert("Comment này đã tạo đơn rồi.");
-        return { success: false, orderId: "" };
-      }
-
-      try {
-        createdCommentKeysRef.current.add(commentKey);
-        const result = await orderManager.createOrderFromComment(comment);
-        setCreatedCommentKeys((prev) => new Set(prev).add(commentKey));
-
-        if (result?.message) {
-          alert(result.message);
+        if (createdCommentKeysRef.current.has(commentKey)) {
+          alert("Comment này đã tạo đơn rồi.");
+          return { success: false, orderId: "" };
         }
 
-        return { success: true, orderId: result?.orderId ?? "" };
-      } catch (error) {
-        createdCommentKeysRef.current.delete(commentKey);
-        setCreatedCommentKeys((prev) => {
-          const next = new Set(prev);
-          next.delete(commentKey);
-          return next;
-        });
+        try {
+          createdCommentKeysRef.current.add(commentKey);
+          const result = await orderManager.createOrderFromComment(comment);
+          setCreatedCommentKeys((prev) => new Set(prev).add(commentKey));
 
-        if (__DEV__) console.error("CREATE ORDER ERROR:", error);
-        alert(error instanceof Error ? error.message : "Tạo đơn thất bại");
+          Alert.alert(
+            "Tạo đơn thành công",
+            'Di chuyển sang "Đơn đã tạo" để kiểm tra',
+            [
+              { text: "Huỷ", style: "cancel" },
+              { text: "OK", onPress: () => onNavigateToOrders?.() },
+            ],
+          );
 
-        return { success: false, orderId: "" };
-      }
-    },
-    [orderManager],
-  );
+          return { success: true, orderId: result?.orderId ?? "" };
+        } catch (error) {
+          createdCommentKeysRef.current.delete(commentKey);
+          setCreatedCommentKeys((prev) => {
+            const next = new Set(prev);
+            next.delete(commentKey);
+            return next;
+          });
 
-  const keyExtractor = useCallback((item: LiveComment) => item.id, []);
+          if (__DEV__) console.error("CREATE ORDER ERROR:", error);
+          alert(error instanceof Error ? error.message : "Tạo đơn thất bại");
 
-  const renderItem = useCallback(
-    ({ item }: { item: LiveComment }) => (
-      <CommentItem
-        item={item}
-        onCreateOrder={handleCreateOrder}
-        isCommentOrderCreated={isCommentOrderCreated}
-      />
-    ),
-    [handleCreateOrder, isCommentOrderCreated],
-  );
+          return { success: false, orderId: "" };
+        }
+      },
+      [orderManager],
+    );
 
-  if (isConnected && comments.length === 0) {
+    const keyExtractor = useCallback((item: LiveComment) => item.id, []);
+
+    const renderItem = useCallback(
+      ({ item }: { item: LiveComment }) => (
+        <CommentItem
+          item={item}
+          onCreateOrder={handleCreateOrder}
+          isCommentOrderCreated={isCommentOrderCreated}
+        />
+      ),
+      [handleCreateOrder, isCommentOrderCreated],
+    );
+
+    if (isConnected && comments.length === 0) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+          <Text style={styles.loadingText}>
+            Đang lấy comment, vui lòng chờ trong giây lát
+          </Text>
+        </View>
+      );
+    }
+
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>
-          Đang lấy comment, vui lòng chờ trong giây lát
-        </Text>
+      <View style={styles.container}>
+        <FlatList
+          data={comments}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          inverted
+          scrollEnabled
+          windowSize={5}
+          maxToRenderPerBatch={8}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={12}
+          removeClippedSubviews={Platform.OS === "ios"}
+          ItemSeparatorComponent={ItemSeparator}
+          contentContainerStyle={styles.listContent}
+        />
       </View>
     );
-  }
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={comments}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        inverted
-        scrollEnabled
-        windowSize={5}
-        maxToRenderPerBatch={8}
-        updateCellsBatchingPeriod={50}
-        initialNumToRender={12}
-        removeClippedSubviews={Platform.OS === "ios"}
-        ItemSeparatorComponent={ItemSeparator}
-        contentContainerStyle={styles.listContent}
-      />
-    </View>
-  );
-});
+  },
+);
 
 const styles = createStyles(({ colors, textPresets }) => ({
   // Layout
