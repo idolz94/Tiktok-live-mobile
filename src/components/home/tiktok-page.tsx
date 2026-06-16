@@ -42,8 +42,8 @@ export const TiktokPage = memo(() => {
     tiktokUsername,
     changeTikTokUsername,
     stopLiveSession,
-    fatalEvent,
-    clearFatalEvent,
+    liveError,
+    clearLiveError,
   } = useTikTokLiveSocketContext();
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -64,28 +64,21 @@ export const TiktokPage = memo(() => {
   }, [opacity, translateY]);
 
   useEffect(() => {
-    if (!fatalEvent || alertShownRef.current) return;
+    if (!liveError || alertShownRef.current) return;
 
     alertShownRef.current = true;
 
-    const titles: Record<string, string> = {
-      LIVE_DISCONNECTED: "TikTok Live đã ngắt kết nối",
-      LIVE_ERROR: "Lỗi TikTok Live",
-      COLLECTOR_STOPPED: "Collector đã dừng",
-    };
-    const title = titles[fatalEvent.type] ?? "Lỗi kết nối";
-
-    Alert.alert(title, fatalEvent.message, [
+    Alert.alert("Phiên live kết thúc", liveError, [
       {
         text: "OK",
         onPress: () => {
           alertShownRef.current = false;
-          clearFatalEvent();
+          clearLiveError();
           resetToInitial();
         },
       },
     ]);
-  }, [fatalEvent, clearFatalEvent, resetToInitial]);
+  }, [liveError, clearLiveError, resetToInitial]);
 
   const fetchChannels = useCallback(async (): Promise<TikTokLiveChannel[]> => {
     try {
