@@ -25,10 +25,12 @@ type UseOrderManagerParams = {
   comments: LiveComment[];
   liveSessionId?: string | null;
   onAfterCreateOrder?: () => void;
+  hasOrders?: boolean;
 };
 
 type CustomerSummaryWithTikTok = CustomerSummary & {
   customerTikTokUsername?: string;
+  customerId?: string | null;
 };
 
 function getCommentText(comment: LiveComment) {
@@ -45,21 +47,23 @@ function getCommentAvatar(comment: LiveComment) {
 
 function getOrderRevenue(order: OrderWithTikTok) {
   const totalAmount = Number(order.totalAmount || 0);
-
-  if (totalAmount > 0) return totalAmount;
-
-  return getOrderTotal(order.products);
+  return totalAmount > 0 ? totalAmount : getOrderTotal(order.products);
 }
+
+export type OrderManager = ReturnType<typeof useOrderManager>;
 
 export function useOrderManager({
   comments,
   liveSessionId,
   onAfterCreateOrder,
+  hasOrders = true,
 }: UseOrderManagerParams) {
   const [orders, setOrders] = useState<OrderWithTikTok[]>([]);
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState("");
-  const [depositLoadingIds, setDepositLoadingIds] = useState<Set<string>>(new Set());
+  const [depositLoadingIds, setDepositLoadingIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const [liveTab, setLiveTab] = useState<LiveTab>("live");
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
@@ -70,7 +74,6 @@ export function useOrderManager({
     try {
       setOrderLoading(true);
       setOrderError("");
-
       const nextOrders = await getOrdersApi();
       setOrders(nextOrders);
     } catch (error) {
@@ -84,20 +87,15 @@ export function useOrderManager({
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      void reloadOrders();
-    }, 0);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [reloadOrders]);
+    if (!hasOrders) return;
+    const timer = setTimeout(() => void reloadOrders(), 0);
+    return () => clearTimeout(timer);
+  }, [reloadOrders, hasOrders]);
 
   const buyingCount = useMemo(
     () =>
       comments.filter((item) => {
         const score = Number(item.finalScore || 0);
-
         return (
           score >= 50 ||
           item.intent === "buying" ||
@@ -129,12 +127,15 @@ export function useOrderManager({
     [orders],
   );
 
+  const totalRevenue = useMemo(
+    () => orders.reduce((sum, item) => sum + getOrderRevenue(item), 0),
+    [orders],
+  );
+
   const filteredOrders = useMemo(() => {
     const keyword = orderSearchText.trim().toLowerCase();
 
     return orders.filter((order) => {
-      const tiktokUsername = getOrderTikTokUsername(order);
-
       const matchFilter =
         orderFilter === "all" ||
         (orderFilter === "unpaid" && order.depositStatus === "unpaid") ||
@@ -145,6 +146,7 @@ export function useOrderManager({
       if (!matchFilter) return false;
       if (!keyword) return true;
 
+      const tiktokUsername = getOrderTikTokUsername(order);
       const searchValue = [
         order.orderCode,
         order.username,
@@ -160,11 +162,13 @@ export function useOrderManager({
     });
   }, [orderFilter, orderSearchText, orders]);
 
-  const selectedOrder = useMemo(() => {
-    if (!selectedOrderId) return null;
-
-    return orders.find((order) => order.id === selectedOrderId) || null;
-  }, [orders, selectedOrderId]);
+  const selectedOrder = useMemo(
+    () =>
+      selectedOrderId
+        ? (orders.find((o) => o.id === selectedOrderId) ?? null)
+        : null,
+    [orders, selectedOrderId],
+  );
 
   const customers = useMemo<CustomerSummaryWithTikTok[]>(() => {
     const map = new Map<string, CustomerSummaryWithTikTok>();
@@ -177,20 +181,24 @@ export function useOrderManager({
       const current = map.get(customerKey);
 
       if (!current) {
+        const matchingOrder = orders.find(
+          (order) =>
+            getOrderTikTokUsername(order) === customerTikTokUsername ||
+            order.username === username,
+        );
         map.set(customerKey, {
           username,
           avatar: getCommentAvatar(comment),
+          customerId: matchingOrder?.customerId ?? null,
           customerTikTokUsername,
           totalComments: 1,
-          totalOrders: orders.filter((order) => {
-            return (
+          totalOrders: orders.filter(
+            (order) =>
               getOrderTikTokUsername(order) === customerTikTokUsername ||
-              order.username === username
-            );
-          }).length,
+              order.username === username,
+          ).length,
           latestComment: getCommentText(comment),
         });
-
         return;
       }
 
@@ -212,21 +220,24 @@ export function useOrderManager({
         map.set(customerKey, {
           username,
           avatar: order.avatar,
+          customerId: order.customerId ?? null,
           customerTikTokUsername,
           totalComments: 0,
           totalOrders: 1,
           latestComment: order.comment,
         });
-
         return;
       }
 
-      current.totalOrders = orders.filter((item) => {
-        return (
+      if (!current.customerId && order.customerId) {
+        current.customerId = order.customerId;
+      }
+
+      current.totalOrders = orders.filter(
+        (item) =>
           getOrderTikTokUsername(item) === customerTikTokUsername ||
-          item.username === username
-        );
-      }).length;
+          item.username === username,
+      ).length;
 
       if (!current.customerTikTokUsername && customerTikTokUsername) {
         current.customerTikTokUsername = customerTikTokUsername;
@@ -262,20 +273,16 @@ export function useOrderManager({
     [liveSessionId, onAfterCreateOrder, reloadOrders],
   );
 
-  const clearOrders = useCallback(() => {
-    setOrders([]);
-  }, []);
+  const clearOrders = useCallback(() => setOrders([]), []);
 
   const updateOrder = useCallback(
     (id: string, field: keyof Order, value: string) => {
       setOrders((prev) =>
         prev.map((order) => {
           if (order.id !== id) return order;
-
           if (field === "quantity" || field === "price") {
             return { ...order, [field]: Number(value || 0) };
           }
-
           return { ...order, [field]: value };
         }),
       );
@@ -286,10 +293,11 @@ export function useOrderManager({
   const addProductToOrder = useCallback(
     (orderId: string, product: OrderProduct) => {
       setOrders((prev) =>
-        prev.map((order) => {
-          if (order.id !== orderId) return order;
-          return { ...order, products: [...order.products, product] };
-        }),
+        prev.map((order) =>
+          order.id !== orderId
+            ? order
+            : { ...order, products: [...order.products, product] },
+        ),
       );
     },
     [],
@@ -298,13 +306,14 @@ export function useOrderManager({
   const removeProductFromOrder = useCallback(
     (orderId: string, itemId: string) => {
       setOrders((prev) =>
-        prev.map((order) => {
-          if (order.id !== orderId) return order;
-          return {
-            ...order,
-            products: order.products.filter((p) => p.id !== itemId),
-          };
-        }),
+        prev.map((order) =>
+          order.id !== orderId
+            ? order
+            : {
+                ...order,
+                products: order.products.filter((p) => p.id !== itemId),
+              },
+        ),
       );
     },
     [],
@@ -313,15 +322,16 @@ export function useOrderManager({
   const updateProductInOrder = useCallback(
     (orderId: string, itemId: string, updates: Partial<OrderProduct>) => {
       setOrders((prev) =>
-        prev.map((order) => {
-          if (order.id !== orderId) return order;
-          return {
-            ...order,
-            products: order.products.map((p) =>
-              p.id === itemId ? { ...p, ...updates } : p,
-            ),
-          };
-        }),
+        prev.map((order) =>
+          order.id !== orderId
+            ? order
+            : {
+                ...order,
+                products: order.products.map((p) =>
+                  p.id === itemId ? { ...p, ...updates } : p,
+                ),
+              },
+        ),
       );
     },
     [],
@@ -345,12 +355,12 @@ export function useOrderManager({
           orderId,
           depositStatus: nextDepositStatus,
         });
-
         setOrders((prev) =>
-          prev.map((order) => {
-            if (order.id !== orderId) return order;
-            return { ...order, depositStatus: nextDepositStatus };
-          }),
+          prev.map((order) =>
+            order.id !== orderId
+              ? order
+              : { ...order, depositStatus: nextDepositStatus },
+          ),
         );
       } finally {
         setDepositLoadingIds((prev) => {
@@ -371,16 +381,11 @@ export function useOrderManager({
       const nextStatus =
         currentOrder.status === "confirmed" ? "draft" : "confirmed";
 
-      await updateOrderStatusApi({
-        orderId,
-        status: nextStatus,
-      });
-
+      await updateOrderStatusApi({ orderId, status: nextStatus });
       setOrders((prev) =>
-        prev.map((order) => {
-          if (order.id !== orderId) return order;
-          return { ...order, status: nextStatus };
-        }),
+        prev.map((order) =>
+          order.id !== orderId ? order : { ...order, status: nextStatus },
+        ),
       );
     },
     [orders],
@@ -399,11 +404,6 @@ export function useOrderManager({
     [],
   );
   const closeOrderOverview = useCallback(() => setSelectedOrderId(null), []);
-
-  const totalRevenue = useMemo(
-    () => orders.reduce((sum, item) => sum + getOrderRevenue(item), 0),
-    [orders],
-  );
 
   return {
     orders,
