@@ -9,6 +9,10 @@ export const images = {
   ship: require("./sources/ship.png"),
   comment: require("./sources/comment.png"),
   order: require("./sources/order.png"),
+  order_item: require("./sources/order-item.png"),
+  money: require("./sources/money.png"),
+  no_money: require("./sources/no-money.png"),
+  calendar: require("./sources/calendar.png"),
 };
 
 export type ImageTypes = keyof typeof images;

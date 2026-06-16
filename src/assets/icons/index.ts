@@ -14,6 +14,9 @@ export const icons = {
   arrow_down: require("./sources/arrow-down.png"),
   close: require("./sources/close.png"),
   search: require("./sources/search.png"),
+  more: require("./sources/more-icon.png"),
+  king: require("./sources/king.png"),
+  print: require("./sources/print-icon.png"),
 };
 
 export type IconsTypes = keyof typeof icons;
