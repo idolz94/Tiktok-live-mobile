@@ -128,6 +128,8 @@ export function normalizeMeBootstrap(raw: any): MeBootstrapResponse {
         ? source.canUseApp
         : isLicenseUsable(license),
     reason: source.reason || null,
+    hasOrders: source.hasOrders === true,
+    hasHistory: source.hasHistory === true,
   };
 }
 
@@ -188,6 +190,6 @@ export function mapBootstrapToAuthUser(
     canUseApp: canUseApp ?? false,
 
     // Status raw của license — UI dùng để hiển thị banner "còn X ngày trial"
-    licenseStatus: license?.status || null,
+    // licenseStatus: license?.status || null,
   };
 }

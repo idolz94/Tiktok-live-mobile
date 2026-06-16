@@ -1,3 +1,5 @@
+import { ShopTikTokChannel } from "./database";
+
 export type AiStatus = "none" | "pending" | "done" | "error";
 
 export type CommentPriorityLevel = "high" | "medium" | "low" | "normal";
@@ -191,7 +193,18 @@ export type SocketMessage = {
 
 export type AuthUser = {
   id: string;
-  username: string;
+  email?: string | null;
+  username?: string | null;
+  fullName?: string | null;
+  phone?: string | null;
+  shopId?: string | null;
+  shopName?: string | null;
+  tiktokUsername?: string | null;
+  tiktokChannels?: ShopTikTokChannel[];
+  role?: string | null;
+  canUseApp?: boolean;
+  hasOrders?: boolean;
+  hasHistory?: boolean;
 };
 
 export type LiveTab = "live" | "orders";
