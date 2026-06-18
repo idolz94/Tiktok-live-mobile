@@ -41,7 +41,7 @@ function mergeSession(
   } as LiveHistoryItem;
 }
 
-export function useTikTokLiveSession() {
+export function useTikTokLiveSession(options: { hasHistory?: boolean } = {}) {
   const currentLiveSessionRef = useRef<LiveHistoryItem | null>(null);
   const currentDbLiveSessionIdRef = useRef<string | null>(null);
   const sessionCommentIdsRef = useRef<Set<string>>(new Set());
@@ -71,7 +71,13 @@ export function useTikTokLiveSession() {
     currentLiveSession?.startedAt && !currentLiveSession?.endedAt,
   );
 
+  const hasHistoryRef = useRef(options.hasHistory);
+  useEffect(() => {
+    hasHistoryRef.current = options.hasHistory;
+  }, [options.hasHistory]);
+
   const reloadLiveHistory = useCallback(async () => {
+    if (hasHistoryRef.current === false) return [];
     try {
       const history = await getLiveHistoryApi();
       setLiveHistory(history);
@@ -83,14 +89,15 @@ export function useTikTokLiveSession() {
   }, []);
 
   useEffect(() => {
+    if (options.hasHistory !== true) return;
     const timer = setTimeout(() => {
       void reloadLiveHistory();
-    }, 0);
+    }, 800);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [reloadLiveHistory]);
+  }, [reloadLiveHistory, options.hasHistory]);
 
   useEffect(() => {
     if (!isRunning) return;

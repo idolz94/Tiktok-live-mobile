@@ -1,17 +1,20 @@
 import { useTikTokLiveSocket } from "@modules/tiktok-live/hooks/use-tiktok-live-socket";
-import React, { createContext, useContext } from "react";
+import { createContext, ReactNode, useContext } from "react";
 
 type LiveSocketType = ReturnType<typeof useTikTokLiveSocket>;
+
+type TikTokLiveSocketProviderProps = {
+  children: ReactNode;
+  hasHistory?: boolean;
+};
 
 const TikTokLiveSocketContext = createContext<LiveSocketType | null>(null);
 
 export function TikTokLiveSocketProvider({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  // Chỉ khởi tạo 1 instance duy nhất tại Provider này
-  const socketValue = useTikTokLiveSocket();
+  hasHistory,
+}: TikTokLiveSocketProviderProps) {
+  const socketValue = useTikTokLiveSocket({ hasHistory });
 
   return (
     <TikTokLiveSocketContext.Provider value={socketValue}>

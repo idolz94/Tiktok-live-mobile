@@ -52,6 +52,7 @@ function loadResumeUsername(): string {
 
 type UseTikTokLiveSocketOptions = {
   initialUsername?: string | null;
+  hasHistory?: boolean;
   onOrderShippingUpdated?: (payload: Record<string, unknown>) => void;
 };
 
@@ -76,7 +77,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const onOrderShippingUpdatedRef = useRef(options.onOrderShippingUpdated);
 
   const pendingCommentsRef = useRef<any[]>([]);
-  const batchFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const batchFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
 
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,7 +123,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     endSessionFromPayload,
     updateSessionStatusFromPayload,
     addCommentToCurrentSession,
-  } = useTikTokLiveSession();
+  } = useTikTokLiveSession({ hasHistory: options.hasHistory });
 
   const handleServerEvent = useCallback(
     (type: string, payload: Record<string, any>) => {
@@ -132,12 +135,15 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
       if (type === "PING") {
         setIsConnected(true);
-        if (typeof payload.viewersCount === "number") setViewersCount(payload.viewersCount);
+        if (typeof payload.viewersCount === "number")
+          setViewersCount(payload.viewersCount);
         return;
       }
 
       if (type === "SUBSCRIBING") {
-        setStatus(`Đang chuẩn bị lấy comment LIVE: ${getPayloadUsername(payload)}`);
+        setStatus(
+          `Đang chuẩn bị lấy comment LIVE: ${getPayloadUsername(payload)}`,
+        );
         return;
       }
 
@@ -149,7 +155,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         }
         const snapshot = payload.comments || [];
         replaceSnapshot(Array.isArray(snapshot) ? snapshot : []);
-        setStatus(`Đã subscribe LIVE ${username}, đang chờ comment đầu tiên...`);
+        setStatus(
+          `Đã subscribe LIVE ${username}, đang chờ comment đầu tiên...`,
+        );
         return;
       }
 
@@ -178,7 +186,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           tiktokUsernameRef.current = username;
           setTiktokUsername(username);
         }
-        if (typeof payload.viewersCount === "number") setViewersCount(payload.viewersCount);
+        if (typeof payload.viewersCount === "number")
+          setViewersCount(payload.viewersCount);
         startSessionFromPayload(payload);
         setIsConnecting(false);
         setStatus(`Đã kết nối TikTok Live: ${username}`);
@@ -215,7 +224,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
 
       if (type === "VIEWER_COUNT_UPDATE") {
-        if (typeof payload.viewersCount === "number") setViewersCount(payload.viewersCount);
+        if (typeof payload.viewersCount === "number")
+          setViewersCount(payload.viewersCount);
         return;
       }
 
@@ -342,7 +352,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         const attempt = retryCountRef.current;
         const delay = RETRY_DELAYS[Math.min(attempt, RETRY_DELAYS.length - 1)];
         retryCountRef.current += 1;
-        setStatus(`SSE mất kết nối, thử lại sau ${delay / 1000}s (lần ${attempt + 1})...`);
+        setStatus(
+          `SSE mất kết nối, thử lại sau ${delay / 1000}s (lần ${attempt + 1})...`,
+        );
         if (__DEV__) console.error("[SSE Connection Error]:", error);
 
         retryTimerRef.current = setTimeout(() => {
@@ -382,7 +394,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       setTiktokUsername(nextUsername);
       setLiveError(null);
       setComments([]);
-      setStatus(`Đang yêu cầu Backend start Python collector: ${nextUsername}...`);
+      setStatus(
+        `Đang yêu cầu Backend start Python collector: ${nextUsername}...`,
+      );
 
       const usernameWithoutAt = nextUsername.replace(/^@/, "");
 
@@ -402,7 +416,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
         saveResumeUsername(tiktokUsernameRef.current);
         setStatus(
-          result?.message || `Đã start collector cho ${nextUsername}, đang chờ comment...`,
+          result?.message ||
+            `Đã start collector cho ${nextUsername}, đang chờ comment...`,
         );
         return result?.success ?? true;
       } catch (error) {
@@ -535,7 +550,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const nextUsername = normalizeTikTokUsername(options.initialUsername || "");
+      const nextUsername = normalizeTikTokUsername(
+        options.initialUsername || "",
+      );
       if (!nextUsername) return;
       tiktokUsernameRef.current = nextUsername;
       setTiktokUsername(nextUsername);
@@ -544,17 +561,19 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     return () => clearTimeout(timer);
   }, [options.initialUsername]);
 
-  useEffect(() => {
-    const resumeUsername = loadResumeUsername();
-    if (!resumeUsername) return;
-
-    const timer = setTimeout(() => {
-      subscribeTikTokUsername(resumeUsername);
-    }, 300);
-
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // ---start: auto-resume live session từ MMKV khi app mount lại sau kill---
+  // useEffect(() => {
+  //   const resumeUsername = loadResumeUsername();
+  //   if (!resumeUsername) return;
+  //
+  //   const timer = setTimeout(() => {
+  //     subscribeTikTokUsername(resumeUsername);
+  //   }, 300);
+  //
+  //   return () => clearTimeout(timer);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
+  // ---end: auto-resume live session từ MMKV khi app mount lại sau kill---
 
   return {
     status,
