@@ -2,8 +2,8 @@ import {
   useAuth as useClerkAuth,
   useUser as useClerkUser,
 } from "@clerk/clerk-expo";
-import { useAuthStore } from "@stores/auth";
 import { getMeBootstrapApi } from "@modules/auth/services/api";
+import { useAuthStore } from "@stores/auth";
 import { mapBootstrapToAuthUser } from "@stores/auth/auth-utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -21,24 +21,27 @@ async function bootstrapAuth({
   setUserFromBootstrap,
   setError,
 }: BootstrapOptions): Promise<void> {
-  if (bootstrapInFlight) return bootstrapInFlight;
+  if (bootstrapInFlight) {
+    return bootstrapInFlight;
+  }
 
   bootstrapInFlight = (async () => {
     try {
       setError(null);
       const response = await getMeBootstrapApi();
+
       const authUser = mapBootstrapToAuthUser(response);
+
       setUserFromBootstrap(authUser);
     } catch (error) {
-      console.warn(
-        "[useAuth] Bootstrap thất bại, giữ user cũ trong store:",
-        error,
-      );
-      // background refresh: giữ user cũ, không clear — chỉ report error
       if (!background) {
         setUserFromBootstrap(null);
       }
-      setError(error instanceof Error ? error.message : "Không thể tải thông tin tài khoản");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải thông tin tài khoản",
+      );
     } finally {
       bootstrapInFlight = null;
     }
@@ -82,23 +85,18 @@ export const useAuth = () => {
     if (!isHydrated || !isClerkLoaded || !isClerkUserLoaded) return;
 
     if (!isSignedIn) {
-      // Nếu Clerk đã đăng xuất -> Clear user ở Zustand store
-      if (user !== null) {
-        setUserFromBootstrap(null);
-      }
+      setUserFromBootstrap(null);
       bootstrappedUserId = null;
       setIsBootstrapping(false);
       return;
     }
 
-    // Nếu Clerk đã đăng nhập -> Đồng bộ thông tin từ Backend
     const clerkUserId = clerkUser?.id || null;
     const hasBootstrappedCurrentUser = bootstrappedUserId === clerkUserId;
 
-    if (isSignedIn && !hasBootstrappedCurrentUser && !bootstrapInFlight) {
-      const isBackground = Boolean(user);
+    if (!hasBootstrappedCurrentUser && !bootstrapInFlight) {
       setIsBootstrapping(true);
-      bootstrapAuth({ background: isBackground, setUserFromBootstrap, setError })
+      bootstrapAuth({ background: false, setUserFromBootstrap, setError })
         .then(() => {
           bootstrappedUserId = clerkUserId;
         })
@@ -112,7 +110,6 @@ export const useAuth = () => {
     isClerkUserLoaded,
     isSignedIn,
     clerkUser?.id,
-    user,
     setUserFromBootstrap,
   ]);
 
@@ -133,7 +130,11 @@ export const useAuth = () => {
     async ({ force = false }: { force?: boolean } = {}) => {
       if (!force && !isSignedIn) return;
       setIsBootstrapping(true);
-      await bootstrapAuth({ background: Boolean(user), setUserFromBootstrap, setError });
+      await bootstrapAuth({
+        background: Boolean(user),
+        setUserFromBootstrap,
+        setError,
+      });
       bootstrappedUserId = clerkUser?.id || null;
       setIsBootstrapping(false);
     },
