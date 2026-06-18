@@ -1,6 +1,6 @@
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, View } from "react-native";
 import PagerView from "react-native-pager-view";
 import Animated, {
   runOnJS,
@@ -9,7 +9,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { TIKTOK_USERNAME } from "@constants/config";
 import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
 import {
   createTikTokChannelApi,
@@ -61,7 +60,18 @@ export const TiktokPage = memo(() => {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
-  const [channels, setChannels] = useState<TikTokLiveChannel[]>([]);
+  const [localChannels, setLocalChannels] = useState<TikTokLiveChannel[]>([]);
+
+  const channels = useMemo<TikTokLiveChannel[]>(() => {
+    if (user?.tiktokChannels?.length) {
+      return user.tiktokChannels.map((c) => ({
+        id: c.id,
+        username: normalizeTikTokUsername(c.tiktokUsername),
+        isDefault: c.isDefault,
+      }));
+    }
+    return localChannels;
+  }, [user?.tiktokChannels, localChannels]);
 
   const alertShownRef = useRef(false);
 
@@ -103,20 +113,7 @@ export const TiktokPage = memo(() => {
       }));
 
       if (options.length > 0) {
-        setChannels(options);
-        return options;
-      }
-
-      if (__DEV__) {
-        const devUsername = normalizeTikTokUsername(TIKTOK_USERNAME);
-        if (devUsername) {
-          setChannels((prev) => {
-            if (prev.length > 0) return prev;
-            return [
-              { id: "dev-current", username: devUsername, isDefault: true },
-            ];
-          });
-        }
+        setLocalChannels(options);
       }
 
       return options;
@@ -125,10 +122,6 @@ export const TiktokPage = memo(() => {
       return [];
     }
   }, []);
-
-  useEffect(() => {
-    fetchChannels();
-  }, [fetchChannels]);
 
   const selectedChannel = channels?.find(
     (c) =>
@@ -147,7 +140,7 @@ export const TiktokPage = memo(() => {
 
   const onSelectChannel = useCallback(
     (selectedItem: TikTokLiveChannel) => {
-      setChannels((prev) =>
+      setLocalChannels((prev) =>
         prev?.map((c) => ({
           ...c,
           isDefault: c.id === selectedItem.id,
@@ -182,7 +175,7 @@ export const TiktokPage = memo(() => {
           return false;
         }
 
-        setChannels((prev) =>
+        setLocalChannels((prev) =>
           prev?.map((c) => ({
             ...c,
             isDefault: normalizeTikTokUsername(c.username) === nextUsername,
@@ -234,7 +227,7 @@ export const TiktokPage = memo(() => {
           username: normalizeTikTokUsername(created.tiktokUsername),
           isDefault: false,
         };
-        setChannels((prev) => [...prev, newChannel!]);
+        setLocalChannels((prev) => [...prev, newChannel!]);
       }
 
       return connectSelectedChannel(newChannel);

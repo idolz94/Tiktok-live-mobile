@@ -106,10 +106,21 @@ export function normalizeTikTokChannels(raw: any): ShopTikTokChannel[] {
 
 export function normalizeMeBootstrap(raw: any): MeBootstrapResponse {
   const source = raw || {};
-  const user = normalizeUser(source.user || source.account || source.me);
+  const user = normalizeUser(
+    source.user || source.account || source.me || (source.userId ? { id: source.userId } : null),
+  );
   const profile = normalizeProfile(source.profile, user);
   const shopMember = source.shopMember || source.member || null;
-  const shop = source.shop || null;
+  const rawShop = source.shop || null;
+  const shop = rawShop
+    ? {
+        ...rawShop,
+        default_tiktok_username:
+          rawShop.default_tiktok_username ||
+          rawShop.defaultTikTokUsername ||
+          null,
+      }
+    : null;
   const license =
     source.license || source.shopLicense || source.shop_license || null;
   const tiktokChannels = normalizeTikTokChannels(

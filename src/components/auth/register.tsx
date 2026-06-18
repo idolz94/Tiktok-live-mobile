@@ -69,21 +69,22 @@ export const Register = ({ animatedStyle }: Props) => {
 
           if (result.status === "complete") {
             await signUpActive({ session: result.createdSessionId });
-            await refreshAuth({ force: true });
 
-            try {
-              await createTikTokChannelApi({
-                tiktokUsername: tiktokId.trim(),
-                isDefault: true,
-              });
-            } catch (error) {
-              console.warn(
-                "[Register] Lỗi tạo TikTok channel ở backend:",
-                error,
-              );
-              //@ts-ignore
-              Alert.alert("Lỗi rồi!!", error?.message || "Có lỗi xảy ra");
+            if (tiktokId.trim()) {
+              try {
+                await createTikTokChannelApi({
+                  tiktokUsername: tiktokId.trim(),
+                  isDefault: true,
+                });
+              } catch (error) {
+                console.warn(
+                  "[Register] Lỗi tạo TikTok channel ở backend:",
+                  error,
+                );
+              }
             }
+
+            await refreshAuth({ force: true });
           } else {
             Alert.alert(
               "Yêu cầu xác minh",
