@@ -1,19 +1,13 @@
+import { CustomTabBar } from "@components/bottom-tab";
+import { tabOptions } from "@components/bottom-tab/tabs-screen-options";
 import {
   TikTokLiveSocketProvider,
   useTikTokLiveSocketContext,
 } from "@contexts/tiktok-live-socket";
-import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@modules/auth/hooks/use-auth";
-import { Redirect, Tabs } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { SessionHeader } from "../../components/tabs/session-header";
-import { tabOptions } from "@components/bottom-tab/tabs-screen-options";
 import { useThemes } from "@hooks/use-theme";
+import { useAuth } from "@modules/auth/hooks/use-auth";
 import { createStyles } from "@utils/createStyles";
-import { CustomTabBar } from "@components/bottom-tab";
-import { useState } from "react";
-import Animated from "react-native-reanimated";
-import { AccountConnected } from "@components/home/account-connected";
+import { Redirect, Tabs } from "expo-router";
 
 function TabContent() {
   const { colors } = useThemes();
@@ -92,7 +86,7 @@ export default function TabLayout() {
   }
 
   return (
-    <TikTokLiveSocketProvider>
+    <TikTokLiveSocketProvider hasHistory={user.hasHistory}>
       <TabContent />
     </TikTokLiveSocketProvider>
   );
