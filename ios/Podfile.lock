@@ -2123,6 +2123,28 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNGestureHandler (3.0.2):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNReanimated (4.3.1):
     - hermes-engine
     - RCTRequired
@@ -2471,6 +2493,7 @@ DEPENDENCIES:
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
+  - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -2696,6 +2719,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCMaskedView:
     :path: "../node_modules/@react-native-masked-view/masked-view"
+  RNGestureHandler:
+    :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -2724,7 +2749,7 @@ SPEC CHECKSUMS:
   ExpoLinearGradient: debd4f2a2d56b857517588f61707168c8f0b4ff0
   ExpoLinking: a7f6df904ba82ab4e122c89c37c9136ffb5a48d9
   ExpoLogBox: f784d9479130216113272d525f5478e40bd1d2c3
-  ExpoModulesCore: ab973d13ef962354c9122f03de096c166ca11b63
+  ExpoModulesCore: 92bae67cef9170efffb54cb31fbc2c4ead77028a
   ExpoModulesJSI: 36ca885f6416267d6163c25f671f46eaf707bf75
   ExpoModulesWorklets: e1fce177c59e515db694b543168bec941ddf54b4
   ExpoModulesWorkletsAdapter: 9097413b353ac2a5095908c330d0a33191b7b4e7
@@ -2735,7 +2760,7 @@ SPEC CHECKSUMS:
   ExpoUI: babf823088aaadbd66c658f668cbdce8d7f5711a
   ExpoWebBrowser: 89750f6c426baa673e8399c8874987b6acfb89c2
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d
-  hermes-engine: 0c7b5902e998dace6b32186cc477705e393b14a6
+  hermes-engine: 00187821872004e40def30aaa58ac181d79b5e37
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
   NitroMmkv: 1ff46eceb958298b1d7c013a6314432438b77a62
   NitroModules: 8308314b644c15567ffad50bb10667e8c1d82666
@@ -2747,7 +2772,7 @@ SPEC CHECKSUMS:
   React: e2dc35338068bbd299c66f043ae0d7f25de8499e
   React-callinvoker: 28b25d21b124c26cebaea713ba7d801b9351dc48
   React-Core: f90d375d3bab515ad00df30605ce1bf02e6db12f
-  React-Core-prebuilt: 9bc8f313f105c9e31a5c71c9294b4aac20d715d4
+  React-Core-prebuilt: 31763a7c6201a07c2351c13331e52f8ddcab56b9
   React-CoreModules: da4f80202ef954bdfb926ca4c9ac5f685900aa5c
   React-cxxreact: 1d1d2a28a5f10e4e2e7cf2bfd54dc9c92c68c672
   React-debug: 92944dc4d89f56d640e75498266cbde557a48189
@@ -2812,15 +2837,16 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: a54c0c9b976766e1b6d5e2bb4d1ad0d15913e9e1
   ReactCodegen: 9af5798e943781fd2318dab7b60f25337388047c
   ReactCommon: 3ec2a55999d296af90c24beb66c8a77dc660d3ef
-  ReactNativeDependencies: 14461f128fd499eed2b32a4a6cc52e16264ffdf3
+  ReactNativeDependencies: 5b843385e61a7ae6e2c528af249d3fa254316279
   RNCAsyncStorage: 0f84413588571e74ef9cff6e3b669346e3abf9cb
   RNCMaskedView: 48989935d9665d97d87fa7e44f486b4d22cd5b9f
+  RNGestureHandler: 5cbe8c5f54204b2175c5d2b8fe6538b02da3aaf5
   RNReanimated: 59bf185693b7294a0c515e19a6d1be54def61363
   RNScreens: 9b2e552ea56792a85c4efcc279edd61d9014be1c
   RNSVG: d49e9b043822ac92430dd37fa1d7031aa80911b9
   RNWorklets: 32b9ca9e0588b838ce3202a9ea3971f553c9011c
   SwiftUIIntrospect: fee9aa07293ee280373a591e1824e8ddc869ba5d
-  Yoga: 36fee8f1fca3f54a28c3d7f80e69f66d73d3af96
+  Yoga: 77dfa8673de2874e1855002ae59c68b8be9b007b
 
 PODFILE CHECKSUM: 4ebb9a7e7fd29f1edb5a69031573e3a8995916ef
 
