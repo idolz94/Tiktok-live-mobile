@@ -1,9 +1,8 @@
-import { IconsTypes } from "@assets/icons";
-import { Colors } from "@themes/type";
+import { Lottie, LottieTypes } from "@assets/lotties";
 import { Tabs } from "expo-router";
-import { Icon } from "../icon";
+import { ComponentProps } from "react";
 
-type BaseScreenProps = React.ComponentProps<typeof Tabs.Screen>;
+type BaseScreenProps = ComponentProps<typeof Tabs.Screen>;
 
 type BaseOptions = BaseScreenProps["options"] extends (
   ...args: any[]
@@ -11,24 +10,23 @@ type BaseOptions = BaseScreenProps["options"] extends (
   ? R
   : NonNullable<BaseScreenProps["options"]>;
 
-type WithIcon = {
-  icon?: IconsTypes;
+type WithLottie = {
+  lottie?: LottieTypes;
 };
 
-export function tabOptions<T extends BaseOptions & WithIcon>(
+export function tabOptions<T extends BaseOptions & WithLottie>(
   options: T,
-): Omit<T, "icon"> {
-  const { icon, ...rest } = options;
+): Omit<T, "lottie"> {
+  const { lottie, ...rest } = options;
 
-  if (!icon) {
-    return rest as Omit<T, "icon">;
+  if (!lottie) {
+    return rest as Omit<T, "lottie">;
   }
 
   return {
     ...rest,
-
-    tabBarIcon: ({ color, size }: { color: Colors; size: number }) => (
-      <Icon name={icon} size={size} tintColor={color} />
+    tabBarIcon: ({ size, focused }: { size: number; focused: boolean }) => (
+      <Lottie name={lottie} size={size} focused={focused} />
     ),
-  } as Omit<T, "icon">;
+  } as Omit<T, "lottie">;
 }

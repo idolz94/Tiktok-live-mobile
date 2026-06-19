@@ -1,17 +1,16 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
-import React, { memo, useCallback, useMemo } from "react";
-import { createStyles } from "@utils/createStyles";
-import { Image } from "@components/image";
-import { images } from "@assets/images";
-import { HairlineWidth } from "@themes/index";
-import { OrderManager } from "@modules/orders/hooks/use-order-manager";
+import { OrderFilter } from "@app-types/index";
+import { Lottie, LottieTypes } from "@assets/lotties";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
-import { OrderFilter } from "@app-types/index";
+import { OrderManager } from "@modules/orders/hooks/use-order-manager";
+import { HairlineWidth } from "@themes/index";
+import { createStyles } from "@utils/createStyles";
+import { memo, useCallback, useMemo } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 type OrderStatCardData = {
   filterKey: OrderFilter;
-  icon: keyof typeof images;
+  lottie: LottieTypes;
   value: number;
   label: string;
 };
@@ -22,7 +21,7 @@ export type OrdersProps = {
 
 const OrderStatCard = memo(
   ({
-    icon,
+    lottie,
     value,
     label,
     filterKey,
@@ -41,7 +40,7 @@ const OrderStatCard = memo(
         style={[styles.infoCard, isActive && styles.infoCardActive]}
         onPress={handlePress}
       >
-        <Image source={images[icon]} style={styles.infoCardIcon} />
+        <Lottie name={lottie} style={styles.infoCardIcon} focused={isActive} />
         <View style={styles.infoCardTextGroup}>
           <Text style={styles.valueCount}>{value}</Text>
           <Text style={styles.txtCardFlag}>{label}</Text>
@@ -80,20 +79,25 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     () => [
       {
         filterKey: "confirmed",
-        icon: "order_item",
+        lottie: "chart",
         value: confirmedOrders,
         label: "Đã chốt",
       },
-      { filterKey: "paid", icon: "money", value: paidOrders, label: "Đã cọc" },
+      {
+        filterKey: "paid",
+        lottie: "customer",
+        value: paidOrders,
+        label: "Đã cọc",
+      },
       {
         filterKey: "unpaid",
-        icon: "no_money",
+        lottie: "truck",
         value: unpaidOrders,
         label: "Chưa cọc",
       },
       {
         filterKey: "draft",
-        icon: "calendar",
+        lottie: "time",
         value: draftOrders,
         label: "Đơn nháp",
       },
