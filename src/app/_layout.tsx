@@ -1,31 +1,20 @@
 import "@declare";
+import { BottomSheetProvider } from "@components/bottom-sheet/provider";
+import { useAuth } from "@features/auth/hooks/use-auth";
+import { sessionExpiredEmitter } from "@utils/http/session-event";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { ClerkProvider } from "@clerk/clerk-expo";
-import { tokenCache } from "@utils/storage/clerk-token-cache";
-import { CLERK_PUBLISHABLE_KEY } from "@constants/config";
-import { ClerkTokenSync } from "@features/auth/components/clerk-token-sync";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Splash from "./splash";
-import { BottomSheetProvider } from "@components/bottom-sheet/provider";
-import { sessionExpiredEmitter } from "@utils/http/session-event";
-import { useAuth } from "@features/auth/hooks/use-auth";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  return (
-    <ClerkProvider
-      publishableKey={CLERK_PUBLISHABLE_KEY}
-      tokenCache={tokenCache}
-    >
-      <RootContent />
-    </ClerkProvider>
-  );
+  return <RootContent />;
 }
 
 function RootContent() {
@@ -82,7 +71,6 @@ function RootContent() {
 
   return (
     <>
-      <ClerkTokenSync />
       <SafeAreaProvider>
         <KeyboardProvider>
           <BottomSheetProvider>

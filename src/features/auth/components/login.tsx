@@ -1,9 +1,9 @@
 import { images } from "@assets/images";
-import { useSignIn } from "@clerk/clerk-expo";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Image } from "@components/image";
 import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
+import { useAuth } from "@features/auth/hooks/use-auth";
 import { LoginForm, LoginSchema } from "@features/auth/schemas";
 import { useAuthStore } from "@features/auth/stores";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,11 +51,7 @@ type Props = {
 };
 
 export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
-  const {
-    signIn,
-    setActive: signInActive,
-    isLoaded: isSignInLoaded,
-  } = useSignIn();
+  const { login } = useAuth();
   const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
 
@@ -94,47 +90,23 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
 
   const submit = useCallback(() => {
     formMethod.handleSubmit(async ({ username, password, remember }) => {
-      if (!isSignInLoaded || !signIn) return;
-
       setLoading(true);
       try {
-        const result = await signIn.create({
-          identifier: username.trim(),
+        await login({
+          username: username.trim(),
           password,
+          remember,
         });
-
-        if (result.status === "complete") {
-          useAuthStore.getState().setLoginState(username.trim(), remember);
-          await signInActive({ session: result.createdSessionId });
-        } else {
-          Alert.alert(
-            "Yêu cầu xác minh",
-            "Vui lòng hoàn tất xác minh tài khoản.",
-          );
-        }
       } catch (error: any) {
-        const clerkErrors = error?.errors;
-        if (clerkErrors?.length) {
-          const firstErr = clerkErrors[0];
-          let errMsg =
-            firstErr.longMessage || firstErr.message || "Đăng nhập thất bại";
-          if (firstErr.code === "form_password_incorrect") {
-            errMsg = "Mật khẩu không đúng.";
-          } else if (firstErr.code === "form_identifier_not_found") {
-            errMsg = "Tên đăng nhập không tồn tại.";
-          }
-          Alert.alert("Đăng nhập thất bại", errMsg);
-        } else {
-          Alert.alert(
-            "Đăng nhập thất bại",
-            error instanceof Error ? error.message : "Đã có lỗi xảy ra",
-          );
-        }
+        Alert.alert(
+          "Đăng nhập thất bại",
+          error instanceof Error ? error.message : "Đã có lỗi xảy ra",
+        );
       } finally {
         setLoading(false);
       }
     })();
-  }, [formMethod, signIn, signInActive, isSignInLoaded]);
+  }, [formMethod, login]);
 
   return (
     <FormProvider {...formMethod}>

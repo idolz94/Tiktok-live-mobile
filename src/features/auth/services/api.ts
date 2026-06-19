@@ -11,8 +11,16 @@ import {
 } from "@app-types/payload";
 import { apiClient } from "@utils/http/axios";
 
-export const logoutApi = async () => {
-  return apiClient.post("/auth/logout");
+export type AuthLoginPayload = {
+  username: string;
+  password: string;
+};
+
+export type AuthRegisterPayload = {
+  username: string;
+  password: string;
+  fullName?: string;
+  tiktokId?: string;
 };
 
 const EMPTY_ME: MeBootstrapResponse = {
@@ -26,6 +34,17 @@ const EMPTY_ME: MeBootstrapResponse = {
   reason: "NO_USER",
   hasOrders: false,
   hasHistory: false,
+};
+
+export const loginApi = async (payload: AuthLoginPayload) => {  return apiClient.post("/auth/login", payload);
+};
+
+export const registerApi = async (payload: AuthRegisterPayload) => {
+  return apiClient.post("/auth/register", payload);
+};
+
+export const logoutApi = async () => {
+  return apiClient.post("/auth/logout");
 };
 
 export const getMeBootstrapApi = async (): Promise<MeBootstrapResponse> => {
