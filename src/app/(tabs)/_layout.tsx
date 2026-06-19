@@ -43,35 +43,35 @@ function TabContent() {
           name="index"
           options={tabOptions({
             title: "Home",
-            icon: "house",
+            lottie: "home",
           })}
         />
         <Tabs.Screen
           name="customers"
           options={tabOptions({
             title: "Khách hàng",
-            icon: "group_user",
+            lottie: "customer",
           })}
         />
         <Tabs.Screen
           name="shipping"
           options={tabOptions({
             title: "Vận đơn",
-            icon: "truck",
+            lottie: "truck",
           })}
         />
         <Tabs.Screen
           name="reports"
           options={tabOptions({
             title: "Báo cáo",
-            icon: "chart_pie",
+            lottie: "chart",
           })}
         />
         <Tabs.Screen
           name="settings"
           options={tabOptions({
             title: "Cài đặt",
-            icon: "settings",
+            lottie: "settings",
           })}
         />
       </Tabs>
