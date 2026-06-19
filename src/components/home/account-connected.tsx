@@ -5,6 +5,7 @@ import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
+import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ListChannels } from "./list-channels";
 import { TikTokLiveChannel } from "./tiktok-page";
@@ -16,74 +17,73 @@ type Props = {
   onSelectChannel: (item: TikTokLiveChannel) => void;
 };
 
-export const AccountConnected = ({
-  onClose,
-  selectedChannel,
-  channels,
-  onSelectChannel,
-}: Props) => {
-  const { show, hide } = useBottomSheet();
+export const AccountConnected = memo(
+  ({ onClose, selectedChannel, channels, onSelectChannel }: Props) => {
+    console.log("🚀 ~ selectedChannel:", selectedChannel);
 
-  const showListChannels = () =>
-    show({
-      content: (
-        <ListChannels
-          channels={channels}
-          onClose={hide}
-          onSelected={(item) => {
-            onSelectChannel(item);
-            hide();
-          }}
-        />
-      ),
-      showDragIndicator: false,
-    });
+    const { show, hide } = useBottomSheet();
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.left}>
-        <Image source={images.logo_app} style={styles.avatar} />
-        <View style={{ rowGap: 2 }}>
-          <Text style={styles.name}>{selectedChannel?.username ?? ""}</Text>
-          <View style={styles.info}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                columnGap: 4,
-              }}
-            >
-              <Icon name="followers" size={16} tintColor="neutral300" />
-              <Text style={styles.textCount}>1.000</Text>
-            </View>
-            <Separator type="vertical" size={1} />
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                columnGap: 4,
-              }}
-            >
-              <Icon name="heart" size={16} tintColor="neutral300" />
-              <Text style={styles.textCount}>1.000</Text>
+    const showListChannels = () =>
+      show({
+        content: (
+          <ListChannels
+            channels={channels}
+            onClose={hide}
+            onSelected={(item) => {
+              onSelectChannel(item);
+              hide();
+            }}
+          />
+        ),
+        showDragIndicator: false,
+      });
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.left}>
+          <Image source={images.logo_app} style={styles.avatar} />
+          <View style={{ rowGap: 2 }}>
+            <Text style={styles.name}>{selectedChannel?.username ?? ""}</Text>
+            <View style={styles.info}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  columnGap: 4,
+                }}
+              >
+                <Icon name="followers" size={16} tintColor="neutral300" />
+                <Text style={styles.textCount}>1.000</Text>
+              </View>
+              <Separator type="vertical" size={1} />
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  columnGap: 4,
+                }}
+              >
+                <Icon name="heart" size={16} tintColor="neutral300" />
+                <Text style={styles.textCount}>1.000</Text>
+              </View>
             </View>
           </View>
         </View>
+        <View style={styles.right}>
+          <Pressable onPress={onClose}>
+            <Icon name="disconnect" size={24} tintColor="neutral900" />
+          </Pressable>
+          <Pressable>
+            <Icon name="filter" size={24} tintColor="neutral900" />
+          </Pressable>
+          <Pressable onPress={showListChannels}>
+            <Icon name="arrow_down" size={24} tintColor="neutral900" />
+          </Pressable>
+        </View>
       </View>
-      <View style={styles.right}>
-        <Pressable onPress={onClose}>
-          <Icon name="disconnect" size={24} tintColor="neutral900" />
-        </Pressable>
-        <Pressable>
-          <Icon name="filter" size={24} tintColor="neutral900" />
-        </Pressable>
-        <Pressable onPress={showListChannels}>
-          <Icon name="arrow_down" size={24} tintColor="neutral900" />
-        </Pressable>
-      </View>
-    </View>
-  );
-};
+    );
+  },
+);
 
 const styles = createStyles(({ colors, textPresets, shadows }) => ({
   container: {

@@ -1,4 +1,4 @@
-import { LiveComment } from "@app-types/index";
+import { LiveComment } from "../types";
 import { createId } from "./id";
 import { getCommentTikTokUsername } from "./tiktok";
 
@@ -134,11 +134,17 @@ export function normalizeComment(input: any): LiveComment | null {
   const createdAt = String(
     source.createdAt || source.created_at || new Date().toISOString(),
   );
+  const profilePicUrls =
+    source.user?.profilePicture?.url ?? source.profilePicture?.url;
+  const avatarFromProfilePicture = Array.isArray(profilePicUrls)
+    ? profilePicUrls[0]
+    : profilePicUrls;
   const avatar = String(
     source.avatar ||
       source.avatarUrl ||
       source.avatar_url ||
       source.profilePictureUrl ||
+      avatarFromProfilePicture ||
       "",
   );
 
@@ -203,112 +209,7 @@ export function removeAt(username: string) {
 export function normalizeTikTokUsername(value: string) {
   const cleanValue = String(value || "").trim();
   if (!cleanValue) return "";
-  return cleanValue.startsWith("@") ? cleanValue : `@${cleanValue}`;
-}
-
-type RuleResult = {
-  intent: LiveComment["intent"];
-  priorityLevel: LiveComment["priorityLevel"];
-  finalScore: number;
-  matchedReasons: string[];
-  missingInfo: string[];
-  aiReason: string;
-};
-
-export function analyzeCommentByRule(comment: string): RuleResult {
-  const text = comment.toLowerCase();
-
-  const matchedReasons: string[] = [];
-  const missingInfo: string[] = [];
-
-  let score = 0;
-  let intent: LiveComment["intent"] = "normal";
-
-  const buyKeywords = ["chốt", "mua", "lấy", "order", "đặt", "xí", "xin giá"];
-  const priceKeywords = ["bao nhiêu", "bn", "giá", "nhiêu tiền", "mấy tiền"];
-  const stockKeywords = [
-    "còn không",
-    "còn ko",
-    "còn hàng",
-    "còn size",
-    "còn màu",
-  ];
-  const shippingKeywords = ["ship", "giao", "cod", "phí ship", "vận chuyển"];
-  const productKeywords = [
-    "mã",
-    "size",
-    "sz",
-    "màu",
-    "kg",
-    "trắng",
-    "đen",
-    "đỏ",
-    "xanh",
-  ];
-
-  if (buyKeywords.some((keyword) => text.includes(keyword))) {
-    score += 45;
-    intent = "buying";
-    matchedReasons.push("Có từ khóa mua/chốt");
-  }
-
-  if (/\d/.test(text)) {
-    score += 20;
-    matchedReasons.push("Có số/mã hàng/số lượng");
-  }
-
-  if (priceKeywords.some((keyword) => text.includes(keyword))) {
-    score += 18;
-    if (intent === "normal") intent = "ask_price";
-    matchedReasons.push("Hỏi giá");
-  }
-
-  if (stockKeywords.some((keyword) => text.includes(keyword))) {
-    score += 15;
-    if (intent === "normal") intent = "ask_stock";
-    matchedReasons.push("Hỏi tồn kho");
-  }
-
-  if (shippingKeywords.some((keyword) => text.includes(keyword))) {
-    score += 12;
-    if (intent === "normal") intent = "ask_shipping";
-    matchedReasons.push("Hỏi ship/giao hàng");
-  }
-
-  if (productKeywords.some((keyword) => text.includes(keyword))) {
-    score += 12;
-    if (intent === "normal") intent = "ask_product";
-    matchedReasons.push("Có thông tin sản phẩm");
-  }
-
-  if (text.length <= 2) {
-    score -= 20;
-    intent = "spam";
-    matchedReasons.push("Comment quá ngắn");
-  }
-
-  if (intent === "buying" && !/\d/.test(text)) {
-    missingInfo.push("mã hàng hoặc số lượng");
-  }
-
-  const finalScore = Math.max(0, Math.min(100, score));
-  let priorityLevel: LiveComment["priorityLevel"] = "normal";
-
-  if (finalScore >= 75) priorityLevel = "high";
-  else if (finalScore >= 50) priorityLevel = "medium";
-  else if (finalScore >= 25) priorityLevel = "low";
-
-  return {
-    intent,
-    priorityLevel,
-    finalScore,
-    matchedReasons,
-    missingInfo,
-    aiReason:
-      matchedReasons.length > 0
-        ? `Rule phát hiện: ${matchedReasons.join(", ")}`
-        : "Chưa phát hiện tín hiệu mua hàng rõ ràng",
-  };
+  return cleanValue.startsWith("@") ? cleanValue : `${cleanValue}`;
 }
 
 export function isPriorityComment(comment: LiveComment) {
