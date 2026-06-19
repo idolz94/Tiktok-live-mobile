@@ -288,16 +288,30 @@ export function useTikTokLiveSession(options: { hasHistory?: boolean } = {}) {
 
       const session = currentLiveSessionRef.current;
       if (session) {
-        const nextSession: LiveHistoryItem = {
-          ...session,
-          commentCount: sessionCommentIdsRef.current.size,
-        };
-
-        setCurrentLiveSession(nextSession);
+        const nextCount = sessionCommentIdsRef.current.size;
+        if (session.commentCount !== nextCount) {
+          setCurrentLiveSession({ ...session, commentCount: nextCount });
+        }
       }
     },
     [setCurrentLiveSession],
   );
+
+  // ---start: batchAddCommentsToSession - gộp N comment chỉ 1 lần setState thay vì N lần---
+  const batchAddCommentsToSession = useCallback(
+    (commentsToAdd: LiveComment[]) => {
+      commentsToAdd.forEach((c) => sessionCommentIdsRef.current.add(c.id));
+      const session = currentLiveSessionRef.current;
+      if (session) {
+        const nextCount = sessionCommentIdsRef.current.size;
+        if (session.commentCount !== nextCount) {
+          setCurrentLiveSession({ ...session, commentCount: nextCount });
+        }
+      }
+    },
+    [setCurrentLiveSession],
+  );
+  // ---end: batchAddCommentsToSession---
 
   return {
     currentLiveSession,
@@ -312,6 +326,7 @@ export function useTikTokLiveSession(options: { hasHistory?: boolean } = {}) {
     endSessionFromPayload,
     updateSessionStatusFromPayload,
     addCommentToCurrentSession,
+    batchAddCommentsToSession,
     resetCurrentSession,
   };
 }

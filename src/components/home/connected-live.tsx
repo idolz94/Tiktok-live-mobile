@@ -8,14 +8,8 @@ import { OrderManager } from "@modules/orders/hooks/use-order-manager";
 import { createOrderCommentKey, isPriorityComment } from "@utils/comment";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Platform,
-  Text,
-  View,
-} from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { ActivityIndicator, Alert, Text, View } from "react-native";
 
 interface CommentItemProps {
   item: LiveComment;
@@ -47,7 +41,7 @@ const CommentCardContent = memo(({ item, onCreateOrder }: CommentItemProps) => {
       <View style={styles.leftCard}>
         <Avatar
           uri={item.avatar || item.avatarUrl}
-          username={item.username}
+          username={item.displayName ?? item.username ?? "Unknown user"}
           size={40}
         />
         <View style={styles.commentTextGroup}>
@@ -82,7 +76,16 @@ const CommentItem = memo(
     );
 
     if (item.type === "user_joined") {
-      return <UserJoinedRow username={item.username} />;
+      return (
+        <UserJoinedRow
+          username={
+            item.displayName ??
+            item.username ??
+            item.customerTikTokName ??
+            "Unknown user"
+          }
+        />
+      );
     }
 
     const isOwner = item?.raw?.liveUsername === item?.raw?.tiktok_username;
@@ -138,28 +141,19 @@ const CommentItem = memo(
     prev.item.isOrderCreated === next.item.isOrderCreated,
 );
 
-const ItemSeparator = () => <View style={styles.separator} />;
-
 export const ConnectedLive = memo(
   ({ orderManager, onNavigateToOrders }: ConnectedLiveProps) => {
-    const { comments, isConnected } =
-      useTikTokLiveSocketContext();
+    const { comments, isConnected } = useTikTokLiveSocketContext();
 
     const createdCommentKeysRef = useRef<Set<string>>(new Set());
-    const [createdCommentKeys, setCreatedCommentKeys] = useState<Set<string>>(
-      new Set(),
-    );
 
-    const isCommentOrderCreated = useCallback(
-      (comment: LiveComment) => {
-        return Boolean(
-          comment.isOrderCreated ||
-          comment.orderId ||
-          createdCommentKeys.has(createOrderCommentKey(comment)),
-        );
-      },
-      [createdCommentKeys],
-    );
+    const isCommentOrderCreated = useCallback((comment: LiveComment) => {
+      return Boolean(
+        comment.isOrderCreated ||
+        comment.orderId ||
+        createdCommentKeysRef.current.has(createOrderCommentKey(comment)),
+      );
+    }, []);
 
     const handleCreateOrder = useCallback(
       async (comment: LiveComment) => {
@@ -173,7 +167,6 @@ export const ConnectedLive = memo(
         try {
           createdCommentKeysRef.current.add(commentKey);
           const result = await orderManager.createOrderFromComment(comment);
-          setCreatedCommentKeys((prev) => new Set(prev).add(commentKey));
 
           Alert.alert(
             "Tạo đơn thành công",
@@ -187,11 +180,6 @@ export const ConnectedLive = memo(
           return { success: true, orderId: result?.orderId ?? "" };
         } catch (error) {
           createdCommentKeysRef.current.delete(commentKey);
-          setCreatedCommentKeys((prev) => {
-            const next = new Set(prev);
-            next.delete(commentKey);
-            return next;
-          });
 
           if (__DEV__) console.error("CREATE ORDER ERROR:", error);
           alert(error instanceof Error ? error.message : "Tạo đơn thất bại");
@@ -228,18 +216,11 @@ export const ConnectedLive = memo(
 
     return (
       <View style={styles.container}>
-        <FlatList
+        <FlashList
           data={comments}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           inverted
-          scrollEnabled
-          windowSize={5}
-          maxToRenderPerBatch={8}
-          updateCellsBatchingPeriod={50}
-          initialNumToRender={12}
-          removeClippedSubviews={Platform.OS === "ios"}
-          ItemSeparatorComponent={ItemSeparator}
           contentContainerStyle={styles.listContent}
         />
       </View>
@@ -289,10 +270,12 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "flex-start",
     justifyContent: "space-between",
     columnGap: 16,
+    marginBottom: 8,
   },
   gradientContainer: {
     borderRadius: 16,
     padding: 1,
+    marginBottom: 8,
   },
   innerCardBorderAnimated: {
     backgroundColor: colors.neutral100,

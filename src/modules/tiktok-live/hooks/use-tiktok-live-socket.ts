@@ -46,10 +46,6 @@ function clearResumeUsername() {
   remove(STORAGE_KEYS.LIVE_RESUME_USERNAME);
 }
 
-function loadResumeUsername(): string {
-  return loadString(STORAGE_KEYS.LIVE_RESUME_USERNAME) || "";
-}
-
 type UseTikTokLiveSocketOptions = {
   initialUsername?: string | null;
   hasHistory?: boolean;
@@ -67,7 +63,9 @@ function getPayloadUsername(payload: Record<string, any>) {
 }
 
 export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
-  const authUser = useAuthStore((state) => state.user);
+  // ---start: narrow authStore selector — only re-render when user existence changes, not on bootstrap enrich---
+  const hasAuthUser = useAuthStore((state) => Boolean(state.user));
+  // ---end: narrow authStore selector---
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const clientIdRef = useRef(getOrCreateClientId());
@@ -86,7 +84,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const RETRY_DELAYS = [1000, 2000, 5000, 10000, 30000];
 
   const initialUsername =
-    options.initialUsername || (authUser ? "" : TIKTOK_USERNAME);
+    options.initialUsername || (hasAuthUser ? "" : TIKTOK_USERNAME);
   const tiktokUsernameRef = useRef(
     normalizeTikTokUsername(initialUsername || TIKTOK_USERNAME),
   );
@@ -123,6 +121,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     endSessionFromPayload,
     updateSessionStatusFromPayload,
     addCommentToCurrentSession,
+    batchAddCommentsToSession,
   } = useTikTokLiveSession({ hasHistory: options.hasHistory });
 
   const handleServerEvent = useCallback(
@@ -509,12 +508,22 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     onOrderShippingUpdatedRef.current = options.onOrderShippingUpdated;
   }, [options.onOrderShippingUpdated]);
 
+  // ---start: connectSseRef — prevent connectSse in effect deps causing teardown/remount---
+  const connectSseRef = useRef(connectSse);
+  useEffect(() => {
+    connectSseRef.current = connectSse;
+  }, [connectSse]);
+  // ---end: connectSseRef---
+
+  // ---start: setup effect with stable deps, use batchAddCommentsToSession for 1 render per batch---
   useEffect(() => {
     batchFlushTimerRef.current = setInterval(() => {
       if (pendingCommentsRef.current.length === 0) return;
       const batch = pendingCommentsRef.current.splice(0);
       const added = addCommentsToList(batch);
-      added.forEach((c) => addCommentToCurrentSession(c));
+      if (added.length > 0) {
+        batchAddCommentsToSession(added);
+      }
     }, 200);
 
     const appStateSub = AppState.addEventListener("change", (nextState) => {
@@ -525,7 +534,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
             abortControllerRef.current?.abort();
           } catch {}
           abortControllerRef.current = null;
-          connectSse();
+          connectSseRef.current();
         }, 500);
       }
     });
@@ -546,34 +555,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
       appStateSub.remove();
     };
-  }, [connectSse, addCommentsToList, addCommentToCurrentSession]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const nextUsername = normalizeTikTokUsername(
-        options.initialUsername || "",
-      );
-      if (!nextUsername) return;
-      tiktokUsernameRef.current = nextUsername;
-      setTiktokUsername(nextUsername);
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [options.initialUsername]);
-
-  // ---start: auto-resume live session từ MMKV khi app mount lại sau kill---
-  // useEffect(() => {
-  //   const resumeUsername = loadResumeUsername();
-  //   if (!resumeUsername) return;
-  //
-  //   const timer = setTimeout(() => {
-  //     subscribeTikTokUsername(resumeUsername);
-  //   }, 300);
-  //
-  //   return () => clearTimeout(timer);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
-  // ---end: auto-resume live session từ MMKV khi app mount lại sau kill---
+  }, [addCommentsToList, batchAddCommentsToSession]);
+  // ---end: setup effect with stable deps---
 
   return {
     status,

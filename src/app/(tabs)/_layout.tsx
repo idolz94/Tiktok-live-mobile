@@ -3,6 +3,7 @@ import { tabOptions } from "@components/bottom-tab/tabs-screen-options";
 import {
   TikTokLiveSocketProvider,
   useTikTokLiveSocketContext,
+  useTikTokLiveTimerContext,
 } from "@contexts/tiktok-live-socket";
 import { useThemes } from "@hooks/use-theme";
 import { useAuth } from "@modules/auth/hooks/use-auth";
