@@ -1,8 +1,6 @@
-import { useSignUp } from "@clerk/clerk-expo";
 import { LinearGradient } from "@components/linear-gradient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
-import { createTikTokChannelApi } from "@features/auth/services/api";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
@@ -24,10 +22,12 @@ type Props = {
   animatedStyle: AnimatedStyleHandle<{
     opacity: number;
   }>;
+  switchToLogin: () => void;
 };
 
-export const Register = ({ animatedStyle }: Props) => {
+export const Register = ({ animatedStyle, switchToLogin }: Props) => {
   const { colors } = useThemes();
+  const { register } = useAuth();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -43,78 +43,34 @@ export const Register = ({ animatedStyle }: Props) => {
     resolver: zodResolver(RegisterSchema),
   });
 
-  const {
-    signUp,
-    setActive: signUpActive,
-    isLoaded: isSignUpLoaded,
-  } = useSignUp();
-  const { refreshAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const submit = useCallback(() => {
-    formMethod.handleSubmit(
-      async ({ username: phone, password, fullName, tiktokId }) => {
-        if (!isSignUpLoaded || !signUp) return;
+    formMethod.handleSubmit(async ({ username: phone, password, fullName, tiktokId }) => {
+      setIsLoading(true);
+      try {
+        await register({
+          username: phone.trim(),
+          password,
+          fullName: fullName.trim(),
+          tiktokId: tiktokId.trim(),
+        });
 
-        setIsLoading(true);
-        try {
-          const result = await signUp.create({
-            username: phone.trim(),
-            password,
-            firstName: fullName.trim(),
-            unsafeMetadata: {
-              tiktokId: tiktokId.trim(),
-            },
-          });
-
-          if (result.status === "complete") {
-            await signUpActive({ session: result.createdSessionId });
-
-            if (tiktokId.trim()) {
-              try {
-                await createTikTokChannelApi({
-                  tiktokUsername: tiktokId.trim(),
-                  isDefault: true,
-                });
-              } catch (error) {
-                console.warn(
-                  "[Register] Lỗi tạo TikTok channel ở backend:",
-                  error,
-                );
-              }
-            }
-
-            await refreshAuth({ force: true });
-          } else {
-            Alert.alert(
-              "Yêu cầu xác minh",
-              "Vui lòng hoàn tất xác minh tài khoản.",
-            );
-          }
-        } catch (error: any) {
-          const clerkErrors = error?.errors;
-          if (clerkErrors?.length) {
-            const firstErr = clerkErrors[0];
-            let errMsg =
-              firstErr.longMessage || firstErr.message || "Đăng ký thất bại";
-            if (firstErr.code === "form_identifier_exists") {
-              errMsg = "Tên đăng nhập này đã được sử dụng.";
-            } else if (firstErr.code === "form_password_pwned") {
-              errMsg = "Mật khẩu này đã bị lộ. Vui lòng sử dụng mật khẩu khác.";
-            }
-            Alert.alert("Đăng ký thất bại", errMsg);
-          } else {
-            Alert.alert(
-              "Đăng ký thất bại",
-              error instanceof Error ? error.message : "Đã có lỗi xảy ra",
-            );
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      },
-    )();
-  }, [formMethod, signUp, signUpActive, refreshAuth, isSignUpLoaded]);
+        Alert.alert(
+          "Đăng ký thành công",
+          "Vui lòng đăng nhập để tiếp tục.",
+          [{ text: "Đồng ý", onPress: switchToLogin }],
+        );
+      } catch (error: any) {
+        Alert.alert(
+          "Đăng ký thất bại",
+          error instanceof Error ? error.message : "Đã có lỗi xảy ra",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [formMethod, register, switchToLogin]);
 
   return (
     <FormProvider {...formMethod}>

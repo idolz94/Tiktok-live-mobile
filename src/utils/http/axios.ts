@@ -4,11 +4,54 @@ import {
   WEB_URL_ORIGIN,
   WEB_URL_REFERER,
 } from "@constants/config";
+import { useAuthStore } from "@features/auth/stores";
+import {
+  extractAccessToken,
+  extractRefreshToken,
+  getStoredRefreshToken,
+  refreshTokenApi,
+  setStoredTokens,
+} from "./auth-session";
 import { secureStorage } from "@utils/storage";
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { sessionExpiredEmitter } from "./session-event";
-import { getClerkToken } from "./clerk-token-bridge";
 import { ApiError } from "./api-error";
+
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken() {
+  const refreshToken = await getStoredRefreshToken();
+
+  if (!refreshToken) return null;
+
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const response = await refreshTokenApi({ refreshToken });
+      const nextAccessToken = extractAccessToken(response);
+      const nextRefreshToken = extractRefreshToken(response);
+
+      await setStoredTokens({
+        accessToken: nextAccessToken,
+        refreshToken: nextRefreshToken,
+      });
+
+      return nextAccessToken;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
+}
+
+function shouldSkipRefresh(url?: string) {
+  return Boolean(url?.includes("/auth/login") || url?.includes("/auth/refresh"));
+}
+
+async function clearSessionAndNotify() {
+  await useAuthStore.getState().logout();
+  sessionExpiredEmitter.emit();
+}
 
 // ────────────────────────────────────────────────
 // Axios instance for SSE
@@ -29,8 +72,7 @@ export const sseClient = axios.create({
 // ────────────────────────────────────────────────
 sseClient.interceptors.request.use(
   async (config) => {
-    const clerkToken = await getClerkToken();
-    const token = clerkToken || (await secureStorage.getAccessToken());
+    const token = await secureStorage.getAccessToken();
 
     config.headers["x-app-key"] = MOBILE_APP_KEY;
 
@@ -38,13 +80,20 @@ sseClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // if (__DEV__) {
-    //   console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
-    // }
-
     return config;
   },
   (error) => Promise.reject(error),
+);
+
+sseClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      void clearSessionAndNotify();
+    }
+
+    throw error;
+  },
 );
 
 // ────────────────────────────────────────────────
@@ -102,8 +151,7 @@ export const apiClient = axios.create({
 // Request Interceptor: Tự động đính kèm Token nếu user đã đăng nhập
 apiClient.interceptors.request.use(
   async (config) => {
-    const clerkToken = await getClerkToken();
-    const token = clerkToken || (await secureStorage.getAccessToken());
+    const token = await secureStorage.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -111,6 +159,42 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error),
+);
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const status = error.response?.status;
+    const url = error.config?.url || "";
+    const originalRequest = error.config as (InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    }) | undefined;
+
+    if (
+      status === 401 &&
+      originalRequest &&
+      !shouldSkipRefresh(url) &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+
+      try {
+        const newAccessToken = await refreshAccessToken();
+
+        if (newAccessToken) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        void clearSessionAndNotify();
+        return Promise.reject(refreshError);
+      }
+
+      void clearSessionAndNotify();
+    }
+
+    return Promise.reject(error);
+  },
 );
 
 // ────────────────────────────────────────────────

@@ -77,7 +77,10 @@ export default function AuthScreen() {
               switchToRegister={switchToRegister}
               animatedStyle={loginStyle}
             />
-            <Register animatedStyle={registerStyle} />
+            <Register
+              animatedStyle={registerStyle}
+              switchToLogin={switchToLogin}
+            />
           </KeyboardAwareScrollView>
         </View>
       </View>

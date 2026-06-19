@@ -3,7 +3,6 @@ import { secureStorage } from "@utils/storage";
 import { AxiosResponse } from "axios";
 
 import { sseClient } from "./axios";
-import { getClerkToken } from "./clerk-token-bridge";
 
 export type RequestParams = Record<
   string,
@@ -18,8 +17,7 @@ export type RequestOptions = {
 
 export async function getAuthToken() {
   try {
-    const clerkToken = await getClerkToken();
-    return clerkToken || (await secureStorage.getAccessToken()) || "";
+    return (await secureStorage.getAccessToken()) || "";
   } catch (error) {
     if (__DEV__) {
       console.error("[Request SSE] Lỗi khi lấy auth token:", error);
