@@ -1,9 +1,9 @@
 import { LinearGradient } from "@components/linear-gradient";
 import { DEFAULT_WS_URL } from "@constants/config";
-import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
-import { useAuth } from "@modules/auth/hooks/use-auth";
+import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
+import { useAuth } from "@features/auth/hooks/use-auth";
 import { colors } from "@themes/colors";
-import { normalizeTikTokUsername } from "@utils/comment";
+import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { createStyles } from "@utils/createStyles";
 import { useState } from "react";
 import {

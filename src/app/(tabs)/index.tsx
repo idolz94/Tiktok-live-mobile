@@ -1,11 +1,11 @@
-import { useTikTokLiveSocketContext } from "@contexts/tiktok-live-socket";
-import { useOrderManager } from "@modules/orders/hooks/use-order-manager";
-import { createOrderCommentKey } from "@utils/comment";
+import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
+import { useOrderManager } from "@features/orders/hooks/use-order-manager";
+import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Home } from "../../components/tabs/home";
-import { TopSegmentTabs } from "../../components/tabs/top-segment-tabs";
+import { Home } from "@features/tiktok-live/components/home";
+import { TopSegmentTabs } from "@features/tiktok-live/components/top-segment-tabs";
 import { Screen } from "@components/screen";
 import { LinearGradient } from "@components/linear-gradient";
 import PagerView from "react-native-pager-view";
@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "@components/image";
 import { images } from "@assets/images";
 import { HomeHeader } from "@components/home/header";
-import { TiktokPage } from "@components/home/tiktok-page";
+import { TiktokPage } from "@features/tiktok-live/components/tiktok-page";
 import { LiveComment } from "@app-types/index";
 
 export type TopTab = "connect" | "history";

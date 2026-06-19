@@ -1,4 +1,4 @@
-import { Mode } from "src/schemas/auth";
+import { Mode } from "@features/auth/schemas";
 import { images } from "@assets/images";
 import { Image } from "@components/image";
 import { LinearGradient } from "@components/linear-gradient";

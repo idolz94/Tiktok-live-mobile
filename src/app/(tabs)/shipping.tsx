@@ -5,7 +5,7 @@ import {
   useOrderStore,
   OrderState,
   OrderActions,
-} from "@stores/order/order-store";
+} from "@features/orders/stores/order-store";
 
 export default function ShippingTab() {
   const orders = useOrderStore((s: OrderState & OrderActions) => s.orders);

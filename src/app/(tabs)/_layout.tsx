@@ -4,9 +4,9 @@ import {
   TikTokLiveSocketProvider,
   useTikTokLiveSocketContext,
   useTikTokLiveTimerContext,
-} from "@contexts/tiktok-live-socket";
+} from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { useThemes } from "@hooks/use-theme";
-import { useAuth } from "@modules/auth/hooks/use-auth";
+import { useAuth } from "@features/auth/hooks/use-auth";
 import { createStyles } from "@utils/createStyles";
 import { Redirect, Tabs } from "expo-router";
 

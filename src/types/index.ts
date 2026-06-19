@@ -218,3 +218,19 @@ export type BottomTab =
   | "history"
   | "settings";
 export type OrderFilter = "all" | "unpaid" | "paid" | "draft" | "confirmed";
+
+export type SaveLiveStartedPayload = {
+  sessionId: string;
+  username: string;
+  startedAt: string;
+};
+
+export type SaveLiveEndedPayload = {
+  sessionId: string;
+  username: string;
+  startedAt?: string | null;
+  endedAt: string;
+  durationSeconds?: number;
+  commentCount?: number;
+  reason?: string;
+};

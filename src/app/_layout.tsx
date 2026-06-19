@@ -4,7 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@utils/storage/clerk-token-cache";
 import { CLERK_PUBLISHABLE_KEY } from "@constants/config";
-import { ClerkTokenSync } from "@components/auth/clerk-token-sync";
+import { ClerkTokenSync } from "@features/auth/components/clerk-token-sync";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
@@ -13,7 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import Splash from "./splash";
 import { BottomSheetProvider } from "@components/bottom-sheet/provider";
 import { sessionExpiredEmitter } from "@utils/http/session-event";
-import { useAuth } from "@modules/auth/hooks/use-auth";
+import { useAuth } from "@features/auth/hooks/use-auth";
 
 SplashScreen.preventAutoHideAsync();
 

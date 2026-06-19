@@ -1,4 +1,4 @@
-import { useAuth } from "@modules/auth/hooks/use-auth";
+import { useAuth } from "@features/auth/hooks/use-auth";
 import { loadBoolean, STORAGE_KEYS } from "@utils/storage";
 import { Redirect } from "expo-router";
 
