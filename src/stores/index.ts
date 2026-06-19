@@ -1,1 +1,1 @@
-export * from "./auth";
+export * from "@features/auth/stores";

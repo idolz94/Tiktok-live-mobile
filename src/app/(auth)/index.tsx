@@ -1,6 +1,6 @@
-import { Header } from "@components/auth/header";
-import { Login } from "@components/auth/login";
-import { Register } from "@components/auth/register";
+import { Header } from "@features/auth/components/header";
+import { Login } from "@features/auth/components/login";
+import { Register } from "@features/auth/components/register";
 import { LinearGradient } from "@components/linear-gradient";
 import { Screen } from "@components/screen";
 import { createStyles } from "@utils/createStyles";
@@ -13,7 +13,7 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { Mode } from "src/schemas/auth";
+import { Mode } from "@features/auth/schemas";
 
 export default function AuthScreen() {
   const params = useLocalSearchParams<{ mode?: Mode }>();

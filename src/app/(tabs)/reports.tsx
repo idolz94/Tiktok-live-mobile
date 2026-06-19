@@ -1,5 +1,5 @@
 import { createStyles } from "@utils/createStyles";
-import { formatMoneyFromK } from "@utils/order";
+import { formatMoneyFromK } from "@features/orders/utils/order";
 import { ScrollView, Text, View } from "react-native";
 
 export default function ReportsTab({
