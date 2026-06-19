@@ -12,6 +12,7 @@ import {
   FlatList,
   ListRenderItem,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -62,14 +63,26 @@ export const UnConnectedLive = memo(
     channels,
     onConnect,
     onAddChannel,
+    onRefreshChannels,
   }: {
     channels: TikTokLiveChannel[];
     onConnect: (item: TikTokLiveChannel) => Promise<boolean>;
     onAddChannel: (name: string) => Promise<boolean>;
+    onRefreshChannels: () => Promise<TikTokLiveChannel[]>;
   }) => {
     const { show, hide } = useBottomSheet();
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
     const isCancelledRef = useRef(false);
+
+    const handleRefresh = useCallback(async () => {
+      setRefreshing(true);
+      try {
+        await onRefreshChannels();
+      } finally {
+        setRefreshing(false);
+      }
+    }, [onRefreshChannels]);
 
     const _onConnect = useCallback(
       async (item: TikTokLiveChannel) => {
@@ -133,7 +146,12 @@ export const UnConnectedLive = memo(
     };
 
     return (
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
         <View style={{ rowGap: 4 }}>
           <Text style={styles.pickAccount}>Chọn tài khoản</Text>
           <View style={{ flexShrink: 1 }}>

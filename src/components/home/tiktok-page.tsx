@@ -294,6 +294,7 @@ export const TiktokPage = memo(() => {
               channels={channels || []}
               onConnect={connectSelectedChannel}
               onAddChannel={onAddChannel}
+              onRefreshChannels={fetchChannels}
             />
           )}
         </View>
