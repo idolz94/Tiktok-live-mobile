@@ -313,7 +313,15 @@ export const TiktokPage = memo(() => {
         </View>
 
         <View style={{ flex: 1 }} key="orders">
-          <Orders orderManager={orderManager} />
+          <Orders
+            orders={orderManager.orders}
+            paidOrders={orderManager.paidOrders}
+            draftOrders={orderManager.draftOrders}
+            confirmedOrders={orderManager.confirmedOrders}
+            orderProductCount={orderManager.orderProductCount}
+            orderFilter={orderManager.orderFilter}
+            setOrderFilter={orderManager.setOrderFilter}
+          />
         </View>
       </PagerView>
 

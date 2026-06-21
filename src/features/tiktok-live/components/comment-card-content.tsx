@@ -42,6 +42,9 @@ export const CommentCardContent = memo(
             <Text numberOfLines={4} style={styles.comment}>
               {processedText}
             </Text>
+            <Text numberOfLines={4} style={styles.createAtTime}>
+              {new Date(item.createdAt ?? "").toLocaleTimeString()}
+            </Text>
           </View>
         </View>
         <Button
@@ -79,6 +82,10 @@ const styles = createStyles(({ colors, textPresets }) => ({
   comment: {
     color: colors.neutral400,
     ...textPresets.fs14_400,
+  },
+  createAtTime: {
+    color: colors.neutral300,
+    ...textPresets.fs12_400,
   },
   btnCreateOrder: {
     flex: 1,

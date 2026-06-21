@@ -1,6 +1,5 @@
 import { useLocalSearchParams, router } from "expo-router";
-import { useOrderStore } from "@features/orders/stores/order-store";
-import { ProductTable } from "@features/orders/components/product-table";
+
 import { Order } from "@app-types/index";
 import { formatMoneyFromK, getOrderTotal } from "@features/orders/utils/order";
 import {

@@ -1,7 +1,5 @@
-import { OrderFilter } from "@app-types/index";
+import { OrderFilter, OrderWithTikTok } from "@app-types/index";
 import { LottieTypes } from "@assets/lotties";
-import { OrderManager } from "../hooks/use-order-manager";
-import { Colors } from "@themes/type";
 
 export type { Order, OrderProduct, OrderWithTikTok } from "@app-types/index";
 
@@ -14,5 +12,11 @@ export type OrderStatCardData = {
 };
 
 export type OrdersProps = {
-  orderManager: OrderManager;
+  orders: OrderWithTikTok[];
+  paidOrders: number;
+  draftOrders: number;
+  confirmedOrders: number;
+  orderProductCount: number;
+  orderFilter: OrderFilter;
+  setOrderFilter: (filter: OrderFilter) => void;
 };

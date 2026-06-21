@@ -50,20 +50,19 @@ const OrdersSectionHeader = memo(() => (
   <Text style={styles.txtCurrentLive}>Phiên live hiện tại</Text>
 ));
 
-export const Orders = memo(({ orderManager }: OrdersProps) => {
-  const { colors } = useThemes();
-
-  const {
+export const Orders = memo(
+  ({
+    orders,
     paidOrders,
     draftOrders,
     confirmedOrders,
-    orders,
     orderProductCount,
     setOrderFilter,
     orderFilter,
-  } = orderManager;
+  }: OrdersProps) => {
+    const { colors } = useThemes();
 
-  const unpaidOrders = useMemo(
+    const unpaidOrders = useMemo(
     () =>
       orders?.filter(
         (o) => o.depositStatus !== "paid" && o.depositStatus !== "deposited",
