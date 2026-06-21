@@ -2,13 +2,11 @@ import { Order } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
 import { ScrollView, Text, View } from "react-native";
 import {
-  useOrderStore,
-  OrderState,
-  OrderActions,
+  readOrders,
 } from "@features/orders/stores/order-store";
 
 export default function ShippingTab() {
-  const orders = useOrderStore((s: OrderState & OrderActions) => s.orders);
+  const orders = readOrders();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

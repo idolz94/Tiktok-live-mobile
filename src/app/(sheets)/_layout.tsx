@@ -14,6 +14,17 @@ export default function FormSheets() {
     // />
     <Stack>
       <Stack.Screen
+        name="tiktok-channels"
+        options={{
+          presentation: "formSheet",
+          title: "Quản Lý Kênh Tiktok",
+          headerShown: false,
+          sheetAllowedDetents: "fitToContents",
+          contentStyle: styles.whiteContentFormSheet,
+        }}
+      />
+
+      <Stack.Screen
         name="test"
         options={{
           presentation: "formSheet",

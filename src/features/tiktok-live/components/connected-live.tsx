@@ -9,7 +9,8 @@ import { createOrderCommentKey, isPriorityComment } from "@features/tiktok-live/
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useRef, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
-import { ActivityIndicator, Alert, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface CommentItemProps {
   item: LiveComment;
@@ -24,55 +25,122 @@ export type ConnectedLiveProps = {
   onNavigateToOrders?: () => void;
 };
 
-const UserJoinedRow = memo(({ username }: { username: string }) => (
-  <View style={styles.dividerRow}>
-    <Separator type="horizontal" size={1} containerStyle={styles.dividerFlex} />
-    <View style={styles.dividerCenter}>
-      <Text>New</Text>
-      <Text style={styles.dividerText}>{username} đã vào live</Text>
-    </View>
-    <Separator type="horizontal" size={1} containerStyle={styles.dividerFlex} />
-  </View>
-));
+const UserJoinedRow = memo(
+  ({ username, avatarUrl }: { username: string; avatarUrl?: string }) => {
+    const initial = username.trim().charAt(0).toUpperCase() || "?";
 
-const CommentCardContent = memo(({ item, onCreateOrder }: CommentItemProps) => {
-  return (
-    <>
-      <View style={styles.leftCard}>
-        <Avatar
-          uri={item.avatar || item.avatarUrl}
-          username={item.displayName ?? item.username ?? "Unknown user"}
-          size={40}
-        />
-        <View style={styles.commentTextGroup}>
-          <Text style={styles.nameTiktok}>
-            {item.displayName || item.username || "Unknown user"}
-          </Text>
-          <Text numberOfLines={4} style={styles.comment}>
-            {item.comment}
-          </Text>
+    return (
+      <View style={styles.dividerRow}>
+        <Separator type="horizontal" size={1} containerStyle={styles.dividerFlex} />
+        <View style={styles.dividerCenter}>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.joinAvatar} />
+          ) : (
+            <View style={styles.joinAvatarFallback}>
+              <Text style={styles.joinAvatarFallbackText}>{initial}</Text>
+            </View>
+          )}
+          <Text style={styles.dividerText}>{username} đã vào live</Text>
         </View>
+        <Separator type="horizontal" size={1} containerStyle={styles.dividerFlex} />
       </View>
+    );
+  },
+);
+
+const CommentActionButton = memo(
+  ({
+    isCreatedOrder,
+    isCreatingOrder,
+    onCreateOrder,
+    item,
+  }: {
+    isCreatedOrder: boolean;
+    isCreatingOrder: boolean;
+    onCreateOrder: (item: LiveComment) => Promise<{ success: boolean; orderId: string }>;
+    item: LiveComment;
+  }) => {
+    if (isCreatedOrder) {
+      return (
+        <Button
+          title="In lại"
+          onPress={async () => await onCreateOrder(item)}
+          containerStyle={styles.btnCreateOrder}
+          txtBtnStyle={styles.txtCreateOrder}
+        />
+      );
+    }
+
+    return (
       <Button
-        title="Tạo đơn"
+        title={isCreatingOrder ? "Đang tạo" : "Tạo đơn"}
         onPress={async () => await onCreateOrder(item)}
-        loadingType="center"
+        loadingType={isCreatingOrder ? "center" : undefined}
         containerStyle={styles.btnCreateOrder}
         txtBtnStyle={styles.txtCreateOrder}
+        disabled={isCreatingOrder}
       />
-    </>
-  );
-});
+    );
+  },
+);
+
+const CommentCardContent = memo(
+  ({
+    item,
+    onCreateOrder,
+    isCreatedOrder,
+    isCreatingOrder,
+    isOwner,
+  }: {
+    item: LiveComment;
+    onCreateOrder: (item: LiveComment) => Promise<{ success: boolean; orderId: string }>;
+    isCreatedOrder: boolean;
+    isCreatingOrder: boolean;
+    isOwner: boolean;
+  }) => {
+    return (
+      <>
+        <View style={styles.leftCard}>
+          <Avatar
+            uri={item.avatar || item.avatarUrl}
+            username={item.displayName ?? item.username ?? "Unknown user"}
+            size={40}
+          />
+          <View style={styles.commentTextGroup}>
+            <View style={styles.nameRow}>
+              <Text style={styles.nameTiktok}>
+                {item.displayName || item.username || "Unknown user"}
+              </Text>
+              <View style={styles.stickerBadge}>
+                <MaterialCommunityIcons name="sticker-emoji" size={12} color="#AD2C4E" />
+              </View>
+            </View>
+            <Text numberOfLines={4} style={styles.comment}>
+              {item.comment}
+            </Text>
+          </View>
+        </View>
+        {!isOwner && (
+          <CommentActionButton
+            isCreatedOrder={isCreatedOrder}
+            isCreatingOrder={isCreatingOrder}
+            onCreateOrder={onCreateOrder}
+            item={item}
+          />
+        )}
+      </>
+    );
+  },
+);
 
 const CommentItem = memo(
   ({ item, onCreateOrder, isCommentOrderCreated }: CommentItemProps) => {
-    const [localOrderId, setLocalOrderId] = useState("");
+    const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
     const isCreatedOrder = Boolean(
       isCommentOrderCreated(item) ||
       item.isOrderCreated ||
-      item.orderId ||
-      localOrderId,
+      item.orderId,
     );
 
     if (item.type === "user_joined") {
@@ -84,25 +152,41 @@ const CommentItem = memo(
             item.customerTikTokName ??
             "Unknown user"
           }
+          avatarUrl={item.avatarUrl || item.avatar}
         />
       );
     }
 
-    const isOwner = item?.raw?.liveUsername === item?.raw?.tiktok_username;
+    const rawItem = item?.raw as Record<string, any> | undefined;
+    const liveUser = String(rawItem?.liveUsername || "").toLowerCase().replace(/^@/, "");
+    const commenter = String(rawItem?.tiktok_username || rawItem?.tiktokUsername || "").toLowerCase().replace(/^@/, "");
+    const isOwner = liveUser !== "" && commenter !== "" && liveUser === commenter;
     const hasPriorityBorder = !isOwner && isPriorityComment(item);
 
     const handleCreateOrder = async (
       commentItem: LiveComment,
     ): Promise<{ success: boolean; orderId: string }> => {
-      if (isCreatedOrder) return { success: false, orderId: "" };
+      if (isCreatingOrder || isCreatedOrder) return { success: false, orderId: "" };
       try {
+        setIsCreatingOrder(true);
         const result = await onCreateOrder(commentItem);
-        if (result.success) setLocalOrderId(result.orderId);
         return result;
       } catch {
         return { success: false, orderId: "" };
+      } finally {
+        setIsCreatingOrder(false);
       }
     };
+
+    const cardContent = (
+      <CommentCardContent
+        item={item}
+        onCreateOrder={handleCreateOrder}
+        isCreatedOrder={isCreatedOrder}
+        isCreatingOrder={isCreatingOrder}
+        isOwner={isOwner}
+      />
+    );
 
     if (hasPriorityBorder) {
       return (
@@ -113,23 +197,15 @@ const CommentItem = memo(
           style={styles.gradientContainer}
         >
           <View style={styles.innerCardBorderAnimated}>
-            <CommentCardContent
-              item={item}
-              onCreateOrder={handleCreateOrder}
-              isCommentOrderCreated={isCommentOrderCreated}
-            />
+            {cardContent}
           </View>
         </LinearGradient>
       );
     }
 
     return (
-      <View style={styles.cardContainer}>
-        <CommentCardContent
-          item={item}
-          onCreateOrder={handleCreateOrder}
-          isCommentOrderCreated={isCommentOrderCreated}
-        />
+      <View style={[styles.cardContainer, isOwner && styles.cardContainerOwner]}>
+        {cardContent}
       </View>
     );
   },
@@ -255,8 +331,26 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flex: 1,
   },
   dividerCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  joinAvatar: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  joinAvatarFallback: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.primaryLight,
+  },
+  joinAvatarFallbackText: {
+    color: colors.primary,
+    ...textPresets.fs10_500,
   },
 
   // Cards
@@ -264,6 +358,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flex: 1,
     padding: 12,
     borderWidth: 1,
+    borderColor: colors.border10,
     borderRadius: 16,
     overflow: "hidden",
     flexDirection: "row",
@@ -271,6 +366,9 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "space-between",
     columnGap: 16,
     marginBottom: 8,
+  },
+  cardContainerOwner: {
+    opacity: 0.9,
   },
   gradientContainer: {
     borderRadius: 16,
@@ -299,6 +397,19 @@ const styles = createStyles(({ colors, textPresets }) => ({
   commentTextGroup: {
     rowGap: 8,
     flex: 1,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  stickerBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFF0F6",
+    alignItems: "center",
+    justifyContent: "center",
   },
   separator: {
     height: 8,

@@ -1,21 +1,14 @@
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
-import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Home } from "@features/tiktok-live/components/home";
-import { TopSegmentTabs } from "@features/tiktok-live/components/top-segment-tabs";
+import { StyleSheet, Text, View } from "react-native";
 import { Screen } from "@components/screen";
 import { LinearGradient } from "@components/linear-gradient";
 import PagerView from "react-native-pager-view";
 import { createStyles } from "@utils/createStyles";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "@components/image";
-import { images } from "@assets/images";
 import { HomeHeader } from "@components/home/header";
 import { TiktokPage } from "@features/tiktok-live/components/tiktok-page";
-import { LiveComment } from "@app-types/index";
 
 export type TopTab = "connect" | "history";
 
@@ -23,40 +16,14 @@ export default function HomeTab() {
   const pagerRef = useRef<PagerView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const [topTab, setTopTab] = useState<TopTab>("connect");
-  const createdCommentKeysRef = useRef<Set<string>>(new Set());
-  const { comments, clearComments, currentLiveSessionId, liveHistory } =
-    useTikTokLiveSocketContext();
+  const { currentLiveSessionId } = useTikTokLiveSocketContext();
 
-  const orderManager = useOrderManager({
-    comments,
+  useOrderManager({
+    comments: [],
     liveSessionId: currentLiveSessionId,
     onAfterCreateOrder: () => router.back(),
   });
 
-  const handleCreateOrder = async (comment: LiveComment) => {
-    const commentKey = createOrderCommentKey(comment);
-
-    if (createdCommentKeysRef.current.has(commentKey)) {
-      alert("Comment này đã tạo đơn rồi.");
-      return false;
-    }
-
-    try {
-      createdCommentKeysRef.current.add(commentKey);
-
-      await orderManager.createOrderFromComment(comment);
-
-      return true;
-    } catch (error) {
-      createdCommentKeysRef.current.delete(commentKey);
-
-      console.log("CREATE ORDER ERROR:", error);
-      alert(error instanceof Error ? error.message : "Tạo đơn thất bại");
-
-      return false;
-    }
-  };
 
   const onTabPress = (i: number) => {
     setActiveIndex(i);

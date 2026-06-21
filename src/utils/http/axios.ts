@@ -139,6 +139,7 @@ export const apiClient = axios.create({
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
+    "x-app-key": MOBILE_APP_KEY,
     Origin: WEB_URL_ORIGIN,
     Referer: WEB_URL_REFERER,
   },
@@ -148,10 +149,10 @@ export const apiClient = axios.create({
 // Request interceptor
 // ────────────────────────────────────────────────
 
-// Request Interceptor: Tự động đính kèm Token nếu user đã đăng nhập
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await secureStorage.getAccessToken();
+    config.headers["x-app-key"] = MOBILE_APP_KEY;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

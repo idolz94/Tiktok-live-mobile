@@ -1,5 +1,5 @@
 export const DEFAULT_WS_URL =
-  process.env.EXPO_PUBLIC_TIKTOK_SSE_API || "http://localhost:8765";
+  process.env.EXPO_PUBLIC_TIKTOK_SSE_API || "http://localhost:3001";
 
 export const MAX_COMMENTS = 500;
 export const TIKTOK_USERNAME =

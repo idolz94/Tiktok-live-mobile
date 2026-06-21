@@ -10,6 +10,11 @@ export const colors = {
 
   border10: "rgba(0, 0, 0, 0.1)",
   border20: "rgba(0, 0, 0, 0.2)",
+  border: "rgba(0, 0, 0, 0.1)",
+  borderGray: "rgba(0, 0, 0, 0.1)",
+  borderLight: "rgba(0, 0, 0, 0.06)",
+  textGray: "rgba(120, 120, 120, 1)",
+  textLightMuted: "rgba(160, 160, 160, 1)",
 
   transparent50: "rgba(0, 0, 0, 0.5)",
 
@@ -19,9 +24,27 @@ export const colors = {
   success: "rgba(44, 168, 123, 1)",
   successDark: "rgba(217, 255, 238, 1)",
   successLight: "rgba(237, 250, 244, 1)",
+  successActive: "rgba(44, 168, 123, 1)",
+  successPastel: "rgba(237, 250, 244, 1)",
+  successBg: "rgba(237, 250, 244, 1)",
 
   info: "rgba(70, 138, 223, 1)",
   infoLight: "rgba(233, 242, 255, 1)",
+
+  warning: "rgba(255, 168, 0, 1)",
+  warningAlt: "rgba(255, 245, 217, 1)",
+  warningLight: "rgba(255, 245, 217, 1)",
+
+  link: "rgba(70, 138, 223, 1)",
+  muted: "rgba(120, 120, 120, 1)",
+  surface: "rgba(255, 255, 255, 1)",
+  surfaceAlt: "rgba(248, 248, 248, 1)",
+  surfaceGray: "rgba(248, 248, 248, 1)",
+  text: "#000000",
+  textMuted: "rgba(120, 120, 120, 1)",
+  textDarkGray: "rgba(72, 72, 72, 1)",
+  textDark: "rgba(0, 0, 0, 0.86)",
+  white: "#ffffff",
 
   error: "rgba(255, 66, 66, 1)",
 };

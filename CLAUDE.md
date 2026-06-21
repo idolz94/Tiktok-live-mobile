@@ -21,6 +21,21 @@ Core stack:
 
 Entry point is `expo-router/entry` from `package.json`. Expo Router root is configured as `src` in `app.json`.
 
+## React Native code rules
+
+- Prefer platform-aware React Native components and Expo APIs over web-only patterns.
+- Do not assume DOM, browser globals, or CSS files exist.
+- Use `StyleSheet`, theme helpers, or existing style factories instead of Tailwind/web CSS.
+- Keep UI logic inside screens/components; keep network, storage, and business logic in hooks/services/stores.
+- Prefer Expo modules and React Native packages that already exist in `package.json` before introducing new dependencies.
+- Use `ScrollView`, `FlatList`, `FlashList`, `Pressable`, `View`, `Text`, `Image`, and `TextInput` appropriately; avoid web `<div>`/`span>` patterns.
+- Keep gesture, keyboard, and safe-area behavior in mind for mobile screens.
+- When a feature needs platform-specific behavior, isolate it with `Platform.select` or platform-specific files instead of branching everywhere.
+- Do not introduce browser-only routing or navigation patterns; keep using Expo Router.
+- Do not call `fetch` or Axios directly inside screens when an API/service helper already exists.
+- Keep persistence split correctly: tokens in SecureStore, app state in MMKV/Zustand, and ephemeral UI state in React state.
+- Verify any UI change on device/emulator when practical, not just with typecheck.
+
 ## Common commands
 
 - `npm start` — start Expo dev server
@@ -37,17 +52,19 @@ Before reporting a code change as complete, run `npm run typecheck` when practic
 Important directories:
 
 - `src/app/` — Expo Router routes and route layouts
-- `src/modules/` — domain-specific business logic, services, hooks, and types
-- `src/stores/` — Zustand stores and store utilities
+- `src/features/` — feature-specific screens, hooks, services, and types when a domain is isolated enough to live under one feature
 - `src/components/` — reusable and feature-specific UI components
-- `src/contexts/` — React providers for shared runtime services
-- `src/utils/` — storage, HTTP, formatting, style, date, comment, and helper utilities
+- `src/stores/` — Zustand stores and store utilities
 - `src/hooks/` — shared hooks
+- `src/utils/` — storage, HTTP, formatting, style, date, comment, and helper utilities
 - `src/themes/` — theme colors, typography, shadows, and theme types
 - `src/constants/` — environment/config constants and static values
 - `src/assets/` — images and icons
 - `src/schemas/` — form validation schemas
+- `src/types/` — shared TypeScript types
 - `declare/` — global/project declarations imported by the root layout
+
+If a domain is currently implemented under `src/modules/`, keep following that structure for existing code. Prefer not to mix both module- and feature-based layouts inside the same feature unless there is a clear migration plan.
 
 Feature/module directories currently include:
 
@@ -370,6 +387,16 @@ Component organization:
 - Shared wrappers: `src/components/screen/`, `src/components/image/`, `src/components/icon/`, `src/components/linear-gradient/`
 
 Prefer existing themed helpers and components over one-off inline styling. For larger screen-specific styles, follow the existing `createStyles`/`useThemes` pattern.
+
+Use the existing design system for mobile spacing, typography, and colors instead of inventing web-style utility classes or CSS modules.
+
+For long lists or live feeds, prefer `FlashList`/`FlatList` over manual `.map()` rendering when the list is large or frequently updated.
+
+For forms, reuse React Hook Form and Zod patterns already present in auth and settings flows rather than introducing a second validation approach.
+
+For local state that must survive app restarts, prefer the current MMKV/SecureStore split instead of ad hoc AsyncStorage usage.
+
+For images and media, prefer Expo-compatible components and helpers already in the repo.
 
 ## Forms and validation
 

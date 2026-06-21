@@ -65,8 +65,14 @@ export const getMeBootstrapApi = async (): Promise<MeBootstrapResponse> => {
 
 export const getTikTokChannelsApi = async (): Promise<ShopTikTokChannel[]> => {
   const response = await apiClient.get("/me/tiktok-channels");
+  const source =
+    response.data?.data?.channels ??
+    response.data?.data?.tiktokChannels ??
+    response.data?.data?.tiktok_channels ??
+    response.data?.data ??
+    response.data;
 
-  return normalizeTikTokChannels(response.data?.data ?? response.data);
+  return normalizeTikTokChannels(source);
 };
 
 export const createTikTokChannelApi = async (

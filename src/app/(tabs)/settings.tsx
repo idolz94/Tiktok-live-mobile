@@ -1,62 +1,40 @@
 import { LinearGradient } from "@components/linear-gradient";
-import { DEFAULT_WS_URL } from "@constants/config";
-import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
+import { icons } from "@assets/icons";
+import { images } from "@assets/images";
 import { useAuth } from "@features/auth/hooks/use-auth";
-import { colors } from "@themes/colors";
-import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { createStyles } from "@utils/createStyles";
-import { useState } from "react";
-import {
-  Alert,
-  Image,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { router } from "expo-router";
+import { Image, ImageSourcePropType, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const AVATAR_URL = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
 
-const settingGroups = [
+const settingGroups: { icon: ImageSourcePropType; label: string; onPress?: () => void }[][] = [
   [
-    { icon: "♪", label: "Quản lý kênh Tiktok" },
-    { icon: "f", label: "Quản lý kênh Facebook" },
+    { icon: images.logo_tiktok, label: "Quản lý kênh Tiktok", onPress: () => router.push("/(sheets)/tiktok-channels") },
+    { icon: images.logo_facebook, label: "Quản lý kênh Facebook" },
   ],
   [
-    { icon: "⚙", label: "Cài đặt chung" },
-    { icon: "⌘", label: "Cài đặt máy in" },
-    { icon: "⇄", label: "Cấu hình vận chuyển" },
+    { icon: icons.settings, label: "Cài đặt chung" },
+    { icon: icons.clipboard_check, label: "Cài đặt thông tin SP trước Live" },
+    { icon: icons.print, label: "Cài đặt máy in" },
+    { icon: icons.truck, label: "Cấu hình vận chuyển" },
   ],
   [
-    { icon: "文", label: "Ngôn ngữ" },
-    { icon: "?", label: "Hỗ trợ" },
+    { icon: icons.group_user, label: "Ngôn ngữ" },
+    { icon: icons.plus_circle, label: "Hỗ trợ" },
   ],
 ];
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
-  const { tiktokUsername, isConnected, status, changeTikTokUsername } =
-    useTikTokLiveSocketContext();
 
   const username = user?.fullName || user?.username || "User";
-  const accountName = user?.username || user?.phone || tiktokUsername || "Lumi Live";
-  const currentTiktokUsername = tiktokUsername;
-
-  const [inputUsername, setInputUsername] = useState(currentTiktokUsername);
-
-  async function submitTikTokUsername() {
-    const nextUsername = normalizeTikTokUsername(inputUsername);
-    const ok = await changeTikTokUsername(nextUsername);
-    if (ok) Alert.alert("Đã đổi LIVE", nextUsername);
-  }
+  const accountName = user?.username || user?.phone || "Lumi Live";
+  const manageTikTokChannels = () => router.push("/(sheets)/tiktok-channels");
 
   return (
     <View style={styles.screen}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.container}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
         <View style={styles.hero}>
           <Image source={{ uri: AVATAR_URL }} blurRadius={18} style={styles.heroImage} />
           <View style={styles.heroOverlay} />
@@ -107,39 +85,12 @@ export default function SettingsTab() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.tiktokCard}>
-            <View style={styles.tiktokHeader}>
-              <View>
-                <Text style={styles.cardLabel}>TikTok username</Text>
-                <Text style={styles.connectionText}>
-                  {isConnected ? "Đã kết nối" : "Chưa kết nối"} · {status}
-                </Text>
-              </View>
-            </View>
-            <TextInput
-              style={styles.input}
-              value={inputUsername}
-              onChangeText={setInputUsername}
-              autoCapitalize="none"
-              placeholder="Nhập TikTok username"
-              placeholderTextColor={colors.neutral300}
-            />
-            <TouchableOpacity
-              style={styles.changeButton}
-              onPress={submitTikTokUsername}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.changeButtonText}>Kết nối / Đổi username</Text>
-            </TouchableOpacity>
-            <Text numberOfLines={1} style={styles.serverText}>{DEFAULT_WS_URL}</Text>
-          </View>
-
           <View style={styles.settingsContainer}>
             {settingGroups.map((group, groupIndex) => (
               <View key={groupIndex} style={styles.settingsGroupWrap}>
                 <View style={styles.settingsGroup}>
                   {group.map((item) => (
-                    <SettingItem key={item.label} icon={item.icon} label={item.label} />
+                    <SettingItem key={item.label} icon={item.icon} label={item.label} onPress={item.onPress} />
                   ))}
                 </View>
                 <View style={styles.divider} />
@@ -148,7 +99,7 @@ export default function SettingsTab() {
             <TouchableOpacity activeOpacity={0.7} style={styles.settingItem} onPress={logout}>
               <View style={styles.settingLeft}>
                 <View style={styles.settingIconBox}>
-                  <Text style={styles.settingIcon}>↗</Text>
+                  <Image source={icons.disconnect} style={styles.settingIcon} resizeMode="contain" />
                 </View>
                 <Text style={styles.settingText}>Đăng xuất</Text>
               </View>
@@ -169,17 +120,26 @@ function SocialButton({ label }: { label: string }) {
   );
 }
 
-function SettingItem({ icon, label }: { icon: string; label: string }) {
+function SettingItem({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: ImageSourcePropType;
+  label: string;
+  onPress?: () => void;
+}) {
+  const Wrapper = onPress ? TouchableOpacity : View;
   return (
-    <TouchableOpacity activeOpacity={0.7} style={styles.settingItem}>
+    <Wrapper activeOpacity={0.7 as never} style={styles.settingItem} onPress={onPress as never}>
       <View style={styles.settingLeft}>
         <View style={styles.settingIconBox}>
-          <Text style={styles.settingIcon}>{icon}</Text>
+          <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
         </View>
         <Text style={styles.settingText}>{label}</Text>
       </View>
       <Text style={styles.chevron}>›</Text>
-    </TouchableOpacity>
+    </Wrapper>
   );
 }
 
@@ -268,7 +228,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   nickname: {
     width: 273,
-    color: "rgba(0,0,0,0.6)",
+    color: colors.neutral400,
     textAlign: "center",
     lineHeight: 22,
     marginTop: 4,
@@ -338,113 +298,138 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     lineHeight: 22,
     ...textPresets.fs14_400,
   },
-  chevron: {
-    color: colors.neutral900,
-    fontSize: 28,
-    lineHeight: 28,
-    fontWeight: "300",
-  },
   upgradeButton: {
-    height: 40,
-    borderRadius: 40,
+    minWidth: 120,
+    height: 44,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
   },
   upgradeText: {
-    color: colors.neutral900,
-    lineHeight: 22,
+    color: colors.neutral100,
     ...textPresets.fs14_500,
   },
   tiktokCard: {
-    gap: 12,
+    backgroundColor: colors.neutral50,
+    borderRadius: 20,
     padding: 16,
-    borderRadius: 16,
+    gap: 12,
+    marginTop: 16,
     borderWidth: 0.5,
     borderColor: colors.border10,
-    backgroundColor: colors.neutral100,
   },
   tiktokHeader: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
   },
-  cardLabel: {
+  manageText: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  manageCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: colors.neutral100,
+    borderWidth: 0.5,
+    borderColor: colors.border10,
+    ...shadows.sd1,
+  },
+  manageTitle: {
     color: colors.neutral900,
-    lineHeight: 22,
+    marginTop: 2,
     ...textPresets.fs14_500,
   },
-  connectionText: {
+  manageSubtitle: {
     color: colors.neutral400,
-    lineHeight: 20,
     marginTop: 2,
     ...textPresets.fs12_400,
   },
+  cardLabel: {
+    color: colors.neutral400,
+    ...textPresets.fs12_400,
+  },
+  connectionText: {
+    marginTop: 2,
+    color: colors.neutral400,
+    ...textPresets.fs12_400,
+  },
   input: {
-    minHeight: 44,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: colors.border10,
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     color: colors.neutral900,
-    backgroundColor: colors.neutral50,
+    backgroundColor: colors.neutral100,
     ...textPresets.fs14_400,
   },
   changeButton: {
-    minHeight: 44,
-    borderRadius: 12,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.neutral900,
+    paddingVertical: 14,
   },
   changeButtonText: {
     color: colors.neutral100,
     ...textPresets.fs14_500,
   },
   serverText: {
-    color: colors.neutral300,
-    ...textPresets.fs12_400,
+    color: colors.neutral400,
+    ...textPresets.fs11_400,
   },
   settingsContainer: {
-    gap: 16,
+    marginTop: 16,
+    gap: 12,
   },
   settingsGroupWrap: {
-    gap: 16,
+    gap: 12,
   },
   settingsGroup: {
-    gap: 0,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: colors.neutral100,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border10,
   },
   settingItem: {
-    minHeight: 48,
-    paddingVertical: 12,
+    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.neutral100,
   },
   settingLeft: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 12,
   },
   settingIconBox: {
-    width: 24,
-    height: 24,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.neutral50,
   },
   settingIcon: {
-    color: colors.neutral900,
-    fontSize: 18,
-    fontWeight: "600",
+    width: 18,
+    height: 18,
   },
   settingText: {
-    flex: 1,
     color: colors.neutral900,
-    lineHeight: 22,
-    ...textPresets.fs14_400,
+    ...textPresets.fs14_500,
   },
-  divider: {
-    height: 0.5,
-    backgroundColor: colors.border10,
+  chevron: {
+    color: colors.neutral400,
+    ...textPresets.fs18_500,
   },
 }));

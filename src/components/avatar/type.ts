@@ -1,5 +1,5 @@
-import { IconTypes } from '@assets/icon';
-import { BorderRadius, Colors, Shadows, Spacing } from '@theme/type';
+import { IconsTypes } from "@assets/icons";
+import { Colors } from "@themes/type";
 
 export type AvatarProps = {
   source: string | number | null | undefined;
@@ -9,25 +9,10 @@ export type AvatarProps = {
   size?: number;
   onPress?: () => void;
 
-  icon?: IconTypes;
+  icon?: IconsTypes;
   /**
    * @default 10
    */
   iconSize?: number;
   iconColorTheme?: Colors;
-
-  /**
-   * @default 0
-   */
-  iconContainerPadding?: Spacing;
-
-  /**
-   * @default 99
-   */
-  iconContainerRadius?: BorderRadius | 99;
-
-  /**
-   * @default none
-   */
-  iconContainerShadow?: Shadows;
 };

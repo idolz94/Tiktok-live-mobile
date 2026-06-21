@@ -1,5 +1,5 @@
 import { useLocalSearchParams, router } from "expo-router";
-import { useOrderStore } from "@features/orders/stores/order-store";
+import { readOrders } from "@features/orders/stores/order-store";
 import { ProductTable } from "@features/orders/components/product-table";
 import { Order } from "@app-types/index";
 import { formatMoneyFromK, getOrderTotal } from "@features/orders/utils/order";
@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OrderDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { orders, confirmOrder, closeOrderOverview } = useOrderStore();
+  const orders = readOrders();
   const order: Order | undefined = orders.find((o: Order) => o.id === id);
 
   if (!order) {
@@ -28,7 +28,6 @@ export default function OrderDetail() {
   const total = getOrderTotal(order.products || []);
 
   const handleBack = () => {
-    closeOrderOverview();
     if (router.canGoBack()) {
       router.back();
     }
@@ -55,7 +54,7 @@ export default function OrderDetail() {
           </View>
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={() => confirmOrder(order.id)}
+            onPress={() => {}}
           >
             <Text style={styles.confirmText}>
               {order.status === "confirmed"
