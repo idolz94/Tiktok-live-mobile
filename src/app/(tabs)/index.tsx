@@ -1,5 +1,6 @@
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
+import { useAuth } from "@features/auth/hooks/use-auth";
 import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
@@ -27,11 +28,13 @@ export default function HomeTab() {
   const createdCommentKeysRef = useRef<Set<string>>(new Set());
   const { comments, clearComments, currentLiveSessionId, liveHistory } =
     useTikTokLiveSocketContext();
+  const { user } = useAuth();
 
   const orderManager = useOrderManager({
     comments,
     liveSessionId: currentLiveSessionId,
     onAfterCreateOrder: () => router.back(),
+    hasOrders: user?.hasOrders ?? false,
   });
 
   const handleCreateOrder = async (comment: LiveComment) => {

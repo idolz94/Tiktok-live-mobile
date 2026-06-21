@@ -207,6 +207,18 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           endSessionFromPayload(payload);
         }
         clearResumeUsername();
+
+        // LIVE_ERROR means start succeeded but collector failed later, so cleanup backend collector explicitly.
+        if (type === "LIVE_ERROR") {
+          stopTikTokLiveApi({
+            clientId: clientIdRef.current,
+            username: tiktokUsernameRef.current.replace(/^@/, ""),
+            silent: true,
+          }).catch((error) => {
+            if (__DEV__) console.error("STOP LIVE STREAM AFTER ERROR:", error);
+          });
+        }
+
         isManualCloseRef.current = true;
         abortControllerRef.current?.abort();
         abortControllerRef.current = null;

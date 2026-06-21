@@ -221,27 +221,38 @@ export const TiktokPage = memo(() => {
 
   const onAddChannel = useCallback(
     async (name: string): Promise<boolean> => {
-      const created = await createTikTokChannelApi({
-        tiktokUsername: name,
-        isDefault: false,
-      });
-      const freshChannels = await fetchChannels();
-      const normalizedName = normalizeTikTokUsername(name);
-
-      let newChannel = freshChannels.find(
-        (c) => normalizeTikTokUsername(c.username) === normalizedName,
-      );
-
-      if (!newChannel) {
-        newChannel = {
-          id: created.id,
-          username: normalizeTikTokUsername(created.tiktokUsername),
+      try {
+        const created = await createTikTokChannelApi({
+          tiktokUsername: name,
           isDefault: false,
-        };
-        setLocalChannels((prev) => [...prev, newChannel!]);
-      }
+        });
+        const freshChannels = await fetchChannels();
+        const normalizedName = normalizeTikTokUsername(name);
 
-      return connectSelectedChannel(newChannel);
+        let newChannel = freshChannels.find(
+          (c) => normalizeTikTokUsername(c.username) === normalizedName,
+        );
+
+        if (!newChannel) {
+          newChannel = {
+            id: created.id,
+            username: normalizeTikTokUsername(created.tiktokUsername),
+            isDefault: false,
+          };
+          setLocalChannels((prev) => [...prev, newChannel!]);
+        }
+
+        return connectSelectedChannel(newChannel);
+      } catch (error) {
+        if (__DEV__) {
+          console.error("Add channel error:", error);
+        }
+        Alert.alert(
+          "Lỗi",
+          "Không thể thêm kênh TikTok. Vui lòng thử lại hoặc liên hệ admin.",
+        );
+        return false;
+      }
     },
     [fetchChannels, connectSelectedChannel],
   );

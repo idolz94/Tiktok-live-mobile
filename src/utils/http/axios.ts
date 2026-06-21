@@ -139,6 +139,7 @@ export const apiClient = axios.create({
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
+    "x-app-key": MOBILE_APP_KEY,
     Origin: WEB_URL_ORIGIN,
     Referer: WEB_URL_REFERER,
   },
