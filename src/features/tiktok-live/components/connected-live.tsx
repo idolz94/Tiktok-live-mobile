@@ -138,6 +138,7 @@ export const ConnectedLive = memo(
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     flex: 1,
+    paddingTop: 12,
     paddingBottom: 48 * 2 - 16,
   },
   listContent: {

@@ -9,10 +9,13 @@ import {
 } from "@features/tiktok-live/utils/comment";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
+import { refreshAccessToken } from "@utils/http/auth-session";
+import { isAuthResumeInFlight } from "@features/auth/hooks/use-auth";
 import { useTikTokComments } from "./use-tik-tok-comments";
 import { useTikTokLiveSession } from "./use-tik-tok-live-session";
 import {
   buildLiveStreamEventsUrl,
+  getLiveSessionStatusApi,
   stopTikTokLiveApi,
   subscribeTikTokLiveApi,
 } from "../service/sse-api";
@@ -72,6 +75,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const isManualCloseRef = useRef(false);
   const isAuthFailedRef = useRef(false);
   const isConnectedRef = useRef(false);
+  const isResumingRef = useRef(false);
   const onOrderShippingUpdatedRef = useRef(options.onOrderShippingUpdated);
 
   const pendingCommentsRef = useRef<any[]>([]);
@@ -122,6 +126,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     updateSessionStatusFromPayload,
     addCommentToCurrentSession,
     batchAddCommentsToSession,
+    restoreCurrentSession,
+    clearCurrentSession,
   } = useTikTokLiveSession({ hasHistory: options.hasHistory });
 
   const handleServerEvent = useCallback(
@@ -444,7 +450,13 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         return false;
       }
     },
-    [finalizeCurrentSessionLocally, setComments, connectSse],
+    [
+      clearComments,
+      connectSse,
+      currentLiveSession,
+      finalizeCurrentSessionLocally,
+      restoreCurrentSession,
+    ],
   );
 
   const stopLiveSession = useCallback(async () => {
@@ -488,6 +500,66 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
     connectSse();
   }, [connectSse, finalizeCurrentSessionLocally]);
+
+  const restoreOrClearSessionOnForeground = useCallback(async () => {
+    if (isManualCloseRef.current || isAuthResumeInFlight()) return;
+
+    const username = tiktokUsernameRef.current.replace(/^@/, "");
+    if (!username) {
+      clearCurrentSession();
+      clearResumeUsername();
+      clearComments();
+      return;
+    }
+
+    const resolveLiveSessionStatus = async () => {
+      try {
+        return await getLiveSessionStatusApi({
+          clientId: clientIdRef.current,
+          username,
+        });
+      } catch (error) {
+        const responseStatus =
+          typeof error === "object" && error && "response" in error
+            ? Number(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (error as any).response?.status || 0,
+              )
+            : 0;
+
+        if (responseStatus === 401) {
+          await refreshAccessToken();
+          return getLiveSessionStatusApi({
+            clientId: clientIdRef.current,
+            username,
+          });
+        }
+
+        throw error;
+      }
+    };
+
+    try {
+      const status = await resolveLiveSessionStatus();
+      const active = Boolean((status as { active?: boolean })?.active);
+
+      if (!active) {
+        clearCurrentSession();
+        clearResumeUsername();
+        clearComments();
+        setIsConnected(false);
+        setIsConnecting(false);
+        setStatus("Phiên live đã kết thúc");
+        return;
+      }
+
+      if (currentLiveSession) {
+        restoreCurrentSession(currentLiveSession);
+      }
+    } catch (error) {
+      if (__DEV__) console.error("LIVE SESSION STATUS ERROR:", error);
+    }
+  }, [clearComments, clearCurrentSession, currentLiveSession, restoreCurrentSession]);
 
   const disconnect = useCallback(async () => {
     finalizeCurrentSessionLocally("manual_disconnect");
@@ -538,18 +610,38 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
     }, 200);
 
+    // ---start: foreground resume
+    // On app active: check backend live status → reconnect SSE if still active,
+    // clear local state if session ended. Token refresh only on 401 (lazy).
     const appStateSub = AppState.addEventListener("change", (nextState) => {
       if (nextState === "active" && !isManualCloseRef.current) {
-        setTimeout(() => {
+        setTimeout(async () => {
           if (isManualCloseRef.current) return;
+          if (isResumingRef.current || isAuthResumeInFlight()) return;
+
+          isResumingRef.current = true;
           try {
-            abortControllerRef.current?.abort();
-          } catch {}
-          abortControllerRef.current = null;
-          connectSseRef.current();
+            const token = await getAuthToken();
+            if (!token) return;
+
+            if (isManualCloseRef.current || isAuthResumeInFlight()) return;
+
+            await restoreOrClearSessionOnForeground();
+
+            if (isManualCloseRef.current || isAuthResumeInFlight()) return;
+
+            try {
+              abortControllerRef.current?.abort();
+            } catch {}
+            abortControllerRef.current = null;
+            connectSseRef.current();
+          } finally {
+            isResumingRef.current = false;
+          }
         }, 500);
       }
     });
+    // ---end: foreground resume---
 
     return () => {
       isManualCloseRef.current = true;

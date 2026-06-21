@@ -2,6 +2,7 @@ import { DEFAULT_WS_URL } from "@constants/config";
 import {
   buildApiUrl,
   getAuthToken,
+  getRequest,
   postRequest,
 } from "@utils/http/request-sse";
 
@@ -70,6 +71,22 @@ export async function stopTikTokLiveApi(
       ...(silent ? { silent: true } : {}),
     },
     { timeout: 60_000 },
+  );
+}
+
+export async function getLiveSessionStatusApi({
+  clientId,
+  username,
+}: {
+  clientId?: string;
+  username: string;
+}) {
+  return getRequest<{ active?: boolean; status?: string; data?: unknown }>(
+    "/live-stream/status",
+    {
+      clientId,
+      username: removeAt(username),
+    },
   );
 }
 

@@ -28,7 +28,7 @@ export default function HomeTab() {
   const orderManager = useOrderManager({
     comments,
     liveSessionId: currentLiveSessionId,
-    onAfterCreateOrder: () => router.back(),
+    onAfterCreateOrder: () => setActiveIndex(1),
     hasOrders: user?.hasOrders ?? false,
   });
 
