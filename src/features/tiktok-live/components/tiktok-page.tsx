@@ -336,7 +336,7 @@ export const TiktokPage = memo(() => {
   );
 });
 
-const styles = createStyles(({ shadows }) => ({
+const styles = createStyles(({ colors, shadows }) => ({
   container: {
     flex: 1,
   },

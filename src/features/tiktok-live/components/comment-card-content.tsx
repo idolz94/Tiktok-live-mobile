@@ -48,6 +48,7 @@ export const CommentCardContent = memo(
           title={isCreatedOrder ? "In lại" : "Tạo đơn"}
           disabled={isCreatedOrder ? !onPrintOrder : isCreatingOrder}
           onPress={isCreatedOrder ? onPrintOrder : onCreateOrder}
+          loading={isCreatingOrder}
           loadingType="center"
           containerStyle={styles.btnCreateOrder}
           txtBtnStyle={styles.txtCreateOrder}

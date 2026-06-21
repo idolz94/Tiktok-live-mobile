@@ -1,23 +1,12 @@
 import { OrderFilter } from "@app-types/index";
-import { Lottie, LottieTypes } from "@assets/lotties";
+import { Lottie } from "@assets/lotties";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
-import { OrderManager } from "@features/orders/hooks/use-order-manager";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-
-type OrderStatCardData = {
-  filterKey: OrderFilter;
-  lottie: LottieTypes;
-  value: number;
-  label: string;
-};
-
-export type OrdersProps = {
-  orderManager: OrderManager;
-};
+import { OrdersProps, OrderStatCardData } from "../types/order";
 
 const OrderStatCard = memo(
   ({
@@ -26,6 +15,7 @@ const OrderStatCard = memo(
     label,
     filterKey,
     isActive,
+    bgColor,
     onPressCard,
   }: OrderStatCardData & {
     isActive: boolean;
@@ -37,7 +27,13 @@ const OrderStatCard = memo(
 
     return (
       <Pressable
-        style={[styles.infoCard, isActive && styles.infoCardActive]}
+        style={[
+          styles.infoCard,
+          {
+            backgroundColor: bgColor,
+            borderColor: isActive ? "red" : "transparent",
+          },
+        ]}
         onPress={handlePress}
       >
         <Lottie name={lottie} style={styles.infoCardIcon} focused={isActive} />
@@ -82,27 +78,31 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
         lottie: "chart",
         value: confirmedOrders,
         label: "Đã chốt",
+        bgColor: colors.success200,
       },
       {
         filterKey: "paid",
         lottie: "customer",
         value: paidOrders,
         label: "Đã cọc",
+        bgColor: colors.info200,
       },
       {
         filterKey: "unpaid",
         lottie: "truck",
         value: unpaidOrders,
         label: "Chưa cọc",
+        bgColor: colors.pink200,
       },
       {
         filterKey: "draft",
         lottie: "time",
         value: draftOrders,
         label: "Đơn nháp",
+        bgColor: colors.neutral100,
       },
     ],
-    [confirmedOrders, paidOrders, unpaidOrders, draftOrders],
+    [confirmedOrders, paidOrders, unpaidOrders, draftOrders, colors],
   );
 
   const handlePressCard = useCallback(
@@ -152,7 +152,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
   );
 });
 
-const styles = createStyles(({ colors, textPresets }) => ({
+const styles = createStyles(({ colors, textPresets, shadows }) => ({
   container: {
     paddingTop: 16,
     paddingBottom: 48 + 8,
@@ -172,7 +172,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   infoCard: {
     flex: 1,
-    backgroundColor: colors.neutral100,
+    // backgroundColor: colors.neutral100,
     borderRadius: 12,
     padding: 16,
     columnGap: 12,
@@ -181,6 +181,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderWidth: HairlineWidth * 3,
     borderColor: colors.border10,
     overflow: "hidden",
+    ...shadows.sd1,
   },
   infoCardActive: {
     backgroundColor: colors.neutral50,

@@ -1,22 +1,17 @@
-import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
-import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useAuth } from "@features/auth/hooks/use-auth";
+import { useOrderManager } from "@features/orders/hooks/use-order-manager";
+import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Home } from "@features/tiktok-live/components/home";
-import { TopSegmentTabs } from "@features/tiktok-live/components/top-segment-tabs";
-import { Screen } from "@components/screen";
-import { LinearGradient } from "@components/linear-gradient";
-import PagerView from "react-native-pager-view";
-import { createStyles } from "@utils/createStyles";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "@components/image";
-import { images } from "@assets/images";
-import { HomeHeader } from "@components/home/header";
-import { TiktokPage } from "@features/tiktok-live/components/tiktok-page";
+import { StyleSheet, Text, View } from "react-native";
 import { LiveComment } from "@app-types/index";
+import { HomeHeader } from "@components/home/header";
+import { LinearGradient } from "@components/linear-gradient";
+import { Screen } from "@components/screen";
+import { TiktokPage } from "@features/tiktok-live/components/tiktok-page";
+import { createStyles } from "@utils/createStyles";
+import PagerView from "react-native-pager-view";
 
 export type TopTab = "connect" | "history";
 
@@ -121,7 +116,7 @@ export default function HomeTab() {
   );
 }
 
-const styles = createStyles(() => ({
+const styles = createStyles(({ colors }) => ({
   pager: {
     flex: 1,
   },
