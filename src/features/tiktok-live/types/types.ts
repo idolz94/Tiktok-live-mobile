@@ -1,4 +1,5 @@
 import type { LiveComment, OrderWithTikTok } from "@app-types/index";
+import { OrderManager } from "@features/orders/hooks/use-order-manager";
 
 export type UserJoinedEvent = {
   shopId?: string;
@@ -26,4 +27,18 @@ export type LiveHistoryItem = {
   orders?: OrderWithTikTok[];
   createdAt?: string;
   updatedAt?: string;
+};
+
+export interface CommentItemProps {
+  item: LiveComment;
+  onCreateOrder: (
+    item: LiveComment,
+  ) => Promise<{ success: boolean; orderId: string }>;
+  isCommentOrderCreated: (item: LiveComment) => boolean;
+  disabled?: boolean;
+}
+
+export type ConnectedLiveProps = {
+  orderManager: OrderManager;
+  onNavigateToOrders?: () => void;
 };
