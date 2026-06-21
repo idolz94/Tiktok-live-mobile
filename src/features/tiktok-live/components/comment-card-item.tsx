@@ -1,4 +1,3 @@
-import { LiveComment } from "@app-types/index";
 import { Separator } from "@components/separator";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useEffect, useState, type ReactNode } from "react";
@@ -139,7 +138,7 @@ const UserJoinedRow = memo(({ username }: { username: string }) => (
 ));
 
 export const CommentCardItem = memo(
-  ({ item, onCreateOrder, isCommentOrderCreated }: CommentItemProps) => {
+  ({ item, onCreateOrder, onPrintOrder, isCommentOrderCreated }: CommentItemProps) => {
     const [localOrderId, setLocalOrderId] = useState("");
     const [isCreatingOrder, setIsCreatingOrder] = useState(false);
     const isCreatedOrder = Boolean(
@@ -166,29 +165,33 @@ export const CommentCardItem = memo(
 
     const hasPriorityBorder = !isOwner && isPriorityComment(item);
 
-    const handleCreateOrder = async (
-      commentItem: LiveComment,
-    ): Promise<{ success: boolean; orderId: string }> => {
-      if (isCreatingOrder || isCreatedOrder)
-        return { success: false, orderId: "" };
+    // START create/print order UI flow
+    const orderId = localOrderId || item.orderId || "";
+
+    const createOrderFromItem = async () => {
+      if (isCreatingOrder || isCreatedOrder) return;
+
       try {
         setIsCreatingOrder(true);
-        const result = await onCreateOrder(commentItem);
+        const result = await onCreateOrder(item);
         if (result.success) setLocalOrderId(result.orderId);
-        return result;
-      } catch {
-        return { success: false, orderId: "" };
       } finally {
         setIsCreatingOrder(false);
       }
     };
 
+    const printOrderFromItem = () => {
+      onPrintOrder?.(item, orderId);
+    };
+    // END create/print order UI flow
+
     const content = (
       <CommentCardContent
         item={item}
-        onCreateOrder={handleCreateOrder}
-        isCommentOrderCreated={isCommentOrderCreated}
-        disabled={isCreatingOrder}
+        isCreatedOrder={isCreatedOrder}
+        isCreatingOrder={isCreatingOrder}
+        onCreateOrder={createOrderFromItem}
+        onPrintOrder={onPrintOrder ? printOrderFromItem : undefined}
       />
     );
 

@@ -34,11 +34,12 @@ export interface CommentItemProps {
   onCreateOrder: (
     item: LiveComment,
   ) => Promise<{ success: boolean; orderId: string }>;
+  onPrintOrder?: (item: LiveComment, orderId: string) => void;
   isCommentOrderCreated: (item: LiveComment) => boolean;
-  disabled?: boolean;
 }
 
 export type ConnectedLiveProps = {
   orderManager: OrderManager;
   onNavigateToOrders?: () => void;
+  onPrintOrder?: (item: LiveComment, orderId: string) => void;
 };

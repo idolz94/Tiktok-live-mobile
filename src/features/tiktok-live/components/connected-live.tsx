@@ -10,12 +10,14 @@ import { ConnectedLiveProps } from "../types/types";
 import { CommentCardItem } from "./comment-card-item";
 
 export const ConnectedLive = memo(
-  ({ orderManager, onNavigateToOrders }: ConnectedLiveProps) => {
+  ({ orderManager, onNavigateToOrders, onPrintOrder }: ConnectedLiveProps) => {
     const { comments, isConnected } = useTikTokLiveSocketContext();
 
     const listRef = useRef<ComponentRef<typeof FlashList<LiveComment>>>(null);
     const createdCommentKeysRef = useRef<Set<string>>(new Set());
-    const rafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
+    const rafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(
+      null,
+    );
 
     useEffect(() => {
       if (comments.length === 0) return;
@@ -66,7 +68,31 @@ export const ConnectedLive = memo(
           return { success: false, orderId: "" };
         }
       },
-      [orderManager],
+      [onNavigateToOrders, orderManager],
+    );
+
+    const handlePrintOrder = useCallback(
+      (comment: LiveComment, orderId: string) => {
+        const order = orderManager.orders.find(
+          (item) =>
+            item.id === orderId ||
+            item.id === comment.orderId ||
+            item.commentId === comment.id,
+        );
+
+        if (!order) {
+          Alert.alert(
+            "Không tìm thấy đơn",
+            "Vui lòng tải lại danh sách đơn hàng.",
+          );
+          return;
+        }
+
+        // Luồng mobile hiện chỉ map comment -> order; native print sẽ được nối ở callback ngoài khi có print module.
+        onPrintOrder?.(comment, order.id) ??
+          Alert.alert("Đơn đã tạo", "Tính năng in lại sẽ được bổ sung sau.");
+      },
+      [onPrintOrder, orderManager.orders],
     );
 
     const keyExtractor = useCallback((item: LiveComment) => item.id, []);
@@ -76,10 +102,11 @@ export const ConnectedLive = memo(
         <CommentCardItem
           item={item}
           onCreateOrder={handleCreateOrder}
+          onPrintOrder={handlePrintOrder}
           isCommentOrderCreated={isCommentOrderCreated}
         />
       ),
-      [handleCreateOrder, isCommentOrderCreated],
+      [handleCreateOrder, handlePrintOrder, isCommentOrderCreated],
     );
 
     if (isConnected && comments.length === 0) {

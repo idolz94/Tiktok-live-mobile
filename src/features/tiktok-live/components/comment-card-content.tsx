@@ -1,17 +1,27 @@
-import React, { memo, useCallback, useMemo } from "react";
-import { View, Text } from "react-native";
-import { CommentItemProps } from "../types/types";
-import { renderTikTokEmojiTokens } from "./tiktok-emoji-text";
+import { LiveComment } from "@app-types/index";
 import { Avatar } from "@components/avatar";
 import { Button } from "@components/button";
 import { createStyles } from "@utils/createStyles";
+import { memo, useMemo } from "react";
+import { Text, View } from "react-native";
+import { renderTikTokEmojiTokens } from "./tiktok-emoji-text";
+
+type CommentCardContentProps = {
+  item: LiveComment;
+  isCreatedOrder: boolean;
+  isCreatingOrder: boolean;
+  onCreateOrder: () => void;
+  onPrintOrder?: () => void;
+};
 
 export const CommentCardContent = memo(
-  ({ item, onCreateOrder, disabled }: CommentItemProps) => {
-    const handleOnCreateOrder = useCallback(async () => {
-      await onCreateOrder(item);
-    }, [onCreateOrder, item]);
-
+  ({
+    item,
+    isCreatedOrder,
+    isCreatingOrder,
+    onCreateOrder,
+    onPrintOrder,
+  }: CommentCardContentProps) => {
     const processedText = useMemo(
       () => renderTikTokEmojiTokens(item.comment),
       [item.comment],
@@ -35,9 +45,9 @@ export const CommentCardContent = memo(
           </View>
         </View>
         <Button
-          title="Tạo đơn"
-          disabled={disabled}
-          onPress={handleOnCreateOrder}
+          title={isCreatedOrder ? "In lại" : "Tạo đơn"}
+          disabled={isCreatedOrder ? !onPrintOrder : isCreatingOrder}
+          onPress={isCreatedOrder ? onPrintOrder : onCreateOrder}
           loadingType="center"
           containerStyle={styles.btnCreateOrder}
           txtBtnStyle={styles.txtCreateOrder}
