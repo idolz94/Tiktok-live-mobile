@@ -1,11 +1,23 @@
-export type Setting = { icon: string; label: string };
+import { router } from "expo-router";
+
+export type Setting = {
+  icon: string;
+  label: string;
+  onPress?: () => void;
+};
 
 export const AVATAR_URL =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
 
 export const settingGroups: Setting[][] = [
   [
-    { icon: "♪", label: "Quản lý kênh Tiktok" },
+    {
+      icon: "♪",
+      label: "Quản lý kênh Tiktok",
+      onPress: () => {
+        router.navigate("/manage-titktok-channel");
+      },
+    },
     { icon: "f", label: "Quản lý kênh Facebook" },
   ],
   [
@@ -13,7 +25,10 @@ export const settingGroups: Setting[][] = [
     { icon: "⌘", label: "Cài đặt máy in" },
     { icon: "⇄", label: "Cấu hình vận chuyển" },
   ],
-  [{ icon: "文", label: "Ngôn ngữ" }, { icon: "?", label: "Hỗ trợ" }],
+  [
+    { icon: "文", label: "Ngôn ngữ" },
+    { icon: "?", label: "Hỗ trợ" },
+  ],
 ];
 
 export const SETTINGS_COPY = {

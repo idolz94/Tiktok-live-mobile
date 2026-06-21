@@ -77,7 +77,7 @@ export default function HomeTab() {
         initialPage={0}
         onPageSelected={(e) => setActiveIndex(e.nativeEvent.position)}
       >
-        <TiktokPage key="tiktok" />
+        <TiktokPage key="tiktok" orderManager={orderManager} />
         <View style={styles.page} key="facebook">
           <Text>Facebook coming soon</Text>
         </View>

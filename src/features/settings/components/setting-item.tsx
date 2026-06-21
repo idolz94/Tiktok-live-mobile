@@ -1,15 +1,14 @@
 import { createStyles } from "@utils/createStyles";
 import { Text, TouchableOpacity, View } from "react-native";
+import { Setting } from "../constants";
 
-type SettingItemProps = {
-  icon: string;
-  label: string;
-  onPress?: () => void;
-};
-
-export function SettingItem({ icon, label, onPress }: SettingItemProps) {
+export function SettingItem({ icon, label, onPress }: Setting) {
   return (
-    <TouchableOpacity activeOpacity={0.7} style={styles.settingItem} onPress={onPress}>
+    <TouchableOpacity
+      activeOpacity={0.7}
+      style={styles.settingItem}
+      onPress={onPress}
+    >
       <View style={styles.settingLeft}>
         <View style={styles.settingIconBox}>
           <Text style={styles.settingIcon}>{icon}</Text>

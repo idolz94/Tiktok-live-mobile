@@ -1,3 +1,4 @@
+import { ShopTikTokChannel } from "@app-types/database";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, View } from "react-native";
@@ -16,7 +17,7 @@ import {
   createTikTokChannelApi,
   getTikTokChannelsApi,
 } from "@features/auth/services/api";
-import { useOrderManager } from "@features/orders/hooks/use-order-manager";
+import { OrderManager } from "@features/orders/hooks/use-order-manager";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { AccountConnected } from "./account-connected";
@@ -36,7 +37,19 @@ const SUB_TABS = ["Live", "Đơn đã tạo"];
 const ANIMATION_DURATION = 250;
 const INITIAL_OFFSET = 48;
 
-export const TiktokPage = memo(() => {
+type TiktokPageProps = {
+  orderManager: OrderManager;
+};
+
+function mapChannels(channels: ShopTikTokChannel[] | undefined) {
+  return (channels ?? []).map((c) => ({
+    id: c.id,
+    username: normalizeTikTokUsername(c.tiktokUsername),
+    isDefault: c.isDefault,
+  }));
+}
+
+export const TiktokPage = memo(({ orderManager }: TiktokPageProps) => {
   const pagerRef = useRef<PagerView>(null);
 
   const translateY = useSharedValue(INITIAL_OFFSET);
@@ -48,34 +61,26 @@ export const TiktokPage = memo(() => {
     stopLiveSession,
     liveError,
     clearLiveError,
-    comments,
-    currentLiveSessionId,
   } = useTikTokLiveSocketContext();
 
   const { user } = useAuth();
-
-  const orderManager = useOrderManager({
-    comments,
-    liveSessionId: currentLiveSessionId,
-    hasOrders: user?.hasOrders ?? false,
-  });
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
 
   // ---start: localChannels seeds from user.tiktokChannels, then stays authoritative after any fetch/add---
   const [localChannels, setLocalChannels] = useState<TikTokLiveChannel[]>(() =>
-    (user?.tiktokChannels ?? []).map((c) => ({
-      id: c.id,
-      username: normalizeTikTokUsername(c.tiktokUsername),
-      isDefault: c.isDefault,
-    })),
+    mapChannels(user?.tiktokChannels),
   );
-
   const channels = localChannels;
   // ---end: localChannels---
 
+  useEffect(() => {
+    setLocalChannels(mapChannels(user?.tiktokChannels));
+  }, [user?.tiktokChannels]);
+
   const alertShownRef = useRef(false);
+
   // ---start: requestIdRef — prevent stale fetchChannels overwriting newer state---
   const fetchRequestIdRef = useRef(0);
   // ---end: requestIdRef---

@@ -65,8 +65,9 @@ export const getMeBootstrapApi = async (): Promise<MeBootstrapResponse> => {
 
 export const getTikTokChannelsApi = async (): Promise<ShopTikTokChannel[]> => {
   const response = await apiClient.get("/me/tiktok-channels");
+  const raw = response.data?.data ?? response.data;
 
-  return normalizeTikTokChannels(response.data?.data ?? response.data);
+  return normalizeTikTokChannels(raw?.channels ?? raw?.items ?? raw?.data ?? raw);
 };
 
 export const createTikTokChannelApi = async (
@@ -94,7 +95,8 @@ export const updateTikTokChannelApi = async (
     payload,
   );
 
-  const channel = normalizeTikTokChannel(response.data?.data ?? response.data);
+  const raw = response.data?.data ?? response.data;
+  const channel = normalizeTikTokChannel(raw?.channel ?? raw?.data ?? raw);
 
   if (!channel) {
     throw new Error("Update dữ liệu kênh TikTok không thành công!!");

@@ -20,7 +20,12 @@ export function SettingsSection({
         <View key={groupIndex} style={styles.settingsGroupWrap}>
           <View style={styles.settingsGroup}>
             {group.map((item) => (
-              <SettingItem key={item.label} icon={item.icon} label={item.label} />
+              <SettingItem
+                key={item.label}
+                icon={item.icon}
+                label={item.label}
+                onPress={item.onPress}
+              />
             ))}
           </View>
           <View style={styles.divider} />
