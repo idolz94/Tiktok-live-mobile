@@ -9,6 +9,8 @@ export type Setting = {
 export const AVATAR_URL =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
 
+const openProductInfoSetup = () => router.push("/product-info-setup" as never);
+
 export const settingGroups: Setting[][] = [
   [
     {
@@ -22,8 +24,13 @@ export const settingGroups: Setting[][] = [
   ],
   [
     { icon: "⚙", label: "Cài đặt chung" },
-    { icon: "⌘", label: "Cài đặt máy in" },
-    { icon: "⇄", label: "Cấu hình vận chuyển" },
+    {
+      icon: "⌘",
+      label: "Cài đặt thông tin SP trước Live",
+      onPress: openProductInfoSetup,
+    },
+    { icon: "⇄", label: "Cài đặt máy in" },
+    { icon: "↕", label: "Cấu hình vận chuyển" },
   ],
   [
     { icon: "文", label: "Ngôn ngữ" },

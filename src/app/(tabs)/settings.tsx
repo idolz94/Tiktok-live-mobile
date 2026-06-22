@@ -15,7 +15,11 @@ const settingGroups: { icon: ImageSourcePropType; label: string; onPress?: () =>
   ],
   [
     { icon: icons.settings, label: "Cài đặt chung" },
-    { icon: icons.clipboard_check, label: "Cài đặt thông tin SP trước Live" },
+    {
+      icon: icons.clipboard_check,
+      label: "Cài đặt thông tin SP trước Live",
+      onPress: () => router.push("/product-info-setup"),
+    },
     { icon: icons.print, label: "Cài đặt máy in" },
     { icon: icons.truck, label: "Cấu hình vận chuyển" },
   ],
@@ -30,7 +34,6 @@ export default function SettingsTab() {
 
   const username = user?.fullName || user?.username || "User";
   const accountName = user?.username || user?.phone || "Lumi Live";
-  const manageTikTokChannels = () => router.push("/(sheets)/tiktok-channels");
 
   return (
     <View style={styles.screen}>
