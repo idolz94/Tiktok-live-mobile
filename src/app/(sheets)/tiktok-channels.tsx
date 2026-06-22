@@ -23,6 +23,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type EditModalState = { visible: true; channel: TikTokLiveChannel } | { visible: false };
 
@@ -133,16 +134,20 @@ export default function TikTokChannelsScreen() {
     ]);
   }, [editModal, syncChannels, closeEdit]);
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    }
+  };
 
   return (
-    <View style={styles.screen}>
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Text style={[styles.backArrow, { color: colors.neutral900 }]}>←</Text>
+    <SafeAreaView style={styles.screen} edges={["top", "left", "right", "bottom"]}>
+      <View style={styles.header}>
+        <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
+          <Text style={styles.backIcon}>‹</Text>
         </Pressable>
-        <Text style={styles.title}>Quản lý kênh Tiktok</Text>
-        <View style={styles.topBarSpacer} />
+        <Text style={styles.title}>Quản lý kênh TikTok</Text>
+        <View style={styles.headerPlaceholder} />
       </View>
 
       {loading ? (
@@ -216,7 +221,7 @@ export default function TikTokChannelsScreen() {
         </View>
       ) : null}
 
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -251,33 +256,41 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flex: 1,
     backgroundColor: colors.white,
   },
-  topBar: {
+  header: {
+    minHeight: 72,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
+    justifyContent: "space-between",
+    backgroundColor: colors.white,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.neutral50,
     alignItems: "center",
     justifyContent: "center",
   },
-  backArrow: {
-    fontSize: 20,
-    fontWeight: "600",
+  backIcon: {
+    color: colors.neutral900,
+    fontSize: 34,
+    lineHeight: 34,
+    marginTop: -4,
   },
   title: {
     flex: 1,
-    textAlign: "center",
+    marginHorizontal: 12,
     color: colors.neutral900,
+    textAlign: "center",
     ...textPresets.fs18_500,
   },
-  topBarSpacer: {
-    width: 40,
+  headerPlaceholder: {
+    width: 44,
+    height: 44,
+    opacity: 0,
   },
   loadingWrap: {
     flex: 1,

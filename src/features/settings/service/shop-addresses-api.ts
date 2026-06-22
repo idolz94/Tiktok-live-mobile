@@ -30,8 +30,12 @@ export type ShopAddressPayload = {
   isDefault?: boolean;
 };
 
-function unwrapAddress(data: any): ShopAddress {
-  return (data?.address ?? data?.data?.address ?? data) as ShopAddress;
+type ShopAddressResponse = { address: ShopAddress } | { data: { address: ShopAddress } };
+
+function unwrapAddress(data: ShopAddressResponse): ShopAddress {
+  if ("data" in data) return data?.data?.address;
+
+  return data?.address;
 }
 
 export async function listShopAddressesApi() {
@@ -43,7 +47,7 @@ export async function listShopAddressesApi() {
 }
 
 export async function createShopAddressApi(payload: ShopAddressPayload) {
-  const data = await postRequest<any>("/me/shop-addresses", payload);
+  const data = await postRequest<ShopAddressResponse>("/me/shop-addresses", payload);
 
   return unwrapAddress(data);
 }
@@ -52,7 +56,7 @@ export async function updateShopAddressApi(
   addressId: string,
   payload: ShopAddressPayload,
 ) {
-  const data = await patchRequest<any>(`/me/shop-addresses/${addressId}`, payload);
+  const data = await patchRequest<ShopAddressResponse>(`/me/shop-addresses/${addressId}`, payload);
 
   return unwrapAddress(data);
 }
