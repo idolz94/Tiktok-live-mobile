@@ -1,5 +1,6 @@
 export const colors = {
   neutral900: "#000000",
+  neutral500: "#2B2B2B",
   neutral400: "#484848",
   neutral300: "#787878",
   neutral100: "#ffffff",
@@ -22,6 +23,7 @@ export const colors = {
 
   pinkLight: "rgba(255, 239, 228, 1)",
   pink200: "#FFE8E8",
+  pink50: "#FFEFE4",
 
   success: "rgba(44, 168, 123, 1)",
   successDark: "rgba(217, 255, 238, 1)",
