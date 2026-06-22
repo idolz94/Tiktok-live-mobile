@@ -1,23 +1,13 @@
 import { OrderFilter } from "@app-types/index";
-import { Lottie, LottieTypes } from "@assets/lotties";
+import { Lottie } from "@assets/lotties";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
-import { OrderManager } from "@features/orders/hooks/use-order-manager";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-
-type OrderStatCardData = {
-  filterKey: OrderFilter;
-  lottie: LottieTypes;
-  value: number;
-  label: string;
-};
-
-export type OrdersProps = {
-  orderManager: OrderManager;
-};
+import { OrdersProps, OrderStatCardData } from "../types/order";
+import { ListOrders } from "./list-orders";
 
 const OrderStatCard = memo(
   ({
@@ -26,18 +16,27 @@ const OrderStatCard = memo(
     label,
     filterKey,
     isActive,
+    bgColor,
     onPressCard,
   }: OrderStatCardData & {
     isActive: boolean;
     onPressCard: (filterKey: OrderFilter) => void;
   }) => {
+    const { colors } = useThemes();
     const handlePress = useCallback(() => {
       onPressCard(filterKey);
     }, [onPressCard, filterKey]);
 
     return (
       <Pressable
-        style={[styles.infoCard, isActive && styles.infoCardActive]}
+        style={[
+          styles.infoCard,
+          {
+            backgroundColor: bgColor,
+            borderColor: isActive ? colors.primary : "transparent",
+            borderWidth: HairlineWidth * 2,
+          },
+        ]}
         onPress={handlePress}
       >
         <Lottie name={lottie} style={styles.infoCardIcon} focused={isActive} />
@@ -49,10 +48,6 @@ const OrderStatCard = memo(
     );
   },
 );
-
-const OrdersSectionHeader = memo(() => (
-  <Text style={styles.txtCurrentLive}>Phiên live hiện tại</Text>
-));
 
 export const Orders = memo(({ orderManager }: OrdersProps) => {
   const { colors } = useThemes();
@@ -82,24 +77,28 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
         lottie: "chart",
         value: confirmedOrders,
         label: "Đã chốt",
+        bgColor: colors.successPastel,
       },
       {
         filterKey: "paid",
         lottie: "customer",
         value: paidOrders,
         label: "Đã cọc",
+        bgColor: colors.info200,
       },
       {
         filterKey: "unpaid",
         lottie: "truck",
         value: unpaidOrders,
         label: "Chưa cọc",
+        bgColor: colors.pink200,
       },
       {
         filterKey: "draft",
         lottie: "time",
         value: draftOrders,
         label: "Đơn nháp",
+        bgColor: colors.surfaceGray,
       },
     ],
     [confirmedOrders, paidOrders, unpaidOrders, draftOrders],
@@ -126,7 +125,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
 
   return (
     <ScrollView style={styles.container}>
-      <OrdersSectionHeader />
+      <Text style={styles.txtCurrentLive}>Phiên live hiện tại</Text>
       <View style={styles.grid}>
         {Array.from({ length: Math.ceil(cards.length / 2) }, (_, row) => (
           <View key={row} style={styles.columnWrapper}>
@@ -148,6 +147,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
           <Text>{activeFilterLabel}</Text>
         </Pressable>
       </View>
+      <ListOrders orders={orders} />
     </ScrollView>
   );
 });
@@ -156,11 +156,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     paddingTop: 16,
     paddingBottom: 48 + 8,
-    paddingHorizontal: 16,
   },
   grid: {
     rowGap: 8,
     marginTop: 8,
+    paddingHorizontal: 16,
   },
   columnWrapper: {
     flexDirection: "row",
@@ -169,6 +169,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   txtCurrentLive: {
     color: colors.neutral900,
     ...textPresets.fs20_600,
+    paddingHorizontal: 16,
   },
   infoCard: {
     flex: 1,
@@ -201,7 +202,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     ...textPresets.fs12_400,
   },
   footerRow: {
-    paddingVertical: 16,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
