@@ -10,9 +10,10 @@ import { Alert, Pressable, Text, TextInput, View } from "react-native";
 type Props = {
   title: string;
   tiktokUsername?: string;
-  usedUsernames: string[];
+  usedUsernames: Set<string>;
   onClose: () => void;
   onSave: (nextUsername: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
 };
 
 // START EditChannel — bottom sheet form for editing TikTok channel username
@@ -22,10 +23,12 @@ export const EditChannel = ({
   usedUsernames,
   onClose,
   onSave,
+  onDelete,
 }: Props) => {
   const { colors } = useThemes();
   const [name, setName] = useState(tiktokUsername);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   const currentNormalized = useMemo(
@@ -41,11 +44,8 @@ export const EditChannel = ({
       return;
     }
 
-    const hasDuplicate = usedUsernames.some(
-      (item) =>
-        normalizeTikTokUsername(item) === nextUsername &&
-        normalizeTikTokUsername(item) !== currentNormalized,
-    );
+    const hasDuplicate =
+      nextUsername !== currentNormalized && usedUsernames.has(nextUsername);
 
     if (hasDuplicate) {
       setError("Kênh TikTok này đã tồn tại");
@@ -70,6 +70,32 @@ export const EditChannel = ({
       setSaving(false);
     }
   }, [currentNormalized, name, onClose, onSave, usedUsernames]);
+
+  const onConfirmDelete = useCallback(() => {
+    if (!onDelete || deleting || saving) return;
+
+    Alert.alert("Xoá kênh", `Xoá kênh ${currentNormalized}?`, [
+      { text: "Huỷ", style: "cancel" },
+      {
+        text: "Xoá",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setDeleting(true);
+            await onDelete();
+            onClose();
+          } catch (err) {
+            Alert.alert(
+              "Xoá thất bại",
+              err instanceof Error ? err.message : "Không thể xoá kênh",
+            );
+          } finally {
+            setDeleting(false);
+          }
+        },
+      },
+    ]);
+  }, [currentNormalized, deleting, onClose, onDelete, saving]);
 
   return (
     <View style={styles.container}>
@@ -105,14 +131,26 @@ export const EditChannel = ({
         </View>
       </View>
 
-      <Button
-        title="Lưu thay đổi"
-        loading={saving}
-        onPress={onSubmit}
-        disabled={!name}
-        gradientType="gra_primary"
-        containerStyle={styles.btnSave}
-      />
+      <View style={styles.actions}>
+        {onDelete ? (
+          <Button
+            title={deleting ? "Đang xoá..." : "Xoá kênh"}
+            loading={deleting}
+            onPress={onConfirmDelete}
+            disabled={saving || deleting}
+            containerStyle={styles.btnDelete}
+            txtBtnStyle={styles.btnDeleteText}
+          />
+        ) : null}
+        <Button
+          title="Lưu thay đổi"
+          loading={saving}
+          onPress={onSubmit}
+          disabled={!name || saving || deleting}
+          gradientType="gra_primary"
+          containerStyle={styles.btnSave}
+        />
+      </View>
     </View>
   );
 };
@@ -175,9 +213,25 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.error,
     ...textPresets.fs12_400,
   },
-  btnSave: {
+  actions: {
+    flexDirection: "row",
+    columnGap: 12,
+    marginTop: 16,
+  },
+  btnDelete: {
+    flex: 1,
     borderRadius: 40,
     overflow: "hidden",
-    marginTop: 16,
+    borderWidth: 1,
+    borderColor: colors.border10,
+  },
+  btnDeleteText: {
+    color: colors.neutral900,
+    ...textPresets.fs14_500,
+  },
+  btnSave: {
+    flex: 1,
+    borderRadius: 40,
+    overflow: "hidden",
   },
 }));

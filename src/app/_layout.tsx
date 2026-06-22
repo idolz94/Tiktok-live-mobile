@@ -87,7 +87,7 @@ function RootContent() {
                     <Stack.Screen name="printer-settings" />
                     <Stack.Screen name="shipping-settings" />
                     <Stack.Screen name="(sheets)" />
-                    <Stack.Screen name="manage-titktok-channel" />
+                    <Stack.Screen name="manage-tiktok-channel" />
                   </Stack>
                 </View>
               )}

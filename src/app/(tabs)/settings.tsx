@@ -4,13 +4,29 @@ import { images } from "@assets/images";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
-import { Image, ImageSourcePropType, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const AVATAR_URL = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
+const AVATAR_URL =
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
 
-const settingGroups: { icon: ImageSourcePropType; label: string; onPress?: () => void }[][] = [
+const settingGroups: {
+  icon: ImageSourcePropType;
+  label: string;
+  onPress?: () => void;
+}[][] = [
   [
-    { icon: images.logo_tiktok, label: "Quản lý kênh Tiktok", onPress: () => router.push("/(sheets)/tiktok-channels") },
+    {
+      icon: images.logo_tiktok,
+      label: "Quản lý kênh Tiktok",
+      onPress: () => router.push("/manage-tiktok-channel"),
+    },
     { icon: images.logo_facebook, label: "Quản lý kênh Facebook" },
   ],
   [
@@ -20,8 +36,16 @@ const settingGroups: { icon: ImageSourcePropType; label: string; onPress?: () =>
       label: "Cài đặt thông tin SP trước Live",
       onPress: () => router.push("/product-info-setup"),
     },
-    { icon: icons.print, label: "Cài đặt máy in", onPress: () => router.push("/printer-settings") },
-    { icon: icons.truck, label: "Cấu hình vận chuyển", onPress: () => router.push("/shipping-settings") },
+    {
+      icon: icons.print,
+      label: "Cài đặt máy in",
+      onPress: () => router.push("/printer-settings"),
+    },
+    {
+      icon: icons.truck,
+      label: "Cấu hình vận chuyển",
+      onPress: () => router.push("/shipping-settings"),
+    },
   ],
   [
     { icon: icons.group_user, label: "Ngôn ngữ" },
@@ -37,9 +61,16 @@ export default function SettingsTab() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.container}
+      >
         <View style={styles.hero}>
-          <Image source={{ uri: AVATAR_URL }} blurRadius={18} style={styles.heroImage} />
+          <Image
+            source={{ uri: AVATAR_URL }}
+            blurRadius={18}
+            style={styles.heroImage}
+          />
           <View style={styles.heroOverlay} />
 
           <View style={styles.topBar}>
@@ -93,16 +124,29 @@ export default function SettingsTab() {
               <View key={groupIndex} style={styles.settingsGroupWrap}>
                 <View style={styles.settingsGroup}>
                   {group.map((item) => (
-                    <SettingItem key={item.label} icon={item.icon} label={item.label} onPress={item.onPress} />
+                    <SettingItem
+                      key={item.label}
+                      icon={item.icon}
+                      label={item.label}
+                      onPress={item.onPress}
+                    />
                   ))}
                 </View>
                 <View style={styles.divider} />
               </View>
             ))}
-            <TouchableOpacity activeOpacity={0.7} style={styles.settingItem} onPress={logout}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.settingItem}
+              onPress={logout}
+            >
               <View style={styles.settingLeft}>
                 <View style={styles.settingIconBox}>
-                  <Image source={icons.disconnect} style={styles.settingIcon} resizeMode="contain" />
+                  <Image
+                    source={icons.disconnect}
+                    style={styles.settingIcon}
+                    resizeMode="contain"
+                  />
                 </View>
                 <Text style={styles.settingText}>Đăng xuất</Text>
               </View>
@@ -134,10 +178,18 @@ function SettingItem({
 }) {
   const Wrapper = onPress ? TouchableOpacity : View;
   return (
-    <Wrapper activeOpacity={0.7 as never} style={styles.settingItem} onPress={onPress as never}>
+    <Wrapper
+      activeOpacity={0.7 as never}
+      style={styles.settingItem}
+      onPress={onPress as never}
+    >
       <View style={styles.settingLeft}>
         <View style={styles.settingIconBox}>
-          <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
+          <Image
+            source={icon}
+            style={styles.settingIcon}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.settingText}>{label}</Text>
       </View>
