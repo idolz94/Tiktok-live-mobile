@@ -17,7 +17,7 @@ export const settingGroups: Setting[][] = [
       icon: "♪",
       label: "Quản lý kênh Tiktok",
       onPress: () => {
-        router.navigate("/manage-titktok-channel");
+        router.navigate("/manage-tiktok-channel");
       },
     },
     { icon: "f", label: "Quản lý kênh Facebook" },
