@@ -100,7 +100,9 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
       } catch (error: any) {
         Alert.alert(
           "Đăng nhập thất bại",
-          error instanceof Error ? error.message : "Đã có lỗi xảy ra",
+          error?.response?.data?.message ||
+            error?.message ||
+            "Đã có lỗi xảy ra",
         );
       } finally {
         setLoading(false);

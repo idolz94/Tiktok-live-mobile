@@ -5,17 +5,13 @@ import PagerView, {
   PagerViewOnPageSelectedEvent,
 } from "react-native-pager-view";
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
-import {
-  createTikTokChannelApi,
-  getTikTokChannelsApi,
-} from "@features/auth/services/api";
+import { getTikTokChannelsApi } from "@features/auth/services/api";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
@@ -32,13 +28,11 @@ export type TikTokLiveChannel = {
 };
 
 const SUB_TABS = ["Live", "Đơn đã tạo"];
-
 const ANIMATION_DURATION = 250;
 const INITIAL_OFFSET = 48;
 
 export const TiktokPage = memo(() => {
   const pagerRef = useRef<PagerView>(null);
-
   const translateY = useSharedValue(INITIAL_OFFSET);
   const opacity = useSharedValue(0);
 
@@ -63,7 +57,6 @@ export const TiktokPage = memo(() => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
 
-  // ---start: localChannels seeds from user.tiktokChannels, then stays authoritative after any fetch/add---
   const [localChannels, setLocalChannels] = useState<TikTokLiveChannel[]>(() =>
     (user?.tiktokChannels ?? []).map((c) => ({
       id: c.id,
@@ -73,25 +66,21 @@ export const TiktokPage = memo(() => {
   );
 
   const channels = localChannels;
-  // ---end: localChannels---
-
   const alertShownRef = useRef(false);
-  // ---start: requestIdRef — prevent stale fetchChannels overwriting newer state---
   const fetchRequestIdRef = useRef(0);
-  // ---end: requestIdRef---
 
-  // ---start: hideConnectedView — shared animation for resetToInitial and onDisconnectAccount---
   const hideConnectedView = useCallback(() => {
     opacity.value = withTiming(0, { duration: ANIMATION_DURATION });
     translateY.value = withTiming(
       INITIAL_OFFSET,
       { duration: ANIMATION_DURATION },
       (finished) => {
-        if (finished) runOnJS(setVisible)(false);
+        if (finished) {
+          setVisible(false);
+        }
       },
     );
   }, [opacity, translateY]);
-  // ---end: hideConnectedView---
 
   useEffect(() => {
     if (!liveError || alertShownRef.current) return;
@@ -128,7 +117,6 @@ export const TiktokPage = memo(() => {
     }
   }, []);
 
-  // ---start: selectedChannel memoized---
   const selectedChannel = useMemo(
     () =>
       channels.find(
@@ -138,36 +126,11 @@ export const TiktokPage = memo(() => {
       ),
     [channels, tiktokUsername],
   );
-  // ---end: selectedChannel memoized---
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [
-      {
-        translateY: translateY.value,
-      },
-    ],
+    transform: [{ translateY: translateY.value }],
   }));
-
-  const onSelectChannel = useCallback(
-    (selectedItem: TikTokLiveChannel) => {
-      setLocalChannels((prev) =>
-        prev?.map((c) => ({
-          ...c,
-          isDefault: c.id === selectedItem.id,
-        })),
-      );
-
-      const targetUsername = selectedItem.username;
-      const nextUsername = normalizeTikTokUsername(targetUsername);
-      if (nextUsername) {
-        changeTikTokUsername(nextUsername).catch((err) => {
-          if (__DEV__) console.error("Change channel error:", err);
-        });
-      }
-    },
-    [changeTikTokUsername],
-  );
 
   const connectSelectedChannel = useCallback(
     async (item?: TikTokLiveChannel): Promise<boolean> => {
@@ -187,7 +150,7 @@ export const TiktokPage = memo(() => {
         }
 
         setLocalChannels((prev) =>
-          prev?.map((c) => ({
+          prev.map((c) => ({
             ...c,
             isDefault: normalizeTikTokUsername(c.username) === nextUsername,
           })),
@@ -196,68 +159,65 @@ export const TiktokPage = memo(() => {
         if (visible) return true;
 
         setVisible(true);
-
         opacity.value = 0;
         translateY.value = INITIAL_OFFSET;
-
-        opacity.value = withTiming(1, {
-          duration: ANIMATION_DURATION,
-        });
-
-        translateY.value = withTiming(0, {
-          duration: ANIMATION_DURATION,
-        });
+        opacity.value = withTiming(1, { duration: ANIMATION_DURATION });
+        translateY.value = withTiming(0, { duration: ANIMATION_DURATION });
 
         return true;
       } catch (error) {
-        if (__DEV__) {
-          console.error("Connect channel error:", error);
-        }
+        if (__DEV__) console.error("Connect channel error:", error);
         return false;
       }
     },
-    [tiktokUsername, visible, changeTikTokUsername],
+    [tiktokUsername, visible, changeTikTokUsername, opacity, translateY],
   );
 
-  const onAddChannel = useCallback(
-    async (name: string): Promise<boolean> => {
-      const created = await createTikTokChannelApi({
-        tiktokUsername: name,
-        isDefault: false,
-      });
-      const freshChannels = await fetchChannels();
-      const normalizedName = normalizeTikTokUsername(name);
-
-      let newChannel = freshChannels.find(
-        (c) => normalizeTikTokUsername(c.username) === normalizedName,
+  const onSelectChannel = useCallback(
+    (selectedItem: TikTokLiveChannel) => {
+      setLocalChannels((prev) =>
+        prev.map((c) => ({
+          ...c,
+          isDefault: c.id === selectedItem.id,
+        })),
       );
 
-      if (!newChannel) {
-        newChannel = {
-          id: created.id,
-          username: normalizeTikTokUsername(created.tiktokUsername),
-          isDefault: false,
-        };
-        setLocalChannels((prev) => [...prev, newChannel!]);
+      const nextUsername = normalizeTikTokUsername(selectedItem.username);
+      if (nextUsername) {
+        changeTikTokUsername(nextUsername).catch((err) => {
+          if (__DEV__) console.error("Change channel error:", err);
+        });
       }
-
-      return connectSelectedChannel(newChannel);
     },
-    [fetchChannels, connectSelectedChannel],
+    [changeTikTokUsername],
+  );
+
+  const addChannel = useCallback(
+    async (name: string): Promise<boolean> => {
+      const normalizedName = normalizeTikTokUsername(name);
+      if (!normalizedName) return false;
+
+      const nextChannel: TikTokLiveChannel = {
+        id: `${Date.now()}`,
+        username: normalizedName,
+        isDefault: false,
+      };
+
+      setLocalChannels((prev) => [...prev, nextChannel]);
+      return connectSelectedChannel(nextChannel);
+    },
+    [connectSelectedChannel],
   );
 
   const onDisconnectAccount = useCallback(async () => {
-    // const username = tiktokUsername;
     try {
       await stopLiveSession();
     } catch (error) {
       if (__DEV__) console.error("Disconnect error:", error);
     }
     hideConnectedView();
-    // Alert.alert("Đã rời phiên live", `Bạn đã rời khỏi phiên live của ${username}`);
-  }, [stopLiveSession, hideConnectedView, tiktokUsername]);
+  }, [stopLiveSession, hideConnectedView]);
 
-  // ---start: onTabPress + handlePageSelected stable callbacks---
   const onTabPress = useCallback((index: number) => {
     setActiveIndex(index);
     pagerRef.current?.setPage(index);
@@ -266,15 +226,10 @@ export const TiktokPage = memo(() => {
   const handlePageSelected = useCallback((e: PagerViewOnPageSelectedEvent) => {
     setActiveIndex(e.nativeEvent.position);
   }, []);
-  // ---end: stable callbacks---
 
   return (
     <View style={styles.container}>
-      <Segment
-        tabs={SUB_TABS}
-        activeIndex={activeIndex}
-        onTabPress={onTabPress}
-      />
+      <Segment tabs={SUB_TABS} activeIndex={activeIndex} onTabPress={onTabPress} />
 
       <PagerView
         ref={pagerRef}
@@ -295,7 +250,7 @@ export const TiktokPage = memo(() => {
             <UnConnectedLive
               channels={channels}
               onConnect={connectSelectedChannel}
-              onAddChannel={onAddChannel}
+              onAddChannel={addChannel}
               onRefreshChannels={fetchChannels}
             />
           )}
@@ -306,7 +261,6 @@ export const TiktokPage = memo(() => {
         </View>
       </PagerView>
 
-      {/* ---start: always mounted overlay, pointerEvents controls interaction, content only renders when visible--- */}
       <Animated.View
         pointerEvents={visible ? "box-none" : "none"}
         style={[styles.accountOverlay, animatedStyle]}
@@ -320,7 +274,6 @@ export const TiktokPage = memo(() => {
           />
         )}
       </Animated.View>
-      {/* ---end: always mounted overlay--- */}
     </View>
   );
 });

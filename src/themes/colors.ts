@@ -19,7 +19,9 @@ export const colors = {
   transparent50: "rgba(0, 0, 0, 0.5)",
 
   blueLight: "rgba(233, 242, 255, 1)",
+
   pinkLight: "rgba(255, 239, 228, 1)",
+  pink200: "#FFE8E8",
 
   success: "rgba(44, 168, 123, 1)",
   successDark: "rgba(217, 255, 238, 1)",
@@ -30,6 +32,7 @@ export const colors = {
 
   info: "rgba(70, 138, 223, 1)",
   infoLight: "rgba(233, 242, 255, 1)",
+  info200: "#E9F2FF",
 
   warning: "rgba(255, 168, 0, 1)",
   warningAlt: "rgba(255, 245, 217, 1)",

@@ -51,7 +51,7 @@ export default function FormSheets() {
 
 const styles = createStyles(({ colors }) => ({
   whiteContentFormSheet: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.neutral100,
   },
 }));
 

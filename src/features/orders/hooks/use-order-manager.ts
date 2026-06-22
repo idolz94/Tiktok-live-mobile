@@ -56,7 +56,7 @@ export function useOrderManager({
   comments,
   liveSessionId,
   onAfterCreateOrder,
-  hasOrders = true,
+  hasOrders = false,
 }: UseOrderManagerParams) {
   const [orders, setOrders] = useState<OrderWithTikTok[]>([]);
   const [orderLoading, setOrderLoading] = useState(false);

@@ -1,6 +1,6 @@
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
+import { useAuth } from "@features/auth/hooks/use-auth";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
-import { router } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Screen } from "@components/screen";
@@ -17,13 +17,14 @@ export default function HomeTab() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const { currentLiveSessionId } = useTikTokLiveSocketContext();
+  const { user } = useAuth();
 
   useOrderManager({
     comments: [],
     liveSessionId: currentLiveSessionId,
-    onAfterCreateOrder: () => router.back(),
+    onAfterCreateOrder: () => setActiveIndex(1),
+    hasOrders: user?.hasOrders ?? false,
   });
-
 
   const onTabPress = (i: number) => {
     setActiveIndex(i);

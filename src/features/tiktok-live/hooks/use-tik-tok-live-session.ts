@@ -133,16 +133,28 @@ export function useTikTokLiveSession(options: { hasHistory?: boolean } = {}) {
     return formatNowText(nowMs);
   }, [isRunning, nowMs]);
 
-  const clearLiveHistory = useCallback(() => {
-    setLiveHistory([]);
-  }, []);
-
   const resetCurrentSession = useCallback(() => {
     sessionCommentIdsRef.current = new Set();
     setCurrentLiveSession(null);
     setDbLiveSessionId(null);
     setNowMs(0);
   }, [setCurrentLiveSession, setDbLiveSessionId]);
+
+  const clearLiveHistory = useCallback(() => {
+    setLiveHistory([]);
+    resetCurrentSession();
+  }, [resetCurrentSession]);
+
+  const restoreCurrentSession = useCallback((session: LiveHistoryItem) => {
+    sessionCommentIdsRef.current = new Set();
+    setCurrentLiveSession(session);
+    setDbLiveSessionId(session.id || null);
+    setNowMs(Date.now());
+  }, [setCurrentLiveSession, setDbLiveSessionId]);
+
+  const clearCurrentSession = useCallback(() => {
+    resetCurrentSession();
+  }, [resetCurrentSession]);
 
   const startSessionFromPayload = useCallback(
     (payload: unknown) => {
@@ -328,5 +340,7 @@ export function useTikTokLiveSession(options: { hasHistory?: boolean } = {}) {
     addCommentToCurrentSession,
     batchAddCommentsToSession,
     resetCurrentSession,
+    restoreCurrentSession,
+    clearCurrentSession,
   };
 }

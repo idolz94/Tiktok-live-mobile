@@ -11,7 +11,8 @@ import {
 import { useAuthStore } from "@features/auth/stores";
 import { mapBootstrapToAuthUser } from "@features/auth/stores/auth-utils";
 import { secureStorage } from "@utils/storage";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { AppState } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type BootstrapOptions = {
   background?: boolean;
@@ -40,9 +41,7 @@ async function bootstrapAuth({
   try {
     setError(null);
     const response = await getMeBootstrapApi();
-
     const authUser = mapBootstrapToAuthUser(response);
-
     setUserFromBootstrap(authUser);
   } catch (error) {
     if (!background) {
@@ -53,6 +52,38 @@ async function bootstrapAuth({
     );
   }
 }
+
+// Module-level guards: ensure /me/bootstrap is called at most once across all useAuth instances.
+let bootstrapInFlight = false;
+let bootstrapDone = false;
+let authResumeInFlight = false;
+
+export const isAuthResumeInFlight = () => authResumeInFlight;
+
+export const resetBootstrapGuard = () => {
+  bootstrapInFlight = false;
+  bootstrapDone = false;
+};
+
+export const setAuthResumeInFlight = (value: boolean) => {
+  authResumeInFlight = value;
+};
+
+// ---start: auth resume guard helpers---
+export const beginAuthResume = () => {
+  authResumeInFlight = true;
+  bootstrapInFlight = true;
+};
+
+export const endAuthResume = () => {
+  authResumeInFlight = false;
+  bootstrapInFlight = false;
+};
+// ---end: auth resume guard helpers---
+
+export const resetAuthResumeGuard = () => {
+  authResumeInFlight = false;
+};
 
 export const useAuth = () => {
   const user = useAuthStore((state) => state.user);
@@ -67,6 +98,7 @@ export const useAuth = () => {
   );
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const appStateRef = useRef(AppState.currentState);
 
   useEffect(() => {
     if (useAuthStore.persist.hasHydrated()) {
@@ -83,6 +115,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (!isHydrated) return;
+    if (bootstrapDone || bootstrapInFlight) return;
 
     const run = async () => {
       const accessToken = await secureStorage.getAccessToken();
@@ -93,6 +126,7 @@ export const useAuth = () => {
         return;
       }
 
+      beginAuthResume();
       setIsBootstrapping(true);
       try {
         await bootstrapAuth({
@@ -100,13 +134,54 @@ export const useAuth = () => {
           setUserFromBootstrap,
           setError,
         });
+        bootstrapDone = true;
       } finally {
+        endAuthResume();
         setIsBootstrapping(false);
       }
     };
 
     void run();
   }, [isHydrated, setUserFromBootstrap]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      const prev = appStateRef.current;
+      appStateRef.current = nextState;
+
+      if (nextState !== "active") return;
+      if (prev === "active") return;
+
+      const resume = async () => {
+        const token = await secureStorage.getAccessToken();
+        if (!token) return;
+        if (bootstrapInFlight) return;
+
+        beginAuthResume();
+        setIsBootstrapping(true);
+        try {
+          try {
+            await refreshAccessToken();
+          } catch {
+            // If refresh fails, bootstrap will still decide whether the session is valid.
+          }
+          await bootstrapAuth({
+            background: true,
+            setUserFromBootstrap,
+            setError,
+          });
+          bootstrapDone = true;
+        } finally {
+          endAuthResume();
+          setIsBootstrapping(false);
+        }
+      };
+
+      void resume();
+    });
+
+    return () => sub.remove();
+  }, [setUserFromBootstrap]);
 
   const login = useCallback(
     async ({ username, password, remember }: LoginParams) => {
@@ -126,7 +201,18 @@ export const useAuth = () => {
         }
 
         setLoginState(username.trim(), remember);
-        await bootstrapAuth({ background: false, setUserFromBootstrap, setError });
+        resetBootstrapGuard();
+        beginAuthResume();
+        try {
+          await bootstrapAuth({
+            background: false,
+            setUserFromBootstrap,
+            setError,
+          });
+          bootstrapDone = true;
+        } finally {
+          endAuthResume();
+        }
       } finally {
         setIsBootstrapping(false);
       }
@@ -134,22 +220,26 @@ export const useAuth = () => {
     [setLoginState, setUserFromBootstrap],
   );
 
-  const register = useCallback(async ({ username, password, fullName, tiktokId }: RegisterParams) => {
-    const response = await registerApi({
-      username,
-      password,
-      fullName,
-      tiktokId,
-    });
+  const register = useCallback(
+    async ({ username, password, fullName, tiktokId }: RegisterParams) => {
+      const response = await registerApi({
+        username,
+        password,
+        fullName,
+        tiktokId,
+      });
 
-    return response.data?.data ?? response.data;
-  }, []);
+      return response.data?.data ?? response.data;
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     try {
       setIsBootstrapping(true);
       await logoutStore();
       setUserFromBootstrap(null);
+      resetBootstrapGuard();
     } catch (err) {
       console.warn("Lỗi đăng xuất:", err);
     } finally {
@@ -157,19 +247,34 @@ export const useAuth = () => {
     }
   }, [logoutStore, setUserFromBootstrap]);
 
-  const refreshAuth = useCallback(async ({ force = false }: { force?: boolean } = {}) => {
-    if (!force && !user) return;
-    setIsBootstrapping(true);
+  const refreshAuth = useCallback(
+    async ({ force = false }: { force?: boolean } = {}) => {
+      if (!force && !user) return;
+      if (bootstrapInFlight) return;
 
-    try {
-      await refreshAccessToken();
-    } catch (error) {
-      console.warn("Không thể refresh token:", error);
-    }
+      bootstrapInFlight = true;
+      setIsBootstrapping(true);
 
-    await bootstrapAuth({ background: Boolean(user), setUserFromBootstrap, setError });
-    setIsBootstrapping(false);
-  }, [user, setUserFromBootstrap]);
+      try {
+        try {
+          await refreshAccessToken();
+        } catch (error) {
+          console.warn("Không thể refresh token:", error);
+        }
+
+        await bootstrapAuth({
+          background: Boolean(user),
+          setUserFromBootstrap,
+          setError,
+        });
+        bootstrapDone = true;
+      } finally {
+        bootstrapInFlight = false;
+        setIsBootstrapping(false);
+      }
+    },
+    [user, setUserFromBootstrap],
+  );
 
   const mergedUser = useMemo(() => user, [user]);
 

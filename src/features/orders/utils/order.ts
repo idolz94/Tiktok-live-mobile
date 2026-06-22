@@ -1,4 +1,4 @@
-import type { OrderProduct, OrderWithTikTok } from "@app-types/index";
+import type { Order, OrderProduct, OrderWithTikTok } from "@app-types/index";
 import { cleanTikTokUsername } from "@utils/tiktok";
 import { createId } from "@utils/id";
 import { getOrderTikTokUsername } from "@utils/tiktok";
@@ -194,4 +194,14 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
     createdAt,
     updatedAt: String(order?.updatedAt || order?.updated_at || ""),
   };
+}
+
+export function statusLabel(status: Order["status"]) {
+  if (status === "confirmed") return "Đã chốt";
+  if (status === "packed") return "Đã đóng gói";
+  if (status === "shipping") return "Đang giao";
+  if (status === "completed") return "Hoàn tất";
+  if (status === "canceled") return "Đã hủy";
+  if (status === "returned") return "Hoàn trả";
+  return "Đơn nháp";
 }

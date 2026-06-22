@@ -100,7 +100,8 @@ export const updateTikTokChannelApi = async (
     payload,
   );
 
-  const channel = normalizeTikTokChannel(response.data?.data ?? response.data);
+  const raw = response.data?.data ?? response.data;
+  const channel = normalizeTikTokChannel(raw?.channel ?? raw?.data ?? raw);
 
   if (!channel) {
     throw new Error("Update dữ liệu kênh TikTok không thành công!!");

@@ -2,7 +2,7 @@ import { DEFAULT_WS_URL } from "@constants/config";
 import { secureStorage } from "@utils/storage";
 import { AxiosResponse } from "axios";
 
-import { sseClient } from "./axios";
+import { apiClient } from "./axios";
 
 export type RequestParams = Record<
   string,
@@ -105,7 +105,7 @@ export async function getRequest<T>(
   params?: RequestParams,
   options?: RequestOptions,
 ): Promise<T> {
-  const response = await sseClient.get(path, {
+  const response = await apiClient.get(path, {
     params,
     headers: options?.headers,
   });
@@ -122,7 +122,7 @@ export async function postRequest<T>(
   //   console.log(`[postRequest] POST ${path}`, data);
   // }
 
-  const response = await sseClient.post(path, data ?? {}, {
+  const response = await apiClient.post(path, data ?? {}, {
     headers: options?.headers,
     ...(options?.timeout !== undefined && { timeout: options.timeout }),
   });
@@ -141,7 +141,7 @@ export async function patchRequest<T>(
   data?: unknown,
   options?: RequestOptions,
 ): Promise<T> {
-  const response = await sseClient.patch(path, data ?? {}, {
+  const response = await apiClient.patch(path, data ?? {}, {
     headers: options?.headers,
   });
 
@@ -153,7 +153,7 @@ export async function deleteRequest<T>(
   params?: RequestParams,
   options?: RequestOptions,
 ): Promise<T> {
-  const response = await sseClient.delete(path, {
+  const response = await apiClient.delete(path, {
     params,
     headers: options?.headers,
   });

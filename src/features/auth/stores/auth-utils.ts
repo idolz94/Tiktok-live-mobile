@@ -166,6 +166,8 @@ export function mapBootstrapToAuthUser(
     license,
     tiktokChannels,
     canUseApp,
+    hasOrders,
+    hasHistory,
   } = response;
 
   // Nếu không có user object → server xác nhận chưa đăng nhập
@@ -199,6 +201,8 @@ export function mapBootstrapToAuthUser(
 
     // Có được dùng app không? false = license hết hạn hoặc chưa đăng ký
     canUseApp: canUseApp ?? false,
+    hasOrders,
+    hasHistory,
 
     // Status raw của license — UI dùng để hiển thị banner "còn X ngày trial"
     // licenseStatus: license?.status || null,

@@ -1,4 +1,4 @@
-import { API_URL_ENDPOINT } from "@constants/config";
+import { API_URL_ENDPOINT, MOBILE_APP_KEY } from "@constants/config";
 import { secureStorage } from "@utils/storage";
 import axios from "axios";
 
@@ -7,6 +7,7 @@ const authSessionClient = axios.create({
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
+    "x-app-key": MOBILE_APP_KEY,
   },
 });
 
