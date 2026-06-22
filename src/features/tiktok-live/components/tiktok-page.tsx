@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { getTikTokChannelsApi } from "@features/auth/services/api";
@@ -76,7 +77,7 @@ export const TiktokPage = memo(() => {
       { duration: ANIMATION_DURATION },
       (finished) => {
         if (finished) {
-          setVisible(false);
+          scheduleOnRN(setVisible, false);
         }
       },
     );
