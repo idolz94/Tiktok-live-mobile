@@ -20,8 +20,8 @@ const settingGroups: { icon: ImageSourcePropType; label: string; onPress?: () =>
       label: "Cài đặt thông tin SP trước Live",
       onPress: () => router.push("/product-info-setup"),
     },
-    { icon: icons.print, label: "Cài đặt máy in" },
-    { icon: icons.truck, label: "Cấu hình vận chuyển" },
+    { icon: icons.print, label: "Cài đặt máy in", onPress: () => router.push("/printer-settings") },
+    { icon: icons.truck, label: "Cấu hình vận chuyển", onPress: () => router.push("/shipping-settings") },
   ],
   [
     { icon: icons.group_user, label: "Ngôn ngữ" },
