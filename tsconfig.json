@@ -4,7 +4,6 @@
     "strict": true,
     "types": ["node"],
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
       "@contexts/*": ["./src/contexts/*"],
       "@declare": ["./declare/index"],

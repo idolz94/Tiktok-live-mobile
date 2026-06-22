@@ -184,12 +184,24 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
     shippingStatus:
       order?.shippingStatus || order?.shipping_status || "not_shipped",
     subtotalAmount,
+    customerId: String(order?.customerId || order?.customer_id || ""),
+    customerPhone: String(order?.customerPhone || order?.customer_phone || ""),
+    customerAddress: String(
+      order?.customerAddress || order?.customer_address || "",
+    ),
+    customerAddressId: String(
+      order?.customerAddressId || order?.customer_address_id || "",
+    ),
+    customerAddressData:
+      order?.customerAddressData || order?.customer_address_data || null,
+    trackingCode: String(order?.trackingCode || order?.tracking_code || ""),
+    providerName: String(order?.providerName || order?.provider_name || ""),
     shippingFee: Number(order?.shippingFee || order?.shipping_fee || 0),
     discountAmount: Number(
       order?.discountAmount || order?.discount_amount || 0,
     ),
     totalAmount,
-    codAmount: Number(order?.codAmount || order?.cod_amount || totalAmount),
+    codAmount: Number(order?.codAmount || order?.cod_amount || 0),
     note: String(order?.note || ""),
     createdAt,
     updatedAt: String(order?.updatedAt || order?.updated_at || ""),

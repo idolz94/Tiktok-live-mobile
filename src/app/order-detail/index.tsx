@@ -1,5 +1,5 @@
 import { useLocalSearchParams, router } from "expo-router";
-import { useOrderStore } from "@features/orders/stores/order-store";
+import { readOrders } from "@features/orders/stores/order-store";
 import { ProductTable } from "@features/orders/components/product-table";
 import { Order } from "@app-types/index";
 import { formatMoneyFromK, getOrderTotal } from "@features/orders/utils/order";
@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OrderDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { orders, confirmOrder, closeOrderOverview } = useOrderStore();
+  const orders = readOrders();
   const order: Order | undefined = orders.find((o: Order) => o.id === id);
 
   if (!order) {
@@ -28,7 +28,6 @@ export default function OrderDetail() {
   const total = getOrderTotal(order.products || []);
 
   const handleBack = () => {
-    closeOrderOverview();
     if (router.canGoBack()) {
       router.back();
     }
@@ -48,20 +47,23 @@ export default function OrderDetail() {
           <Text style={styles.orderCode}>{order.orderCode}</Text>
           <Text style={styles.customer}>{order.username}</Text>
           <Text style={styles.comment}>{order.comment}</Text>
+          <View style={styles.metaBlock}>
+            {order.customerPhone ? <Text style={styles.metaText}>SĐT: {order.customerPhone}</Text> : null}
+            {order.customerAddress ? <Text style={styles.metaText}>Địa chỉ: {order.customerAddress}</Text> : null}
+            {order.trackingCode ? (
+              <Text style={styles.metaText}>Mã vận đơn: {order.trackingCode}</Text>
+            ) : null}
+            {order.providerName ? (
+              <Text style={styles.metaText}>Đơn vị: {order.providerName}</Text>
+            ) : null}
+          </View>
           <ProductTable products={order.products || []} />
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Tổng tiền</Text>
             <Text style={styles.totalValue}>{formatMoneyFromK(total)}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={() => confirmOrder(order.id)}
-          >
-            <Text style={styles.confirmText}>
-              {order.status === "confirmed"
-                ? "Chuyển về đơn nháp"
-                : "Xác nhận đơn"}
-            </Text>
+          <TouchableOpacity style={styles.confirmButton} disabled>
+            <Text style={styles.confirmText}>Xác nhận đơn</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -86,6 +88,15 @@ const styles = StyleSheet.create({
   orderCode: { fontSize: 20, fontWeight: "900", color: "#2563eb" },
   customer: { marginTop: 8, fontSize: 22, fontWeight: "900", color: "#273044" },
   comment: { marginTop: 10, color: "#475569", lineHeight: 22 },
+  metaBlock: {
+    marginTop: 12,
+    gap: 4,
+  },
+  metaText: {
+    color: "#475569",
+    fontSize: 14,
+    lineHeight: 20,
+  },
   totalRow: {
     marginTop: 18,
     flexDirection: "row",

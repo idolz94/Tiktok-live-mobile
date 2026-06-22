@@ -56,7 +56,7 @@ export function useOrderManager({
   comments,
   liveSessionId,
   onAfterCreateOrder,
-  hasOrders = true,
+  hasOrders = false,
 }: UseOrderManagerParams) {
   const [orders, setOrders] = useState<OrderWithTikTok[]>([]);
   const [orderLoading, setOrderLoading] = useState(false);
@@ -71,13 +71,20 @@ export function useOrderManager({
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const reloadOrders = useCallback(async () => {
+    if (__DEV__) console.log("[orders] reloadOrders start");
     try {
       setOrderLoading(true);
       setOrderError("");
-      const nextOrders = await getOrdersApi();
+      const nextOrders = await getOrdersApi("not_shipped");
+      if (__DEV__) {
+        console.log("[orders] reloadOrders success", {
+          count: nextOrders.length,
+          orders: nextOrders,
+        });
+      }
       setOrders(nextOrders);
     } catch (error) {
-      if (__DEV__) console.error("LOAD ORDERS ERROR:", error);
+      if (__DEV__) console.error("[orders] reloadOrders error", error);
       setOrderError(
         error instanceof Error ? error.message : "Không tải được đơn hàng.",
       );
@@ -90,7 +97,7 @@ export function useOrderManager({
     if (!hasOrders) return;
     const timer = setTimeout(() => void reloadOrders(), 0);
     return () => clearTimeout(timer);
-  }, [reloadOrders, hasOrders]);
+  }, [hasOrders, reloadOrders]);
 
   const buyingCount = useMemo(
     () =>
@@ -133,34 +140,18 @@ export function useOrderManager({
   );
 
   const filteredOrders = useMemo(() => {
-    const keyword = orderSearchText.trim().toLowerCase();
+    if (__DEV__) {
+      console.log("[orders][state]", {
+        ordersLength: orders.length,
+        orders,
+        hasOrders,
+        orderFilter,
+        orderSearchText,
+      });
+    }
 
-    return orders.filter((order) => {
-      const matchFilter =
-        orderFilter === "all" ||
-        (orderFilter === "unpaid" && order.depositStatus === "unpaid") ||
-        (orderFilter === "paid" && order.depositStatus === "paid") ||
-        (orderFilter === "draft" && order.status === "draft") ||
-        (orderFilter === "confirmed" && order.status === "confirmed");
-
-      if (!matchFilter) return false;
-      if (!keyword) return true;
-
-      const tiktokUsername = getOrderTikTokUsername(order);
-      const searchValue = [
-        order.orderCode,
-        order.username,
-        order.customerTikTokUsername,
-        tiktokUsername,
-        order.comment,
-        order.productName,
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return searchValue.includes(keyword);
-    });
-  }, [orderFilter, orderSearchText, orders]);
+    return orders;
+  }, [orders, hasOrders, orderFilter, orderSearchText]);
 
   const selectedOrder = useMemo(
     () =>

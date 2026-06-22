@@ -1,19 +1,44 @@
 import { images } from "@assets/images";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Button } from "@components/button";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { memo, useCallback } from "react";
 import { FlatList, ListRenderItem, Pressable, Text, View } from "react-native";
+import { AddChannel } from "./add-channel";
 import { TikTokLiveChannel } from "./tiktok-page";
 
 type Props = {
   channels: TikTokLiveChannel[];
   onClose: () => void;
   onSelected: (item: TikTokLiveChannel) => void;
+  onAddChannel: (name: string) => Promise<boolean>;
 };
 
-export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
+export const ListChannels = memo(({ channels, onClose, onSelected, onAddChannel }: Props) => {
   const { colors } = useThemes();
+  const { show, hide } = useBottomSheet();
+
+  const handleAddChannel = useCallback(() => {
+    show({
+      content: (
+        <AddChannel
+          onClose={hide}
+          onSave={async (name) => {
+            const success = await onAddChannel(name);
+            if (success) {
+              hide();
+            }
+            return undefined as never;
+          }}
+          onCancel={hide}
+        />
+      ),
+      showDragIndicator: false,
+    });
+  }, [hide, onAddChannel, show]);
 
   const itemSeparator = () => <View style={{ height: 12 }} />;
 
@@ -53,11 +78,16 @@ export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={itemSeparator}
         renderItem={renderItem}
+        ListFooterComponent={
+          <View style={styles.footer}>
+            <Button title="Thêm kênh TikTok" onPress={handleAddChannel} containerStyle={styles.addButton} txtBtnStyle={styles.addButtonText} />
+          </View>
+        }
         ListFooterComponentStyle={{ paddingTop: 16 }}
       />
     </View>
   );
-};
+});
 
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
@@ -113,5 +143,19 @@ const styles = createStyles(({ colors, textPresets }) => ({
   imgLogoBranch: {
     width: 16,
     height: 16,
+  },
+  footer: {
+    paddingTop: 16,
+  },
+  addButton: {
+    borderRadius: 40,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border10,
+    backgroundColor: colors.neutral50,
+  },
+  addButtonText: {
+    color: colors.neutral900,
+    ...textPresets.fs14_500,
   },
 }));

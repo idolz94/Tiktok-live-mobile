@@ -5,17 +5,13 @@ import PagerView, {
   PagerViewOnPageSelectedEvent,
 } from "react-native-pager-view";
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
-import {
-  createTikTokChannelApi,
-  getTikTokChannelsApi,
-} from "@features/auth/services/api";
+import { getTikTokChannelsApi } from "@features/auth/services/api";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
@@ -87,7 +83,9 @@ export const TiktokPage = memo(() => {
       INITIAL_OFFSET,
       { duration: ANIMATION_DURATION },
       (finished) => {
-        if (finished) runOnJS(setVisible)(false);
+        if (finished) {
+          setVisible(false);
+        }
       },
     );
   }, [opacity, translateY]);
@@ -219,33 +217,6 @@ export const TiktokPage = memo(() => {
     [tiktokUsername, visible, changeTikTokUsername],
   );
 
-  const onAddChannel = useCallback(
-    async (name: string): Promise<boolean> => {
-      const created = await createTikTokChannelApi({
-        tiktokUsername: name,
-        isDefault: false,
-      });
-      const freshChannels = await fetchChannels();
-      const normalizedName = normalizeTikTokUsername(name);
-
-      let newChannel = freshChannels.find(
-        (c) => normalizeTikTokUsername(c.username) === normalizedName,
-      );
-
-      if (!newChannel) {
-        newChannel = {
-          id: created.id,
-          username: normalizeTikTokUsername(created.tiktokUsername),
-          isDefault: false,
-        };
-        setLocalChannels((prev) => [...prev, newChannel!]);
-      }
-
-      return connectSelectedChannel(newChannel);
-    },
-    [fetchChannels, connectSelectedChannel],
-  );
-
   const onDisconnectAccount = useCallback(async () => {
     // const username = tiktokUsername;
     try {
@@ -295,7 +266,6 @@ export const TiktokPage = memo(() => {
             <UnConnectedLive
               channels={channels}
               onConnect={connectSelectedChannel}
-              onAddChannel={onAddChannel}
               onRefreshChannels={fetchChannels}
             />
           )}

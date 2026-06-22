@@ -163,12 +163,12 @@ export function mapBootstrapToAuthUser(
     profile,
     shop,
     shopMember,
-    license,
     tiktokChannels,
     canUseApp,
+    hasOrders,
+    hasHistory,
   } = response;
 
-  // Nếu không có user object → server xác nhận chưa đăng nhập
   if (!user) return null;
 
   const metadata = user.user_metadata || {};
@@ -178,29 +178,17 @@ export function mapBootstrapToAuthUser(
     email: user.email || null,
     fullName: profile?.full_name || metadata.full_name || null,
     phone: profile?.phone || metadata.phone || null,
-
-    // Shop info — cần để gọi các API nghiệp vụ (orders, products,...)
     shopId: shop?.id ? String(shop.id) : null,
     shopName: shop?.name || null,
-
-    // TikTok username — ưu tiên default từ shop settings
     tiktokUsername:
       shop?.default_tiktok_username ||
       metadata.default_tiktok_username ||
       metadata.tiktok_id ||
       null,
-
-    // Danh sách kênh TikTok đã liên kết (có thể nhiều kênh)
     tiktokChannels: tiktokChannels || [],
-
-    // Role trong shop: "owner" | "staff" | ...
-    // Dùng để ẩn/hiện các tính năng quản lý
     role: shopMember?.role || null,
-
-    // Có được dùng app không? false = license hết hạn hoặc chưa đăng ký
     canUseApp: canUseApp ?? false,
-
-    // Status raw của license — UI dùng để hiển thị banner "còn X ngày trial"
-    // licenseStatus: license?.status || null,
+    hasOrders: hasOrders === true,
+    hasHistory: hasHistory === true,
   };
 }

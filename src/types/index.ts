@@ -166,6 +166,8 @@ export type Order = {
   depositStatus: DepositStatus;
   paymentStatus?: PaymentStatus;
   shippingStatus?: ShippingStatus;
+  trackingCode?: string;
+  providerName?: string;
   subtotalAmount?: number;
   shippingFee?: number;
   discountAmount?: number;

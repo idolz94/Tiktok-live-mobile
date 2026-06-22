@@ -7,11 +7,47 @@ import {
   formatMoneyFromK,
   getOrderTotal,
 } from "@features/orders/utils/order";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { openTikTokProfile } from "@utils/tiktok";
+import { Pressable, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 function createDisplayCode(orderCode: string) {
   const numbers = orderCode.replace(/\D/g, "");
   return `#${(numbers || orderCode).slice(-6).padStart(6, "0")}`;
+}
+
+function getDisplayName(item: Order) {
+  return item.customerName || item.username || "Khách live";
+}
+
+function getTikTokUsername(item: Order) {
+  return item.customerTikTokUsername || item.uniqueId || item.username || "";
+}
+
+function getAvatarUri(item: Order) {
+  return item.avatarUrl || item.avatar || "";
+}
+
+function canOpenCustomer(item: Order) {
+  return Boolean(item.customerTikTokUsername || item.uniqueId || item.username);
+}
+
+function openCustomerProfile(item: Order) {
+  void openTikTokProfile(item.customerTikTokUsername || item.uniqueId || item.username);
+}
+
+function formatCodAmount(value: number) {
+  return `${formatMoneyFromK(value)} ₫`;
+}
+
+
+function formatStatus(status: Order["status"]) {
+  if (status === "confirmed") return "Đã chốt";
+  if (status === "packed") return "Đã đóng gói";
+  if (status === "shipping") return "Đang giao";
+  if (status === "completed") return "Hoàn tất";
+  if (status === "canceled") return "Đã hủy";
+  if (status === "returned") return "Hoàn trả";
+  return "Đơn nháp";
 }
 
 export const OrderCard = ({
@@ -31,21 +67,39 @@ export const OrderCard = ({
   onConfirmOrder?: (orderId: string) => void;
   onOpenOverview?: (orderId: string) => void;
 }) => {
-  const total = getOrderTotal(item.products || []);
-  const isPaid = item.depositStatus === "paid";
+  const products = item.products || [];
+  const total = item.subtotalAmount || getOrderTotal(products);
+  const isPaid = item.depositStatus === "paid" || item.depositStatus === "deposited";
   const isConfirmed = item.status === "confirmed";
+  const displayName = getDisplayName(item);
+  const tiktokUsername = getTikTokUsername(item);
+  const avatarUri = getAvatarUri(item);
 
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
-        <Avatar uri={item.avatar} username={item.username} size={56} />
+        {canOpenCustomer(item) ? (
+          <Pressable onPress={() => openCustomerProfile(item)}>
+            <Avatar uri={avatarUri} username={displayName} size={56} />
+          </Pressable>
+        ) : (
+          <Avatar uri={avatarUri} username={displayName} size={56} />
+        )}
         <View style={styles.info}>
-          <Text style={styles.code}>{createDisplayCode(item.orderCode)}</Text>
-          <Text style={styles.name}>{item.username || "Unknown user"}</Text>
+          <Pressable
+            onPress={() => canOpenCustomer(item) && openCustomerProfile(item)}
+            disabled={!canOpenCustomer(item)}
+          >
+            <Text style={styles.name}>{displayName}</Text>
+          </Pressable>
+          <Text style={styles.code}>{createDisplayCode(item.orderCode || item.id)}</Text>
+          {tiktokUsername ? (
+            <Text style={styles.handle}>@{tiktokUsername}</Text>
+          ) : null}
           <View style={styles.badgeRow}>
             <Text style={styles.vip}>VIP</Text>
-            <Text style={styles.smallBadge}>☎</Text>
-            <Text style={styles.smallBadge}>⌖</Text>
+            <Text style={styles.smallBadge}>{isPaid ? "Đã cọc" : "Chưa cọc"}</Text>
+            <Text style={styles.smallBadge}>{formatStatus(item.status)}</Text>
           </View>
         </View>
         <View style={styles.rightActions}>
@@ -69,7 +123,7 @@ export const OrderCard = ({
         </View>
       </View>
 
-      <Text style={styles.comment}>{item.comment}</Text>
+      <Text style={styles.comment}>{item.comment || item.productName || "Sản phẩm"}</Text>
       <Text style={styles.time}>
         {new Date(item.createdAt).toLocaleTimeString("vi-VN")}
       </Text>
@@ -79,12 +133,26 @@ export const OrderCard = ({
         <Text style={styles.total}>{formatMoneyFromK(total)}</Text>
       </View>
 
+      <View style={styles.codRow}>
+        <Text style={styles.muted}>Tiền thu hộ (COD)</Text>
+        <Text style={styles.codValue}>{formatCodAmount(item.codAmount || 0)}</Text>
+      </View>
+
+      <Text style={styles.label}>Ghi chú</Text>
+      <TextInput
+        style={[styles.input, styles.noteInput]}
+        value={item.note || ""}
+        onChangeText={(value) => onUpdate(item.id, "note", value)}
+        placeholder="Nhập ghi chú"
+        multiline
+      />
+
       <ProductTable
-        products={item.products || []}
+        products={products}
         onAddProduct={
           onAddProduct
             ? () =>
-                onAddProduct(item.id, createProductFromComment(item.comment))
+                onAddProduct(item.id, createProductFromComment(item.comment || item.productName || "Sản phẩm"))
             : undefined
         }
       />
@@ -137,6 +205,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     ...textPresets.fs19_900,
     lineHeight: 24,
   },
+  handle: {
+    marginTop: 2,
+    color: colors.textGray,
+    ...textPresets.fs12_italic,
+  },
   badgeRow: { marginTop: 8, flexDirection: "row", alignItems: "center" },
   vip: {
     marginRight: 8,
@@ -186,8 +259,15 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  codRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   muted: { color: colors.textMuted, ...textPresets.fs12_italic },
   total: { color: colors.text, ...textPresets.fs17_900 },
+  codValue: { color: colors.textDark, ...textPresets.fs12_800 },
   label: {
     marginTop: 14,
     marginBottom: 6,
@@ -202,6 +282,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderRadius: 12,
     paddingHorizontal: 12,
     color: colors.textDark,
+  },
+  noteInput: {
+    minHeight: 72,
+    paddingTop: 10,
+    textAlignVertical: "top",
   },
   buttonRow: { marginTop: 14, flexDirection: "row" },
   depositButton: {

@@ -1,20 +1,9 @@
 import { LinearGradient } from "@components/linear-gradient";
-import { DEFAULT_WS_URL } from "@constants/config";
-import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { useAuth } from "@features/auth/hooks/use-auth";
-import { colors } from "@themes/colors";
-import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
+import { getTikTokChannelsApi } from "@features/auth/services/api";
 import { createStyles } from "@utils/createStyles";
-import { useState } from "react";
-import {
-  Alert,
-  Image,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const AVATAR_URL = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
 
@@ -36,20 +25,42 @@ const settingGroups = [
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
-  const { tiktokUsername, isConnected, status, changeTikTokUsername } =
-    useTikTokLiveSocketContext();
-
   const username = user?.fullName || user?.username || "User";
-  const accountName = user?.username || user?.phone || tiktokUsername || "Lumi Live";
-  const currentTiktokUsername = tiktokUsername;
+  const accountName = user?.username || user?.phone || "Lumi Live";
 
-  const [inputUsername, setInputUsername] = useState(currentTiktokUsername);
+  const [channels, setChannels] = useState<
+    { id: string; username: string; isDefault: boolean }[]
+  >([]);
+  const [loadingChannels, setLoadingChannels] = useState(true);
+  const [channelError, setChannelError] = useState<string | null>(null);
 
-  async function submitTikTokUsername() {
-    const nextUsername = normalizeTikTokUsername(inputUsername);
-    const ok = await changeTikTokUsername(nextUsername);
-    if (ok) Alert.alert("Đã đổi LIVE", nextUsername);
-  }
+  const loadChannels = useCallback(async () => {
+    setLoadingChannels(true);
+    setChannelError(null);
+    try {
+      const data = await getTikTokChannelsApi();
+      setChannels(
+        data.map((channel) => ({
+          id: channel.id,
+          username: channel.tiktokUsername,
+          isDefault: channel.isDefault,
+        })),
+      );
+    } catch (error) {
+      setChannelError(error instanceof Error ? error.message : "Không tải được danh sách kênh TikTok");
+    } finally {
+      setLoadingChannels(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadChannels();
+  }, [loadChannels]);
+
+  const defaultChannel = useMemo(
+    () => channels.find((channel) => channel.isDefault) ?? channels[0],
+    [channels],
+  );
 
   return (
     <View style={styles.screen}>
@@ -109,29 +120,54 @@ export default function SettingsTab() {
 
           <View style={styles.tiktokCard}>
             <View style={styles.tiktokHeader}>
-              <View>
-                <Text style={styles.cardLabel}>TikTok username</Text>
+              <View style={styles.tiktokHeaderCopy}>
+                <Text style={styles.cardLabel}>Quản lý kênh TikTok</Text>
                 <Text style={styles.connectionText}>
-                  {isConnected ? "Đã kết nối" : "Chưa kết nối"} · {status}
+                  {loadingChannels
+                    ? "Đang tải danh sách..."
+                    : `${channels.length} kênh${defaultChannel ? ` · mặc định @${defaultChannel.username}` : ""}`}
                 </Text>
               </View>
+              <TouchableOpacity style={styles.reloadPill} onPress={loadChannels} activeOpacity={0.85}>
+                <Text style={styles.reloadPillText}>Tải lại</Text>
+              </TouchableOpacity>
             </View>
-            <TextInput
-              style={styles.input}
-              value={inputUsername}
-              onChangeText={setInputUsername}
-              autoCapitalize="none"
-              placeholder="Nhập TikTok username"
-              placeholderTextColor={colors.neutral300}
-            />
-            <TouchableOpacity
-              style={styles.changeButton}
-              onPress={submitTikTokUsername}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.changeButtonText}>Kết nối / Đổi username</Text>
-            </TouchableOpacity>
-            <Text numberOfLines={1} style={styles.serverText}>{DEFAULT_WS_URL}</Text>
+
+            {channelError ? <Text style={styles.errorText}>{channelError}</Text> : null}
+
+            {loadingChannels ? (
+              <View style={styles.loadingWrap}>
+                <Text style={styles.connectionText}>Đang tải kênh TikTok...</Text>
+              </View>
+            ) : channels.length ? (
+              <View style={styles.channelList}>
+                {channels.map((channel) => (
+                  <View key={channel.id} style={styles.channelItem}>
+                    <View style={styles.channelAvatar}>
+                      <Text style={styles.channelAvatarText}>
+                        {channel.username.slice(0, 1).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.channelMeta}>
+                      <View style={styles.channelTitleRow}>
+                        <Text style={styles.channelName}>@{channel.username}</Text>
+                        {channel.isDefault ? (
+                          <View style={styles.defaultBadge}>
+                            <Text style={styles.defaultBadgeText}>Mặc định</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={styles.channelSub}>Kênh TikTok đã liên kết</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>Chưa có kênh TikTok nào.</Text>
+                <Text style={styles.emptyHint}>Danh sách sẽ hiển thị khi backend trả về dữ liệu kênh.</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.settingsContainer}>
@@ -362,11 +398,29 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     borderWidth: 0.5,
     borderColor: colors.border10,
     backgroundColor: colors.neutral100,
+    ...shadows.sd1,
   },
   tiktokHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: 12,
+  },
+  tiktokHeaderCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  reloadPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.neutral50,
+    borderWidth: 0.5,
+    borderColor: colors.border10,
+  },
+  reloadPillText: {
+    color: colors.neutral900,
+    ...textPresets.fs12_400,
   },
   cardLabel: {
     color: colors.neutral900,
@@ -379,29 +433,78 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     marginTop: 2,
     ...textPresets.fs12_400,
   },
-  input: {
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: colors.border10,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    color: colors.neutral900,
-    backgroundColor: colors.neutral50,
-    ...textPresets.fs14_400,
-  },
-  changeButton: {
-    minHeight: 44,
-    borderRadius: 12,
+  loadingWrap: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.neutral900,
+    paddingVertical: 12,
   },
-  changeButtonText: {
+  errorText: {
+    color: "#d92d20",
+    ...textPresets.fs12_400,
+  },
+  channelList: {
+    gap: 10,
+  },
+  channelItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: colors.neutral50,
+    borderRadius: 12,
+  },
+  channelAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: "#010101",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  channelAvatarText: {
     color: colors.neutral100,
+    ...textPresets.fs16_500,
+  },
+  channelMeta: {
+    flex: 1,
+    gap: 2,
+  },
+  channelTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  channelName: {
+    color: colors.neutral900,
     ...textPresets.fs14_500,
   },
-  serverText: {
-    color: colors.neutral300,
+  defaultBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+  },
+  defaultBadgeText: {
+    color: colors.neutral100,
+    ...textPresets.fs11_400,
+  },
+  channelSub: {
+    color: colors.neutral400,
+    ...textPresets.fs12_400,
+  },
+  emptyState: {
+    paddingVertical: 16,
+    alignItems: "center",
+    gap: 4,
+  },
+  emptyText: {
+    color: colors.neutral900,
+    ...textPresets.fs14_500,
+  },
+  emptyHint: {
+    color: colors.neutral400,
+    textAlign: "center",
     ...textPresets.fs12_400,
   },
   settingsContainer: {

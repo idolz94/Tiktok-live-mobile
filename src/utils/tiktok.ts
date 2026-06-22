@@ -21,7 +21,9 @@ export function getTikTokProfileUrl(username?: string | null) {
   return `https://www.tiktok.com/@${cleanUsername}`;
 }
 
-export function openTikTokProfile(username?: string | null) {
+import { Linking } from "react-native";
+
+export async function openTikTokProfile(username?: string | null) {
   const url = getTikTokProfileUrl(username);
 
   if (!url) {
@@ -29,7 +31,7 @@ export function openTikTokProfile(username?: string | null) {
     return;
   }
 
-  window.open(url, "_blank", "noopener,noreferrer");
+  await Linking.openURL(url);
 }
 
 export function getCommentTikTokUsername(comment: any) {

@@ -7,6 +7,7 @@ import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { OrderCard } from "@features/orders/components/order-card";
 
 type OrderStatCardData = {
   filterKey: OrderFilter;
@@ -62,9 +63,16 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     draftOrders,
     confirmedOrders,
     orders,
+    filteredOrders,
     orderProductCount,
     setOrderFilter,
     orderFilter,
+    updateOrder,
+    deleteOrder,
+    addProductToOrder,
+    toggleDepositStatus,
+    confirmOrder,
+    openOrderOverview,
   } = orderManager;
 
   const unpaidOrders = useMemo(
@@ -148,6 +156,20 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
           <Text>{activeFilterLabel}</Text>
         </Pressable>
       </View>
+      <View style={styles.listSection}>
+        {filteredOrders.map((item) => (
+          <OrderCard
+            key={item.id}
+            item={item}
+            onUpdate={updateOrder}
+            onDelete={deleteOrder}
+            onAddProduct={addProductToOrder}
+            onToggleDeposit={toggleDepositStatus}
+            onConfirmOrder={confirmOrder}
+            onOpenOverview={openOrderOverview}
+          />
+        ))}
+      </View>
     </ScrollView>
   );
 });
@@ -214,5 +236,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
   txtCount: {
     color: colors.neutral900,
     ...textPresets.fs20_600,
+  },
+  listSection: {
+    marginTop: 4,
   },
 }));
