@@ -17,13 +17,29 @@ type Props = {
   onClose: () => void;
   onSave: (name: string) => Promise<void>;
   onCancel?: () => void;
+  title?: string;
+  initialName?: string;
+  saveTitle?: string;
+  loadingText?: string;
+  cancelTitle?: string;
+  onDelete?: () => void;
 };
 
-export const AddChannel = ({ onClose, onSave, onCancel }: Props) => {
+export const AddChannel = ({
+  onClose,
+  onSave,
+  onCancel,
+  title = "Thêm mới kênh Tiktok",
+  initialName = "",
+  saveTitle = "Lưu và kết nối",
+  loadingText = "Đang kết nối với phòng live, pop-up sẽ tự đóng khi kết nối hoàn tất.",
+  cancelTitle = "Huỷ kết nối",
+  onDelete,
+}: Props) => {
   const { colors } = useThemes();
   const { update } = useBottomSheet();
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const [loading, setLoading] = useState(false);
   const cancelledRef = useRef(false);
 
@@ -54,11 +70,9 @@ export const AddChannel = ({ onClose, onSave, onCancel }: Props) => {
       {loading ? (
         <View style={styles.connectingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.connectingText}>
-            Đang kết nối với phòng live, pop-up sẽ tự đóng khi kết nối hoàn tất.
-          </Text>
+          <Text style={styles.connectingText}>{loadingText}</Text>
           <Button
-            title="Huỷ kết nối"
+            title={cancelTitle}
             onPress={handleCancel}
             containerStyle={styles.btnCancel}
             txtBtnStyle={styles.txtCancel}
@@ -67,7 +81,7 @@ export const AddChannel = ({ onClose, onSave, onCancel }: Props) => {
       ) : (
         <>
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>Thêm mới kênh Tiktok</Text>
+            <Text style={styles.title}>{title}</Text>
             <Pressable style={styles.btnClose} onPress={onClose}>
               <Icon name="close" size={16} tintColor={colors.neutral900} />
             </Pressable>
@@ -92,14 +106,24 @@ export const AddChannel = ({ onClose, onSave, onCancel }: Props) => {
               </Text>
             </View>
           </View>
-          <Button
-            title="Lưu và kết nối"
-            loading={false}
-            onPress={() => onAddChannel(name)}
-            disabled={!name}
-            gradientType="gra_primary"
-            containerStyle={styles.btnSave}
-          />
+          <View style={styles.actions}>
+            {onDelete ? (
+              <Button
+                title="Xoá kênh"
+                onPress={onDelete}
+                containerStyle={styles.btnDelete}
+                txtBtnStyle={styles.txtDelete}
+              />
+            ) : null}
+            <Button
+              title={saveTitle}
+              loading={false}
+              onPress={() => onAddChannel(name)}
+              disabled={!name}
+              gradientType="gra_primary"
+              containerStyle={styles.btnSave}
+            />
+          </View>
         </>
       )}
     </View>
@@ -152,9 +176,24 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.neutral400,
     ...textPresets.fs12_400,
   },
+  actions: {
+    flexDirection: "row",
+    gap: 12,
+  },
   btnSave: {
+    flex: 1,
     borderRadius: 40,
     overflow: "hidden",
+  },
+  btnDelete: {
+    flex: 1,
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: colors.border10,
+  },
+  txtDelete: {
+    color: colors.neutral900,
+    ...textPresets.fs14_500,
   },
   connectingContainer: {
     alignItems: "center",

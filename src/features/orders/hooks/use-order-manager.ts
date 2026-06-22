@@ -33,6 +33,11 @@ type CustomerSummaryWithTikTok = CustomerSummary & {
   customerId?: string | null;
 };
 
+type OrderWithAvatarFallback = OrderWithTikTok & {
+  customerAvatarUrl?: string | null;
+  customer_avatar_url?: string | null;
+};
+
 function getCommentText(comment: LiveComment) {
   return String(comment.comment || "").trim();
 }
@@ -43,6 +48,16 @@ function getCommentDisplayName(comment: LiveComment) {
 
 function getCommentAvatar(comment: LiveComment) {
   return String(comment.avatar || comment.avatarUrl || "").trim();
+}
+
+function getOrderAvatar(order: OrderWithAvatarFallback) {
+  return String(
+    order.avatar ||
+      order.avatarUrl ||
+      order.customerAvatarUrl ||
+      order.customer_avatar_url ||
+      "",
+  ).trim();
 }
 
 function getOrderRevenue(order: OrderWithTikTok) {
@@ -203,6 +218,7 @@ export function useOrderManager({
       }
 
       current.totalComments += 1;
+      if (!current.avatar) current.avatar = getCommentAvatar(comment);
       if (!current.latestComment)
         current.latestComment = getCommentText(comment);
       if (!current.customerTikTokUsername && customerTikTokUsername) {
@@ -219,7 +235,7 @@ export function useOrderManager({
       if (!current) {
         map.set(customerKey, {
           username,
-          avatar: order.avatar,
+          avatar: getOrderAvatar(order),
           customerId: order.customerId ?? null,
           customerTikTokUsername,
           totalComments: 0,
@@ -231,6 +247,10 @@ export function useOrderManager({
 
       if (!current.customerId && order.customerId) {
         current.customerId = order.customerId;
+      }
+
+      if (!current.avatar) {
+        current.avatar = getOrderAvatar(order);
       }
 
       current.totalOrders = orders.filter(

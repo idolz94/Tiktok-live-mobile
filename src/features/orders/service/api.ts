@@ -15,7 +15,7 @@ type CreateOrderFromCommentPayload = {
   note?: string;
 };
 
-const DEFAULT_PRICE = 20;
+const DEFAULT_PRICE = 20000;
 const DEFAULT_QUANTITY = 1;
 
 function pickArrayResponse(data: any, keys: string[]) {
@@ -59,11 +59,17 @@ function normalizeOrderResponse(data: any) {
 
 export async function getOrdersApi(): Promise<OrderWithTikTok[]> {
   const data = await getRequest<any>("/orders");
-  console.log("data : ",data)
   const rows = pickArrayResponse(data, ["orders", "items", "data"]);
 
   return rows.map((order: any) => normalizeApiOrderForUi(order));
 }
+
+export type CreateOrderFromCommentResult = {
+  success: boolean;
+  message: string;
+  orderId: string;
+  orderCode: string;
+};
 
 export async function createOrderFromCommentApi({
   comment,
@@ -71,7 +77,7 @@ export async function createOrderFromCommentApi({
   price = DEFAULT_PRICE,
   quantity = DEFAULT_QUANTITY,
   note = "",
-}: CreateOrderFromCommentPayload) {
+}: CreateOrderFromCommentPayload): Promise<CreateOrderFromCommentResult> {
   const data = await postRequest<any>("/orders/from-comment", {
     comment,
     liveSessionId,
@@ -80,9 +86,13 @@ export async function createOrderFromCommentApi({
     note,
   });
 
+  const result = data?.data ?? data;
+
   return {
-    ...data,
-    uiOrder: normalizeOrderResponse(data),
+    success: Boolean(result?.success ?? true),
+    message: String(result?.message ?? ""),
+    orderId: String(result?.orderId ?? result?.order_id ?? ""),
+    orderCode: String(result?.orderCode ?? result?.order_code ?? ""),
   };
 }
 

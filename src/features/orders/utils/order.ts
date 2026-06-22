@@ -3,7 +3,7 @@ import { cleanTikTokUsername } from "@utils/tiktok";
 import { createId } from "@utils/id";
 import { getOrderTikTokUsername } from "@utils/tiktok";
 
-export const DEFAULT_PRODUCT_PRICE = 20; // 20 = 20.000đ
+export const DEFAULT_PRODUCT_PRICE = 20000;
 export const DEFAULT_PRODUCT_QUANTITY = 1;
 
 export function parseOrderFromComment(comment: string) {
@@ -80,10 +80,12 @@ export function createProductFromComment(comment: string): OrderProduct {
   });
 }
 
-export function formatMoneyFromK(value: number) {
-  const safeValue = Number(value || 0);
-  return `${safeValue.toLocaleString("vi-VN")}.000đ`;
+export function formatMoney(value: number) {
+  return `${Number(value || 0).toLocaleString("vi-VN")} VNĐ`;
 }
+
+/** @deprecated use formatMoney */
+export const formatMoneyFromK = formatMoney;
 
 export function getProductTotal(
   product: Pick<OrderProduct, "price" | "quantity">,
@@ -138,11 +140,9 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
     order?.createdAt || order?.created_at || new Date().toISOString(),
   );
   const subtotalAmount = Number(
-    order?.subtotalAmount || order?.subtotal_amount || getOrderTotal(products),
+    order?.subtotalAmount ?? order?.subtotal_amount ?? getOrderTotal(products),
   );
-  const totalAmount = Number(
-    order?.totalAmount || order?.total_amount || subtotalAmount,
-  );
+  const totalAmount = subtotalAmount;
 
   return {
     id: String(order?.id || createId()),
@@ -154,17 +154,35 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
         customerTikTokUsername ||
         "Khách live",
     ),
+    customerId: order?.customerId || order?.customer_id || null,
     customerName: String(
       order?.customerName || order?.customer_name || order?.username || "",
     ),
+    customerPhone: String(order?.customerPhone || order?.customer_phone || ""),
+    customerAddress: String(
+      order?.customerAddress || order?.customer_address || "",
+    ),
+    customerAddressId: order?.customerAddressId || order?.customer_address_id || null,
+    customerAddressData:
+      order?.customerAddressData || order?.customer_address_data || null,
     customerTikTokUsername,
     customerTikTokName: customerTikTokUsername,
     uniqueId: cleanTikTokUsername(customerTikTokUsername),
     avatar: String(
-      order?.avatar || order?.avatarUrl || order?.avatar_url || "",
+      order?.avatar ||
+        order?.customerAvatarUrl ||
+        order?.customer_avatar_url ||
+        order?.avatarUrl ||
+        order?.avatar_url ||
+        "",
     ),
     avatarUrl: String(
-      order?.avatarUrl || order?.avatar || order?.avatar_url || "",
+      order?.avatarUrl ||
+        order?.customerAvatarUrl ||
+        order?.customer_avatar_url ||
+        order?.avatar ||
+        order?.avatar_url ||
+        "",
     ),
     comment,
     commentId: String(
@@ -189,7 +207,7 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
       order?.discountAmount || order?.discount_amount || 0,
     ),
     totalAmount,
-    codAmount: Number(order?.codAmount || order?.cod_amount || totalAmount),
+    codAmount: Number(order?.codAmount ?? order?.cod_amount ?? 0),
     note: String(order?.note || ""),
     createdAt,
     updatedAt: String(order?.updatedAt || order?.updated_at || ""),

@@ -131,7 +131,7 @@ export default function ShippingSettingsScreen() {
   } | null>(null);
   const {
     control,
-    formState: { errors },
+    formState: { errors, isValid },
     handleSubmit,
     reset,
     setValue,
@@ -549,20 +549,20 @@ export default function ShippingSettingsScreen() {
                   <Text style={styles.formErrorText}>{formError}</Text>
                 </View>
               ) : null}
-            </ScrollView>
 
-            <TouchableOpacity
-              style={[styles.saveButton, isSavingAddress && styles.saveButtonDisabled]}
-              activeOpacity={0.8}
-              onPress={handleSaveAddress}
-              disabled={isSavingAddress}
-            >
-              {isSavingAddress ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>{editingAddress ? "CẬP NHẬT ĐỊA CHỈ" : "+ THÊM ĐỊA CHỈ"}</Text>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.saveButton, (isSavingAddress || !isValid) && styles.saveButtonDisabled]}
+                activeOpacity={0.8}
+                onPress={handleSaveAddress}
+                disabled={isSavingAddress || !isValid}
+              >
+                {isSavingAddress ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveButtonText}>{editingAddress ? "CẬP NHẬT ĐỊA CHỈ" : "+ THÊM ĐỊA CHỈ"}</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
 
             <GeoPickerModal picker={geoPicker} onClose={() => setGeoPicker(null)} onSelect={selectGeoItem} />
           </View>
