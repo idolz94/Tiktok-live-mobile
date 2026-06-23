@@ -168,7 +168,6 @@ export const shippingSettingsStyles = StyleSheet.create({
     lineHeight: 20,
   },
   inputError: { borderColor: "#ef4444" },
-  fieldErrorText: { color: "#ef4444", fontSize: 12, lineHeight: 16 },
   textArea: { minHeight: 92, paddingTop: 10, paddingBottom: 10, textAlignVertical: "top" },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
   switchTextWrap: { flex: 1, gap: 2 },

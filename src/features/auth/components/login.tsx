@@ -3,6 +3,7 @@ import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Image } from "@components/image";
 import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
+import { AnimatedErrorText } from "@components/animated-error-text";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { LoginForm, LoginSchema } from "@features/auth/schemas";
 import { useAuthStore } from "@features/auth/stores";
@@ -52,7 +53,7 @@ type Props = {
 
 export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
   const { login } = useAuth();
-  const { colors, textPresets } = useThemes();
+  const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -123,7 +124,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
               fieldState: { invalid, isDirty, error },
             }) => {
               return (
-                <View style={{ rowGap: 6 }}>
+                <View>
                   <View style={styles.inputWrap}>
                     <TextInput
                       value={value}
@@ -139,11 +140,9 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
                       <Text style={styles.check}>✓</Text>
                     )}
                   </View>
-                  {isDirty && error && (
-                    <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                      {error.message}
-                    </Text>
-                  )}
+                  <AnimatedErrorText
+                    message={isDirty && error ? error.message : undefined}
+                  />
                 </View>
               );
             }}
@@ -188,11 +187,13 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
                 )}
               />
             </View>
-            {formMethod.formState.dirtyFields.password && formMethod.formState.errors.password && (
-              <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                {formMethod.formState.errors.password.message}
-              </Text>
-            )}
+            <AnimatedErrorText
+              message={
+                formMethod.formState.dirtyFields.password && formMethod.formState.errors.password
+                  ? formMethod.formState.errors.password.message
+                  : undefined
+              }
+            />
           </View>
         </View>
 

@@ -1,4 +1,5 @@
 import { LinearGradient } from "@components/linear-gradient";
+import { AnimatedErrorText } from "@components/animated-error-text";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
 import { useAuth } from "@features/auth/hooks/use-auth";
@@ -26,7 +27,7 @@ type Props = {
 };
 
 export const Register = ({ animatedStyle, switchToLogin }: Props) => {
-  const { colors, textPresets } = useThemes();
+  const { colors } = useThemes();
   const { register } = useAuth();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -53,7 +54,7 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
           username: phone.trim(),
           password,
           fullName: fullName.trim(),
-          tiktokId: tiktokId.trim(),
+          tiktokId: tiktokId.trim().replace(/^@/, ""),
         });
 
         Alert.alert(
@@ -103,11 +104,9 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
                         <Text style={styles.check}>✓</Text>
                       )}
                     </View>
-                    {isDirty && error && (
-                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                        {error.message}
-                      </Text>
-                    )}
+                    <AnimatedErrorText
+                      message={isDirty && error ? error.message : undefined}
+                    />
                   </>
                 );
               }}
@@ -141,11 +140,9 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
                         <Text style={styles.check}>✓</Text>
                       )}
                     </View>
-                    {isDirty && error && (
-                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                        {error.message}
-                      </Text>
-                    )}
+                    <AnimatedErrorText
+                      message={isDirty && error ? error.message : undefined}
+                    />
                   </>
                 );
               }}
@@ -179,11 +176,13 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
                 )}
               />
             </View>
-            {formMethod.formState.dirtyFields.password && formMethod.formState.errors.password && (
-              <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                {formMethod.formState.errors.password.message}
-              </Text>
-            )}
+            <AnimatedErrorText
+              message={
+                formMethod.formState.dirtyFields.password && formMethod.formState.errors.password
+                  ? formMethod.formState.errors.password.message
+                  : undefined
+              }
+            />
           </View>
         </View>
         <View style={{ rowGap: 8 }}>
@@ -212,11 +211,9 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
                         <Text style={styles.check}>✓</Text>
                       )}
                     </View>
-                    {isDirty && error && (
-                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                        {error.message}
-                      </Text>
-                    )}
+                    <AnimatedErrorText
+                      message={isDirty && error ? error.message : undefined}
+                    />
                   </>
                 );
               }}
@@ -245,11 +242,9 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
                   </Text>
                 </View>
               </Pressable>
-              {isDirty && !value && error && (
-                <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                  {error.message}
-                </Text>
-              )}
+              <AnimatedErrorText
+                message={isDirty && !value && error ? error.message : undefined}
+              />
             </View>
           )}
         />

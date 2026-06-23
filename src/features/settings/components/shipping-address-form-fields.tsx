@@ -1,5 +1,6 @@
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
+import { AnimatedErrorText } from "@components/animated-error-text";
 
 export function AddressInput({ label, required = false, value, onChangeText, onBlur, keyboardType = "default", placeholder, error }: {
   label: string;
@@ -25,7 +26,7 @@ export function AddressInput({ label, required = false, value, onChangeText, onB
         placeholderTextColor="#d1d5db"
         placeholder={placeholder}
       />
-      {error ? <Text style={styles.fieldErrorText}>{error}</Text> : null}
+      <AnimatedErrorText message={error ?? undefined} />
     </View>
   );
 }
@@ -77,7 +78,7 @@ export function PickerField({ label, required = false, value, placeholder, disab
         <Text style={[styles.pickerButtonText, !value && styles.pickerPlaceholder]}>{value || placeholder}</Text>
         <Text style={styles.pickerChevron}>⌄</Text>
       </TouchableOpacity>
-      {dirty && error ? <Text style={styles.fieldErrorText}>{error}</Text> : null}
+      <AnimatedErrorText message={dirty && error ? error : undefined} />
     </View>
   );
 }

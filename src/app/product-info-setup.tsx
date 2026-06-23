@@ -5,6 +5,7 @@ import {
   ProductPreset,
   updateProductPresetApi,
 } from "@features/settings/service/product-presets-api";
+import { AnimatedErrorText } from "@components/animated-error-text";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -262,7 +263,7 @@ export default function ProductInfoSetupScreen() {
                   placeholderTextColor="#BDBDBD"
                   style={[styles.input, errors.code && styles.inputError]}
                 />
-                {errors.code ? <Text style={styles.errorText}>{errors.code}</Text> : null}
+                <AnimatedErrorText message={errors.code} />
               </View>
 
               <View style={styles.field}>
@@ -289,7 +290,7 @@ export default function ProductInfoSetupScreen() {
                   />
                   <Text style={styles.currencyText}>VNĐ</Text>
                 </View>
-                {errors.price ? <Text style={styles.errorText}>{errors.price}</Text> : null}
+                <AnimatedErrorText message={errors.price} />
               </View>
             </View>
 
@@ -543,10 +544,6 @@ const styles = StyleSheet.create({
   currencyText: {
     color: "#9ca3af",
     fontSize: 13,
-  },
-  errorText: {
-    color: "#ef4444",
-    fontSize: 12,
   },
   saveButton: {
     minHeight: 54,

@@ -15,6 +15,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { AnimatedErrorText } from "@components/animated-error-text";
 import { Icon } from "@components/icon";
 import { fetchVnProvinces, fetchVnDistricts, fetchVnWards, VnGeoItem } from "@features/settings/service/vn-geo";
 import { addrSchema, AddrFormValues } from "../types";
@@ -349,11 +350,7 @@ function FormField({
         {label}
       </Text>
       {children}
-      {!!error && (
-        <Text style={[formFieldStyles.error, { color: colors.error }, textPresets.fs12_400]}>
-          {error}
-        </Text>
-      )}
+      <AnimatedErrorText message={error} />
     </View>
   );
 }
@@ -361,7 +358,6 @@ function FormField({
 const formFieldStyles = createStyles(() => ({
   container: { gap: 6, marginBottom: 14 },
   label: { marginBottom: 2 },
-  error: { marginTop: 2 },
 }));
 
 const formModalStyles = createStyles(() => ({

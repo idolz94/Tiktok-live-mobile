@@ -1,3 +1,4 @@
+import { AnimatedErrorText } from "@components/animated-error-text";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { useEffect } from "react";
@@ -57,7 +58,7 @@ export function ProductSheet({
   onClose,
   onSave,
 }: ProductSheetProps) {
-  const { colors, textPresets } = useThemes();
+  const { colors } = useThemes();
 
   const {
     control,
@@ -138,11 +139,9 @@ export function ProductSheet({
                       placeholderTextColor={colors.neutral300}
                       autoCapitalize="none"
                     />
-                    {dirtyFields.code && errors.code && (
-                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                        {errors.code.message}
-                      </Text>
-                    )}
+                    <AnimatedErrorText
+                      message={dirtyFields.code && errors.code ? errors.code.message : undefined}
+                    />
                   </>
                 )}
               />
@@ -165,11 +164,9 @@ export function ProductSheet({
                       placeholder="Nhập tên SP"
                       placeholderTextColor={colors.neutral300}
                     />
-                    {dirtyFields.name && errors.name && (
-                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-                        {errors.name.message}
-                      </Text>
-                    )}
+                    <AnimatedErrorText
+                      message={dirtyFields.name && errors.name ? errors.name.message : undefined}
+                    />
                   </>
                 )}
               />
@@ -204,11 +201,9 @@ export function ProductSheet({
               <Text style={[styles.priceSuffixText, { color: colors.neutral400 }]}>VNĐ</Text>
             </View>
           </View>
-          {dirtyFields.price && errors.price && (
-            <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-              {errors.price.message}
-            </Text>
-          )}
+          <AnimatedErrorText
+            message={dirtyFields.price && errors.price ? errors.price.message : undefined}
+          />
         </View>
 
         <View style={{ rowGap: 6 }}>
@@ -243,11 +238,9 @@ export function ProductSheet({
               <Text style={[styles.qtyBtnText, { color: colors.neutral900 }]}>+</Text>
             </Pressable>
           </View>
-          {dirtyFields.quantity && errors.quantity && (
-            <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
-              {errors.quantity.message}
-            </Text>
-          )}
+          <AnimatedErrorText
+            message={dirtyFields.quantity && errors.quantity ? errors.quantity.message : undefined}
+          />
         </View>
 
         <View style={styles.actions}>
