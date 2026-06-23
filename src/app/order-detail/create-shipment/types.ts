@@ -8,10 +8,15 @@ export type DeliveryPolicy = "full" | "partial";
 export type RefusalFee = "free" | "charge";
 
 const VN_PHONE_RE = /^(0|\+84)(3[2-9]|5[6-9]|7[06-9]|8[0-9]|9[0-9])\d{7}$/;
+const fullNamePattern = /^[\p{L}\s]+$/u;
 
 export const addrSchema = z.object({
   label: z.string(),
-  name: z.string().trim().min(1, "Tên không được bỏ trống"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Tên không được bỏ trống")
+    .regex(fullNamePattern, "Họ và tên chỉ được gồm chữ cái và khoảng trắng"),
   phone: z
     .string()
     .trim()

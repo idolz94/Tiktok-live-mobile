@@ -2,7 +2,7 @@ import { ShopAddress, ShopAddressPayload } from "@features/settings/service/shop
 import { VnGeoItem } from "@features/settings/service/vn-geo";
 import { z } from "zod";
 
-const SPECIAL_CHARS_RE = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/;
+const fullNamePattern = /^[\p{L}\s]+$/u;
 const VN_PHONE_RE = /^(\+84|0)(3[2-9]|5[25689]|7[06-9]|8[1-689]|9[0-46-8])\d{7}$/;
 
 export const addressFormSchema = z.object({
@@ -11,7 +11,7 @@ export const addressFormSchema = z.object({
     .string()
     .trim()
     .min(1, { error: "Tên không được bỏ trống" })
-    .refine((value) => !SPECIAL_CHARS_RE.test(value), "Tên không được chứa ký tự đặc biệt"),
+    .regex(fullNamePattern, "Tên chỉ được gồm chữ cái và khoảng trắng"),
   phone: z
     .string()
     .trim()
