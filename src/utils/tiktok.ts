@@ -21,15 +21,17 @@ export function getTikTokProfileUrl(username?: string | null) {
   return `https://www.tiktok.com/@${cleanUsername}`;
 }
 
+import { Alert, Linking } from "react-native";
+
 export function openTikTokProfile(username?: string | null) {
   const url = getTikTokProfileUrl(username);
 
   if (!url) {
-    alert("Không tìm thấy TikTok username của khách.");
+    Alert.alert("Không tìm thấy TikTok username của khách.");
     return;
   }
 
-  window.open(url, "_blank", "noopener,noreferrer");
+  Linking.openURL(url);
 }
 
 export function getCommentTikTokUsername(comment: any) {
@@ -61,11 +63,14 @@ export function getCommentTikTokUsername(comment: any) {
 export function getOrderTikTokUsername(order: any) {
   const username = String(
     order?.customerTikTokName ||
+      order?.customerTiktokUsername ||
       order?.customer_tiktok_name ||
       order?.customerTikTokUsername ||
       order?.customer_tiktok_username ||
       order?.tiktokUsername ||
       order?.tiktok_username ||
+      order?.tiktokUniqueId ||
+      order?.tiktok_unique_id ||
       order?.uniqueId ||
       order?.unique_id ||
       order?.customer?.tiktok_name ||

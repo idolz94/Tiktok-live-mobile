@@ -7,12 +7,16 @@ import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { getOrderTikTokUsername, openTikTokProfile } from "@utils/tiktok";
 import { memo, useCallback } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { formatMoneyFromK, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
   item: Order;
+  onToggleDeposit?: (orderId: string) => void;
+  depositLoading?: boolean;
+  onOpenOverview?: (orderId: string) => void;
 }
 
 function createDisplayCode(orderCode: string) {
@@ -20,7 +24,7 @@ function createDisplayCode(orderCode: string) {
   return (numbers || orderCode).slice(-6).padStart(6, "0");
 }
 
-export const OrderItem = memo(({ item }: OrderItemProps) => {
+export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOverview }: OrderItemProps) => {
   const { colors } = useThemes();
 
   const products = item.products?.length ? item.products : [];
@@ -29,16 +33,17 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
   const isPaid =
     item.depositStatus === "paid" || item.depositStatus === "deposited";
 
-  const onOpenCustomer = useCallback(() => {}, []);
-  const onPrintOrder = useCallback(() => {}, []);
-  const onOpenMoreMenu = useCallback(() => {}, []);
-  const onOpenNoteEditor = useCallback(() => {}, []);
-  const onDeleteOrder = useCallback(() => {}, []);
-  const onToggleDeposit = useCallback(() => {}, []);
-  const onOpenOrderOverview = useCallback(() => {}, []);
-  const onSaveOrderChanges = useCallback(() => {}, []);
-  const onOpenTikTokProfile = useCallback(() => {}, []);
-  const onUpdateOrder = useCallback(() => {}, []);
+  const handleOpenTikTok = useCallback(() => {
+    openTikTokProfile(getOrderTikTokUsername(item));
+  }, [item]);
+
+  const handleToggleDeposit = useCallback(() => {
+    onToggleDeposit?.(item.id);
+  }, [onToggleDeposit, item.id]);
+
+  const handleOpenOverview = useCallback(() => {
+    onOpenOverview?.(item.id);
+  }, [onOpenOverview, item.id]);
 
   return (
     <View style={styles.container}>
@@ -56,10 +61,12 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
             >{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
           </View>
           <View style={styles.actions}>
-            <Image
-              source={images.logo_tiktok}
-              style={{ width: 24, height: 24 }}
-            />
+            <Pressable onPress={handleOpenTikTok}>
+              <Image
+                source={images.logo_tiktok}
+                style={{ width: 24, height: 24 }}
+              />
+            </Pressable>
             <Icon name="print" size={24} tintColor="neutral900" />
             <Icon name="more" size={24} tintColor="neutral900" />
           </View>
@@ -116,8 +123,8 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
       <View style={styles.footer}>
         <Button
           title={isPaid ? "Đã cọc" : "Chưa cọc"}
-          loading={false}
-          onPress={onToggleDeposit}
+          loading={depositLoading}
+          onPress={handleToggleDeposit}
           txtBtnStyle={[
             styles.txtNotPaid,
             {
@@ -136,7 +143,7 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
         <Button
           title="Lưu thay đổi"
           loading={false}
-          onPress={onOpenOrderOverview}
+          onPress={handleOpenOverview}
           gradientType="gra_primary"
           containerStyle={styles.btnSubmit}
         />

@@ -11,23 +11,23 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		5874D3439FFDC064EFE52ACE /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B54A1D2DEF3A2C783281EAD /* ExpoModulesProvider.swift */; };
 		6197F84888A296BF5967FB2C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7096C7F3DE664DD5FECC752F /* PrivacyInfo.xcprivacy */; };
-		803B5C779D3E0F8AB948CC17 /* libPods-TikTokLiveTools.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EF2C660667D273165511611C /* libPods-TikTokLiveTools.a */; };
+		6630ED125BB76A716242AEBF /* libPods-TikTokLiveTools.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4281CCBE5E02CCFBD68F92C5 /* libPods-TikTokLiveTools.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0805E97AB658BC385489AE7D /* Pods-TikTokLiveTools.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TikTokLiveTools.release.xcconfig"; path = "Target Support Files/Pods-TikTokLiveTools/Pods-TikTokLiveTools.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* TikTokLiveTools.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TikTokLiveTools.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TikTokLiveTools/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TikTokLiveTools/Info.plist; sourceTree = "<group>"; };
-		169B6B972D0ACC363E5D6FE1 /* Pods-TikTokLiveTools.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TikTokLiveTools.release.xcconfig"; path = "Target Support Files/Pods-TikTokLiveTools/Pods-TikTokLiveTools.release.xcconfig"; sourceTree = "<group>"; };
+		4281CCBE5E02CCFBD68F92C5 /* libPods-TikTokLiveTools.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TikTokLiveTools.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7096C7F3DE664DD5FECC752F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = TikTokLiveTools/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		7307B101A2168D36ADE8D14D /* Pods-TikTokLiveTools.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TikTokLiveTools.debug.xcconfig"; path = "Target Support Files/Pods-TikTokLiveTools/Pods-TikTokLiveTools.debug.xcconfig"; sourceTree = "<group>"; };
 		9B54A1D2DEF3A2C783281EAD /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TikTokLiveTools/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = TikTokLiveTools/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		CD264D6BEBCA612EB8DC6C1C /* Pods-TikTokLiveTools.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TikTokLiveTools.debug.xcconfig"; path = "Target Support Files/Pods-TikTokLiveTools/Pods-TikTokLiveTools.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		EF2C660667D273165511611C /* libPods-TikTokLiveTools.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TikTokLiveTools.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = TikTokLiveTools/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* TikTokLiveTools-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TikTokLiveTools-Bridging-Header.h"; path = "TikTokLiveTools/TikTokLiveTools-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -37,13 +37,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				803B5C779D3E0F8AB948CC17 /* libPods-TikTokLiveTools.a in Frameworks */,
+				6630ED125BB76A716242AEBF /* libPods-TikTokLiveTools.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0BCF0EB94031A0FAEA2FC1EC /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				CD264D6BEBCA612EB8DC6C1C /* Pods-TikTokLiveTools.debug.xcconfig */,
+				0805E97AB658BC385489AE7D /* Pods-TikTokLiveTools.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* TikTokLiveTools */ = {
 			isa = PBXGroup;
 			children = (
@@ -62,7 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				EF2C660667D273165511611C /* libPods-TikTokLiveTools.a */,
+				4281CCBE5E02CCFBD68F92C5 /* libPods-TikTokLiveTools.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -81,8 +91,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				9B3260E8B717AFC8C855D241 /* Pods */,
 				C720064356BAE504A9D1E329 /* ExpoModulesProviders */,
+				0BCF0EB94031A0FAEA2FC1EC /* Pods */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -95,16 +105,6 @@
 				13B07F961A680F5B00A75B9A /* TikTokLiveTools.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		9B3260E8B717AFC8C855D241 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				7307B101A2168D36ADE8D14D /* Pods-TikTokLiveTools.debug.xcconfig */,
-				169B6B972D0ACC363E5D6FE1 /* Pods-TikTokLiveTools.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -139,14 +139,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "TikTokLiveTools" */;
 			buildPhases = (
-				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
+				291DF508DE5667F300B46BDD /* [CP] Check Pods Manifest.lock */,
 				BB4591865D4BC438C18FFF20 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				434D5003FD86E70FA3B43884 /* [CP] Embed Pods Frameworks */,
+				1A7E4C5532331317F1F7A0A8 /* [CP] Embed Pods Frameworks */,
+				1E60DBC32E5CCEED38EE92EF /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -220,29 +220,7 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TikTokLiveTools-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		434D5003FD86E70FA3B43884 /* [CP] Embed Pods Frameworks */ = {
+		1A7E4C5532331317F1F7A0A8 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -286,7 +264,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TikTokLiveTools/Pods-TikTokLiveTools-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
+		1E60DBC32E5CCEED38EE92EF /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -320,6 +298,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TikTokLiveTools/Pods-TikTokLiveTools-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		291DF508DE5667F300B46BDD /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TikTokLiveTools-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		BB4591865D4BC438C18FFF20 /* [Expo] Configure project */ = {
@@ -363,7 +363,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7307B101A2168D36ADE8D14D /* Pods-TikTokLiveTools.debug.xcconfig */;
+			baseConfigurationReference = CD264D6BEBCA612EB8DC6C1C /* Pods-TikTokLiveTools.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -400,7 +400,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 169B6B972D0ACC363E5D6FE1 /* Pods-TikTokLiveTools.release.xcconfig */;
+			baseConfigurationReference = 0805E97AB658BC385489AE7D /* Pods-TikTokLiveTools.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

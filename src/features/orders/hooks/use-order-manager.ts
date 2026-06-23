@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   LiveComment,
@@ -123,7 +124,11 @@ export function useOrderManager({
   );
 
   const paidOrders = useMemo(
-    () => orders.filter((item) => item.depositStatus === "paid").length,
+    () =>
+      orders.filter(
+        (item) =>
+          item.depositStatus === "paid" || item.depositStatus === "deposited",
+      ).length,
     [orders],
   );
 
@@ -154,7 +159,9 @@ export function useOrderManager({
       const matchFilter =
         orderFilter === "all" ||
         (orderFilter === "unpaid" && order.depositStatus === "unpaid") ||
-        (orderFilter === "paid" && order.depositStatus === "paid") ||
+        (orderFilter === "paid" &&
+          (order.depositStatus === "paid" ||
+            order.depositStatus === "deposited")) ||
         (orderFilter === "draft" && order.status === "draft") ||
         (orderFilter === "confirmed" && order.status === "confirmed");
 
@@ -419,10 +426,10 @@ export function useOrderManager({
     [reloadOrders],
   );
 
-  const openOrderOverview = useCallback(
-    (orderId: string) => setSelectedOrderId(orderId),
-    [],
-  );
+  const openOrderOverview = useCallback((orderId: string) => {
+    setSelectedOrderId(orderId);
+    router.push(`/order-detail?id=${orderId}`);
+  }, []);
   const closeOrderOverview = useCallback(() => setSelectedOrderId(null), []);
 
   return {

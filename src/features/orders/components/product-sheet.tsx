@@ -1,0 +1,391 @@
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+
+const addProductSchema = z.object({
+  code: z.string().trim().min(1, "Mã sản phẩm không được bỏ trống"),
+  name: z.string().trim().min(1, "Tên sản phẩm không được bỏ trống"),
+  price: z.number().min(1, "Giá phải lớn hơn 0"),
+  quantity: z.number().min(1, "Số lượng phải lớn hơn 0"),
+});
+
+const editProductSchema = z.object({
+  code: z.string().trim(),
+  name: z.string().trim(),
+  price: z.number().min(1, "Giá phải lớn hơn 0"),
+  quantity: z.number().min(1, "Số lượng phải lớn hơn 0"),
+});
+
+type ProductForm = z.infer<typeof addProductSchema>;
+
+type ProductSheetProps = {
+  visible: boolean;
+  mode: "add" | "edit";
+  initialCode?: string;
+  initialName?: string;
+  initialPrice?: number;
+  initialQty?: number;
+  loading?: boolean;
+  onClose: () => void;
+  onSave: (data: { code: string; name: string; price: number; quantity: number }) => void;
+};
+
+function parsePriceDisplay(formatted: string): number {
+  return parseInt(formatted.replace(/\D/g, ""), 10) || 0;
+}
+
+export function ProductSheet({
+  visible,
+  mode,
+  initialCode = "",
+  initialName = "",
+  initialPrice = 0,
+  initialQty = 1,
+  loading = false,
+  onClose,
+  onSave,
+}: ProductSheetProps) {
+  const { colors, textPresets } = useThemes();
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isValid, dirtyFields },
+  } = useForm<ProductForm>({
+    resolver: zodResolver(mode === "add" ? addProductSchema : editProductSchema),
+    mode: "onChange",
+    defaultValues: {
+      code: initialCode,
+      name: initialName,
+      price: initialPrice,
+      quantity: initialQty < 1 ? 1 : initialQty,
+    },
+  });
+
+  const quantity = watch("quantity");
+
+  useEffect(() => {
+    if (visible) {
+      reset({
+        code: initialCode,
+        name: initialName,
+        price: initialPrice,
+        quantity: initialQty < 1 ? 1 : initialQty,
+      });
+    }
+  }, [visible, reset, initialCode, initialName, initialPrice, initialQty]);
+
+  const onSubmit = handleSubmit((data) => {
+    onSave({
+      code: data.code.trim(),
+      name: data.name.trim(),
+      price: data.price,
+      quantity: data.quantity,
+    });
+  });
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.overlay} />
+      </TouchableWithoutFeedback>
+
+      <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
+        <View style={styles.dragHandle} />
+
+        <Text style={[styles.title, { color: colors.neutral900 }]}>
+          {mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}
+        </Text>
+
+        {mode === "add" && (
+          <>
+            <View style={{ rowGap: 6 }}>
+              <Text style={[styles.label, { color: colors.neutral400 }]}>Mã sản phẩm</Text>
+              <Controller
+                control={control}
+                name="code"
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        { color: colors.neutral900, borderColor: dirtyFields.code && errors.code ? colors.error : colors.border10 },
+                      ]}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Nhập mã SP"
+                      placeholderTextColor={colors.neutral300}
+                      autoCapitalize="none"
+                    />
+                    {dirtyFields.code && errors.code && (
+                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                        {errors.code.message}
+                      </Text>
+                    )}
+                  </>
+                )}
+              />
+            </View>
+            <View style={{ rowGap: 6 }}>
+              <Text style={[styles.label, { color: colors.neutral400 }]}>Tên sản phẩm</Text>
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        { color: colors.neutral900, borderColor: dirtyFields.name && errors.name ? colors.error : colors.border10 },
+                      ]}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Nhập tên SP"
+                      placeholderTextColor={colors.neutral300}
+                    />
+                    {dirtyFields.name && errors.name && (
+                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                        {errors.name.message}
+                      </Text>
+                    )}
+                  </>
+                )}
+              />
+            </View>
+          </>
+        )}
+
+        <View style={{ rowGap: 6 }}>
+          <Text style={[styles.label, { color: colors.neutral400 }]}>Đơn giá</Text>
+          <View
+            style={[
+              styles.priceRow,
+              { borderColor: dirtyFields.price && errors.price ? colors.error : colors.border10 },
+            ]}
+          >
+            <Controller
+              control={control}
+              name="price"
+              render={({ field: { onChange, value, onBlur } }) => (
+                <TextInput
+                  style={[styles.priceInput, { color: colors.neutral900 }]}
+                  value={value > 0 ? Number(value).toLocaleString("vi-VN") : ""}
+                  onChangeText={(text) => onChange(parsePriceDisplay(text))}
+                  onBlur={onBlur}
+                  placeholder="0"
+                  placeholderTextColor={colors.neutral300}
+                  keyboardType="numeric"
+                />
+              )}
+            />
+            <View style={[styles.priceSuffix, { backgroundColor: colors.neutral50, borderLeftColor: colors.border10 }]}>
+              <Text style={[styles.priceSuffixText, { color: colors.neutral400 }]}>VNĐ</Text>
+            </View>
+          </View>
+          {dirtyFields.price && errors.price && (
+            <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+              {errors.price.message}
+            </Text>
+          )}
+        </View>
+
+        <View style={{ rowGap: 6 }}>
+          <Text style={[styles.label, { color: colors.neutral400 }]}>Số lượng</Text>
+          <View style={styles.qtyRow}>
+            <Pressable
+              style={[styles.qtyBtn, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+              onPress={() => setValue("quantity", Math.max(1, quantity - 1), { shouldDirty: true, shouldValidate: true })}
+            >
+              <Text style={[styles.qtyBtnText, { color: colors.neutral900 }]}>−</Text>
+            </Pressable>
+            <Controller
+              control={control}
+              name="quantity"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={[styles.qtyInput, { color: colors.neutral900, borderColor: colors.border10 }]}
+                  value={String(value)}
+                  onChangeText={(t) => {
+                    const n = parseInt(t, 10);
+                    if (!isNaN(n) && n > 0) onChange(n);
+                  }}
+                  keyboardType="numeric"
+                  textAlign="center"
+                />
+              )}
+            />
+            <Pressable
+              style={[styles.qtyBtn, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+              onPress={() => setValue("quantity", quantity + 1, { shouldDirty: true, shouldValidate: true })}
+            >
+              <Text style={[styles.qtyBtnText, { color: colors.neutral900 }]}>+</Text>
+            </Pressable>
+          </View>
+          {dirtyFields.quantity && errors.quantity && (
+            <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+              {errors.quantity.message}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.actions}>
+          <Pressable
+            style={[styles.cancelBtn, { borderColor: colors.border10 }]}
+            onPress={onClose}
+            disabled={loading}
+          >
+            <Text style={[styles.cancelText, { color: colors.neutral500 }]}>Huỷ</Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.saveBtn,
+              { backgroundColor: isValid && !loading ? colors.primary : colors.neutral300 },
+            ]}
+            onPress={onSubmit}
+            disabled={!isValid || loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.neutral100} />
+            ) : (
+              <Text style={[styles.saveText, { color: colors.neutral100 }]}>Lưu</Text>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = createStyles(({ colors, textPresets }) => ({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 36,
+    paddingTop: 12,
+    rowGap: 8,
+  },
+  dragHandle: {
+    alignSelf: "center",
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.neutral300,
+    marginBottom: 8,
+  },
+  title: {
+    ...textPresets.fs16_600,
+    marginBottom: 8,
+  },
+  label: {
+    ...textPresets.fs12_500,
+    marginTop: 4,
+  },
+  input: {
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    ...textPresets.fs14_500,
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  priceInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    height: "100%",
+    ...textPresets.fs14_500,
+  },
+  priceSuffix: {
+    height: "100%",
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderLeftWidth: 1,
+  },
+  priceSuffixText: {
+    ...textPresets.fs12_500,
+  },
+  qtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+  },
+  qtyBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qtyBtnText: {
+    fontSize: 20,
+    lineHeight: 24,
+  },
+  qtyInput: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    ...textPresets.fs14_500,
+  },
+  actions: {
+    flexDirection: "row",
+    columnGap: 12,
+    marginTop: 16,
+  },
+  cancelBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 40,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelText: {
+    ...textPresets.fs14_500,
+  },
+  saveBtn: {
+    flex: 2,
+    height: 48,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveText: {
+    ...textPresets.fs14_500,
+  },
+}));

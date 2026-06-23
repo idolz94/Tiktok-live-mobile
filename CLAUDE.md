@@ -1,12 +1,25 @@
 # CLAUDE.md
 
-This file gives Claude Code project-specific context for working in this repository.
+This file provides Claude Code with project-specific context, architectural constraints, and business rules for working safely in this repository.
 
-## Project overview
+## 1. Project purpose
 
-This is a React Native mobile app built with Expo and Expo Router. The app is named TikTok Live Tools and focuses on TikTok live session management, comments, channel connection, customer/order views, and auth-gated mobile workflows.
+Lumi App is a React Native mobile application for livestream sellers.
 
-Core stack:
+The app helps sellers:
+
+- connect and manage TikTok livestream channels
+- receive live comments in real time
+- prioritize comments with buying intent
+- create draft orders from comments
+- manage customers, addresses, orders, shipping, COD, and reports
+- configure products before a livestream
+- review live-session history and performance
+- use AI-assisted comment analysis and seller workflows
+
+Business actions must remain under seller control. AI may analyze, suggest, or prepare drafts, but must not silently perform irreversible actions.
+
+## 2. Core stack
 
 - Expo SDK 56
 - React Native 0.85
@@ -14,469 +27,622 @@ Core stack:
 - Expo Router with typed routes
 - TypeScript strict mode
 - Zustand for state management
-- MMKV and Expo SecureStore for persistence
+- MMKV for persisted app/UI state
+- Expo SecureStore for secrets and tokens
 - Axios for HTTP clients
 - `react-native-sse` for live event streaming
-- React Hook Form + Zod for auth forms
+- React Hook Form + Zod for forms and validation
 
-Entry point is `expo-router/entry` from `package.json`. Expo Router root is configured as `src` in `app.json`.
+Entry point:
 
-## React Native code rules
+```text
+expo-router/entry
+```
 
-- Prefer platform-aware React Native components and Expo APIs over web-only patterns.
-- Do not assume DOM, browser globals, or CSS files exist.
-- Use `StyleSheet`, theme helpers, or existing style factories instead of Tailwind/web CSS.
-- Keep UI logic inside screens/components; keep network, storage, and business logic in hooks/services/stores.
-- Prefer Expo modules and React Native packages that already exist in `package.json` before introducing new dependencies.
-- Use `ScrollView`, `FlatList`, `FlashList`, `Pressable`, `View`, `Text`, `Image`, and `TextInput` appropriately; avoid web `<div>`/`span>` patterns.
-- Keep gesture, keyboard, and safe-area behavior in mind for mobile screens.
-- When a feature needs platform-specific behavior, isolate it with `Platform.select` or platform-specific files instead of branching everywhere.
-- Do not introduce browser-only routing or navigation patterns; keep using Expo Router.
-- Do not call `fetch` or Axios directly inside screens when an API/service helper already exists.
-- Keep persistence split correctly: tokens in SecureStore, app state in MMKV/Zustand, and ephemeral UI state in React state.
-- Verify any UI change on device/emulator when practical, not just with typecheck.
+Expo Router root is configured under:
 
-## Common commands
+```text
+src/app/
+```
 
-- `npm start` — start Expo dev server
-- `npm run ios` — run iOS app
-- `npm run android` — run Android app
-- `npm run web` — run Expo web
-- `npm run pod` — install iOS pods
-- `npm run typecheck` — run TypeScript typecheck
+## 3. Core domain model
 
-Before reporting a code change as complete, run `npm run typecheck` when practical. For UI or behavior changes, run the app and verify the changed flow manually.
+The main business relationships are:
 
-## Directory structure
+```text
+User
+  └── Shops
+        ├── Shop Channels
+        ├── Products
+        ├── Customers
+        │     ├── Addresses
+        │     └── Orders
+        ├── Live Sessions
+        │     ├── Comments
+        │     └── Orders
+        ├── Shipping Providers
+        └── Shipments
+```
+
+Rules:
+
+- One user can manage multiple shops.
+- One shop can connect multiple social channels.
+- One shop has many live sessions.
+- One live session has many comments.
+- One live session may produce many orders.
+- One comment may create one draft order.
+- One customer may have many orders and addresses.
+- One order contains one or more order items.
+- One order may have one or more shipment records.
+
+Do not create alternative ownership models without explicit approval.
+
+## 4. Repository structure
 
 Important directories:
 
-- `src/app/` — Expo Router routes and route layouts
-- `src/features/` — feature-specific screens, hooks, services, and types when a domain is isolated enough to live under one feature
-- `src/components/` — reusable and feature-specific UI components
+- `src/app/` — Expo Router routes and layouts
+- `src/modules/` — domain modules
+- `src/features/` — feature-oriented code when already used
+- `src/components/` — reusable UI components
 - `src/stores/` — Zustand stores and store utilities
 - `src/hooks/` — shared hooks
-- `src/utils/` — storage, HTTP, formatting, style, date, comment, and helper utilities
-- `src/themes/` — theme colors, typography, shadows, and theme types
-- `src/constants/` — environment/config constants and static values
+- `src/utils/` — HTTP, storage, formatting, mapping, and helper utilities
+- `src/themes/` — colors, typography, shadows, theme types
+- `src/constants/` — configuration and static constants
 - `src/assets/` — images and icons
-- `src/schemas/` — form validation schemas
+- `src/schemas/` — Zod validation schemas
 - `src/types/` — shared TypeScript types
-- `declare/` — global/project declarations imported by the root layout
+- `declare/` — global declarations
 
-If a domain is currently implemented under `src/modules/`, keep following that structure for existing code. Prefer not to mix both module- and feature-based layouts inside the same feature unless there is a clear migration plan.
-
-Feature/module directories currently include:
+Current domain modules include:
 
 - `src/modules/auth/`
 - `src/modules/tiktok-live/`
 - `src/modules/orders/`
 - `src/modules/customers/`
 
-## Path aliases
+If a feature already exists under `src/modules/`, keep it there unless there is an explicit migration plan.
 
-Use aliases instead of long relative imports when possible. Keep `babel.config.js` and `tsconfig.json` in sync if aliases change.
+Do not mix `modules` and `features` within the same domain without a clear reason.
 
-Current aliases:
+## 5. General coding rules
 
-- `@contexts/*` → `src/contexts/*`
-- `@declare` and `@declare/*` → `declare/index`, `declare/*`
-- `@screens/*` → `src/screens/*`
-- `@stores/*` → `src/stores/*`
-- `@hooks/*` → `src/hooks/*`
-- `@components/*` → `src/components/*`
-- `@utils/*` → `src/utils/*`
-- `@app-types/*` → `src/types/*`
-- `@themes` and `@themes/*` → `src/themes/index`, `src/themes/*`
-- `@modules/*` → `src/modules/*`
-- `@constants/*` → `src/constants/*`
-- `@assets/*` → `src/assets/*`
-- `@app/*` → `src/app/*`
+- Prefer platform-aware React Native and Expo APIs.
+- Do not assume DOM, browser globals, CSS files, or browser-only routing.
+- Do not use web elements such as `<div>`, `<span>`, or browser event APIs.
+- Use `StyleSheet`, existing theme helpers, and existing style factories.
+- Reuse existing abstractions when they remain cohesive.
+- Create a new file when it cleanly isolates a reusable component, service, adapter, schema, or domain responsibility.
+- Keep screens focused on rendering and interaction.
+- Keep network, storage, mapping, and business logic in hooks, services, stores, or domain utilities.
+- Prefer packages already present in `package.json`.
+- Do not add a dependency without checking whether the project already has an equivalent.
+- Use project aliases instead of deep relative imports.
+- Keep Babel and TypeScript alias configuration synchronized.
+- Avoid broad refactors unless explicitly requested.
+- Do not leave dead code, commented-out blocks, or unused exports.
+- Comments should explain only non-obvious invariants, platform limitations, or workarounds.
 
-## Routing structure
+## 6. React Native UI rules
+
+Use React Native components appropriately:
+
+- `View`
+- `Text`
+- `Pressable`
+- `TextInput`
+- `Image`
+- `ScrollView`
+- `FlatList`
+- `FlashList`
+
+Rules:
+
+- Prefer `FlatList` or `FlashList` for large or frequently updated collections.
+- Avoid `.map()` for long realtime lists.
+- Use stable keys.
+- Memoize row components where useful.
+- Avoid replacing an entire comments array when updating one comment.
+- Keep keyboard, safe-area, gesture, and platform behavior in mind.
+- Isolate platform-specific behavior with `Platform.select` or `.ios.tsx` / `.android.tsx` files.
+- Do not introduce infinite animation on every visible list item.
+- Animate only newly received or visible priority comments when possible.
+- Respect reduced-motion accessibility settings.
+- Do not claim device or simulator verification unless it was actually performed.
+
+## 7. Routing rules
 
 Routing is controlled by Expo Router under `src/app/`.
 
-Main route files:
+Main route groups:
 
-- `src/app/_layout.tsx` — root app layout
-- `src/app/index.tsx` — first redirect gate
-- `src/app/(auth)/_layout.tsx` — auth route guard
-- `src/app/(auth)/index.tsx` — login/register screen host
-- `src/app/(tabs)/_layout.tsx` — protected tab layout
-- `src/app/(tabs)/index.tsx` — home tab
-- `src/app/(tabs)/customers.tsx` — customers tab
-- `src/app/(tabs)/shipping.tsx` — shipping tab
-- `src/app/(tabs)/reports.tsx` — reports tab
-- `src/app/(tabs)/settings.tsx` — settings tab
-- `src/app/onboarding/index.tsx` — onboarding route
-- `src/app/order-detail/index.tsx` — order detail route
-- `src/app/(sheets)/` — sheet routes
-- `src/app/splash/index.tsx` — splash overlay UI
+- `src/app/_layout.tsx` — root providers and global app behavior
+- `src/app/index.tsx` — initial redirect gate
+- `src/app/(auth)/` — public auth routes
+- `src/app/(tabs)/` — authenticated app routes
+- `src/app/(sheets)/` — sheet/modal routes
+- `src/app/onboarding/` — onboarding flow
 
-Root layout responsibilities:
+Rules:
 
-- imports `@declare`
-- wraps the app with `SafeAreaProvider`, `KeyboardProvider`, and `BottomSheetProvider`
-- manages Expo splash screen visibility
-- listens for session-expired events and triggers logout via root-level alert
-- declares the root Stack routes
-
-Initial routing in `src/app/index.tsx`:
+- Do not introduce manual navigation architecture.
+- Preserve Expo Router conventions.
+- When changing route guards, review these files together:
 
 ```text
-if auth is loading → render null
-if user exists → redirect to /(tabs)
-if onboarding is not completed → redirect to /onboarding
-otherwise → redirect to /(auth)
+src/app/_layout.tsx
+src/app/index.tsx
+src/app/(auth)/_layout.tsx
+src/app/(tabs)/_layout.tsx
 ```
 
-Protected tabs in `src/app/(tabs)/_layout.tsx` require `user`. The tab tree is wrapped with `TikTokLiveSocketProvider` so live state has a single provider instance inside the protected area.
+- Protected tabs require an authenticated user.
+- Realtime live state must keep a single provider instance inside the protected app tree.
 
-## Auth flow
+## 8. Auth invariants
 
-Auth is token-based and split into two persistence layers:
+Auth uses two persistence layers:
 
-- access/refresh token helpers live in `src/utils/storage/secure-store.ts` and use Expo SecureStore
-- user/session UI state lives in Zustand and is persisted via MMKV
+- SecureStore for access and refresh tokens
+- Zustand/MMKV for user-facing session and app state
 
-Main files:
+Rules:
 
-- `src/modules/auth/hooks/use-auth.ts`
-- `src/modules/auth/services/api.ts`
-- `src/stores/auth/auth-store.ts`
-- `src/stores/auth/auth-utils.ts`
-- `src/utils/http/axios.ts`
-- `src/utils/http/session-event.ts`
-- `src/utils/storage/secure-store.ts`
-
-Startup auth flow:
-
-```text
-Root/layout and route guards call useAuth()
-  ↓
-Zustand waits for MMKV hydration
-  ↓
-bootstrapAuth() checks SecureStore access token
-  ↓
-No token → set user = null
-  ↓
-Has token → GET /me/bootstrap
-  ↓
-mapBootstrapToAuthUser()
-  ↓
-set user in Zustand
-```
-
-`use-auth.ts` has module-level `bootstrapInFlight` and `bootstrapDone` guards. Preserve this behavior when editing auth; it prevents duplicate bootstrap calls and avoids circular imports between store and API layers.
-
-Login flow:
-
-```text
-Login form submits phone/password/remember
-  ↓
-useAuth().login()
-  ↓
-authStore.login()
-  ↓
-POST /auth/login
-  ↓
-extract access token from response
-  ↓
-secureStorage.setAccessToken(token)
-  ↓
-set basic user in Zustand for fast navigation
-  ↓
-fire-and-forget bootstrapAuth()
-  ↓
-GET /me/bootstrap enriches shop/license/TikTok channel data
-```
-
-Register flow:
-
-```text
-Register form
-  ↓
-useRegister().handleRegister()
-  ↓
-useAuth().register()
-  ↓
-POST /auth/register
-  ↓
-on success, alert and return to login
-```
-
-Logout flow:
-
-```text
-useAuth().logout()
-  ↓
-authStore.logout()
-  ↓
-secureStorage.clearAuth()
-  ↓
-set user = null
-  ↓
-preserve account username/phone for prefill but clear password
-  ↓
-route guard sends user back to auth
-```
-
-There is a `logoutApi()` helper, but the current logout flow is local-only and does not call the server logout endpoint.
-
-Refresh behavior:
-
-- `refreshAuth()` forces `/me/bootstrap` again and refreshes user/shop/license/TikTok channel state.
-- It is not an access-token refresh flow.
-- Refresh-token helpers exist, but there is currently no implemented `/auth/refresh` retry interceptor flow.
-
-Session expiration:
-
-- `apiClient` emits `sessionExpiredEmitter` on `401` responses except `/auth/login`.
-- `src/app/_layout.tsx` shows one root Alert and calls `logout()` when the user confirms.
+- Never store raw tokens in Zustand, MMKV, AsyncStorage, logs, or component state.
+- Do not hardcode credentials or secrets.
+- Login sets a minimal user first for fast navigation.
+- Background bootstrap enriches the user with shop, license, and channel data.
+- Preserve duplicate-bootstrap protection.
+- Temporary network or server failures must not automatically remove a valid persisted user.
+- `refreshAuth()` refreshes bootstrap/user data; it is not a refresh-token flow.
+- Unauthorized handling belongs at the root level.
 - Do not show duplicated session-expired alerts in feature screens.
+- Local logout clears local auth state.
+- Do not assume server logout or refresh-token retry exists unless confirmed in code.
 
-## HTTP and network layer
-
-Main HTTP file: `src/utils/http/axios.ts`.
-
-There are two Axios instances:
-
-- `apiClient` — REST/auth/bootstrap API client
-- `sseClient` — SSE-related/API helper client
-
-Both read tokens from `secureStorage` and attach:
+Relevant areas:
 
 ```text
-Authorization: Bearer <token>
+src/modules/auth/
+src/stores/auth/
+src/utils/http/
+src/utils/storage/secure-store.ts
 ```
 
-`apiClient` also emits session-expired events on unauthorized responses.
+## 9. HTTP and API contracts
 
-Request helper file:
+Rules:
 
-- `src/utils/http/request-sse.ts`
+- The mobile app must call the Lumi backend API.
+- Do not access the database directly from screens.
+- Do not introduce direct Supabase database calls in the mobile app.
+- Do not hardcode API URLs, tokens, app keys, or user secrets.
+- Reuse existing Axios clients and request helpers.
+- Do not call `fetch` or Axios directly inside screens when a helper or service already exists.
+- Validate untrusted API and SSE payloads at boundaries.
+- Do not guess backend fields.
+- Reuse existing DTOs, schemas, types, and mappers.
+- Keep backend DTOs separate from UI view models when their shapes differ.
+- Treat network errors separately from authentication errors.
+- Mutating requests should be idempotent when retry is possible.
 
-This exposes helpers such as:
+Configuration should come from `src/constants/config.ts` and environment variables.
 
-- `getRequest`
-- `postRequest`
-- `patchRequest`
-- `deleteRequest`
-- `buildApiUrl`
-- `ApiError`
+Any stale Supabase-related variables should be removed from project guidance once they are no longer used by source code.
 
-Config values come from `src/constants/config.ts`, mostly via `EXPO_PUBLIC_*` env vars:
+## 10. SSE and TikTok live invariants
 
-- `EXPO_PUBLIC_TIKTOK_SSE_API`
-- `EXPO_PUBLIC_SUPABASE_URL_ENDPOINT`
-- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-- `EXPO_PUBLIC_MOBILE_APP_KEY`
-- `EXPO_PUBLIC_WEB_URL_ORIGIN`
-- `EXPO_PUBLIC_WEB_URL_REFERER`
+TikTok live code lives mainly under:
 
-Do not hardcode API URLs or tokens in components.
-
-## TikTok live flow
-
-TikTok live domain code lives under `src/modules/tiktok-live/`.
-
-Important files:
-
-- `src/modules/tiktok-live/service/sse-api.ts`
-- `src/modules/tiktok-live/service/live-history-api.ts`
-- `src/modules/tiktok-live/hooks/use-tiktok-live-sse.ts`
-- `src/modules/tiktok-live/hooks/use-tik-tok-live-session.ts`
-- `src/modules/tiktok-live/hooks/use-tik-tok-comments.ts`
-- `src/modules/tiktok-live/hooks/use-tiktok-live-socket.ts`
-- `src/modules/tiktok-live/live-session-mapper.ts`
-- `src/modules/tiktok-live/types.ts`
-- `src/contexts/tiktok-live-socket.tsx`
-- `src/utils/comment.ts`
+```text
+src/modules/tiktok-live/
+src/contexts/tiktok-live-socket.tsx
+src/utils/comment.ts
+```
 
 High-level flow:
 
 ```text
-Auth user provides TikTok username/channel info
+Authenticated user
   ↓
-TikTokLiveSocketProvider creates one socket/session runtime in the tab tree
+Single protected live provider
   ↓
-useTikTokLiveSocket composes auth, SSE, comments, and live-session hooks
+SSE connection
   ↓
-clientId is loaded/stored locally
+Subscribe to live session
   ↓
-connect to SSE backend
+Receive normalized events
   ↓
-subscribe/stop live session through backend API helpers
-  ↓
-SSE events update comments, current live session, duration, and history
+Update comments, session state, duration, and history
 ```
-
-Common live event types include:
-
-- `CONNECTED`
-- `PING`
-- `SUBSCRIBING`
-- `SUBSCRIBED`
-- `LIVE_CONNECTED`
-- `LIVE_DISCONNECTED`
-- `LIVE_ERROR`
-- `LIVE_TIME_STARTED`
-- `LIVE_TIME_ENDED`
-- `LIVE_TIME_STATUS`
-- `COMMENT`
-- `COMMENT_SAVED`
-- `COMMENT_UPDATED`
-- `SNAPSHOT`
-
-When changing TikTok live behavior, preserve normalization/mapping in `src/utils/comment.ts` and `src/modules/tiktok-live/live-session-mapper.ts` so event schema handling remains consistent.
-
-## State management and persistence
-
-Zustand stores live in `src/stores/`.
-
-Auth store:
-
-- `src/stores/auth/auth-store.ts`
-- keeps `user`, `accounts`, and `isRemembered`
-- persists through a custom storage layer
-- supports migration from old AsyncStorage keys to MMKV-backed storage
-
-Order store:
-
-- `src/stores/order/order-store.ts`
-
-Storage utilities:
-
-- `src/utils/storage/secure-store.ts` — SecureStore token helpers
-- `src/utils/storage/mmkv.ts` — MMKV-backed Zustand storage
-- `src/utils/storage/constants.ts` — storage keys
-- `src/utils/storage/async-storage.ts` or storage index files — general local storage helpers where present
 
 Rules:
 
-- Store secrets/tokens only in SecureStore.
-- Store UI/session cache in Zustand/MMKV.
-- Do not put raw auth tokens into Zustand, AsyncStorage, logs, or component state.
-- Be careful when changing persisted store shapes; update migration logic if needed.
+- Maintain one active SSE connection per authenticated app session.
+- Do not create separate SSE connections from individual screens.
+- Clean up listeners, timers, and reconnect attempts on unmount and logout.
+- Reconnect with bounded backoff.
+- Revalidate auth and live state after returning from background when needed.
+- Deduplicate comments by stable external ID or normalized fallback ID.
+- `SNAPSHOT` must not duplicate comments already received.
+- Keep event normalization centralized.
+- Preserve comment and session mapping utilities.
+- Do not bypass existing live services and hooks.
+- Keep realtime state updates incremental.
+- Do not persist unbounded live-comment history in local storage.
 
-## UI and styling conventions
+Common event types may include:
 
-Theme files:
+```text
+CONNECTED
+PING
+SUBSCRIBING
+SUBSCRIBED
+LIVE_CONNECTED
+LIVE_DISCONNECTED
+LIVE_ERROR
+LIVE_TIME_STARTED
+LIVE_TIME_ENDED
+LIVE_TIME_STATUS
+COMMENT
+COMMENT_SAVED
+COMMENT_UPDATED
+SNAPSHOT
+```
 
-- `src/themes/colors.ts`
-- `src/themes/typography.ts`
-- `src/themes/shadow.ts`
-- `src/themes/type.ts`
-- `src/themes/index.ts`
+Do not add a new event type without updating its type, parser, mapper, state handler, and tests.
 
-Theme hook:
+## 11. State and persistence
 
-- `src/hooks/use-theme.ts`
+Rules:
 
-Style helper:
+- Tokens and secrets: SecureStore only.
+- Persisted UI/session state: Zustand + MMKV.
+- Ephemeral screen state: local React state.
+- Avoid introducing ad hoc AsyncStorage usage.
+- When changing a persisted store shape, review migration logic and old keys.
+- Do not store large unbounded arrays in MMKV.
+- Keep stores domain-focused.
+- Avoid storing duplicate server state in multiple stores.
+- Prefer selectors to reduce unnecessary rerenders.
 
-- `src/utils/createStyles.ts`
+Important areas:
 
-Component organization:
+```text
+src/stores/
+src/utils/storage/
+```
 
-- Auth UI: `src/components/auth/`
-- Home/live UI: `src/components/home/`
-- Bottom tab UI: `src/components/bottom-tab/`
-- Bottom sheet UI: `src/components/bottom-sheet/`
-- Shared wrappers: `src/components/screen/`, `src/components/image/`, `src/components/icon/`, `src/components/linear-gradient/`
+## 12. Product and live setup rules
 
-Prefer existing themed helpers and components over one-off inline styling. For larger screen-specific styles, follow the existing `createStyles`/`useThemes` pattern.
+Products may be configured before a live session with:
 
-Use the existing design system for mobile spacing, typography, and colors instead of inventing web-style utility classes or CSS modules.
+- product code
+- name
+- aliases
+- colors
+- sizes
+- live price
+- shipping dimensions or weight when needed
 
-For long lists or live feeds, prefer `FlashList`/`FlatList` over manual `.map()` rendering when the list is large or frequently updated.
+The current live product may be used as context for comment analysis.
 
-For forms, reuse React Hook Form and Zod patterns already present in auth and settings flows rather than introducing a second validation approach.
+Rules:
 
-For local state that must survive app restarts, prefer the current MMKV/SecureStore split instead of ad hoc AsyncStorage usage.
+- Product code, color, size, and quantity are separate entities.
+- Color names alone do not imply buying intent.
+- Size names alone do not imply buying intent.
+- Product matching must be validated against shop product data.
+- Do not infer a product when multiple products match equally.
+- Preserve whether a value came directly from the comment or was inferred from live context.
 
-For images and media, prefer Expo-compatible components and helpers already in the repo.
+## 13. Comment intelligence rules
 
-## Forms and validation
+Comment intelligence is a hybrid system:
 
-Auth forms use:
+```text
+Normalize
+  ↓
+System/noise filtering
+  ↓
+Rule-based parsing
+  ↓
+Entity extraction
+  ↓
+AI fallback when needed
+  ↓
+Product validation
+  ↓
+Confidence and priority
+  ↓
+Seller review
+```
+
+Supported intent categories may include:
+
+```text
+buy
+ask_price
+ask_stock
+ask_size
+ask_color
+ask_shipping
+ask_product
+ask_how_to_buy
+after_sales
+normal
+spam
+unknown
+```
+
+Rules:
+
+- Run deterministic rules before AI.
+- AI output is advisory and must be schema-validated.
+- Do not execute business actions directly from raw AI output.
+- AI may suggest or prepare a draft order only.
+- Seller confirmation is required before confirmed order creation.
+- Preserve raw comment text.
+- Preserve analysis source: rule, AI, rule+AI, or manual.
+- Preserve prompt/model version when AI is used.
+- Separate intent confidence from business priority.
+- `buy` does not automatically mean enough data exists to create a draft.
+- Track missing fields such as product, color, size, or quantity.
+- Use `unknown` rather than forcing an uncertain comment into another intent.
+- Do not treat seller/system identity as an intent.
+- Prompt injection inside a comment must remain untrusted user data.
+- Comment-analysis agents must not receive destructive tools.
+
+Recommended order eligibility:
+
+```text
+canSuggestOrder
+  = buying intent exists
+
+canCreateDraftOrder
+  = buying intent
+  + valid matched product
+  + valid variants
+  + valid quantity
+  + sufficient confidence
+```
+
+## 14. Order business rules
+
+Order calculations must be centralized in backend/domain services.
+
+Main monetary fields:
+
+- `subtotalAmount` — sum of item price × quantity
+- `shippingFee` — delivery fee
+- `discountAmount` — total discount
+- `depositAmount` — amount already paid
+- `totalAmount` — subtotal + shipping fee - discount
+- `codAmount` — remaining amount to collect
+
+Default relationship:
+
+```text
+totalAmount = subtotalAmount + shippingFee - discountAmount
+codAmount = max(totalAmount - depositAmount, 0)
+```
+
+Rules:
+
+- Do not calculate the same money fields independently in multiple screens.
+- Do not allow negative COD.
+- Use integer minor units or the project’s established money representation.
+- Avoid floating-point money arithmetic.
+- Draft order and confirmed order are different states.
+- A comment may create a draft order, not silently create a confirmed order.
+- Order creation, cancellation, price changes, deposits, and COD updates require explicit user action.
+- Keep auditability for seller corrections and AI-generated suggestions.
+
+## 15. Customer rules
+
+- A customer may have multiple addresses.
+- A customer may have multiple orders.
+- Do not overwrite historical order address data when a customer profile address changes.
+- Validate phone numbers according to backend rules.
+- Avoid creating duplicate customers from trivial formatting differences.
+- Customer merge operations must be explicit and auditable.
+
+## 16. Shipping rules
+
+Shipping integrations belong behind service or adapter boundaries.
+
+Rules:
+
+- Do not put provider-specific logic directly in screens.
+- Keep provider request/response mapping isolated.
+- Shipment creation must require seller confirmation.
+- COD sent to a provider must come from validated order totals.
+- Do not assume all providers support the same fields or lifecycle.
+- Treat shipment cancellation, label creation, and tracking as separate operations.
+- Preserve provider shipment IDs and status history.
+
+## 17. Printing rules
+
+Use a common print abstraction.
+
+Recommended structure:
+
+```text
+PrintJob
+  ├── System print / PDF
+  ├── ESC/POS adapter
+  ├── ZPL/TSPL adapter
+  └── Vendor-specific adapter
+```
+
+Rules:
+
+- Keep print templates separate from screens.
+- Do not place ESC/POS, ZPL, TSPL, or vendor SDK commands inside UI components.
+- Prefer system print/PDF as a fallback.
+- Isolate native printer integrations behind adapters.
+- Keep paper size and printer language explicit.
+- Do not assume one React Native package supports every printer.
+
+## 18. Forms and validation
+
+The project uses:
 
 - React Hook Form
-- Zod schemas from `src/schemas/auth`
+- Zod
 - `@hookform/resolvers`
 
-Keep validation in schema files where practical rather than duplicating validation logic in components.
+Rules:
 
-## Development rules for Claude Code
+- Keep validation in schema files when practical.
+- Do not duplicate the same validation logic across components.
+- Keep backend validation authoritative.
+- Show actionable validation messages.
+- Validate external values before storing or rendering them.
 
-Follow these rules when modifying this project:
+## 19. Themes and styling
 
-1. Prefer editing existing files over creating new files.
-2. Respect Expo Router conventions under `src/app/`; do not introduce manual navigation architecture unless explicitly requested.
-3. Use project aliases instead of deep relative imports.
-4. Keep `babel.config.js` and `tsconfig.json` aliases synchronized.
-5. Route auth changes through `use-auth.ts`, `auth-store.ts`, `auth-utils.ts`, and `modules/auth/services/api.ts` as appropriate.
-6. Do not hardcode access tokens, refresh tokens, API URLs, app keys, or user secrets.
-7. Preserve SecureStore for tokens and MMKV/Zustand for user/session UI state.
-8. When changing session-expired behavior, keep the root-level alert pattern and avoid duplicate feature-level alerts.
-9. When changing live/SSE behavior, reuse existing services and hooks in `src/modules/tiktok-live/` and `src/utils/http/request-sse.ts`.
-10. When changing route guards, verify `src/app/_layout.tsx`, `src/app/index.tsx`, `src/app/(auth)/_layout.tsx`, and `src/app/(tabs)/_layout.tsx` together.
-11. When changing persisted state shapes, review migrations and old storage keys before removing compatibility logic.
-12. Run `npm run typecheck` after TypeScript changes when practical.
-13. For UI changes, run the app and manually verify the affected path before claiming completion.
-14. Avoid broad refactors unless explicitly requested; keep changes scoped to the task.
-15. Avoid comments unless they explain a non-obvious invariant, platform constraint, or workaround.
+Theme-related code lives under:
 
-## Known architectural notes
+```text
+src/themes/
+src/hooks/use-theme.ts
+src/utils/createStyles.ts
+```
 
-- Login intentionally sets a basic user immediately so protected navigation can proceed quickly, then runs `/me/bootstrap` in the background to enrich user data.
-- Bootstrap intentionally keeps the old persisted user on network/server failure to avoid kicking users out during temporary connectivity issues.
-- Auth bootstrap lives in `use-auth.ts` instead of the store to avoid circular imports between store and API modules.
-- `refreshAuth()` refreshes bootstrap/user data, not access tokens.
-- Refresh-token storage helpers exist, but a full token-refresh retry flow is not currently implemented.
-- `logoutApi()` exists, but the active logout behavior is local token/state cleanup only.
+Rules:
 
-<!-- gitnexus:start -->
-# GitNexus — Code Intelligence
+- Reuse design tokens and theme helpers.
+- Avoid one-off colors and spacing when an existing token exists.
+- Avoid CSS modules and Tailwind-style web assumptions.
+- Prefer screen-specific style files or existing style factories for larger styles.
+- Keep dark/light appearance behavior consistent with the existing theme system.
 
-This project is indexed by GitNexus as **Tiktok-live-mobile** (1097 symbols, 2350 relationships, 85 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+## 20. Performance rules
 
-> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
+For realtime and list-heavy screens:
 
-## Always Do
+- Use stable keys.
+- Keep row components small.
+- Prefer memoized selectors.
+- Avoid rerendering the entire list for one comment update.
+- Batch updates where appropriate.
+- Avoid expensive parsing inside render.
+- Avoid infinite animations across many cards.
+- Pause or stop animations when rows are offscreen.
+- Avoid storing duplicate normalized and raw copies when unnecessary.
+- Bound local history and caches.
+- Measure before introducing complex optimization.
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "main"})`.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
+## 21. Security rules
 
-## Never Do
+- Never expose secrets in client code.
+- Never log tokens.
+- Never trust comment text, API payloads, SSE events, or deep-link params.
+- Escape or safely render user-generated content.
+- Do not give AI agents destructive permissions.
+- Enforce authorization on the backend.
+- Client-side route guards are UX only, not security.
+- Do not place service-role keys or database credentials in Expo environment variables.
+- `EXPO_PUBLIC_*` values are public and must not contain secrets.
 
-- NEVER edit a function, class, or method without first running `impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
-- NEVER commit changes without running `detect_changes()` to check affected scope.
+## 22. Definition of done
 
-## Resources
+Before reporting a task complete, run the narrowest relevant checks available:
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/Tiktok-live-mobile/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/Tiktok-live-mobile/clusters` | All functional areas |
-| `gitnexus://repo/Tiktok-live-mobile/processes` | All execution flows |
-| `gitnexus://repo/Tiktok-live-mobile/process/{name}` | Step-by-step execution trace |
+1. `npm run typecheck`
+2. lint, when configured
+3. targeted tests for changed logic
+4. app/simulator verification for native UI behavior when supported
+5. review affected flows for broad or shared changes
 
-## CLI
+Rules:
 
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+- Do not claim a check passed unless it was run.
+- If native verification was not possible, say which static checks were run.
+- For UI changes, verify the exact affected path when practical.
+- For auth, routing, SSE, persistence, order totals, or shared stores, perform extra impact review.
 
-<!-- gitnexus:end -->
+Common commands:
+
+```bash
+npm start
+npm run ios
+npm run android
+npm run web
+npm run pod
+npm run typecheck
+```
+
+Use scripts from `package.json` as the source of truth.
+
+## 23. High-risk areas
+
+Treat changes in these areas as high risk:
+
+- authentication and route guards
+- SecureStore and token handling
+- persisted Zustand/MMKV store shapes
+- SSE connection lifecycle
+- comment deduplication
+- live session finalization
+- order totals, deposit, COD, and discounts
+- shipment creation and cancellation
+- shared exported hooks and services
+- native printer integrations
+- broad renames and refactors
+
+Do not change these casually or as part of unrelated cleanup.
+
+## 24. GitNexus usage
+
+This repository may be indexed by GitNexus.
+
+Use GitNexus for shared or high-risk changes.
+
+Workflow:
+
+1. Use `query` to locate unfamiliar flows.
+2. Use `context` for callers, callees, and related execution flows.
+3. Use `impact` before changing shared or high-risk symbols.
+4. Warn before proceeding only when risk is HIGH or CRITICAL.
+5. Use `rename` for symbol renames.
+6. Use `detect_changes()` before broad refactors, commits, or completion reports for high-risk work.
+
+GitNexus impact analysis is optional for isolated copy, spacing, color, icon, or local visual changes that do not affect shared behavior.
+
+Never use blind find-and-replace for exported symbol renames.
+
+If the index is stale, refresh it with the repository-supported GitNexus command.
+
+## 25. Known intentional behavior
+
+Preserve these decisions unless the task explicitly changes them:
+
+- Login may set a basic user immediately for fast protected navigation.
+- Bootstrap enriches shop, license, and channel information afterward.
+- Duplicate bootstrap calls are guarded.
+- Temporary bootstrap failure does not automatically clear the persisted user.
+- Session-expired handling is centralized at the root.
+- `refreshAuth()` refreshes bootstrap data, not access tokens.
+- Logout may currently be local-only.
+- Refresh-token storage may exist without a complete retry interceptor flow.
+- TikTok realtime state uses a single provider in the protected route tree.
+
+## 26. Claude Code working rules
+
+When modifying this repository:
+
+1. Read the nearest relevant files before editing.
+2. Preserve established module boundaries.
+3. Keep changes scoped to the requested task.
+4. Do not introduce parallel architectures.
+5. Do not bypass existing services, hooks, stores, or mappers without a clear reason.
+6. Do not silently change business rules.
+7. Do not invent backend fields or API behavior.
+8. Do not add dependencies without justification.
+9. Do not create confirmed business actions from AI suggestions.
+10. Review high-risk flows before completion.
+11. State clearly what was changed and what was actually verified.

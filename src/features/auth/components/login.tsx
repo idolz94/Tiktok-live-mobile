@@ -52,7 +52,7 @@ type Props = {
 
 export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
   const { login } = useAuth();
-  const { colors } = useThemes();
+  const { colors, textPresets } = useThemes();
   const { show, hide } = useBottomSheet();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -61,7 +61,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
   const { isRemembered, lastUsername } = useAuthStore();
 
   const formMethod = useForm<LoginForm>({
-    mode: "all",
+    mode: "onChange",
     defaultValues: {
       username: lastUsername || "",
       password: "",
@@ -79,7 +79,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
   }, [lastUsername, isRemembered]);
 
   const handleSocialLogin = (
-    type: "phone" | "facebook" | "tiktok" | "zalo",
+    _type: "phone" | "facebook" | "tiktok" | "zalo",
   ) => {};
 
   const forgotPass = () =>
@@ -119,22 +119,30 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
             control={formMethod.control}
             name="username"
             render={({
-              field: { onChange, value },
-              fieldState: { invalid },
+              field: { onChange, value, onBlur },
+              fieldState: { invalid, isDirty, error },
             }) => {
               return (
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    keyboardType="default"
-                    autoCapitalize="none"
-                    placeholder="Nhập tài khoản"
-                    placeholderTextColor={colors.neutral300}
-                    style={styles.input}
-                  />
-                  {!invalid && value.length > 0 && (
-                    <Text style={styles.check}>✓</Text>
+                <View style={{ rowGap: 6 }}>
+                  <View style={styles.inputWrap}>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      keyboardType="default"
+                      autoCapitalize="none"
+                      placeholder="Nhập tài khoản"
+                      placeholderTextColor={colors.neutral300}
+                      style={styles.input}
+                    />
+                    {!invalid && value.length > 0 && (
+                      <Text style={styles.check}>✓</Text>
+                    )}
+                  </View>
+                  {isDirty && error && (
+                    <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                      {error.message}
+                    </Text>
                   )}
                 </View>
               );
@@ -155,26 +163,36 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
               <Text style={styles.forgotPass}>Quên mật khẩu?</Text>
             </Pressable>
           </View>
-          <View style={styles.inputWrap}>
-            <Controller
-              control={formMethod.control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  secureTextEntry={!isPasswordVisible}
-                  placeholder="Nhập mật khẩu"
-                  placeholderTextColor={colors.neutral300}
-                  style={styles.input}
-                />
-              )}
-            />
-            <Pressable onPress={() => setIsPasswordVisible((value) => !value)}>
-              <Text style={styles.eye}>
-                {isPasswordVisible ? "Ẩn" : "Hiện"}
+          <View style={{ rowGap: 6 }}>
+            <View style={styles.inputWrap}>
+              <Controller
+                control={formMethod.control}
+                name="password"
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secureTextEntry={!isPasswordVisible}
+                      placeholder="Nhập mật khẩu"
+                      placeholderTextColor={colors.neutral300}
+                      style={styles.input}
+                    />
+                    <Pressable onPress={() => setIsPasswordVisible((v) => !v)}>
+                      <Text style={styles.eye}>
+                        {isPasswordVisible ? "Ẩn" : "Hiện"}
+                      </Text>
+                    </Pressable>
+                  </>
+                )}
+              />
+            </View>
+            {formMethod.formState.dirtyFields.password && formMethod.formState.errors.password && (
+              <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                {formMethod.formState.errors.password.message}
               </Text>
-            </Pressable>
+            )}
           </View>
         </View>
 
@@ -199,7 +217,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
             (!formMethod.formState.isValid || loading) && { opacity: 0.5 },
           ]}
           onPress={submit}
-          disabled={loading}
+          disabled={!formMethod.formState.isValid || loading}
         >
           <LinearGradient type="gra_primary" style={StyleSheet.absoluteFill} />
           <Text style={styles.submitText}>

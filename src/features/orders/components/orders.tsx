@@ -57,9 +57,13 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     draftOrders,
     confirmedOrders,
     orders,
+    filteredOrders,
     orderProductCount,
     setOrderFilter,
     orderFilter,
+    toggleDepositStatus,
+    depositLoadingIds,
+    openOrderOverview,
   } = orderManager;
 
   const unpaidOrders = useMemo(
@@ -147,7 +151,12 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
           <Text>{activeFilterLabel}</Text>
         </Pressable>
       </View>
-      <ListOrders orders={orders} />
+      <ListOrders
+        orders={filteredOrders}
+        onToggleDeposit={toggleDepositStatus}
+        depositLoadingIds={depositLoadingIds}
+        onOpenOverview={openOrderOverview}
+      />
     </ScrollView>
   );
 });

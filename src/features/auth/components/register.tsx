@@ -26,13 +26,13 @@ type Props = {
 };
 
 export const Register = ({ animatedStyle, switchToLogin }: Props) => {
-  const { colors } = useThemes();
+  const { colors, textPresets } = useThemes();
   const { register } = useAuth();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const formMethod = useForm<RegisterForm>({
-    mode: "all",
+    mode: "onChange",
     defaultValues: {
       password: "",
       username: "",
@@ -79,141 +79,188 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
       >
         <View style={{ rowGap: 8 }}>
           <Text style={styles.label}>Họ và tên</Text>
-          <Controller
-            control={formMethod.control}
-            name="fullName"
-            render={({
-              field: { onChange, value },
-              fieldState: { invalid },
-            }) => {
-              return (
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    autoCapitalize="none"
-                    placeholder="Nhập tên của bạn"
-                    placeholderTextColor={colors.neutral300}
-                    style={styles.input}
-                  />
-                  {!invalid && value.length > 0 && (
-                    <Text style={styles.check}>✓</Text>
-                  )}
-                </View>
-              );
-            }}
-          />
+          <View style={{ rowGap: 6 }}>
+            <Controller
+              control={formMethod.control}
+              name="fullName"
+              render={({
+                field: { onChange, value, onBlur },
+                fieldState: { invalid, isDirty, error },
+              }) => {
+                return (
+                  <>
+                    <View style={styles.inputWrap}>
+                      <TextInput
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        autoCapitalize="none"
+                        placeholder="Nhập tên của bạn"
+                        placeholderTextColor={colors.neutral300}
+                        style={styles.input}
+                      />
+                      {!invalid && value.length > 0 && (
+                        <Text style={styles.check}>✓</Text>
+                      )}
+                    </View>
+                    {isDirty && error && (
+                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                        {error.message}
+                      </Text>
+                    )}
+                  </>
+                );
+              }}
+            />
+          </View>
         </View>
         <View style={{ rowGap: 8 }}>
           <Text style={styles.label}>Tên đăng nhập</Text>
-          <Controller
-            control={formMethod.control}
-            name="username"
-            render={({
-              field: { onChange, value },
-              fieldState: { invalid },
-            }) => {
-              return (
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    keyboardType="phone-pad"
-                    autoCapitalize="none"
-                    placeholder="Nhập tên đăng nhập"
-                    placeholderTextColor={colors.neutral300}
-                    style={styles.input}
-                  />
-                  {!invalid && value.length > 0 && (
-                    <Text style={styles.check}>✓</Text>
-                  )}
-                </View>
-              );
-            }}
-          />
+          <View style={{ rowGap: 6 }}>
+            <Controller
+              control={formMethod.control}
+              name="username"
+              render={({
+                field: { onChange, value, onBlur },
+                fieldState: { invalid, isDirty, error },
+              }) => {
+                return (
+                  <>
+                    <View style={styles.inputWrap}>
+                      <TextInput
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        keyboardType="phone-pad"
+                        autoCapitalize="none"
+                        placeholder="Nhập tên đăng nhập"
+                        placeholderTextColor={colors.neutral300}
+                        style={styles.input}
+                      />
+                      {!invalid && value.length > 0 && (
+                        <Text style={styles.check}>✓</Text>
+                      )}
+                    </View>
+                    {isDirty && error && (
+                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                        {error.message}
+                      </Text>
+                    )}
+                  </>
+                );
+              }}
+            />
+          </View>
         </View>
         <View style={{ rowGap: 8 }}>
           <Text style={styles.label}>Mật khẩu</Text>
-          <View style={styles.inputWrap}>
-            <Controller
-              control={formMethod.control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  value={value}
-                  onChangeText={onChange}
-                  secureTextEntry={!isPasswordVisible}
-                  placeholder="Nhập mật khẩu"
-                  placeholderTextColor={colors.neutral300}
-                  style={styles.input}
-                />
-              )}
-            />
-            <Pressable onPress={() => setIsPasswordVisible((value) => !value)}>
-              <Text style={styles.eye}>
-                {isPasswordVisible ? "Ẩn" : "Hiện"}
+          <View style={{ rowGap: 6 }}>
+            <View style={styles.inputWrap}>
+              <Controller
+                control={formMethod.control}
+                name="password"
+                render={({ field: { onChange, value, onBlur } }) => (
+                  <>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secureTextEntry={!isPasswordVisible}
+                      placeholder="Nhập mật khẩu"
+                      placeholderTextColor={colors.neutral300}
+                      style={styles.input}
+                    />
+                    <Pressable onPress={() => setIsPasswordVisible((v) => !v)}>
+                      <Text style={styles.eye}>
+                        {isPasswordVisible ? "Ẩn" : "Hiện"}
+                      </Text>
+                    </Pressable>
+                  </>
+                )}
+              />
+            </View>
+            {formMethod.formState.dirtyFields.password && formMethod.formState.errors.password && (
+              <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                {formMethod.formState.errors.password.message}
               </Text>
-            </Pressable>
+            )}
           </View>
         </View>
         <View style={{ rowGap: 8 }}>
           <Text style={styles.label}>Tiktok ID (tùy chọn)</Text>
-          <Controller
-            control={formMethod.control}
-            name="tiktokId"
-            render={({
-              field: { onChange, value },
-              fieldState: { invalid },
-            }) => {
-              return (
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    autoCapitalize="none"
-                    placeholder="@username"
-                    placeholderTextColor={colors.neutral300}
-                    style={styles.input}
-                  />
-                  {!invalid && value.length > 0 && (
-                    <Text style={styles.check}>✓</Text>
-                  )}
-                </View>
-              );
-            }}
-          />
+          <View style={{ rowGap: 6 }}>
+            <Controller
+              control={formMethod.control}
+              name="tiktokId"
+              render={({
+                field: { onChange, value, onBlur },
+                fieldState: { isDirty, error },
+              }) => {
+                return (
+                  <>
+                    <View style={styles.inputWrap}>
+                      <TextInput
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        autoCapitalize="none"
+                        placeholder="@username"
+                        placeholderTextColor={colors.neutral300}
+                        style={styles.input}
+                      />
+                      {value.length > 0 && !error && (
+                        <Text style={styles.check}>✓</Text>
+                      )}
+                    </View>
+                    {isDirty && error && (
+                      <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                        {error.message}
+                      </Text>
+                    )}
+                  </>
+                );
+              }}
+            />
+          </View>
         </View>
 
         <Controller
           control={formMethod.control}
           name="agreePolicy"
-          render={({ field: { onChange, value } }) => (
-            <Pressable
-              style={styles.rememberRow}
-              onPress={() => onChange(!value)}
-            >
-              <View style={[styles.checkbox, value && styles.checkboxActive]}>
-                {value ? <Text style={styles.checkboxText}>✓</Text> : null}
-              </View>
-              <View style={{ flexShrink: 1 }}>
-                <Text style={styles.rememberText}>
-                  Bấm nút đăng kí bạn đồng ý với{" "}
-                  <Text style={styles.highLightText}>điều kiện</Text> và{" "}
-                  <Text style={styles.highLightText}>điều khoản</Text> của chúng
-                  tôi.
+          render={({ field: { onChange, value }, fieldState: { isDirty, error } }) => (
+            <View style={{ rowGap: 6 }}>
+              <Pressable
+                style={styles.rememberRow}
+                onPress={() => onChange(!value)}
+              >
+                <View style={[styles.checkbox, value && styles.checkboxActive]}>
+                  {value ? <Text style={styles.checkboxText}>✓</Text> : null}
+                </View>
+                <View style={{ flexShrink: 1 }}>
+                  <Text style={styles.rememberText}>
+                    Bấm nút đăng kí bạn đồng ý với{" "}
+                    <Text style={styles.highLightText}>điều kiện</Text> và{" "}
+                    <Text style={styles.highLightText}>điều khoản</Text> của chúng
+                    tôi.
+                  </Text>
+                </View>
+              </Pressable>
+              {isDirty && !value && error && (
+                <Text style={{ color: colors.error, ...textPresets.fs12_400 }}>
+                  {error.message}
                 </Text>
-              </View>
-            </Pressable>
+              )}
+            </View>
           )}
         />
 
         <Pressable
           style={[
             styles.submitButton,
-            !formMethod.formState.isValid && { opacity: 0.5 },
+            (!formMethod.formState.isValid || isLoading) && { opacity: 0.5 },
           ]}
           onPress={submit}
-          disabled={isLoading}
+          disabled={!formMethod.formState.isValid || isLoading}
         >
           <LinearGradient type="gra_primary" style={StyleSheet.absoluteFill} />
           <Text style={styles.submitText}>
