@@ -1,4 +1,4 @@
-import { ShopAddress, CustomerAddress, AddressPayload } from "@features/orders/service/api";
+import { ShopAddress, CustomerAddress, AddressPayload } from "./create-shipment-api";
 import { AddrFormValues } from "./types";
 
 export function parseLocaleNumber(text: string): number {

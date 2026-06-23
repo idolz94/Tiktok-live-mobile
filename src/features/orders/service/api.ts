@@ -1,11 +1,12 @@
 import { LiveComment, OrderWithTikTok } from "@app-types/index";
+import { normalizeApiOrderForUi } from "@features/orders/utils/order";
+import type { OrderItemPayload } from "@features/orders/types/order";
 import {
   deleteRequest,
   getRequest,
   patchRequest,
   postRequest,
 } from "@utils/http/request-sse";
-import { normalizeApiOrderForUi } from "@features/orders/utils/order";
 
 type CreateOrderFromCommentPayload = {
   comment: LiveComment;
@@ -64,14 +65,15 @@ export async function getOrdersApi(): Promise<OrderWithTikTok[]> {
   return rows.map((order: any) => normalizeApiOrderForUi(order));
 }
 
-export async function getOrderByIdApi(orderId: string): Promise<OrderWithTikTok> {
+// START: Backend không có GET /orders/:id — lấy toàn bộ list rồi find theo id, đúng với cách web lấy order từ in-memory context
+export async function getOrderByIdApi(
+  orderId: string,
+): Promise<OrderWithTikTok | null> {
   const orders = await getOrdersApi();
-  const order = orders.find((item) => item.id === orderId);
 
-  if (!order) throw new Error("Không tìm thấy đơn hàng.");
-
-  return order;
+  return orders.find((o) => o.id === orderId) ?? null;
 }
+// END: Backend không có GET /orders/:id — lấy toàn bộ list rồi find theo id, đúng với cách web lấy order từ in-memory context
 
 export type CreateOrderFromCommentResult = {
   success: boolean;
@@ -140,208 +142,32 @@ export async function updateOrderStatusApi({
   return normalizeOrderResponse(data);
 }
 
-export async function deleteOrderApi(orderId: string) {
-  return deleteRequest<{ ok: boolean }>(`/orders/${orderId}`);
-}
-
+// START: Thêm sản phẩm vào đơn hàng và chuẩn hoá lại order trả về
 export async function addOrderItemApi(
   orderId: string,
-  payload: { productCode: string; productName: string; price: number; quantity: number },
-) {
+  payload: OrderItemPayload,
+): Promise<OrderWithTikTok> {
   const data = await postRequest<any>(`/orders/${orderId}/items`, payload);
-  const item =
-    data?.item ??
-    data?.data?.item ??
-    data?.orderItem ??
-    data?.data?.orderItem ??
-    data?.order_item ??
-    data?.data ??
-    data;
-  return item as { id: string; [key: string]: any };
-}
 
+  return normalizeOrderResponse(data);
+}
+// END: Thêm sản phẩm vào đơn hàng và chuẩn hoá lại order trả về
+
+// START: Cập nhật sản phẩm trong đơn hàng và chuẩn hoá lại order trả về
 export async function updateOrderItemApi(
   orderId: string,
   itemId: string,
-  payload: { productCode?: string; productName?: string; price?: number; quantity?: number },
-) {
-  const data = await patchRequest<any>(`/orders/${orderId}/items/${itemId}`, payload);
-  return data;
+  payload: Partial<OrderItemPayload>,
+): Promise<OrderWithTikTok> {
+  const data = await patchRequest<any>(
+    `/orders/${orderId}/items/${itemId}`,
+    payload,
+  );
+
+  return normalizeOrderResponse(data);
 }
+// END: Cập nhật sản phẩm trong đơn hàng và chuẩn hoá lại order trả về
 
-export async function deleteOrderItemApi(orderId: string, itemId: string) {
-  return deleteRequest<{ ok: boolean }>(`/orders/${orderId}/items/${itemId}`);
-}
-
-export type ManualShippingPayload = {
-  trackingCode: string;
-  providerName?: string;
-  shippingFee?: number;
-  note?: string;
-};
-
-export type ManualShippingResult = {
-  trackingCode: string;
-  providerName: string;
-  shippingStatus: string;
-};
-
-export async function submitManualShippingApi(
-  orderId: string,
-  payload: ManualShippingPayload,
-): Promise<ManualShippingResult> {
-  const data = await postRequest<any>(`/orders/${orderId}/shipping/manual`, payload);
-  return (data?.shipping ?? data) as ManualShippingResult;
-}
-
-// ─── Address types ────────────────────────────────────────────────────────────
-
-export type ShopAddress = {
-  id: string;
-  shopId: string;
-  label: string | null;
-  name: string | null;
-  phone: string | null;
-  address: string | null;
-  province: string | null;
-  district: string | null;
-  ward: string | null;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type CustomerAddress = {
-  id: string;
-  customerId: string;
-  shopId: string;
-  label: string | null;
-  name: string | null;
-  phone: string | null;
-  address: string | null;
-  province: string | null;
-  district: string | null;
-  ward: string | null;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type AddressPayload = {
-  label?: string | null;
-  name?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  province?: string | null;
-  district?: string | null;
-  ward?: string | null;
-  isDefault?: boolean;
-};
-
-// ─── Shop addresses ───────────────────────────────────────────────────────────
-
-export async function listShopAddressesApi(): Promise<ShopAddress[]> {
-  const data = await getRequest<{ addresses: ShopAddress[] }>("/me/shop-addresses");
-  return data.addresses ?? [];
-}
-
-export async function createShopAddressApi(payload: AddressPayload): Promise<ShopAddress> {
-  const data = await postRequest<any>("/me/shop-addresses", payload);
-  return (data?.data?.address ?? data?.address ?? data) as ShopAddress;
-}
-
-export async function updateShopAddressApi(addressId: string, payload: AddressPayload): Promise<ShopAddress> {
-  const data = await patchRequest<any>(`/me/shop-addresses/${addressId}`, payload);
-  return (data?.data?.address ?? data?.address ?? data) as ShopAddress;
-}
-
-export async function deleteShopAddressApi(addressId: string): Promise<void> {
-  await deleteRequest(`/me/shop-addresses/${addressId}`);
-}
-
-// ─── Customer addresses ───────────────────────────────────────────────────────
-
-export async function listCustomerAddressesApi(customerId: string): Promise<CustomerAddress[]> {
-  const data = await getRequest<{ addresses: CustomerAddress[] }>(`/customers/${customerId}/addresses`);
-  return data.addresses ?? [];
-}
-
-export async function createCustomerAddressApi(customerId: string, payload: AddressPayload): Promise<CustomerAddress> {
-  const data = await postRequest<any>(`/customers/${customerId}/addresses`, payload);
-  return (data?.data?.address ?? data?.address ?? data) as CustomerAddress;
-}
-
-export async function updateCustomerAddressApi(
-  customerId: string,
-  addressId: string,
-  payload: AddressPayload,
-): Promise<CustomerAddress> {
-  const data = await patchRequest<any>(`/customers/${customerId}/addresses/${addressId}`, payload);
-  return (data?.data?.address ?? data?.address ?? data) as CustomerAddress;
-}
-
-export async function deleteCustomerAddressApi(customerId: string, addressId: string): Promise<void> {
-  await deleteRequest(`/customers/${customerId}/addresses/${addressId}`);
-}
-
-// ─── Shipping fee & GHTK submit ───────────────────────────────────────────────
-
-export type ShippingFeeParams = {
-  pickProvince: string;
-  pickDistrict: string;
-  pickWard?: string;
-  pickAddress?: string;
-  receiverProvince: string;
-  receiverDistrict: string;
-  receiverWard?: string;
-  receiverAddress?: string;
-  weight?: number;
-  transport?: "road" | "fly";
-};
-
-export type ShippingFeeResult = {
-  name: string;
-  fee: number;
-  insuranceFee: number;
-  delivery: boolean;
-  extFees: Array<{ title: string; amount: number; type: string }>;
-};
-
-export async function getShippingFeeApi(orderId: string, params: ShippingFeeParams): Promise<ShippingFeeResult> {
-  const data = await postRequest<any>(`/orders/${orderId}/shipping/fee`, params);
-  return (data?.fee ?? data) as ShippingFeeResult;
-}
-
-export type SubmitShippingPayload = {
-  pickName: string;
-  pickAddress: string;
-  pickProvince: string;
-  pickDistrict: string;
-  pickWard?: string;
-  pickTel: string;
-  receiverName: string;
-  receiverAddress: string;
-  receiverProvince: string;
-  receiverDistrict: string;
-  receiverWard: string;
-  receiverHamlet?: string;
-  receiverTel: string;
-  note?: string;
-  isFreeShip?: 0 | 1;
-  transport?: "road" | "fly";
-  pickOption?: "cod" | "post";
-};
-
-export async function submitOrderToGhtkApi(
-  orderId: string,
-  payload: SubmitShippingPayload,
-): Promise<{ orderId: string; label?: string; trackingId?: number; fee?: number }> {
-  return postRequest(`/orders/${orderId}/shipping/submit`, payload);
-}
-
-export async function patchOrderApi(
-  orderId: string,
-  payload: { customerAddressId?: string; note?: string },
-): Promise<void> {
-  await patchRequest(`/orders/${orderId}`, payload);
+export async function deleteOrderApi(orderId: string) {
+  return deleteRequest<{ ok: boolean }>(`/orders/${orderId}`);
 }

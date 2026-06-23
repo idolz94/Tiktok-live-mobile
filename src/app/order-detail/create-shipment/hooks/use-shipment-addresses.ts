@@ -5,7 +5,7 @@ import {
   ShopAddress,
   listCustomerAddressesApi,
   listShopAddressesApi,
-} from "@features/orders/service/api";
+} from "../create-shipment-api";
 import { OrderWithTikTok } from "@app-types/index";
 
 export function useShipmentAddresses(order: OrderWithTikTok | null) {

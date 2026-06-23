@@ -2,7 +2,7 @@ import { ActivityIndicator, FlatList, Modal, Pressable, Text, View } from "react
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
-import { ShopAddress, CustomerAddress } from "@features/orders/service/api";
+import { ShopAddress, CustomerAddress } from "../create-shipment-api";
 import { addressLine } from "../utils";
 
 export type AddressPickerSheetProps<T extends ShopAddress | CustomerAddress> = {

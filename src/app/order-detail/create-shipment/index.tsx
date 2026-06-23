@@ -20,7 +20,7 @@ import {
   deleteCustomerAddressApi,
   patchOrderApi,
   getShippingFeeApi,
-} from "@features/orders/service/api";
+} from "./create-shipment-api";
 import { getOrderTotal } from "@features/orders/utils/order";
 import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, ShippingOptions, SummaryRow, shipmentStyles } from "./components/ShipmentComponents";
 import { AddressPickerSheet } from "./components/AddressPickerSheet";

@@ -7,16 +7,13 @@ import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { getOrderTikTokUsername, openTikTokProfile } from "@utils/tiktok";
 import { memo, useCallback } from "react";
-import { Pressable, Text, View } from "react-native";
-import { formatMoneyFromK, getOrderTotal, statusLabel } from "../utils/order";
+import { Text, View } from "react-native";
+import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
+import { router } from "expo-router";
 
 interface OrderItemProps {
   item: Order;
-  onToggleDeposit?: (orderId: string) => void;
-  depositLoading?: boolean;
-  onOpenOverview?: (orderId: string) => void;
 }
 
 function createDisplayCode(orderCode: string) {
@@ -24,7 +21,7 @@ function createDisplayCode(orderCode: string) {
   return (numbers || orderCode).slice(-6).padStart(6, "0");
 }
 
-export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOverview }: OrderItemProps) => {
+export const OrderItem = memo(({ item }: OrderItemProps) => {
   const { colors } = useThemes();
 
   const products = item.products?.length ? item.products : [];
@@ -33,17 +30,21 @@ export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOv
   const isPaid =
     item.depositStatus === "paid" || item.depositStatus === "deposited";
 
-  const handleOpenTikTok = useCallback(() => {
-    openTikTokProfile(getOrderTikTokUsername(item));
-  }, [item]);
-
-  const handleToggleDeposit = useCallback(() => {
-    onToggleDeposit?.(item.id);
-  }, [onToggleDeposit, item.id]);
-
-  const handleOpenOverview = useCallback(() => {
-    onOpenOverview?.(item.id);
-  }, [onOpenOverview, item.id]);
+  const onOpenCustomer = useCallback(() => {}, []);
+  const onPrintOrder = useCallback(() => {}, []);
+  const onOpenMoreMenu = useCallback(() => {}, []);
+  const onOpenNoteEditor = useCallback(() => {}, []);
+  const onDeleteOrder = useCallback(() => {}, []);
+  const onToggleDeposit = useCallback(() => {}, []);
+  const onOpenOrderOverview = useCallback(() => {
+    router.push({
+      pathname: "/order-detail",
+      params: { id: item.id },
+    });
+  }, [item.id]);
+  const onSaveOrderChanges = useCallback(() => {}, []);
+  const onOpenTikTokProfile = useCallback(() => {}, []);
+  const onUpdateOrder = useCallback(() => {}, []);
 
   return (
     <View style={styles.container}>
@@ -61,12 +62,10 @@ export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOv
             >{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
           </View>
           <View style={styles.actions}>
-            <Pressable onPress={handleOpenTikTok}>
-              <Image
-                source={images.logo_tiktok}
-                style={{ width: 24, height: 24 }}
-              />
-            </Pressable>
+            <Image
+              source={images.logo_tiktok}
+              style={{ width: 24, height: 24 }}
+            />
             <Icon name="print" size={24} tintColor="neutral900" />
             <Icon name="more" size={24} tintColor="neutral900" />
           </View>
@@ -101,7 +100,7 @@ export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOv
           </Text>
         </View>
         <Text style={styles.txtProductPrice}>
-          {`${formatMoneyFromK(Number(item.price || 0) * Number(item.quantity || 1))} x ${item.quantity}`}
+          {`${formatMoney(Number(item.price || 0) * Number(item.quantity || 1))} x ${item.quantity}`}
         </Text>
       </View>
 
@@ -113,7 +112,7 @@ export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOv
           <Text style={styles.txtProduct}>Thu tiền hộ (COD)</Text>
         </View>
         <View style={styles.subtotalValues}>
-          <Text style={styles.txtProductPrice}>{formatMoneyFromK(total)}</Text>
+          <Text style={styles.txtProductPrice}>{formatMoney(total)}</Text>
           <Text
             style={[styles.txtProductPrice, { textAlign: "right" }]}
           >{`${item.discountAmount}đ`}</Text>
@@ -123,8 +122,8 @@ export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOv
       <View style={styles.footer}>
         <Button
           title={isPaid ? "Đã cọc" : "Chưa cọc"}
-          loading={depositLoading}
-          onPress={handleToggleDeposit}
+          loading={false}
+          onPress={onToggleDeposit}
           txtBtnStyle={[
             styles.txtNotPaid,
             {
@@ -141,9 +140,9 @@ export const OrderItem = memo(({ item, onToggleDeposit, depositLoading, onOpenOv
           ]}
         />
         <Button
-          title="Lưu thay đổi"
+          title="Tổng quan đơn hàng"
           loading={false}
-          onPress={handleOpenOverview}
+          onPress={onOpenOrderOverview}
           gradientType="gra_primary"
           containerStyle={styles.btnSubmit}
         />

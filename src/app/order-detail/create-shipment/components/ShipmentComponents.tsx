@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { ShopAddress, CustomerAddress } from "@features/orders/service/api";
+import { ShopAddress, CustomerAddress } from "../create-shipment-api";
 import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition } from "../types";
 import { addressLine } from "../utils";
 

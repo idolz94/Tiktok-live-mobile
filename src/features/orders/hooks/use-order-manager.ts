@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   LiveComment,
@@ -66,6 +65,16 @@ function getOrderRevenue(order: OrderWithTikTok) {
   return totalAmount > 0 ? totalAmount : getOrderTotal(order.products);
 }
 
+// START: Đồng bộ cách hiểu trạng thái đã cọc giữa card thống kê và bộ lọc
+function isDepositedOrder(order: OrderWithTikTok) {
+  return order.depositStatus === "paid" || order.depositStatus === "deposited";
+}
+
+function isUnpaidOrder(order: OrderWithTikTok) {
+  return !isDepositedOrder(order);
+}
+// END: Đồng bộ cách hiểu trạng thái đã cọc giữa card thống kê và bộ lọc
+
 export type OrderManager = ReturnType<typeof useOrderManager>;
 
 export function useOrderManager({
@@ -123,14 +132,19 @@ export function useOrderManager({
     [comments],
   );
 
+  // START: Code cũ chỉ tính đơn có depositStatus là paid, nên bỏ sót deposited
+  // const paidOrders = useMemo(
+  //   () => orders.filter((item) => item.depositStatus === "paid").length,
+  //   [orders],
+  // );
+  // END: Code cũ chỉ tính đơn có depositStatus là paid, nên bỏ sót deposited
+
+  // START: Code mới tính Đã cọc gồm cả paid và deposited
   const paidOrders = useMemo(
-    () =>
-      orders.filter(
-        (item) =>
-          item.depositStatus === "paid" || item.depositStatus === "deposited",
-      ).length,
+    () => orders.filter(isDepositedOrder).length,
     [orders],
   );
+  // END: Code mới tính Đã cọc gồm cả paid và deposited
 
   const draftOrders = useMemo(
     () => orders.filter((item) => item.status === "draft").length,
@@ -142,10 +156,12 @@ export function useOrderManager({
     [orders],
   );
 
-  const orderProductCount = useMemo(
-    () => orders.reduce((sum, order) => sum + order.products.length, 0),
-    [orders],
-  );
+  // START: Code cũ tính tổng sản phẩm trên toàn bộ đơn hàng nên sai khi đang bật filter
+  // const orderProductCount = useMemo(
+  //   () => orders.reduce((sum, order) => sum + order.products.length, 0),
+  //   [orders],
+  // );
+  // END: Code cũ tính tổng sản phẩm trên toàn bộ đơn hàng nên sai khi đang bật filter
 
   const totalRevenue = useMemo(
     () => orders.reduce((sum, item) => sum + getOrderRevenue(item), 0),
@@ -156,14 +172,23 @@ export function useOrderManager({
     const keyword = orderSearchText.trim().toLowerCase();
 
     return orders.filter((order) => {
+      // START: Code cũ chỉ lọc đúng paid/unpaid tuyệt đối nên bỏ sót trạng thái deposited
+      // const matchFilter =
+      //   orderFilter === "all" ||
+      //   (orderFilter === "unpaid" && order.depositStatus === "unpaid") ||
+      //   (orderFilter === "paid" && order.depositStatus === "paid") ||
+      //   (orderFilter === "draft" && order.status === "draft") ||
+      //   (orderFilter === "confirmed" && order.status === "confirmed");
+      // END: Code cũ chỉ lọc đúng paid/unpaid tuyệt đối nên bỏ sót trạng thái deposited
+
+      // START: Logic mới đồng bộ với cách tính card Đã cọc và Chưa cọc
       const matchFilter =
         orderFilter === "all" ||
-        (orderFilter === "unpaid" && order.depositStatus === "unpaid") ||
-        (orderFilter === "paid" &&
-          (order.depositStatus === "paid" ||
-            order.depositStatus === "deposited")) ||
+        (orderFilter === "unpaid" && isUnpaidOrder(order)) ||
+        (orderFilter === "paid" && isDepositedOrder(order)) ||
         (orderFilter === "draft" && order.status === "draft") ||
         (orderFilter === "confirmed" && order.status === "confirmed");
+      // END: Logic mới đồng bộ với cách tính card Đã cọc và Chưa cọc
 
       if (!matchFilter) return false;
       if (!keyword) return true;
@@ -183,6 +208,13 @@ export function useOrderManager({
       return searchValue.includes(keyword);
     });
   }, [orderFilter, orderSearchText, orders]);
+
+  // START: Tổng sản phẩm mới tính theo danh sách đơn đã được lọc
+  const orderProductCount = useMemo(
+    () => filteredOrders.reduce((sum, order) => sum + order.products.length, 0),
+    [filteredOrders],
+  );
+  // END: Tổng sản phẩm mới tính theo danh sách đơn đã được lọc
 
   const selectedOrder = useMemo(
     () =>
@@ -426,10 +458,10 @@ export function useOrderManager({
     [reloadOrders],
   );
 
-  const openOrderOverview = useCallback((orderId: string) => {
-    setSelectedOrderId(orderId);
-    router.push(`/order-detail?id=${orderId}`);
-  }, []);
+  const openOrderOverview = useCallback(
+    (orderId: string) => setSelectedOrderId(orderId),
+    [],
+  );
   const closeOrderOverview = useCallback(() => setSelectedOrderId(null), []);
 
   return {
