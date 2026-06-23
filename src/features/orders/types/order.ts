@@ -42,3 +42,14 @@ export type OrderFilterBarProps = {
   setOrderFilter: (filter: OrderFilter) => void;
   onClose?: () => void;
 };
+
+// START: Types dùng cho useOrderDetail — tập trung ở đây để hook file gọn hơn
+export type OrderItemPayload = {
+  name: string;
+  quantity: number;
+  price: number;
+  note?: string;
+};
+
+export type UpdateOrderItemPayload = Partial<OrderItemPayload>;
+// END: Types dùng cho useOrderDetail
