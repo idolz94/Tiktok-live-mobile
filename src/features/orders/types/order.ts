@@ -15,3 +15,30 @@ export type OrderStatCardData = {
 export type OrdersProps = {
   orderManager: OrderManager;
 };
+
+export type FilterButton = {
+  key: OrderFilter;
+  label: string;
+};
+
+export type CustomerButton = {
+  key: "vip" | "retail" | "wholesale";
+  label: string;
+  icon?: "king" | "group_user";
+};
+
+export type FilterChipKey = OrderFilter | CustomerButton["key"];
+
+export type FilterChipProps = {
+  filterKey: FilterChipKey;
+  label: string;
+  isActive: boolean;
+  onPress: (key: FilterChipKey) => void;
+  icon?: CustomerButton["icon"];
+};
+
+export type OrderFilterBarProps = {
+  orderFilter: OrderFilter;
+  setOrderFilter: (filter: OrderFilter) => void;
+  onClose?: () => void;
+};

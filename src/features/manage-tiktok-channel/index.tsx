@@ -23,6 +23,7 @@ import {
   View,
 } from "react-native";
 import { EditChannel } from "./components/edit-channel";
+import { ChannelCardProps } from "./type";
 
 function sortChannels(channels: ShopTikTokChannel[]) {
   return [...channels].sort(
@@ -42,11 +43,6 @@ function toInitial(username: string) {
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
-
-type ChannelCardProps = {
-  channel: ShopTikTokChannel;
-  onEdit: (channel: ShopTikTokChannel) => void;
-};
 
 const ChannelCard = memo(
   ({ channel, onEdit }: ChannelCardProps) => {
