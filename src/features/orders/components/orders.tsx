@@ -26,6 +26,8 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     orderProductCount,
     setOrderFilter,
     orderFilter,
+    reloadOrders,
+    orderLoading,
   } = orderManager;
 
   const { colors } = useThemes();
@@ -163,6 +165,10 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
       keyExtractor={keyExtractor}
       extraData={orderFilter}
       ListHeaderComponent={listHeader}
+      // START: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
+      refreshing={orderLoading}
+      onRefresh={reloadOrders}
+      // END: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
       contentContainerStyle={styles.container}
     />
     // END: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter

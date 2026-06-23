@@ -1,11 +1,12 @@
 import { LiveComment, OrderWithTikTok } from "@app-types/index";
+import { normalizeApiOrderForUi } from "@features/orders/utils/order";
+import type { OrderItemPayload } from "@features/orders/types/order";
 import {
   deleteRequest,
   getRequest,
   patchRequest,
   postRequest,
 } from "@utils/http/request-sse";
-import { normalizeApiOrderForUi } from "@features/orders/utils/order";
 
 type CreateOrderFromCommentPayload = {
   comment: LiveComment;
@@ -63,6 +64,16 @@ export async function getOrdersApi(): Promise<OrderWithTikTok[]> {
 
   return rows.map((order: any) => normalizeApiOrderForUi(order));
 }
+
+// START: Backend không có GET /orders/:id — lấy toàn bộ list rồi find theo id, đúng với cách web lấy order từ in-memory context
+export async function getOrderByIdApi(
+  orderId: string,
+): Promise<OrderWithTikTok | null> {
+  const orders = await getOrdersApi();
+
+  return orders.find((o) => o.id === orderId) ?? null;
+}
+// END: Backend không có GET /orders/:id — lấy toàn bộ list rồi find theo id, đúng với cách web lấy order từ in-memory context
 
 export type CreateOrderFromCommentResult = {
   success: boolean;
@@ -130,6 +141,32 @@ export async function updateOrderStatusApi({
 
   return normalizeOrderResponse(data);
 }
+
+// START: Thêm sản phẩm vào đơn hàng và chuẩn hoá lại order trả về
+export async function addOrderItemApi(
+  orderId: string,
+  payload: OrderItemPayload,
+): Promise<OrderWithTikTok> {
+  const data = await postRequest<any>(`/orders/${orderId}/items`, payload);
+
+  return normalizeOrderResponse(data);
+}
+// END: Thêm sản phẩm vào đơn hàng và chuẩn hoá lại order trả về
+
+// START: Cập nhật sản phẩm trong đơn hàng và chuẩn hoá lại order trả về
+export async function updateOrderItemApi(
+  orderId: string,
+  itemId: string,
+  payload: Partial<OrderItemPayload>,
+): Promise<OrderWithTikTok> {
+  const data = await patchRequest<any>(
+    `/orders/${orderId}/items/${itemId}`,
+    payload,
+  );
+
+  return normalizeOrderResponse(data);
+}
+// END: Cập nhật sản phẩm trong đơn hàng và chuẩn hoá lại order trả về
 
 export async function deleteOrderApi(orderId: string) {
   return deleteRequest<{ ok: boolean }>(`/orders/${orderId}`);

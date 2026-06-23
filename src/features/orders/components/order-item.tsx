@@ -10,6 +10,7 @@ import { createStyles } from "@utils/createStyles";
 import { memo, useCallback } from "react";
 import { Text, View } from "react-native";
 import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
+import { router } from "expo-router";
 
 interface OrderItemProps {
   item: Order;
@@ -35,7 +36,12 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
   const onOpenNoteEditor = useCallback(() => {}, []);
   const onDeleteOrder = useCallback(() => {}, []);
   const onToggleDeposit = useCallback(() => {}, []);
-  const onOpenOrderOverview = useCallback(() => {}, []);
+  const onOpenOrderOverview = useCallback(() => {
+    router.push({
+      pathname: "/order-detail",
+      params: { id: item.id },
+    });
+  }, []);
   const onSaveOrderChanges = useCallback(() => {}, []);
   const onOpenTikTokProfile = useCallback(() => {}, []);
   const onUpdateOrder = useCallback(() => {}, []);
@@ -134,7 +140,7 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
           ]}
         />
         <Button
-          title="Lưu thay đổi"
+          title="Tổng quan đơn hàng"
           loading={false}
           onPress={onOpenOrderOverview}
           gradientType="gra_primary"
