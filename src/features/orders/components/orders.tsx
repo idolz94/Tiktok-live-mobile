@@ -1,66 +1,37 @@
 import { OrderFilter } from "@app-types/index";
-import { Lottie } from "@assets/lotties";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
+import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useMemo } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { OrdersProps, OrderStatCardData } from "../types/order";
-import { ListOrders } from "./list-orders";
-
-const OrderStatCard = memo(
-  ({
-    lottie,
-    value,
-    label,
-    filterKey,
-    isActive,
-    bgColor,
-    onPressCard,
-  }: OrderStatCardData & {
-    isActive: boolean;
-    onPressCard: (filterKey: OrderFilter) => void;
-  }) => {
-    const { colors } = useThemes();
-    const handlePress = useCallback(() => {
-      onPressCard(filterKey);
-    }, [onPressCard, filterKey]);
-
-    return (
-      <Pressable
-        style={[
-          styles.infoCard,
-          {
-            backgroundColor: bgColor,
-            borderColor: isActive ? colors.primary : "transparent",
-            borderWidth: HairlineWidth * 2,
-          },
-        ]}
-        onPress={handlePress}
-      >
-        <Lottie name={lottie} style={styles.infoCardIcon} focused={isActive} />
-        <View style={styles.infoCardTextGroup}>
-          <Text style={styles.valueCount}>{value}</Text>
-          <Text style={styles.txtCardFlag}>{label}</Text>
-        </View>
-      </Pressable>
-    );
-  },
-);
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { Pressable, Text, View } from "react-native";
+import {
+  OrdersProps,
+  OrderStatCardData,
+  OrderWithTikTok,
+} from "../types/order";
+import { OrderFilterBar } from "./order-filter";
+import { OrderItem } from "./order-item";
+import { OrderStatCard } from "./order-stat-card";
 
 export const Orders = memo(({ orderManager }: OrdersProps) => {
-  const { colors } = useThemes();
-
   const {
     paidOrders,
     draftOrders,
     confirmedOrders,
     orders,
+    filteredOrders,
     orderProductCount,
     setOrderFilter,
     orderFilter,
   } = orderManager;
+
+  const { colors } = useThemes();
+  const { show, hide } = useBottomSheet();
+
+  const listRef = useRef<FlashListRef<OrderWithTikTok>>(null);
 
   const unpaidOrders = useMemo(
     () =>
@@ -106,14 +77,25 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
 
   const handlePressCard = useCallback(
     (filterKey: OrderFilter) => {
-      setOrderFilter(orderFilter === filterKey ? "all" : filterKey);
+      setOrderFilter((currentFilter) =>
+        currentFilter === filterKey ? "all" : filterKey,
+      );
     },
-    [orderFilter, setOrderFilter],
+    [setOrderFilter],
   );
 
   const handlePressFilter = useCallback(() => {
-    // TODO: open filter drawer
-  }, []);
+    show({
+      showDragIndicator: true,
+      content: (
+        <OrderFilterBar
+          orderFilter={orderFilter}
+          setOrderFilter={setOrderFilter}
+          onClose={hide}
+        />
+      ),
+    });
+  }, [hide, orderFilter, setOrderFilter, show]);
 
   const activeFilterLabel = useMemo(
     () =>
@@ -123,39 +105,74 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     [orderFilter, cards],
   );
 
+  const keyExtractor = useCallback((item: OrderWithTikTok) => item.id, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: OrderWithTikTok }) => <OrderItem item={item} />,
+    [],
+  );
+
+  useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [orderFilter]);
+
+  const listHeader = useMemo(
+    () => (
+      <>
+        <Text style={styles.txtCurrentLive}>Phiên live hiện tại</Text>
+        <View style={styles.grid}>
+          {Array.from({ length: Math.ceil(cards.length / 2) }, (_, row) => (
+            <View key={row} style={styles.columnWrapper}>
+              {cards.slice(row * 2, row * 2 + 2).map((card) => (
+                <OrderStatCard
+                  key={card.filterKey}
+                  {...card}
+                  isActive={orderFilter === card.filterKey}
+                  onPressCard={handlePressCard}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+        <View style={styles.footerRow}>
+          <Text style={styles.txtCount}>{orderProductCount} sản phẩm</Text>
+          <Pressable style={styles.filterButton} onPress={handlePressFilter}>
+            <Icon name="filter" size={24} tintColor={colors.neutral900} />
+            <Text>{activeFilterLabel}</Text>
+          </Pressable>
+        </View>
+      </>
+    ),
+    [
+      activeFilterLabel,
+      cards,
+      colors.neutral900,
+      handlePressCard,
+      handlePressFilter,
+      orderFilter,
+      orderProductCount,
+    ],
+  );
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.txtCurrentLive}>Phiên live hiện tại</Text>
-      <View style={styles.grid}>
-        {Array.from({ length: Math.ceil(cards.length / 2) }, (_, row) => (
-          <View key={row} style={styles.columnWrapper}>
-            {cards.slice(row * 2, row * 2 + 2).map((card) => (
-              <OrderStatCard
-                key={card.filterKey}
-                {...card}
-                isActive={orderFilter === card.filterKey}
-                onPressCard={handlePressCard}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
-      <View style={styles.footerRow}>
-        <Text style={styles.txtCount}>{orderProductCount} sản phẩm</Text>
-        <Pressable style={styles.filterButton} onPress={handlePressFilter}>
-          <Icon name="filter" size={24} tintColor={colors.neutral900} />
-          <Text>{activeFilterLabel}</Text>
-        </Pressable>
-      </View>
-      <ListOrders orders={orders} />
-    </ScrollView>
+    // START: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter
+    <FlashList
+      ref={listRef}
+      data={filteredOrders}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      extraData={orderFilter}
+      ListHeaderComponent={listHeader}
+      contentContainerStyle={styles.container}
+    />
+    // END: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter
   );
 });
 
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     paddingTop: 16,
-    paddingBottom: 48 + 8,
+    paddingBottom: 8,
   },
   grid: {
     rowGap: 8,
@@ -182,9 +199,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderWidth: HairlineWidth * 3,
     borderColor: colors.border10,
     overflow: "hidden",
-  },
-  infoCardActive: {
-    backgroundColor: colors.neutral50,
   },
   infoCardIcon: {
     width: 32,

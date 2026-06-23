@@ -9,7 +9,7 @@ import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback } from "react";
 import { Text, View } from "react-native";
-import { formatMoneyFromK, getOrderTotal, statusLabel } from "../utils/order";
+import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
   item: Order;
@@ -94,7 +94,7 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
           </Text>
         </View>
         <Text style={styles.txtProductPrice}>
-          {`${formatMoneyFromK(Number(item.price || 0) * Number(item.quantity || 1))} x ${item.quantity}`}
+          {`${formatMoney(Number(item.price || 0) * Number(item.quantity || 1))} x ${item.quantity}`}
         </Text>
       </View>
 
@@ -106,7 +106,7 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
           <Text style={styles.txtProduct}>Thu tiền hộ (COD)</Text>
         </View>
         <View style={styles.subtotalValues}>
-          <Text style={styles.txtProductPrice}>{formatMoneyFromK(total)}</Text>
+          <Text style={styles.txtProductPrice}>{formatMoney(total)}</Text>
           <Text
             style={[styles.txtProductPrice, { textAlign: "right" }]}
           >{`${item.discountAmount}đ`}</Text>
