@@ -20,7 +20,7 @@ async function clearSessionAndNotify() {
   sessionExpiredEmitter.emit();
 }
 
-// START 401 retry interceptor — shared between apiClient and sseClient
+// START 401 retry interceptor
 // Khi gặp 401, thử refresh token một lần; nếu refresh thành công thì retry request gốc.
 // Chỉ khi refresh token cũng thất bại mới gọi clearSessionAndNotify() để logout user.
 function attach401RetryInterceptor(client: ReturnType<typeof axios.create>) {
@@ -61,64 +61,6 @@ function attach401RetryInterceptor(client: ReturnType<typeof axios.create>) {
   );
 }
 // END 401 retry interceptor
-
-// ────────────────────────────────────────────────
-// Axios instance for SSE
-// ────────────────────────────────────────────────
-export const sseClient = axios.create({
-  baseURL: API_URL_ENDPOINT,
-  withCredentials: true,
-  timeout: 15_000,
-  headers: {
-    "Content-Type": "application/json",
-    "x-app-key": MOBILE_APP_KEY,
-    Origin: WEB_URL_ORIGIN,
-  },
-});
-
-sseClient.interceptors.request.use(
-  async (config) => {
-    const token = await secureStorage.getAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-attach401RetryInterceptor(sseClient);
-
-sseClient.interceptors.response.use(
-  (response) => {
-    const data = response.data;
-
-    if (
-      data &&
-      typeof data === "object" &&
-      (("ok" in data && !data.ok) || ("success" in data && !data.success))
-    ) {
-      throw new ApiError(
-        data.message || "Request failed",
-        response.status,
-        data,
-      );
-    }
-
-    return response;
-  },
-  (error) => {
-    if (error.response) {
-      throw new ApiError(
-        error.response.data?.message || error.message,
-        error.response.status,
-        error.response.data,
-      );
-    }
-
-    throw error;
-  },
-);
 
 // ────────────────────────────────────────────────
 // Axios instance for API
@@ -171,4 +113,4 @@ apiClient.interceptors.response.use(
   },
 );
 
-export default sseClient;
+export default apiClient;

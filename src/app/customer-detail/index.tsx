@@ -4,6 +4,7 @@ import { Screen } from "@components/screen";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
+import { updateCustomerApi } from "@features/customers/service/api";
 import { formatMoney, getOrderTotal, statusLabel } from "@features/orders/utils/order";
 import { createStyles } from "@utils/createStyles";
 import { getOrderTikTokUsername, openTikTokProfile } from "@utils/tiktok";
@@ -13,9 +14,9 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -236,12 +237,12 @@ export default function CustomerDetail() {
   const [phone, setPhone] = useState("");
   const [referenceInfo, setReferenceInfo] = useState("");
   const [address, setAddress] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const { top } = useSafeAreaInsets();
   const { user } = useAuth();
 
   const orderManager = useOrderManager({
     comments: [],
-    liveSessionId: null,
     hasOrders: user?.hasOrders ?? false,
   });
 
@@ -279,13 +280,24 @@ export default function CustomerDetail() {
   const draftCount = customerOrders.filter((order) => order.status === "draft").length;
 
   useEffect(() => {
-    setPhone(latestOrder?.customerPhone || "");
-    setAddress(latestOrder?.customerAddress || latestOrder?.customerAddressData?.address || "");
-    setReferenceInfo(latestOrder?.note || customer?.latestComment || "");
-  }, [customer?.latestComment, latestOrder]);
+    if (!customerKey || !latestOrder) return;
+    setPhone(latestOrder.customerPhone || "");
+    setAddress(latestOrder.customerAddress || latestOrder.customerAddressData?.address || "");
+    setReferenceInfo(latestOrder.note || customer?.latestComment || "");
+  }, [customerKey]);
 
   const loading = orderManager.orderLoading && !customer && customerOrders.length === 0;
   const notFound = !loading && !customer && customerOrders.length === 0;
+
+  const handleSave = async () => {
+    if (!customer?.customerId || isSaving) return;
+    setIsSaving(true);
+    try {
+      await updateCustomerApi(customer.customerId, { customerType, phone, referenceInfo });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <Screen backgroundColorTheme="white">
@@ -367,10 +379,6 @@ export default function CustomerDetail() {
                   multiline
                   onChangeText={setReferenceInfo}
                 />
-                <View style={styles.ratingBox}>
-                  <Ionicons name="checkmark-circle" size={18} color="#2CA87B" />
-                  <Text style={styles.ratingText}>Tỉ lệ đánh giá tốt từ các shop: 2/2</Text>
-                </View>
                 <Field
                   label="Địa chỉ giao hàng"
                   value={address}
@@ -378,6 +386,18 @@ export default function CustomerDetail() {
                   multiline
                   onChangeText={setAddress}
                 />
+                <TouchableOpacity
+                  style={[styles.saveButton, (isSaving || !customer?.customerId) && styles.saveButtonDisabled]}
+                  activeOpacity={0.8}
+                  onPress={handleSave}
+                  disabled={isSaving || !customer?.customerId}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>LƯU THÔNG TIN</Text>
+                  )}
+                </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.ordersContent}>
@@ -506,7 +526,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   tabBar: {
     height: 48,
     flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
   },
   tabItem: {
@@ -553,23 +573,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     minHeight: 88,
     paddingTop: 14,
     paddingBottom: 14,
-  },
-  ratingBox: {
-    marginTop: -2,
-    marginBottom: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: colors.successLight,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  ratingText: {
-    flex: 1,
-    color: colors.success,
-    fontSize: 13,
-    fontWeight: "600",
   },
   ordersContent: {
     paddingTop: 16,
@@ -740,7 +743,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   orderTotalRow: {
     marginTop: 12,
     paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
     borderTopColor: colors.borderLight,
     flexDirection: "row",
     alignItems: "center",
@@ -793,5 +796,22 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.textMuted,
     textAlign: "center",
     ...textPresets.fs14_400,
+  },
+  saveButton: {
+    height: 50,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  saveButtonDisabled: {
+    opacity: 0.65,
+  },
+  saveButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.7,
   },
 }));

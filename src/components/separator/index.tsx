@@ -1,6 +1,5 @@
 import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes";
-import isNil from "lodash.isnil";
 import { memo, useMemo } from "react";
 import { View, ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
@@ -58,7 +57,7 @@ export const Separator = memo(
     const backgroundColor = useMemo(() => {
       return `${colors[color]}${
         // @ts-ignore
-        isNil(opacity) ? "" : opacityTheme[opacity]
+        opacity == null ? "" : opacityTheme[opacity]
       }`;
     }, [color, opacity]);
 

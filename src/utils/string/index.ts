@@ -1,4 +1,3 @@
-import isEmpty from "lodash.isempty";
 import { Noop } from "react-hook-form";
 
 /**
@@ -168,7 +167,7 @@ export function extractPhoneNumber(phone: string | null | undefined): {
   dialCode: string | null;
   number: string | null;
 } {
-  if (isEmpty(phone)) {
+  if (!phone) {
     return { dialCode: null, number: null };
   }
 

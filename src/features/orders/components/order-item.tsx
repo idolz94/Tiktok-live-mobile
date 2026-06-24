@@ -8,7 +8,7 @@ import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
 import { router } from "expo-router";
 
@@ -36,6 +36,10 @@ export const OrderItem = memo(
     const handleToggleDeposit = useCallback(() => {
       onToggleDeposit(item.id);
     }, [item.id, onToggleDeposit]);
+  const onPressAvatar = useCallback(() => {
+    const customerKey = item.customerTikTokUsername || item.username;
+    if (customerKey) router.push({ pathname: "/customer-detail", params: { customerKey } });
+  }, [item.customerTikTokUsername, item.username]);
   const onOpenOrderOverview = useCallback(() => {
     router.push({
       pathname: "/order-detail",
@@ -47,11 +51,13 @@ export const OrderItem = memo(
     <View style={styles.container}>
       <View style={styles.top}>
         <View style={styles.header}>
-          <Avatar
-            uri={item.avatar || item.avatarUrl}
-            username={displayName}
-            size={40}
-          />
+          <Pressable onPress={onPressAvatar}>
+            <Avatar
+              uri={item.avatar || item.avatarUrl}
+              username={displayName}
+              size={40}
+            />
+          </Pressable>
           <View style={styles.info}>
             <Text style={styles.displayName}>{displayName}</Text>
             <Text

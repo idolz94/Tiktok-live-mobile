@@ -4,23 +4,38 @@ import { Icon } from "@components/icon";
 import { OrderWithTikTok } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
 import { Section } from "./OrderDetailPrimitives";
+import { useCallback } from "react";
+import { router } from "expo-router";
 
 type OrderDetailCustomerSectionProps = {
   order: OrderWithTikTok;
   displayName: string;
-  onTikTok: () => void;
+  onTikTok?: () => void;
 };
 
 export function OrderDetailCustomerSection({ order, displayName, onTikTok }: OrderDetailCustomerSectionProps) {
-  const handlePhone = () => {
+  const handlePhone = useCallback(() => {
     if (!order.customerPhone) return;
     Linking.openURL(`tel:${order.customerPhone}`);
-  };
+  }, [order.customerPhone]);
+
+  const handlePressAvatar = useCallback(() => {
+    const customerKey = order.customerTikTokUsername || order.username;
+    if (customerKey) router.push({ pathname: "/customer-detail", params: { customerKey } });
+  }, [order.customerTikTokUsername, order.username]);
+
+  const handleZalo = useCallback(() => {
+    if (!order.customerPhone) return;
+    const zaloUrl = `https://zalo.me/${order.customerPhone}`;
+    Linking.openURL(zaloUrl);
+  }, [order.customerPhone]);
 
   return (
     <Section>
       <View style={styles.customerTopRow}>
-        <Avatar uri={order.avatar || order.avatarUrl} username={displayName} size={40} />
+        <Pressable onPress={handlePressAvatar}>
+          <Avatar uri={order.avatar || order.avatarUrl} username={displayName} size={40} />
+        </Pressable>
         <View style={styles.customerInfo}>
           <Text style={styles.customerName}>{displayName}</Text>
           <View style={styles.vipRow}>
@@ -48,7 +63,7 @@ export function OrderDetailCustomerSection({ order, displayName, onTikTok }: Ord
           <Icon name="followers" size={20} tintColor="neutral900" />
           <Text style={styles.customerActionLabel}>Tiktok</Text>
         </Pressable>
-        <Pressable style={styles.customerActionBtn} onPress={() => {}}>
+        <Pressable style={styles.customerActionBtn} onPress={handleZalo}>
           <Icon name="more" size={20} tintColor="neutral900" />
           <Text style={styles.customerActionLabel}>Zalo</Text>
         </Pressable>

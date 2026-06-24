@@ -1,3 +1,4 @@
+import { GeoPickerSheet } from "@components/geo-picker";
 import { ShopAddress } from "@features/settings/service/shop-addresses-api";
 import { VnGeoItem } from "@features/settings/service/vn-geo";
 import { AddressForm, GeoPickerState } from "@features/settings/hooks/shipping-address-form.schema";
@@ -13,7 +14,6 @@ import {
 } from "react-native";
 import { AddressInput, PickerField, SwitchRow } from "./shipping-address-form-fields";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
-import { ShippingGeoPickerModal } from "./shipping-geo-picker-modal";
 
 type ShippingAddressModalProps = {
   visible: boolean;
@@ -195,11 +195,18 @@ export function ShippingAddressModal({
             </TouchableOpacity>
           </ScrollView>
 
-          <ShippingGeoPickerModal
-            picker={geoPicker}
-            onClose={() => setGeoPicker(null)}
-            onSelect={onSelectGeoItem}
-          />
+          {geoPicker ? (
+            <View style={styles.geoPickerOverlay}>
+              <GeoPickerSheet
+                title={geoPicker.title}
+                items={geoPicker.items}
+                selectedName={geoPicker.selectedName}
+                placeholder={geoPicker.placeholder}
+                onClose={() => setGeoPicker(null)}
+                onSelect={onSelectGeoItem}
+              />
+            </View>
+          ) : null}
         </View>
       </View>
     </Modal>

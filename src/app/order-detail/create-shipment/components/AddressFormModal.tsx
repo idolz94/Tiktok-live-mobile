@@ -16,11 +16,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { AnimatedErrorText } from "@components/animated-error-text";
+import { GeoPickerSheet } from "@components/geo-picker";
 import { Icon } from "@components/icon";
 import { fetchVnProvinces, fetchVnDistricts, fetchVnWards, VnGeoItem } from "@features/settings/service/vn-geo";
 import { addrSchema, AddrFormValues } from "../types";
 import { absoluteFill } from "../utils";
-import { GeoPickerOverlay } from "./GeoPickerOverlay";
 
 type AddressFormModalProps = {
   visible: boolean;
@@ -307,7 +307,7 @@ export function AddressFormModal({
             <TouchableWithoutFeedback onPress={() => setGeoPicker(null)}>
               <View style={formModalStyles.backdrop} />
             </TouchableWithoutFeedback>
-            <GeoPickerOverlay
+            <GeoPickerSheet
               title={
                 geoPicker === "province"
                   ? "Chọn Tỉnh / Thành phố"
@@ -315,9 +315,7 @@ export function AddressFormModal({
                   ? "Chọn Quận / Huyện"
                   : "Chọn Phường / Xã"
               }
-              items={
-                geoPicker === "province" ? provinces : geoPicker === "district" ? districts : wards
-              }
+              items={geoPicker === "province" ? provinces : geoPicker === "district" ? districts : wards}
               onSelect={
                 geoPicker === "province"
                   ? handleSelectProvince

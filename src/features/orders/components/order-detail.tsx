@@ -10,7 +10,7 @@ import { formatMoney } from "@features/orders/utils/order";
 import { createStyles } from "@utils/createStyles";
 import { router, useLocalSearchParams } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, Text, View } from "react-native";
 import { OrderDetailCustomerSection } from "../../../app/order-detail/components/OrderDetailCustomerSection";
 import { OrderDetailFooterActions } from "../../../app/order-detail/components/OrderDetailFooterActions";
 import {
@@ -89,6 +89,15 @@ export const OrderDetail = memo(() => {
     [detail],
   );
 
+  const handleTikTok = useCallback(() => {
+    const username = detail.order?.customerTikTokUsername;
+    if (!username) return;
+    const tiktokUrl = `https://www.tiktok.com/@${username}`;
+    Linking.openURL(tiktokUrl).catch(() => {
+      Linking.openURL(`tiktok://user?username=${username}`);
+    });
+  }, [detail.order?.customerTikTokUsername]);
+
   return (
     <Screen>
       <Header title="Tổng quan đơn hàng" />
@@ -123,7 +132,7 @@ export const OrderDetail = memo(() => {
                   <OrderDetailCustomerSection
                     order={detail.order}
                     displayName={displayName}
-                    onTikTok={() => {}}
+                    onTikTok={handleTikTok}
                   />
                   <Divider />
                 </>
