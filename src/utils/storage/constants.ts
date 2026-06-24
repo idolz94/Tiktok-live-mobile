@@ -10,4 +10,6 @@ export const STORAGE_KEYS = {
   LIVE_RESUME_USERNAME: "lumi_live_resume_username",
 
   ONBOARDING_COMPLETED: "onboarding_completed",
+
+  PRINTER_CONFIG: "printer_config",
 } as const;

@@ -29,7 +29,7 @@ export const settingGroups: Setting[][] = [
       label: "Cài đặt thông tin SP trước Live",
       onPress: openProductInfoSetup,
     },
-    { icon: "⇄", label: "Cài đặt máy in" },
+    { icon: "⇄", label: "Cài đặt máy in", onPress: () => router.push("/printer-settings" as never) },
     { icon: "↕", label: "Cấu hình vận chuyển" },
   ],
   [
