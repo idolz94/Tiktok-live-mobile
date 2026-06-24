@@ -1,16 +1,7 @@
-import {
-  createProductPresetApi,
-  deleteProductPresetApi,
-  listProductPresetsApi,
-  ProductPreset,
-  updateProductPresetApi,
-} from "@features/settings/service/product-presets-api";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -22,154 +13,32 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-type FormMode = "add" | "edit";
-
-type FormErrors = {
-  code?: string;
-  price?: string;
-};
-
-function formatPrice(value: number) {
-  return Math.round(value || 0).toLocaleString("vi-VN");
-}
-
-function parsePrice(value: string) {
-  const digits = value.replace(/[^0-9]/g, "");
-  return digits ? Number(digits) : 0;
-}
+import { formatPrice, useProductInfoSetup } from "./use-product-info-setup";
 
 export default function ProductInfoSetupScreen() {
-  const [presets, setPresets] = useState<ProductPreset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [formMode, setFormMode] = useState<FormMode | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<ProductPreset | null>(null);
-  const [draftCode, setDraftCode] = useState("");
-  const [draftColor, setDraftColor] = useState("");
-  const [draftPrice, setDraftPrice] = useState("");
-  const [errors, setErrors] = useState<FormErrors>({});
-
-  const canSubmit = useMemo(
-    () => draftCode.trim().length > 0 && parsePrice(draftPrice) > 0 && !saving,
-    [draftCode, draftPrice, saving],
-  );
-
-  const loadPresets = useCallback(async () => {
-    try {
-      const data = await listProductPresetsApi();
-      setPresets(data);
-    } catch {
-      Alert.alert("Lỗi", "Không thể tải danh sách sản phẩm.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadPresets();
-  }, [loadPresets]);
+  const {
+    presets,
+    loading,
+    saving,
+    formMode,
+    draftCode,
+    draftColor,
+    draftPrice,
+    errors,
+    canSubmit,
+    setDraftCode,
+    setDraftColor,
+    setErrors,
+    openAdd,
+    openEdit,
+    closeForm,
+    handlePriceChange,
+    submitForm,
+    confirmDelete,
+  } = useProductInfoSetup();
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    }
-  };
-
-  const resetForm = () => {
-    setSelectedPreset(null);
-    setDraftCode("");
-    setDraftColor("");
-    setDraftPrice("");
-    setErrors({});
-  };
-
-  const closeForm = () => {
-    setFormMode(null);
-    resetForm();
-  };
-
-  const openAdd = () => {
-    resetForm();
-    setFormMode("add");
-  };
-
-  const openEdit = (preset: ProductPreset) => {
-    setSelectedPreset(preset);
-    setDraftCode(preset.code);
-    setDraftColor(preset.color ?? "");
-    setDraftPrice(preset.price > 0 ? formatPrice(preset.price) : "");
-    setErrors({});
-    setFormMode("edit");
-  };
-
-  const handlePriceChange = (value: string) => {
-    const price = parsePrice(value);
-    setDraftPrice(price > 0 ? formatPrice(price) : "");
-    if (errors.price) {
-      setErrors((current) => ({ ...current, price: undefined }));
-    }
-  };
-
-  const submitForm = async () => {
-    const nextErrors: FormErrors = {};
-    const price = parsePrice(draftPrice);
-
-    if (!draftCode.trim()) {
-      nextErrors.code = "Tên sản phẩm không được trống";
-    }
-
-    if (!draftPrice.trim() || price <= 0) {
-      nextErrors.price = "Giá phải lớn hơn 0";
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const payload = {
-        code: draftCode.trim(),
-        color: draftColor.trim() || null,
-        price,
-      };
-
-      if (formMode === "add") {
-        await createProductPresetApi(payload);
-      } else if (formMode === "edit" && selectedPreset) {
-        await updateProductPresetApi(selectedPreset.id, payload);
-      }
-
-      closeForm();
-      await loadPresets();
-    } catch {
-      Alert.alert("Lỗi", "Thao tác thất bại. Vui lòng thử lại.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const confirmDelete = (preset: ProductPreset) => {
-    Alert.alert("Xoá sản phẩm?", `Bạn có chắc muốn xoá sản phẩm ${preset.code}?`, [
-      { text: "Huỷ", style: "cancel" },
-      {
-        text: "Xoá",
-        style: "destructive",
-        onPress: async () => {
-          setSaving(true);
-          try {
-            await deleteProductPresetApi(preset.id);
-            await loadPresets();
-          } catch {
-            Alert.alert("Lỗi", "Không thể xoá sản phẩm.");
-          } finally {
-            setSaving(false);
-          }
-        },
-      },
-    ]);
+    if (router.canGoBack()) router.back();
   };
 
   return (

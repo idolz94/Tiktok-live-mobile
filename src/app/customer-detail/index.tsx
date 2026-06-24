@@ -2,14 +2,10 @@ import type { Order, OrderProduct } from "@app-types/index";
 import { Avatar } from "@components/avatar";
 import { Screen } from "@components/screen";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@features/auth/hooks/use-auth";
-import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
-import { updateCustomerApi } from "@features/customers/service/api";
 import { formatMoney, getOrderTotal, statusLabel } from "@features/orders/utils/order";
 import { createStyles } from "@utils/createStyles";
-import { getOrderTikTokUsername, openTikTokProfile } from "@utils/tiktok";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { openTikTokProfile } from "@utils/tiktok";
+import { router } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
@@ -20,8 +16,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-type DetailTab = "info" | "orders";
+import { type DetailTab, useCustomerDetail } from "./use-customer-detail";
 
 type StatCardProps = {
   label: string;
@@ -42,58 +37,8 @@ const TABS: { key: DetailTab; label: string }[] = [
   { key: "orders", label: "Đơn hàng" },
 ];
 
-function getSingleParam(value?: string | string[]) {
-  if (Array.isArray(value)) return value[0] ?? "";
-  return value ?? "";
-}
-
-function getCustomerKey(customer: CustomerSummaryWithTikTok) {
-  return customer.customerTikTokUsername || customer.username;
-}
-
-function matchesCustomer(order: Order, customerKey: string, customer?: CustomerSummaryWithTikTok) {
-  if (!customerKey) return false;
-
-  const orderTikTokUsername = getOrderTikTokUsername(order);
-  const customerTikTokUsername = customer?.customerTikTokUsername || "";
-  const customerUsername = customer?.username || "";
-
-  if (customerTikTokUsername) return orderTikTokUsername === customerTikTokUsername;
-
-  return order.username === customerKey || order.username === customerUsername;
-}
-
 function getOrderProducts(order: Order) {
   return Array.isArray(order.products) ? order.products : [];
-}
-
-function getProductQuantity(products: OrderProduct[]) {
-  return products.reduce((sum, product) => sum + Number(product.quantity || 0), 0);
-}
-
-function formatOrderDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Không rõ ngày";
-  return date.toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function groupOrdersByDate(orders: Order[]) {
-  return orders.reduce<{ date: string; orders: Order[] }[]>((groups, order) => {
-    const date = formatOrderDate(order.createdAt);
-    const existing = groups.find((group) => group.date === date);
-
-    if (existing) {
-      existing.orders.push(order);
-      return groups;
-    }
-
-    groups.push({ date, orders: [order] });
-    return groups;
-  }, []);
 }
 
 function TikTokMark() {
@@ -229,75 +174,20 @@ function OrderCard({ order }: { order: Order }) {
 }
 
 export default function CustomerDetail() {
-  const params = useLocalSearchParams<{ customerKey?: string; tab?: string }>();
-  const customerKey = getSingleParam(params.customerKey);
-  const initialTab = getSingleParam(params.tab) === "orders" ? "orders" : "info";
-  const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
-  const [customerType, setCustomerType] = useState("Lẻ");
-  const [phone, setPhone] = useState("");
-  const [referenceInfo, setReferenceInfo] = useState("");
-  const [address, setAddress] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
   const { top } = useSafeAreaInsets();
-  const { user } = useAuth();
-
-  const orderManager = useOrderManager({
-    comments: [],
-    hasOrders: user?.hasOrders ?? false,
-  });
-
-  const customers = orderManager.customers;
-  const customer = useMemo(
-    () => customers.find((item) => getCustomerKey(item) === customerKey),
-    [customerKey, customers],
-  );
-  const customerOrders = useMemo(
-    () =>
-      orderManager.orders
-        .filter((order) => matchesCustomer(order, customerKey, customer))
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        ),
-    [customer, customerKey, orderManager.orders],
-  );
-  const latestOrder = customerOrders[0];
-  const displayName = customer?.username || latestOrder?.customerName || latestOrder?.username || "Khách hàng";
-  const avatar = customer?.avatar || latestOrder?.avatar || latestOrder?.avatarUrl || "";
-  const tiktokUsername = customer?.customerTikTokUsername || (latestOrder ? getOrderTikTokUsername(latestOrder) : "");
-  const groupedOrders = useMemo(() => groupOrdersByDate(customerOrders), [customerOrders]);
-  const productCount = useMemo(
-    () => customerOrders.reduce((sum, order) => sum + getProductQuantity(getOrderProducts(order)), 0),
-    [customerOrders],
-  );
-  const confirmedCount = customerOrders.filter((order) => order.status === "confirmed").length;
-  const depositedCount = customerOrders.filter(
-    (order) => order.depositStatus === "paid" || order.depositStatus === "deposited",
-  ).length;
-  const unpaidCount = customerOrders.filter(
-    (order) => order.depositStatus !== "paid" && order.depositStatus !== "deposited",
-  ).length;
-  const draftCount = customerOrders.filter((order) => order.status === "draft").length;
-
-  useEffect(() => {
-    if (!customerKey || !latestOrder) return;
-    setPhone(latestOrder.customerPhone || "");
-    setAddress(latestOrder.customerAddress || latestOrder.customerAddressData?.address || "");
-    setReferenceInfo(latestOrder.note || customer?.latestComment || "");
-  }, [customerKey]);
-
-  const loading = orderManager.orderLoading && !customer && customerOrders.length === 0;
-  const notFound = !loading && !customer && customerOrders.length === 0;
-
-  const handleSave = async () => {
-    if (!customer?.customerId || isSaving) return;
-    setIsSaving(true);
-    try {
-      await updateCustomerApi(customer.customerId, { customerType, phone, referenceInfo });
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const {
+    activeTab, setActiveTab,
+    customerType, setCustomerType,
+    phone, setPhone,
+    referenceInfo, setReferenceInfo,
+    address, setAddress,
+    isSaving,
+    displayName, avatar, tiktokUsername,
+    customer, groupedOrders,
+    productCount, confirmedCount, depositedCount, unpaidCount, draftCount,
+    loading, notFound,
+    handleSave,
+  } = useCustomerDetail();
 
   return (
     <Screen backgroundColorTheme="white">

@@ -59,55 +59,6 @@ export function formatCurrency(str: string | undefined): string {
   return parseFloat(cleanedStr).currencyFormat();
 }
 
-/**
- * Tạo mật khẩu ngẫu nhiên dựa trên các tập ký tự được chọn.
- *
- * @param useLowercase Bao gồm bảng chữ thường (a-z)
- * @param useUppercase Bao gồm bảng chữ hoa (A-Z)
- * @param useNumbers Bao gồm chữ số (0-9)
- * @param useSpecial Bao gồm ký tự đặc biệt phổ biến (!@#$...)
- * @param passwordSize Độ dài mật khẩu mong muốn
- * @returns Chuỗi mật khẩu đã tạo
- */
-export function generatePassword(
-  useLowercase: boolean,
-  useUppercase: boolean,
-  useNumbers: boolean,
-  useSpecial: boolean,
-  passwordSize: number,
-): string {
-  const LOWER_CASE = "abcdefghijklmnopqrstuvwxyz";
-  const UPPER_CASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const NUMBERS = "0123456789";
-  const SPECIALS = "!@#$%^&*()-_=+";
-
-  let password = "";
-  let charSet = "";
-
-  // Build up the character set to choose from
-  if (useLowercase) {
-    charSet += LOWER_CASE;
-  }
-
-  if (useUppercase) {
-    charSet += UPPER_CASE;
-  }
-
-  if (useNumbers) {
-    charSet += NUMBERS;
-  }
-
-  if (useSpecial) {
-    charSet += SPECIALS;
-  }
-
-  for (let i = 0; i < passwordSize; i++) {
-    const randomIndex = Math.floor(Math.random() * charSet.length);
-    password += charSet[randomIndex];
-  }
-
-  return password;
-}
 
 /**
  * Loại bỏ một số 0 ở đầu số điện thoại nội địa nếu có.
@@ -270,68 +221,6 @@ export const removeAccentAndTrimWhenBlurInput =
     }
   };
 
-/**
- * Lược bỏ thẻ <html> và </html> ở hai đầu chuỗi HTML (bao gồm cả khoảng trắng, xuống dòng).
- * Hữu ích khi lấy nội dung HTML từ các Editor sinh ra mã HTML có bọc thẻ <html> mặc định.
- *
- * @param htmlString Chuỗi HTML gốc cần xử lý
- * @returns Chuỗi mới đã được lược bỏ thẻ <html> bao bọc bên ngoài. Lấy nguyên giá trị null | undefined nếu truyền vào nó.
- */
-export function removeHtmlWrap<T extends string | null | undefined>(
-  htmlString: T,
-): T extends string ? string : T {
-  if (
-    htmlString === null ||
-    htmlString === undefined ||
-    typeof htmlString !== "string"
-  ) {
-    return htmlString as any;
-  }
-  return htmlString
-    .replace(/^<html[^>]*>\n?/i, "")
-    .replace(/\n?<\/html>$/i, "") as any;
-}
-
-/**
- * Kiểm tra xem chuỗi HTML đã được bao bọc bởi thẻ <html> chưa.
- * Nếu chưa thì thêm vào, nếu có rồi thì thôi.
- *
- * @param htmlString Chuỗi HTML cần xử lý
- * @returns Chuỗi mới đã được bao bọc thẻ <html>. Trả về chính nó nếu là null | undefined.
- */
-export function wrapHtml<T extends string | null | undefined>(
-  htmlString: T,
-): T extends string ? string : T {
-  if (
-    htmlString === null ||
-    htmlString === undefined ||
-    typeof htmlString !== "string"
-  ) {
-    return htmlString as any;
-  }
-
-  const trimmed = htmlString.trim();
-  if (/^<html[^>]*>/i.test(trimmed) && /<\/html>$/i.test(trimmed)) {
-    return htmlString as any;
-  }
-
-  return `<html>\n${htmlString}\n</html>` as any;
-}
-
-export function phoneToAuthEmail(phone: string) {
-  const rawPhone = phone;
-
-  let hash = 0;
-
-  for (let index = 0; index < rawPhone.length; index += 1) {
-    hash = (hash << 5) - hash + rawPhone.charCodeAt(index);
-    hash |= 0;
-  }
-
-  const safeHash = Math.abs(hash).toString(36);
-
-  return `phone.${safeHash}@phone-auth.lumi.app`;
-}
 
 export function toStringArray(value: unknown): string[] {
   if (!value) return [];

@@ -1,11 +1,10 @@
 import { Button } from "@components/button";
 import { Icon } from "@components/icon";
-import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
-import { useCallback, useMemo, useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { useEditChannel } from "./use-edit-channel";
 
 type Props = {
   title: string;
@@ -16,7 +15,6 @@ type Props = {
   onDelete?: () => Promise<void>;
 };
 
-// START EditChannel — bottom sheet form for editing TikTok channel username
 export const EditChannel = ({
   title,
   tiktokUsername = "",
@@ -26,76 +24,8 @@ export const EditChannel = ({
   onDelete,
 }: Props) => {
   const { colors } = useThemes();
-  const [name, setName] = useState(tiktokUsername);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState("");
-
-  const currentNormalized = useMemo(
-    () => normalizeTikTokUsername(tiktokUsername),
-    [tiktokUsername],
-  );
-
-  const onSubmit = useCallback(async () => {
-    const nextUsername = normalizeTikTokUsername(name);
-
-    if (!nextUsername) {
-      setError("Vui lòng nhập TikTok username");
-      return;
-    }
-
-    const hasDuplicate =
-      nextUsername !== currentNormalized && usedUsernames.has(nextUsername);
-
-    if (hasDuplicate) {
-      setError("Kênh TikTok này đã tồn tại");
-      return;
-    }
-
-    if (nextUsername === currentNormalized) {
-      onClose();
-      return;
-    }
-
-    try {
-      setSaving(true);
-      await onSave(nextUsername);
-      onClose();
-    } catch (err) {
-      Alert.alert(
-        "Cập nhật thất bại",
-        err instanceof Error ? err.message : "Thao tác thất bại",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }, [currentNormalized, name, onClose, onSave, usedUsernames]);
-
-  const onConfirmDelete = useCallback(() => {
-    if (!onDelete || deleting || saving) return;
-
-    Alert.alert("Xoá kênh", `Xoá kênh ${currentNormalized}?`, [
-      { text: "Huỷ", style: "cancel" },
-      {
-        text: "Xoá",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setDeleting(true);
-            await onDelete();
-            onClose();
-          } catch (err) {
-            Alert.alert(
-              "Xoá thất bại",
-              err instanceof Error ? err.message : "Không thể xoá kênh",
-            );
-          } finally {
-            setDeleting(false);
-          }
-        },
-      },
-    ]);
-  }, [currentNormalized, deleting, onClose, onDelete, saving]);
+  const { name, setName, setError, saving, deleting, error, onSubmit, onConfirmDelete } =
+    useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave, onDelete });
 
   return (
     <View style={styles.container}>
@@ -154,7 +84,6 @@ export const EditChannel = ({
     </View>
   );
 };
-// END EditChannel
 
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {

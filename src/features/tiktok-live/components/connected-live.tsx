@@ -1,99 +1,16 @@
 import { LiveComment } from "@app-types/index";
-import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
-import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { FlashList } from "@shopify/flash-list";
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useEffect, useRef } from "react";
-import type { ComponentRef } from "react";
-import { ActivityIndicator, Alert, Text, View } from "react-native";
+import { memo, useCallback } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
 import { ConnectedLiveProps } from "../types/types";
 import { CommentCardItem } from "./comment-card-item";
+import { useConnectedLive } from "./use-connected-live";
 
 export const ConnectedLive = memo(
-  ({ orderManager, onNavigateToOrders, onPrintOrder }: ConnectedLiveProps) => {
-    const { comments, isConnected } = useTikTokLiveSocketContext();
-
-    const listRef = useRef<ComponentRef<typeof FlashList<LiveComment>>>(null);
-    const createdCommentKeysRef = useRef<Set<string>>(new Set());
-    const rafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(
-      null,
-    );
-
-    useEffect(() => {
-      if (comments.length === 0) return;
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => {
-        listRef.current?.scrollToOffset({ offset: 0, animated: true });
-        rafRef.current = null;
-      });
-    }, [comments.length]);
-
-    const isCommentOrderCreated = useCallback((comment: LiveComment) => {
-      return Boolean(
-        comment.isOrderCreated ||
-        comment.orderId ||
-        createdCommentKeysRef.current.has(createOrderCommentKey(comment)),
-      );
-    }, []);
-
-    const handleCreateOrder = useCallback(
-      async (comment: LiveComment) => {
-        const commentKey = createOrderCommentKey(comment);
-
-        if (createdCommentKeysRef.current.has(commentKey)) {
-          alert("Comment này đã tạo đơn rồi.");
-          return { success: false, orderId: "" };
-        }
-
-        try {
-          createdCommentKeysRef.current.add(commentKey);
-          const result = await orderManager.createOrderFromComment(comment);
-
-          Alert.alert(
-            "Tạo đơn thành công",
-            'Di chuyển sang "Đơn đã tạo" để kiểm tra',
-            [
-              { text: "Huỷ", style: "cancel" },
-              { text: "OK", onPress: () => onNavigateToOrders?.() },
-            ],
-          );
-
-          return { success: true, orderId: result?.orderId ?? "" };
-        } catch (error) {
-          createdCommentKeysRef.current.delete(commentKey);
-
-          if (__DEV__) console.error("CREATE ORDER ERROR:", error);
-          alert(error instanceof Error ? error.message : "Tạo đơn thất bại");
-
-          return { success: false, orderId: "" };
-        }
-      },
-      [onNavigateToOrders, orderManager],
-    );
-
-    const handlePrintOrder = useCallback(
-      (comment: LiveComment, orderId: string) => {
-        const order = orderManager.orders.find(
-          (item) =>
-            item.id === orderId ||
-            item.id === comment.orderId ||
-            item.commentId === comment.id,
-        );
-
-        if (!order) {
-          Alert.alert(
-            "Không tìm thấy đơn",
-            "Vui lòng tải lại danh sách đơn hàng.",
-          );
-          return;
-        }
-
-        // Luồng mobile hiện chỉ map comment -> order; native print sẽ được nối ở callback ngoài khi có print module.
-        onPrintOrder?.(comment, order.id) ??
-          Alert.alert("Đơn đã tạo", "Tính năng in lại sẽ được bổ sung sau.");
-      },
-      [onPrintOrder, orderManager.orders],
-    );
+  (props: ConnectedLiveProps) => {
+    const { comments, isConnected, listRef, isCommentOrderCreated, handleCreateOrder, handlePrintOrder } =
+      useConnectedLive(props);
 
     const keyExtractor = useCallback((item: LiveComment) => item.id, []);
 

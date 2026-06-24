@@ -117,6 +117,7 @@ Do not mix `modules` and `features` within the same domain without a clear reaso
 - Create a new file when it cleanly isolates a reusable component, service, adapter, schema, or domain responsibility.
 - Keep screens focused on rendering and interaction.
 - Keep network, storage, mapping, and business logic in hooks, services, stores, or domain utilities.
+- **Hook rule:** when a screen or component contains logic longer than ~30 lines (API calls, state orchestration, derived values, side effects), extract it into a dedicated `use-*.ts` hook colocated in the same feature folder. The UI file only calls values and functions from the hook — no business logic in the component body.
 - Prefer packages already present in `package.json`.
 - Do not add a dependency without checking whether the project already has an equivalent.
 - Use project aliases instead of deep relative imports.
@@ -197,9 +198,10 @@ Rules:
 - Preserve duplicate-bootstrap protection.
 - Temporary network or server failures must not automatically remove a valid persisted user.
 - `refreshAuth()` refreshes bootstrap/user data; it is not a refresh-token flow.
+- Token refresh (access token via refresh token) happens at the HTTP interceptor layer — do not duplicate in feature screens.
 - Unauthorized handling belongs at the root level.
 - Do not show duplicated session-expired alerts in feature screens.
-- Local logout clears local auth state.
+- Local logout clears local auth state and removes tokens from SecureStore.
 - Do not assume server logout or refresh-token retry exists unless confirmed in code.
 
 Relevant areas:
