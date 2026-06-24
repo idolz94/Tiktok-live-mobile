@@ -97,7 +97,17 @@ export function mapDbLiveSession(row: any): LiveHistoryItem {
     row?.createdAt ||
     row?.created_at ||
     new Date().toISOString();
-  const endedAt = row?.endedAt || row?.ended_at || null;
+  const rawEndedAt = row?.endedAt || row?.ended_at || null;
+  const durationSecondsRaw = toNumber(
+    row?.durationSeconds || row?.duration_seconds,
+  );
+  const endedAt =
+    rawEndedAt ||
+    (durationSecondsRaw > 0
+      ? new Date(
+          new Date(startedAt).getTime() + durationSecondsRaw * 1000,
+        ).toISOString()
+      : null);
 
   const comments = Array.isArray(row?.comments)
     ? row.comments.map(mapDbLiveComment)
@@ -124,11 +134,8 @@ export function mapDbLiveSession(row: any): LiveHistoryItem {
     ),
     startedAt,
     endedAt,
-    durationSeconds: toNumber(
-      row?.durationSeconds ||
-        row?.duration_seconds ||
-        calcDurationSeconds(startedAt, endedAt),
-    ),
+    durationSeconds:
+      durationSecondsRaw || calcDurationSeconds(startedAt, endedAt),
     commentCount: toNumber(
       row?.commentCount || row?.comment_count || comments.length,
     ),

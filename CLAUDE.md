@@ -646,3 +646,77 @@ When modifying this repository:
 9. Do not create confirmed business actions from AI suggestions.
 10. Review high-risk flows before completion.
 11. State clearly what was changed and what was actually verified.
+Keep validation in schema files where practical rather than duplicating validation logic in components.
+
+## Development rules for Claude Code
+
+Follow these rules when modifying this project:
+
+1. Prefer editing existing files over creating new files.
+2. Respect Expo Router conventions under `src/app/`; do not introduce manual navigation architecture unless explicitly requested.
+3. Use project aliases instead of deep relative imports.
+4. Keep `babel.config.js` and `tsconfig.json` aliases synchronized.
+5. Route auth changes through `use-auth.ts`, `auth-store.ts`, `auth-utils.ts`, and `modules/auth/services/api.ts` as appropriate.
+6. Do not hardcode access tokens, refresh tokens, API URLs, app keys, or user secrets.
+7. Preserve SecureStore for tokens and MMKV/Zustand for user/session UI state.
+8. When changing session-expired behavior, keep the root-level alert pattern and avoid duplicate feature-level alerts.
+9. When changing live/SSE behavior, reuse existing services and hooks in `src/modules/tiktok-live/` and `src/utils/http/request-sse.ts`.
+10. When changing route guards, verify `src/app/_layout.tsx`, `src/app/index.tsx`, `src/app/(auth)/_layout.tsx`, and `src/app/(tabs)/_layout.tsx` together.
+11. When changing persisted state shapes, review migrations and old storage keys before removing compatibility logic.
+12. Run `npm run typecheck` after TypeScript changes when practical.
+13. For UI changes, run the app and manually verify the affected path before claiming completion.
+14. Avoid broad refactors unless explicitly requested; keep changes scoped to the task.
+15. Avoid comments unless they explain a non-obvious invariant, platform constraint, or workaround.
+
+## Known architectural notes
+
+- Login intentionally sets a basic user immediately so protected navigation can proceed quickly, then runs `/me/bootstrap` in the background to enrich user data.
+- Bootstrap intentionally keeps the old persisted user on network/server failure to avoid kicking users out during temporary connectivity issues.
+- Auth bootstrap lives in `use-auth.ts` instead of the store to avoid circular imports between store and API modules.
+- `refreshAuth()` refreshes bootstrap/user data, not access tokens.
+- Refresh-token storage helpers exist, but a full token-refresh retry flow is not currently implemented.
+- `logoutApi()` exists, but the active logout behavior is local token/state cleanup only.
+
+<!-- gitnexus:start -->
+# GitNexus — Code Intelligence
+
+This project is indexed by GitNexus as **Tiktok-live-mobile** (1709 symbols, 3661 relationships, 136 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+
+> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
+
+## Always Do
+
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
+- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "main"})`.
+- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
+- When exploring unfamiliar code, use `query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
+- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
+
+## Never Do
+
+- NEVER edit a function, class, or method without first running `impact` on it.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
+- NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
+- NEVER commit changes without running `detect_changes()` to check affected scope.
+
+## Resources
+
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/Tiktok-live-mobile/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/Tiktok-live-mobile/clusters` | All functional areas |
+| `gitnexus://repo/Tiktok-live-mobile/processes` | All execution flows |
+| `gitnexus://repo/Tiktok-live-mobile/process/{name}` | Step-by-step execution trace |
+
+## CLI
+
+| Task | Read this skill file |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+
+<!-- gitnexus:end -->
