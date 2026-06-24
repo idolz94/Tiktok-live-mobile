@@ -1,5 +1,12 @@
-import type { OrderProduct, OrderStatus, OrderWithTikTok } from "@app-types/index";
-import type { OrderItemPayload, UpdateOrderItemPayload } from "@features/orders/types/order";
+import type {
+  OrderProduct,
+  OrderStatus,
+  OrderWithTikTok,
+} from "@app-types/index";
+import type {
+  OrderItemPayload,
+  UpdateOrderItemPayload,
+} from "@features/orders/types/order";
 import { getOrderTotal } from "@features/orders/utils/order";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -10,28 +17,93 @@ import {
   updateOrderStatusApi,
 } from "../service/api";
 
+// START: Stable fallback để tránh tạo array/object mới mỗi render khi order null
+const EMPTY_PRODUCTS: OrderProduct[] = [];
+
+const EMPTY_SUMMARY = {
+  productTotal: 0,
+  totalQuantity: 0,
+  shippingFee: 0,
+  codAmount: 0,
+  remain: 0,
+};
+// END: Stable fallback
+
+type UiState = {
+  addProductOpen: boolean;
+  editProductOpen: boolean;
+  showAllProducts: boolean;
+  showShippingScreen: boolean;
+};
+
+type MutatingState = {
+  addProduct: boolean;
+  updateProduct: boolean;
+  deposit: boolean;
+  confirm: boolean;
+};
+
+const UI_INIT: UiState = {
+  addProductOpen: false,
+  editProductOpen: false,
+  showAllProducts: false,
+  showShippingScreen: false,
+};
+
+const MUTATING_INIT: MutatingState = {
+  addProduct: false,
+  updateProduct: false,
+  deposit: false,
+  confirm: false,
+};
+
 export function useOrderDetail(orderId: string) {
+  // data state
   const [order, setOrder] = useState<OrderWithTikTok | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [addProductOpen, setAddProductOpen] = useState(false);
-  const [editProductOpen, setEditProductOpen] = useState(false);
-  const [showAllProducts, setShowAllProducts] = useState(false);
-  const [showShippingScreen, setShowShippingScreen] = useState(false);
-
   // START: Lưu selectedProductId thay vì object để tránh stale reference khi order update
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
   // END: Lưu selectedProductId thay vì object
 
-  const [addingProduct, setAddingProduct] = useState(false);
-  const [updatingProduct, setUpdatingProduct] = useState(false);
-  const [depositLoading, setDepositLoading] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
+  // START: Gom UI boolean flags — 4 useState → 1
+  const [ui, setUi] = useState<UiState>(UI_INIT);
+  // END: Gom UI boolean flags
+
+  // START: Gom mutation loading flags — 4 useState → 1
+  const [mutating, setMutating] = useState<MutatingState>(MUTATING_INIT);
+  // END: Gom mutation loading flags
+
+  const patchUi = useCallback(
+    (patch: Partial<UiState>) => setUi((prev) => ({ ...prev, ...patch })),
+    [],
+  );
+
+  const patchMutating = useCallback(
+    (patch: Partial<MutatingState>) =>
+      setMutating((prev) => ({ ...prev, ...patch })),
+    [],
+  );
 
   // START: Race condition guard — bỏ qua response của request cũ nếu có request mới hơn
   const requestRef = useRef(0);
   // END: Race condition guard
+
+  // START: Ref lock chống double tap — state update async không đủ nhanh để block lần tap thứ 2
+  const addingRef = useRef(false);
+  const updatingRef = useRef(false);
+  const depositRef = useRef(false);
+  const confirmRef = useRef(false);
+  // END: Ref lock
+
+  // START: previousStatusRef để rollback optimistic deposit an toàn — tránh stale closure
+  const previousStatusRef = useRef<
+    OrderWithTikTok["depositStatus"] | undefined
+  >(undefined);
+  // END: previousStatusRef
 
   // START: Fetch order khi màn mở, luôn lấy data mới nhất từ server
   const fetchOrder = useCallback(async () => {
@@ -69,26 +141,30 @@ export function useOrderDetail(orderId: string) {
       if (requestId !== requestRef.current) return;
       if (result) setOrder(result);
     } catch {
-      // bỏ qua lỗi silent — UI vẫn giữ data cũ, không hiện thông báo lỗi
+      // bỏ qua lỗi silent — UI vẫn giữ data cũ
     }
   }, [orderId]);
 
   useEffect(() => {
     void fetchOrder();
   }, [fetchOrder]);
-  // END: Fetch order khi màn mở, luôn lấy data mới nhất từ server
+  // END: Fetch order khi màn mở
 
-  const products = order?.products ?? [];
+  // START: Stable products — EMPTY_PRODUCTS tránh tạo [] mới mỗi render khi order null
+  const products = order?.products ?? EMPTY_PRODUCTS;
+  // END: Stable products
 
   // START: Tách summary riêng để không tính lại khi showAllProducts đổi
   const summary = useMemo(() => {
-    const p = order?.products ?? [];
+    if (!order) return EMPTY_SUMMARY;
+
+    const p = order.products ?? EMPTY_PRODUCTS;
     const productTotal = getOrderTotal(p);
     const totalQuantity = p.reduce((sum, item) => sum + item.quantity, 0);
-    const shippingFee = Number(order?.shippingFee ?? 0);
-    const codAmount = Number(order?.codAmount ?? 0);
+    const shippingFee = Number(order.shippingFee ?? 0);
+    const codAmount = Number(order.codAmount ?? 0);
     const remain =
-      order?.totalAmount ?? Math.max(0, productTotal + shippingFee - codAmount);
+      order.totalAmount ?? Math.max(0, productTotal + shippingFee - codAmount);
 
     return { productTotal, totalQuantity, shippingFee, codAmount, remain };
   }, [
@@ -97,12 +173,12 @@ export function useOrderDetail(orderId: string) {
     order?.codAmount,
     order?.totalAmount,
   ]);
-  // END: Tách summary riêng để không tính lại khi showAllProducts đổi
+  // END: summary
 
   // START: Tách displayProducts riêng để không trigger lại summary khi toggle
   const displayProducts = useMemo(
-    () => (showAllProducts ? products : products.slice(0, 3)),
-    [products, showAllProducts],
+    () => (ui.showAllProducts ? products : products.slice(0, 3)),
+    [products, ui.showAllProducts],
   );
   // END: Tách displayProducts riêng
 
@@ -117,80 +193,102 @@ export function useOrderDetail(orderId: string) {
   );
   // END: Derive selectedProduct từ id
 
-  const openAddProduct = useCallback(() => setAddProductOpen(true), []);
-  const closeAddProduct = useCallback(() => setAddProductOpen(false), []);
+  const openAddProduct = useCallback(
+    () => patchUi({ addProductOpen: true }),
+    [patchUi],
+  );
+  const closeAddProduct = useCallback(
+    () => patchUi({ addProductOpen: false }),
+    [patchUi],
+  );
 
-  const openEditProduct = useCallback((product: OrderProduct) => {
-    setSelectedProductId(product.id);
-    setEditProductOpen(true);
-  }, []);
+  const openEditProduct = useCallback(
+    (product: OrderProduct) => {
+      setSelectedProductId(product.id);
+      patchUi({ editProductOpen: true });
+    },
+    [patchUi],
+  );
 
   const closeEditProduct = useCallback(() => {
-    setEditProductOpen(false);
+    patchUi({ editProductOpen: false });
     setSelectedProductId(null);
-  }, []);
+  }, [patchUi]);
 
   const toggleShowAllProducts = useCallback(
-    () => setShowAllProducts((v) => !v),
+    () =>
+      setUi((prev) => ({ ...prev, showAllProducts: !prev.showAllProducts })),
     [],
   );
 
-  const openShipping = useCallback(() => setShowShippingScreen(true), []);
-  const closeShipping = useCallback(() => setShowShippingScreen(false), []);
+  const openShipping = useCallback(
+    () => patchUi({ showShippingScreen: true }),
+    [patchUi],
+  );
+  const closeShipping = useCallback(
+    () => patchUi({ showShippingScreen: false }),
+    [patchUi],
+  );
 
-  // dep chỉ vào orderId thay vì object order để tránh recreate callback
   const orderId_ = order?.id;
 
-  // START: Thêm sản phẩm vào đơn
+  // START: Thêm sản phẩm — ref lock tránh double tap gửi 2 request trong cùng frame
   const handleAddProduct = useCallback(
     async (payload: OrderItemPayload) => {
-      if (!orderId || addingProduct) return;
+      if (!orderId || addingRef.current) return;
 
-      setAddingProduct(true);
+      addingRef.current = true;
+      patchMutating({ addProduct: true });
       try {
         await addOrderItemApi(orderId, payload);
         await silentRefetch();
-        setAddProductOpen(false);
+        patchUi({ addProductOpen: false });
       } finally {
-        setAddingProduct(false);
+        addingRef.current = false;
+        patchMutating({ addProduct: false });
       }
     },
-    [addingProduct, orderId, silentRefetch],
+    [orderId, patchMutating, patchUi, silentRefetch],
   );
-  // END: Thêm sản phẩm vào đơn
+  // END: Thêm sản phẩm
 
-  // START: Cập nhật sản phẩm trong đơn
+  // START: Cập nhật sản phẩm — ref lock tránh double tap
   const handleUpdateProduct = useCallback(
     async (itemId: string, payload: UpdateOrderItemPayload) => {
-      if (!orderId || updatingProduct) return;
+      if (!orderId || updatingRef.current) return;
 
-      setUpdatingProduct(true);
+      updatingRef.current = true;
+      patchMutating({ updateProduct: true });
       try {
         await updateOrderItemApi(orderId, itemId, payload);
         await silentRefetch();
-        setEditProductOpen(false);
+        patchUi({ editProductOpen: false });
         setSelectedProductId(null);
       } finally {
-        setUpdatingProduct(false);
+        updatingRef.current = false;
+        patchMutating({ updateProduct: false });
       }
     },
-    [orderId, silentRefetch, updatingProduct],
+    [orderId, patchMutating, patchUi, silentRefetch],
   );
-  // END: Cập nhật sản phẩm trong đơn
+  // END: Cập nhật sản phẩm
 
-  // START: Toggle cọc/chưa cọc — optimistic update, rollback nếu API lỗi
+  // START: Toggle cọc/chưa cọc — optimistic update, rollback an toàn qua previousStatusRef
   const depositStatus = order?.depositStatus;
 
   const handleToggleDeposit = useCallback(async () => {
-    if (!orderId_ || depositLoading) return;
+    if (!orderId_ || depositRef.current) return;
 
-    const previousStatus = depositStatus;
     const nextStatus = isPaid ? "unpaid" : "paid";
 
-    setDepositLoading(true);
-    setOrder((current) =>
-      current ? { ...current, depositStatus: nextStatus } : current,
-    );
+    depositRef.current = true;
+    patchMutating({ deposit: true });
+
+    setOrder((current) => {
+      if (!current) return current;
+      previousStatusRef.current = current.depositStatus;
+      return { ...current, depositStatus: nextStatus };
+    });
 
     try {
       const updatedOrder = await updateOrderDepositStatusApi({
@@ -200,37 +298,40 @@ export function useOrderDetail(orderId: string) {
       setOrder(updatedOrder);
     } catch (err) {
       setOrder((current) =>
-        current && previousStatus
-          ? { ...current, depositStatus: previousStatus }
+        current && previousStatusRef.current
+          ? { ...current, depositStatus: previousStatusRef.current }
           : current,
       );
       throw err;
     } finally {
-      setDepositLoading(false);
+      depositRef.current = false;
+      patchMutating({ deposit: false });
     }
-  }, [depositLoading, depositStatus, isPaid, orderId_]);
-  // END: Toggle cọc/chưa cọc optimistic, rollback nếu API lỗi
+  }, [depositStatus, isPaid, orderId_, patchMutating]);
+  // END: Toggle cọc/chưa cọc
 
-  // START: Toggle trạng thái đơn giữa confirmed và draft
+  // START: Toggle trạng thái đơn giữa confirmed và draft — ref lock tránh double tap
   const orderStatus = order?.status;
 
   const handleToggleConfirm = useCallback(async () => {
-    if (!orderId_ || confirmLoading) return;
+    if (!orderId_ || confirmRef.current) return;
 
     const nextStatus: OrderStatus =
       orderStatus === "confirmed" ? "draft" : "confirmed";
 
-    setConfirmLoading(true);
+    confirmRef.current = true;
+    patchMutating({ confirm: true });
     try {
       await updateOrderStatusApi({ orderId: orderId_, status: nextStatus });
       setOrder((current) =>
         current ? { ...current, status: nextStatus } : current,
       );
     } finally {
-      setConfirmLoading(false);
+      confirmRef.current = false;
+      patchMutating({ confirm: false });
     }
-  }, [confirmLoading, orderId_, orderStatus]);
-  // END: Toggle trạng thái đơn giữa confirmed và draft
+  }, [orderId_, orderStatus, patchMutating]);
+  // END: Toggle trạng thái đơn
 
   return {
     order,
@@ -241,24 +342,24 @@ export function useOrderDetail(orderId: string) {
     ...summary,
     isPaid,
     displayProducts,
-    showAllProducts,
+    showAllProducts: ui.showAllProducts,
     toggleShowAllProducts,
-    addProductOpen,
-    editProductOpen,
+    addProductOpen: ui.addProductOpen,
+    editProductOpen: ui.editProductOpen,
     selectedProduct,
     openAddProduct,
     closeAddProduct,
     openEditProduct,
     closeEditProduct,
-    addingProduct,
+    addingProduct: mutating.addProduct,
     handleAddProduct,
-    updatingProduct,
+    updatingProduct: mutating.updateProduct,
     handleUpdateProduct,
-    depositLoading,
+    depositLoading: mutating.deposit,
     handleToggleDeposit,
-    confirmLoading,
+    confirmLoading: mutating.confirm,
     handleToggleConfirm,
-    showShippingScreen,
+    showShippingScreen: ui.showShippingScreen,
     openShipping,
     closeShipping,
   };
