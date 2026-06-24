@@ -40,16 +40,23 @@ export function OrderDetailShippingSection({
         <View
           style={[
             styles.providerIcon,
-            { backgroundColor: selectedProvider === "ghtk" ? "#EE0033" : "#2ca87b" },
+            {
+              backgroundColor:
+                selectedProvider === "ghtk" ? "#EE0033"
+                : selectedProvider === "spx" ? "#ffb000"
+                : "#2ca87b",
+            },
           ]}
         >
           <Text style={styles.providerInitial}>
-            {selectedProvider === "ghtk" ? "G" : "M"}
+            {selectedProvider === "ghtk" ? "G" : selectedProvider === "spx" ? "S" : "M"}
           </Text>
         </View>
         <View style={styles.providerInfo}>
           <Text style={styles.providerName}>
-            {selectedProvider === "ghtk" ? "Giao Hàng Tiết Kiệm" : "Vận chuyển thủ công"}
+            {selectedProvider === "ghtk" ? "Giao Hàng Tiết Kiệm"
+              : selectedProvider === "spx" ? "Shopee Express"
+              : "Vận chuyển thủ công"}
           </Text>
           {order.trackingCode ? (
             <Text style={styles.providerCode}>{order.trackingCode}</Text>

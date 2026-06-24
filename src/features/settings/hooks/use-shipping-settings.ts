@@ -110,6 +110,10 @@ export function useShippingSettings() {
     setAddressModalVisible(false);
   };
 
+  const forceCloseAddressModal = () => {
+    setAddressModalVisible(false);
+  };
+
   const handleSaveAddress = form.handleSubmit(async (values) => {
     setFormError(null);
     setIsSavingAddress(true);
@@ -132,6 +136,7 @@ export function useShippingSettings() {
   return {
     addressForm,
     closeAddressModal,
+    forceCloseAddressModal,
     defaultAddress,
     editingAddress,
     form,

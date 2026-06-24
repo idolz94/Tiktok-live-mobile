@@ -1,17 +1,14 @@
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -32,7 +29,6 @@ const editProductSchema = z.object({
 type ProductForm = z.infer<typeof addProductSchema>;
 
 type ProductSheetProps = {
-  visible: boolean;
   mode: "add" | "edit";
   initialCode?: string;
   initialName?: string;
@@ -48,7 +44,6 @@ function parsePriceDisplay(formatted: string): number {
 }
 
 export function ProductSheet({
-  visible,
   mode,
   initialCode = "",
   initialName = "",
@@ -63,7 +58,6 @@ export function ProductSheet({
   const {
     control,
     handleSubmit,
-    reset,
     setValue,
     watch,
     formState: { errors, isValid, dirtyFields },
@@ -80,17 +74,6 @@ export function ProductSheet({
 
   const quantity = watch("quantity");
 
-  useEffect(() => {
-    if (visible) {
-      reset({
-        code: initialCode,
-        name: initialName,
-        price: initialPrice,
-        quantity: initialQty < 1 ? 1 : initialQty,
-      });
-    }
-  }, [visible, reset, initialCode, initialName, initialPrice, initialQty]);
-
   const onSubmit = handleSubmit((data) => {
     onSave({
       code: data.code.trim(),
@@ -101,17 +84,7 @@ export function ProductSheet({
   });
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay} />
-      </TouchableWithoutFeedback>
-
-      <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
+    <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
         <View style={styles.dragHandle} />
 
         <Text style={[styles.title, { color: colors.neutral900 }]}>
@@ -267,15 +240,10 @@ export function ProductSheet({
           </Pressable>
         </View>
       </View>
-    </Modal>
   );
 }
 
 const styles = createStyles(({ colors, textPresets }) => ({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
   sheet: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

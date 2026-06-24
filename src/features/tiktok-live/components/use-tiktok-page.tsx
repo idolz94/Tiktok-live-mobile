@@ -4,10 +4,14 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import type PagerView from "react-native-pager-view";
+import { router } from "expo-router";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { listShopAddressesApi } from "@features/settings/service/shop-addresses-api";
+import { useThemes } from "@hooks/use-theme";
 import type { PagerViewOnPageSelectedEvent } from "react-native-pager-view";
 import { TikTokLiveChannel } from "./tiktok-page";
 
@@ -15,6 +19,7 @@ const ANIMATION_DURATION = 250;
 const INITIAL_OFFSET = 48;
 
 export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
+  const { colors } = useThemes();
   const translateY = useSharedValue(INITIAL_OFFSET);
   const opacity = useSharedValue(0);
 
@@ -28,6 +33,7 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     currentLiveSessionId,
   } = useTikTokLiveSocketContext();
 
+  const { show, hide } = useBottomSheet();
   const { user } = useAuth();
   const orderManager = useOrderManager({
     comments,
@@ -102,6 +108,37 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
       if (!nextUsername) return false;
 
       try {
+        const addresses = await listShopAddressesApi();
+        const hasDefault = addresses.some((a: { isDefault: boolean }) => a.isDefault);
+        if (!hasDefault) {
+          show({
+            content: (
+              <View style={{ padding: 24, gap: 16 }}>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: colors.neutral900 }}>
+                  Yêu cầu cài đặt địa chỉ Kho Hàng
+                </Text>
+                <Text style={{ fontSize: 14, color: colors.neutral500, lineHeight: 22 }}>
+                  Bạn cần thiết lập địa chỉ kho hàng mặc định trước khi kết nối live.
+                </Text>
+                <Pressable
+                  onPress={() => { hide(); router.push("/shipping-settings"); }}
+                  style={{ backgroundColor: colors.primary, borderRadius: 12, height: 48, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Text style={{ color: colors.white, fontSize: 15, fontWeight: "600" }}>
+                    Cài Đặt Cấu Hình Vận Chuyển
+                  </Text>
+                </Pressable>
+              </View>
+            ),
+            showDragIndicator: true,
+          });
+          return false;
+        }
+      } catch {
+        // ponytail: nếu check fail, vẫn cho connect tiếp — không block user vì lỗi mạng
+      }
+
+      try {
         const success = await changeTikTokUsername(nextUsername);
         if (!success) {
           Alert.alert("Lỗi", "Không thể kết nối đến TikTok Live. Vui lòng kiểm tra lại username.");
@@ -125,7 +162,7 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
         return false;
       }
     },
-    [tiktokUsername, visible, changeTikTokUsername, opacity, translateY],
+    [tiktokUsername, visible, changeTikTokUsername, opacity, translateY, show, hide, colors],
   );
 
   const onSelectChannel = useCallback(

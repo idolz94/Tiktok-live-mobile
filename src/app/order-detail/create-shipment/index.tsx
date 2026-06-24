@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
-import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, ShippingOptions, SummaryRow, shipmentStyles } from "./components/ShipmentComponents";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, ShippingOptions, SpxOptions, SummaryRow, shipmentStyles } from "./components/ShipmentComponents";
 import { AddressPickerSheet } from "./components/AddressPickerSheet";
 import { AddressFormModal } from "./components/AddressFormModal";
 import { PackageDimModal } from "./components/PackageDimModal";
@@ -13,9 +14,11 @@ import { useCreateShipment } from "./use-create-shipment";
 
 export default function CreateShipmentScreen() {
   const { colors, textPresets } = useThemes();
+  const { show, hide } = useBottomSheet();
   const {
     order,
     isManualProvider,
+    isSpxProvider,
     primaryProduct,
     displayQuantity,
     orderTotal,
@@ -26,16 +29,10 @@ export default function CreateShipmentScreen() {
     selectedRecipient,
     isLoadingSender,
     isLoadingRecipient,
-    senderSheetVisible,
-    setSenderSheetVisible,
-    recipientSheetVisible,
-    setRecipientSheetVisible,
-    addrFormTarget,
     setAddrFormTarget,
     editingAddr,
     setEditingAddr,
     isSavingAddr,
-    formTitle,
     transport,
     setTransport,
     paymentSide,
@@ -58,8 +55,6 @@ export default function CreateShipmentScreen() {
     setDimHeight,
     autoScale,
     setAutoScale,
-    dimensionsOpen,
-    setDimensionsOpen,
     estimatedFee,
     feeLoading,
     feeError,
@@ -71,18 +66,104 @@ export default function CreateShipmentScreen() {
     setManualShippingFee,
     manualNote,
     setManualNote,
-    manualCodAmount,
+    manualCodAmount: _manualCodAmount,
     setManualCodAmount,
     note,
     setNote,
     isSubmitting,
-    handleAddAddress,
-    handleEditAddress,
     handleDeleteAddress,
     handleSelectRecipient,
     handleSaveAddress,
     handleSubmitShipment,
+    submitState,
+    handleRetryOutcomeUnknown,
+    // SPX
+    serviceType,
+    setServiceType,
+    collectType,
+    setCollectType,
+    pickupTimeRangeId,
+    setPickupTimeRangeId,
+    parcelItemName,
+    setParcelItemName,
+    declaredValue,
+    setDeclaredValue,
+    timeslots,
+    timeslotsLoading,
   } = useCreateShipment();
+
+  const openAddressForm = (target: "sender" | "recipient", addr?: typeof editingAddr) => {
+    const title = addr
+      ? target === "sender" ? "Sửa địa chỉ người gửi" : "Sửa địa chỉ người nhận"
+      : target === "sender" ? "Thêm địa chỉ người gửi" : "Thêm địa chỉ người nhận";
+    show({
+      content: (
+        <AddressFormModal
+          title={title}
+          initialValues={formInitialValues(addr ?? null)}
+          isSaving={isSavingAddr}
+          onClose={() => { hide(); setAddrFormTarget(null); setEditingAddr(null); }}
+          onSave={async (vals) => { await handleSaveAddress(vals); hide(); }}
+        />
+      ),
+    });
+  };
+
+  const openSenderSheet = () => {
+    show({
+      content: (
+        <AddressPickerSheet
+          title="Chọn người gửi"
+          addresses={shopAddresses}
+          selectedId={selectedSender?.id}
+          loading={isLoadingSender}
+          onClose={hide}
+          onSelect={(addr) => { setSelectedSender(addr); hide(); }}
+          onAddPress={() => { hide(); setTimeout(() => openAddressForm("sender"), 350); }}
+          onEditPress={(addr) => { hide(); setTimeout(() => openAddressForm("sender", addr), 350); }}
+          onDeletePress={(addr) => handleDeleteAddress("sender", addr)}
+        />
+      ),
+    });
+  };
+
+  const openRecipientSheet = () => {
+    show({
+      content: (
+        <AddressPickerSheet
+          title="Chọn người nhận"
+          addresses={customerAddresses}
+          selectedId={selectedRecipient?.id}
+          loading={isLoadingRecipient}
+          onClose={hide}
+          onSelect={(addr) => { handleSelectRecipient(addr); hide(); }}
+          onAddPress={() => { hide(); setTimeout(() => openAddressForm("recipient"), 350); }}
+          onEditPress={(addr) => { hide(); setTimeout(() => openAddressForm("recipient", addr), 350); }}
+          onDeletePress={(addr) => handleDeleteAddress("recipient", addr)}
+        />
+      ),
+    });
+  };
+
+  const openDimensions = () => {
+    show({
+      content: (
+        <PackageDimModal
+          dimLength={dimLength}
+          dimWidth={dimWidth}
+          dimHeight={dimHeight}
+          weightInput={weightInput}
+          autoScale={autoScale}
+          onChangeDimLength={setDimLength}
+          onChangeDimWidth={setDimWidth}
+          onChangeDimHeight={setDimHeight}
+          onChangeWeightInput={setWeightInput}
+          onToggleAutoScale={() => setAutoScale((v) => !v)}
+          onClose={hide}
+        />
+      ),
+    });
+  };
 
   if (!order) {
     return (
@@ -110,17 +191,17 @@ export default function CreateShipmentScreen() {
 
       <ScrollView style={screenStyles.scroll} contentContainerStyle={screenStyles.scrollContent} keyboardShouldPersistTaps="handled">
         <SectionBlock title="Thông tin người gửi">
-          <FigmaAddressCard address={selectedSender} loading={isLoadingSender} onChangePress={() => setSenderSheetVisible(true)} onAddPress={() => handleAddAddress("sender")} />
+          <FigmaAddressCard address={selectedSender} loading={isLoadingSender} onChangePress={openSenderSheet} onAddPress={() => openAddressForm("sender")} />
         </SectionBlock>
         <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
 
         <SectionBlock title="Thông tin người nhận">
-          <FigmaAddressCard address={selectedRecipient} loading={isLoadingRecipient} onChangePress={() => setRecipientSheetVisible(true)} onAddPress={() => handleAddAddress("recipient")} />
+          <FigmaAddressCard address={selectedRecipient} loading={isLoadingRecipient} onChangePress={openRecipientSheet} onAddPress={() => openAddressForm("recipient")} />
         </SectionBlock>
         <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
 
         {!isManualProvider ? (
-          <SectionBlock title="Thông tin đơn hàng" actionLabel="Kích thước" onActionPress={() => setDimensionsOpen(true)}>
+          <SectionBlock title="Thông tin đơn hàng" actionLabel="Kích thước" onActionPress={openDimensions}>
             <View style={[shipmentStyles.orderCard, { backgroundColor: colors.neutral50 }]}>
             <View style={shipmentStyles.orderMetaRow}>
               <View style={shipmentStyles.productTitle}>
@@ -179,6 +260,23 @@ export default function CreateShipmentScreen() {
               <ShipmentInput label="Phí vận chuyển" value={manualShippingFee} onChangeText={setManualShippingFee} placeholder="0" keyboardType="numeric" />
               <ShipmentInput label="Ghi chú" value={manualNote} onChangeText={setManualNote} placeholder="Nhập ghi chú" multiline />
             </>
+          ) : isSpxProvider ? (
+            <SpxOptions
+              serviceType={serviceType}
+              setServiceType={setServiceType}
+              collectType={collectType}
+              setCollectType={setCollectType}
+              pickupTimeRangeId={pickupTimeRangeId}
+              setPickupTimeRangeId={setPickupTimeRangeId}
+              timeslots={timeslots}
+              timeslotsLoading={timeslotsLoading}
+              parcelItemName={parcelItemName}
+              setParcelItemName={setParcelItemName}
+              declaredValue={declaredValue}
+              setDeclaredValue={setDeclaredValue}
+              note={note}
+              setNote={setNote}
+            />
           ) : (
             <>
               <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>Phương thức dịch vụ</Text>
@@ -202,27 +300,60 @@ export default function CreateShipmentScreen() {
         <View style={{ height: 24 }} />
       </ScrollView>
 
+      {submitState === "outcome_unknown" && (
+        <View style={[screenStyles.outcomeUnknownBanner, { backgroundColor: "#FFF7E6", borderColor: "#FBBF24" }]}>
+          <Text style={[textPresets.fs12_400, { color: "#92400E", flex: 1 }]}>
+            Không xác nhận được trạng thái. Đơn có thể đã được tạo. Kiểm tra lại hoặc thử lại.
+          </Text>
+          <Pressable onPress={handleRetryOutcomeUnknown} hitSlop={8}>
+            <Text style={[textPresets.fs14_500, { color: "#D97706" }]}>Thử lại</Text>
+          </Pressable>
+        </View>
+      )}
+
       <View style={[screenStyles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border10 }]}>
         <View style={screenStyles.footerSummary}>
           <SummaryRow label="Tiền hàng" value={`${orderTotal.toLocaleString("vi-VN")}đ`} />
           <View style={screenStyles.summaryRow}>
             <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>Phí vận chuyển</Text>
-            {feeLoading && !isManualProvider ? <ActivityIndicator size="small" color={colors.primary} /> : <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>}
+            {feeLoading && !isManualProvider && !isSpxProvider ? <ActivityIndicator size="small" color={colors.primary} /> : <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>}
           </View>
           <View style={[screenStyles.summaryRow, screenStyles.summaryRowTotal]}>
             <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>Shipper thu</Text>
             <Text style={[textPresets.fs14_500, { color: colors.primary }]}>{totalCollected.toLocaleString("vi-VN")}đ</Text>
           </View>
         </View>
-        <Pressable onPress={handleSubmitShipment} disabled={isSubmitting || !selectedSender || !selectedRecipient} style={[screenStyles.submitButton, { backgroundColor: !isSubmitting && selectedSender && selectedRecipient ? colors.primary : colors.neutral300 }]}>
+        <Pressable
+          onPress={handleSubmitShipment}
+          disabled={
+            isSubmitting ||
+            !selectedSender ||
+            !selectedRecipient ||
+            (isSpxProvider &&
+              (!parcelItemName.trim() ||
+                weightInput.trim() === "" ||
+                (collectType === 1 && !pickupTimeRangeId)))
+          }
+          style={[
+            screenStyles.submitButton,
+            {
+              backgroundColor:
+                isSubmitting ||
+                !selectedSender ||
+                !selectedRecipient ||
+                (isSpxProvider &&
+                  (!parcelItemName.trim() ||
+                    weightInput.trim() === "" ||
+                    (collectType === 1 && !pickupTimeRangeId)))
+                  ? colors.neutral300
+                  : colors.primary,
+            },
+          ]}
+        >
           {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>Tạo vận đơn</Text>}
         </Pressable>
       </View>
 
-      <AddressPickerSheet visible={senderSheetVisible} title="Chọn người gửi" addresses={shopAddresses} selectedId={selectedSender?.id} loading={isLoadingSender} onClose={() => setSenderSheetVisible(false)} onSelect={setSelectedSender} onAddPress={() => handleAddAddress("sender")} onEditPress={(addr) => handleEditAddress("sender", addr)} onDeletePress={(addr) => handleDeleteAddress("sender", addr)} />
-      <AddressPickerSheet visible={recipientSheetVisible} title="Chọn người nhận" addresses={customerAddresses} selectedId={selectedRecipient?.id} loading={isLoadingRecipient} onClose={() => setRecipientSheetVisible(false)} onSelect={handleSelectRecipient} onAddPress={() => handleAddAddress("recipient")} onEditPress={(addr) => handleEditAddress("recipient", addr)} onDeletePress={(addr) => handleDeleteAddress("recipient", addr)} />
-      <AddressFormModal visible={addrFormTarget !== null} title={formTitle} initialValues={formInitialValues(editingAddr)} isSaving={isSavingAddr} onClose={() => { setAddrFormTarget(null); setEditingAddr(null); }} onSave={handleSaveAddress} />
-      <PackageDimModal visible={dimensionsOpen} dimLength={dimLength} dimWidth={dimWidth} dimHeight={dimHeight} weightInput={weightInput} autoScale={autoScale} onChangeDimLength={setDimLength} onChangeDimWidth={setDimWidth} onChangeDimHeight={setDimHeight} onChangeWeightInput={setWeightInput} onToggleAutoScale={() => setAutoScale((v) => !v)} onClose={() => setDimensionsOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -270,6 +401,16 @@ const screenStyles = createStyles(() => ({
     paddingTop: 12,
     paddingBottom: 16,
     borderTopWidth: 1,
+  },
+  outcomeUnknownBanner: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
   },
   submitButton: {
     height: 50,

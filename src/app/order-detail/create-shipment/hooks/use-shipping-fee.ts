@@ -1,7 +1,7 @@
 import { OrderWithTikTok } from "@app-types/index";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CustomerAddress, ShopAddress, getShippingFeeApi } from "../create-shipment-api";
-import { Transport } from "../types";
+import { Transport, ServiceType } from "../types";
 import { parseLocaleNumber } from "../utils";
 
 export function useShippingFee(
@@ -11,6 +11,7 @@ export function useShippingFee(
   selectedRecipient: CustomerAddress | null,
   weightInput: string,
   transport: Transport,
+  serviceType?: ServiceType,
 ) {
   const [estimatedFee, setEstimatedFee] = useState<number | null>(null);
   const [feeLoading, setFeeLoading] = useState(false);
@@ -58,7 +59,7 @@ export function useShippingFee(
     } finally {
       if (mountedRef.current) setFeeLoading(false);
     }
-  }, [isManualProvider, order, selectedRecipient, selectedSender, transport, weightInput]);
+  }, [isManualProvider, order, selectedRecipient, selectedSender, transport, weightInput, serviceType]);
 
   useEffect(() => {
     void fetchEstimatedFee();

@@ -5,7 +5,6 @@ import { AddressForm, GeoPickerState } from "@features/settings/hooks/shipping-a
 import { Controller, UseFormReturn } from "react-hook-form";
 import {
   ActivityIndicator,
-  Modal,
   ScrollView,
   Text,
   TextInput,
@@ -16,7 +15,6 @@ import { AddressInput, PickerField, SwitchRow } from "./shipping-address-form-fi
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 
 type ShippingAddressModalProps = {
-  visible: boolean;
   editingAddress: ShopAddress | null;
   form: UseFormReturn<AddressForm>;
   addressForm: AddressForm;
@@ -38,7 +36,6 @@ type ShippingAddressModalProps = {
 };
 
 export function ShippingAddressModal({
-  visible,
   editingAddress,
   form,
   addressForm,
@@ -61,9 +58,7 @@ export function ShippingAddressModal({
   const { control, formState: { errors, isValid, dirtyFields } } = form;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalCard}>
+    <View style={styles.modalCard}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{editingAddress ? "Sửa địa chỉ kho" : "Thêm địa chỉ kho"}</Text>
             <TouchableOpacity onPress={onClose} style={styles.modalCloseButton} activeOpacity={0.75}>
@@ -207,8 +202,6 @@ export function ShippingAddressModal({
               />
             </View>
           ) : null}
-        </View>
       </View>
-    </Modal>
   );
 }

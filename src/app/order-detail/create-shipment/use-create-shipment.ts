@@ -1,13 +1,22 @@
 import { OrderWithTikTok } from "@app-types/index";
 import { getOrderTotal } from "@features/orders/utils/order";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { Transport, PaymentSide, ViewCondition, PickupOption, DeliveryPolicy, RefusalFee } from "./types";
+import { Transport, PaymentSide, ViewCondition, PickupOption, DeliveryPolicy, RefusalFee, ServiceType, CollectType } from "./types";
 import { useShipmentAddresses } from "./hooks/use-shipment-addresses";
 import { useAddressForm } from "./hooks/use-address-form";
 import { useShippingFee } from "./hooks/use-shipping-fee";
 import { useSubmitShipment } from "./hooks/use-submit-shipment";
+import { getSpxTimeslotsApi } from "./create-shipment-api";
 import { formatLocaleInput, parseLocaleNumber } from "./utils";
+
+const generateUuid = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 export function useCreateShipment() {
   const params = useLocalSearchParams<{ order?: string; shippingFee?: string; provider?: string }>();
@@ -18,6 +27,7 @@ export function useCreateShipment() {
   });
 
   const isManualProvider = params.provider === "manual";
+  const isSpxProvider = params.provider === "spx";
   const orderProducts = order?.products ?? [];
   const primaryProduct = orderProducts[0];
   const displayQuantity = orderProducts.reduce((sum, p) => sum + (p.quantity || 0), 0) || order?.quantity || 1;
@@ -34,17 +44,42 @@ export function useCreateShipment() {
   const [dimWidth, setDimWidth] = useState("40");
   const [dimHeight, setDimHeight] = useState("10");
   const [autoScale, setAutoScale] = useState(true);
-  const [dimensionsOpen, setDimensionsOpen] = useState(false);
   const [note, setNote] = useState(order?.note ?? "");
   const [manualNote, setManualNote] = useState("");
   const [manualShippingFee, setManualShippingFee] = useState(() => formatLocaleInput(String(params.shippingFee ?? "")));
   const [manualCodAmount, setManualCodAmount] = useState(() => formatLocaleInput(String(order?.codAmount ?? orderTotal)));
 
+  // SPX state
+  const [serviceType, setServiceType] = useState<ServiceType>(1);
+  const [collectType, setCollectType] = useState<CollectType>(1);
+  const [pickupTimeRangeId, setPickupTimeRangeId] = useState<number | null>(null);
+  const [parcelItemName, setParcelItemName] = useState("");
+  const [declaredValue, setDeclaredValue] = useState(0);
+  const [timeslots, setTimeslots] = useState<Array<{ id: number; range: string }>>([]);
+  const [timeslotsLoading, setTimeslotsLoading] = useState(false);
+  const [idempotencyKey] = useState(() => generateUuid());
+
+  useEffect(() => {
+    if (!isSpxProvider || collectType !== 1) {
+      setTimeslots([]);
+      return;
+    }
+    let cancelled = false;
+    setTimeslotsLoading(true);
+    getSpxTimeslotsApi(serviceType).then((res) => {
+      if (cancelled) return;
+      setTimeslots((res.timeslots ?? []).flatMap((g) => g.slots));
+      setTimeslotsLoading(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setTimeslots([]);
+      setTimeslotsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [isSpxProvider, collectType, serviceType]);
+
   const addresses = useShipmentAddresses(order);
   const { shopAddresses, customerAddresses, selectedSender, setSelectedSender, selectedRecipient, setSelectedRecipient, isLoadingSender, isLoadingRecipient, reloadShopAddresses, reloadCustomerAddresses } = addresses;
-
-  const [senderSheetVisible, setSenderSheetVisible] = useState(false);
-  const [recipientSheetVisible, setRecipientSheetVisible] = useState(false);
 
   const addrForm = useAddressForm({
     order,
@@ -58,7 +93,7 @@ export function useCreateShipment() {
   });
 
   const { estimatedFee, feeLoading, feeError } = useShippingFee(
-    order, isManualProvider, selectedSender, selectedRecipient, weightInput, transport,
+    order, isManualProvider, selectedSender, selectedRecipient, weightInput, transport, isSpxProvider ? serviceType : undefined,
   );
 
   const manualFee = useMemo(() => parseLocaleNumber(manualShippingFee), [manualShippingFee]);
@@ -68,15 +103,28 @@ export function useCreateShipment() {
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
   const totalCollected = paymentSide === 0 ? codAmount + shippingFee : codAmount;
 
-  const { isSubmitting, handleSubmitShipment } = useSubmitShipment({
-    order, isManualProvider, selectedSender, selectedRecipient,
+  const { isSubmitting, submitState, handleSubmitShipment, handleRetryOutcomeUnknown } = useSubmitShipment({
+    order, isManualProvider, isSpxProvider, selectedSender, selectedRecipient,
     paymentSide, transport, pickupOption, note,
     manualShippingFee, manualCodAmount, manualNote, manualFee,
+    // SPX
+    senderAddressId: selectedSender?.id,
+    serviceType: isSpxProvider ? serviceType : undefined,
+    collectType: isSpxProvider ? collectType : undefined,
+    pickupTimeRangeId: isSpxProvider ? pickupTimeRangeId ?? undefined : undefined,
+    parcelItemName: isSpxProvider ? parcelItemName || undefined : undefined,
+    declaredValue: isSpxProvider ? declaredValue || undefined : undefined,
+    weightGram: isSpxProvider ? (parseInt(weightInput.replace(/\D/g, ""), 10) || undefined) : undefined,
+    dimLength: isSpxProvider ? (parseInt(dimLength.replace(/\D/g, ""), 10) || undefined) : undefined,
+    dimWidth: isSpxProvider ? (parseInt(dimWidth.replace(/\D/g, ""), 10) || undefined) : undefined,
+    dimHeight: isSpxProvider ? (parseInt(dimHeight.replace(/\D/g, ""), 10) || undefined) : undefined,
+    idempotencyKey,
   });
 
   return {
     order,
     isManualProvider,
+    isSpxProvider,
     primaryProduct,
     displayQuantity,
     orderTotal,
@@ -87,10 +135,6 @@ export function useCreateShipment() {
     selectedRecipient,
     isLoadingSender,
     isLoadingRecipient,
-    senderSheetVisible,
-    setSenderSheetVisible,
-    recipientSheetVisible,
-    setRecipientSheetVisible,
     ...addrForm,
     transport,
     setTransport,
@@ -114,8 +158,6 @@ export function useCreateShipment() {
     setDimHeight,
     autoScale,
     setAutoScale,
-    dimensionsOpen,
-    setDimensionsOpen,
     estimatedFee,
     feeLoading,
     feeError,
@@ -132,6 +174,22 @@ export function useCreateShipment() {
     note,
     setNote,
     isSubmitting,
+    submitState,
     handleSubmitShipment,
+    handleRetryOutcomeUnknown,
+    // SPX
+    serviceType,
+    setServiceType,
+    collectType,
+    setCollectType,
+    pickupTimeRangeId,
+    setPickupTimeRangeId,
+    parcelItemName,
+    setParcelItemName,
+    declaredValue,
+    setDeclaredValue,
+    timeslots,
+    timeslotsLoading,
+    idempotencyKey,
   };
 }

@@ -11,7 +11,7 @@ import {
   ShopAddressPayload,
   updateShopAddressApi,
 } from "@features/settings/service/shop-addresses-api";
-import type { Transport, PickupOption, PaymentSide } from "./types";
+import type { Transport, PickupOption, PaymentSide, ServiceType, CollectType, SpxTimeslot } from "./types";
 
 export {
   createShopAddressApi,
@@ -72,7 +72,7 @@ export type SubmitShippingPayload = {
 };
 
 type ShippingFeeResult = {
-  providerCode: "ghtk" | "manual";
+  providerCode: "ghtk" | "manual" | "spx";
   fee: number;
   insuranceFee?: number;
   delivery?: boolean;
@@ -180,4 +180,42 @@ export async function cancelShipmentApi(
     `/orders/${orderId}/shipping/cancel`,
     payload ?? {},
   );
+}
+
+type SubmitSpxPayload = {
+  providerCode: "spx";
+  senderAddressId: string;
+  serviceType: ServiceType;
+  collectType: CollectType;
+  pickupTimeRangeId?: number;
+  parcelWeightGram: number;
+  parcelLengthCm?: number;
+  parcelWidthCm?: number;
+  parcelHeightCm?: number;
+  parcelItemName?: string;
+  declaredValue?: number;
+  note?: string;
+  idempotencyKey: string;
+};
+
+export async function submitSpxApi(
+  orderId: string,
+  payload: SubmitSpxPayload,
+) {
+  return postRequest<{ shipping: unknown }>(
+    `/orders/${orderId}/shipping/spx`,
+    payload,
+  );
+}
+
+export async function getSpxTimeslotsApi(serviceType: number) {
+  return getRequest<{ timeslots: SpxTimeslot[] }>(`/orders/spx/timeslots?serviceType=${serviceType}`);
+}
+
+export async function getShipmentLabelApi(orderId: string) {
+  return getRequest<{ label_url?: string; format?: string }>(`/orders/${orderId}/shipping/label`);
+}
+
+export async function refreshShippingStatusApi(orderId: string) {
+  return postRequest<{ tracking: unknown }>(`/orders/${orderId}/shipping/refresh`, {});
 }

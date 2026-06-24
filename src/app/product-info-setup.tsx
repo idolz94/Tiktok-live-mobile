@@ -1,10 +1,8 @@
 import { AnimatedErrorText } from "@components/animated-error-text";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { formatPrice, useProductInfoSetup } from "./use-product-info-setup";
+import { useEffect } from "react";
 
 export default function ProductInfoSetupScreen() {
   const {
@@ -36,6 +35,90 @@ export default function ProductInfoSetupScreen() {
     submitForm,
     confirmDelete,
   } = useProductInfoSetup();
+
+  const { show, hide, update, isVisible } = useBottomSheet();
+
+  const handleCloseForm = () => { closeForm(); hide(); };
+
+  const buildFormContent = () => (
+    <SafeAreaView style={styles.sheet} edges={["bottom"]}>
+      <View style={styles.sheetHandle} />
+      <View style={styles.sheetTitleRow}>
+        <Text style={styles.sheetTitle}>{formMode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}</Text>
+        <TouchableOpacity onPress={handleCloseForm} style={styles.sheetCloseButton} activeOpacity={0.75}>
+          <Text style={styles.sheetCloseText}>×</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.form}>
+        <View style={styles.field}>
+          <Text style={styles.label}>Tên sản phẩm <Text style={styles.required}>*</Text></Text>
+          <TextInput
+            value={draftCode}
+            onChangeText={(value) => {
+              setDraftCode(value);
+              if (errors.code) {
+                setErrors((current) => ({ ...current, code: undefined }));
+              }
+            }}
+            placeholder="VD: Áo thun trắng"
+            placeholderTextColor="#BDBDBD"
+            style={[styles.input, errors.code && styles.inputError]}
+          />
+          <AnimatedErrorText message={errors.code} />
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Màu sắc</Text>
+          <TextInput
+            value={draftColor}
+            onChangeText={setDraftColor}
+            placeholder="VD: Đỏ, Xanh..."
+            placeholderTextColor="#BDBDBD"
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Giá <Text style={styles.required}>*</Text></Text>
+          <View style={[styles.priceInputWrap, errors.price && styles.inputError]}>
+            <TextInput
+              value={draftPrice}
+              onChangeText={handlePriceChange}
+              placeholder="0"
+              placeholderTextColor="#BDBDBD"
+              keyboardType="number-pad"
+              style={styles.priceInput}
+            />
+            <Text style={styles.currencyText}>VNĐ</Text>
+          </View>
+          <AnimatedErrorText message={errors.price} />
+        </View>
+      </View>
+
+      <TouchableOpacity
+        onPress={submitForm}
+        disabled={!canSubmit}
+        style={[styles.saveButton, !canSubmit && styles.saveButtonDisabled]}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.saveText}>
+          {saving ? "Đang lưu..." : formMode === "add" ? "Thêm sản phẩm" : "Cập nhật"}
+        </Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
+
+  useEffect(() => {
+    if (formMode !== null && !isVisible) {
+      show({ content: buildFormContent(), enablePanDownToClose: false });
+    } else if (formMode !== null && isVisible) {
+      update({ content: buildFormContent(), enablePanDownToClose: false });
+    } else if (formMode === null && isVisible) {
+      hide();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formMode, draftCode, draftColor, draftPrice, errors, canSubmit, saving]);
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
@@ -106,76 +189,6 @@ export default function ProductInfoSetupScreen() {
           </View>
         )}
       </ScrollView>
-
-      <Modal visible={formMode !== null} transparent animationType="slide" onRequestClose={closeForm}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.modalRoot}
-        >
-          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={closeForm} />
-          <SafeAreaView style={styles.sheet} edges={["bottom"]}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>{formMode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}</Text>
-
-            <View style={styles.form}>
-              <View style={styles.field}>
-                <Text style={styles.label}>Tên sản phẩm <Text style={styles.required}>*</Text></Text>
-                <TextInput
-                  value={draftCode}
-                  onChangeText={(value) => {
-                    setDraftCode(value);
-                    if (errors.code) {
-                      setErrors((current) => ({ ...current, code: undefined }));
-                    }
-                  }}
-                  placeholder="VD: Áo thun trắng"
-                  placeholderTextColor="#BDBDBD"
-                  style={[styles.input, errors.code && styles.inputError]}
-                />
-                <AnimatedErrorText message={errors.code} />
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.label}>Màu sắc</Text>
-                <TextInput
-                  value={draftColor}
-                  onChangeText={setDraftColor}
-                  placeholder="VD: Đỏ, Xanh..."
-                  placeholderTextColor="#BDBDBD"
-                  style={styles.input}
-                />
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.label}>Giá <Text style={styles.required}>*</Text></Text>
-                <View style={[styles.priceInputWrap, errors.price && styles.inputError]}>
-                  <TextInput
-                    value={draftPrice}
-                    onChangeText={handlePriceChange}
-                    placeholder="0"
-                    placeholderTextColor="#BDBDBD"
-                    keyboardType="number-pad"
-                    style={styles.priceInput}
-                  />
-                  <Text style={styles.currencyText}>VNĐ</Text>
-                </View>
-                <AnimatedErrorText message={errors.price} />
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={submitForm}
-              disabled={!canSubmit}
-              style={[styles.saveButton, !canSubmit && styles.saveButtonDisabled]}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.saveText}>
-                {saving ? "Đang lưu..." : formMode === "add" ? "Thêm sản phẩm" : "Cập nhật"}
-              </Text>
-            </TouchableOpacity>
-          </SafeAreaView>
-        </KeyboardAvoidingView>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -336,14 +349,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 26,
   },
-  modalRoot: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0,0,0,0.35)",
-  },
   sheet: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -365,6 +370,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
+  },
+  sheetTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  sheetCloseButton: {
+    position: "absolute",
+    right: 0,
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetCloseText: {
+    color: "#6b7280",
+    fontSize: 24,
+    lineHeight: 26,
   },
   form: {
     gap: 16,

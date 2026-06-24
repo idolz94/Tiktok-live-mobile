@@ -7,6 +7,7 @@ import {
 } from "@features/orders/components/shipping-provider-sheet";
 import { useOrderDetail } from "@features/orders/hooks/use-order-detail";
 import { formatMoney } from "@features/orders/utils/order";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { createStyles } from "@utils/createStyles";
 import { router, useLocalSearchParams } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -25,6 +26,7 @@ import { OrderDetailShippingSection } from "../../../app/order-detail/components
 export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useOrderDetail(id ?? "");
+  const { show, hide } = useBottomSheet();
   const [selectedProvider, setSelectedProvider] = useState<ShippingProvider>("manual");
   const [shippingFeeDisplay, setShippingFeeDisplay] = useState("");
   const [prepaidDisplay, setPrepaidDisplay] = useState("");
@@ -68,25 +70,27 @@ export const OrderDetail = memo(() => {
 
   const handleSaveNewProduct = useCallback(
     (data: { name: string; price: number; quantity: number }) => {
+      hide();
       void detail.handleAddProduct({
         name: data.name,
         price: data.price,
         quantity: data.quantity,
       });
     },
-    [detail],
+    [detail, hide],
   );
 
   const handleSaveProductEdit = useCallback(
     (data: { name: string; price: number; quantity: number }) => {
       if (!detail.selectedProduct) return;
+      hide();
       void detail.handleUpdateProduct(detail.selectedProduct.id, {
         name: data.name,
         price: data.price,
         quantity: data.quantity,
       });
     },
-    [detail],
+    [detail, hide],
   );
 
   const handleTikTok = useCallback(() => {
@@ -146,8 +150,34 @@ export const OrderDetail = memo(() => {
                 hiddenCount={hiddenCount}
                 totalQuantity={detail.totalQuantity}
                 productTotal={detail.productTotal}
-                onAddProduct={detail.openAddProduct}
-                onEditProduct={detail.openEditProduct}
+                onAddProduct={() => {
+                  show({
+                    content: (
+                      <ProductSheet
+                        mode="add"
+                        loading={detail.addingProduct}
+                        onClose={hide}
+                        onSave={handleSaveNewProduct}
+                      />
+                    ),
+                  });
+                }}
+                onEditProduct={() => {
+                  show({
+                    content: (
+                      <ProductSheet
+                        mode="edit"
+                        initialCode={detail.selectedProduct?.code}
+                        initialName={detail.selectedProduct?.name}
+                        initialPrice={detail.selectedProduct?.price}
+                        initialQty={detail.selectedProduct?.quantity}
+                        loading={detail.updatingProduct}
+                        onClose={hide}
+                        onSave={handleSaveProductEdit}
+                      />
+                    ),
+                  });
+                }}
                 onDeleteProduct={() => {}}
                 onToggleShowAll={detail.toggleShowAllProducts}
               />
@@ -158,7 +188,20 @@ export const OrderDetail = memo(() => {
                 shippingFeeDisplay={shippingFeeDisplay || formatMoney(detail.shippingFee)}
                 prepaidDisplay={prepaidDisplay || formatMoney(detail.codAmount)}
                 remain={detail.remain}
-                onOpenProvider={detail.openShipping}
+                onOpenProvider={() => {
+                  show({
+                    content: (
+                      <ShippingProviderSheet
+                        selected={selectedProvider}
+                        onClose={hide}
+                        onSelect={(provider) => {
+                          setSelectedProvider(provider);
+                          hide();
+                        }}
+                      />
+                    ),
+                  });
+                }}
                 onChangeShippingFee={handleChangeShippingFee}
                 onChangePrepaid={handleChangePrepaid}
               />
@@ -182,30 +225,6 @@ export const OrderDetail = memo(() => {
               />
             </ScrollView>
             <OrderDetailShipBar onShip={handleShip} />
-            <ProductSheet
-              visible={detail.addProductOpen}
-              mode="add"
-              loading={detail.addingProduct}
-              onClose={detail.closeAddProduct}
-              onSave={handleSaveNewProduct}
-            />
-            <ProductSheet
-              visible={detail.editProductOpen}
-              mode="edit"
-              initialCode={detail.selectedProduct?.code}
-              initialName={detail.selectedProduct?.name}
-              initialPrice={detail.selectedProduct?.price}
-              initialQty={detail.selectedProduct?.quantity}
-              loading={detail.updatingProduct}
-              onClose={detail.closeEditProduct}
-              onSave={handleSaveProductEdit}
-            />
-            <ShippingProviderSheet
-              visible={detail.showShippingScreen}
-              selected={selectedProvider}
-              onClose={detail.closeShipping}
-              onSelect={setSelectedProvider}
-            />
           </>
         ) : null}
       </View>

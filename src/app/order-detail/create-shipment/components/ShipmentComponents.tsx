@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-nativ
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { ShopAddress, CustomerAddress } from "../create-shipment-api";
-import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition } from "../types";
+import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition, ServiceType, CollectType } from "../types";
 import { addressLine } from "../utils";
 
 export type SectionBlockProps = {
@@ -222,6 +222,112 @@ export function SummaryRow({ label, value }: { label: string; value: string }) {
       <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>{label}</Text>
       <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{value}</Text>
     </View>
+  );
+}
+
+type SpxOptionsProps = {
+  serviceType: ServiceType;
+  setServiceType: (value: ServiceType) => void;
+  collectType: CollectType;
+  setCollectType: (value: CollectType) => void;
+  pickupTimeRangeId: number | null;
+  setPickupTimeRangeId: (value: number | null) => void;
+  timeslots: Array<{ id: number; range: string }>;
+  timeslotsLoading: boolean;
+  parcelItemName: string;
+  setParcelItemName: (value: string) => void;
+  declaredValue: number;
+  setDeclaredValue: (value: number) => void;
+  note: string;
+  setNote: (value: string) => void;
+};
+
+export function SpxOptions({
+  serviceType,
+  setServiceType,
+  collectType,
+  setCollectType,
+  pickupTimeRangeId,
+  setPickupTimeRangeId,
+  timeslots,
+  timeslotsLoading,
+  parcelItemName,
+  setParcelItemName,
+  declaredValue,
+  setDeclaredValue,
+  note,
+  setNote,
+}: SpxOptionsProps) {
+  const { colors, textPresets } = useThemes();
+
+  return (
+    <>
+      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>Loại dịch vụ</Text>
+      <View style={shipmentStyles.optionGrid}>
+        <OptionChip label="SPX Standard" selected={serviceType === 1} onPress={() => setServiceType(1)} />
+        <OptionChip label="SPX Express" selected={serviceType === 2} onPress={() => setServiceType(2)} />
+      </View>
+
+      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>Hình thức lấy hàng</Text>
+      <View style={shipmentStyles.optionGrid}>
+        <OptionChip label="Lấy tại nhà" selected={collectType === 1} onPress={() => setCollectType(1)} />
+        <OptionChip label="Lấy tại bưu cục" selected={collectType === 2} onPress={() => setCollectType(2)} />
+      </View>
+
+      {collectType === 1 && (
+        <>
+          <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>
+            Khung giờ lấy hàng
+          </Text>
+          {timeslotsLoading ? (
+            <View style={[shipmentStyles.feeBox, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : timeslots.length > 0 ? (
+            <View style={shipmentStyles.optionGrid}>
+              {timeslots.map((slot) => (
+                <OptionChip
+                  key={slot.id}
+                  label={slot.range}
+                  selected={pickupTimeRangeId === slot.id}
+                  onPress={() => setPickupTimeRangeId(slot.id)}
+                />
+              ))}
+            </View>
+          ) : (
+            <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>
+              Không có khung giờ nào
+            </Text>
+          )}
+        </>
+      )}
+
+      <ShipmentInput
+        label="Tên hàng hóa"
+        value={parcelItemName}
+        onChangeText={setParcelItemName}
+        placeholder="VD: Áo thun, Giày, ..."
+        topSpacing
+      />
+
+      <ShipmentInput
+        label="Giá trị khai báo (VND)"
+        value={String(declaredValue)}
+        onChangeText={(text) => setDeclaredValue(parseInt(text.replace(/\D/g, ""), 10) || 0)}
+        placeholder="0"
+        keyboardType="numeric"
+        topSpacing
+      />
+
+      <ShipmentInput
+        label="Ghi chú"
+        value={note}
+        onChangeText={setNote}
+        placeholder="Nhập ghi chú"
+        multiline
+        topSpacing
+      />
+    </>
   );
 }
 

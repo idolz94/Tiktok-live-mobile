@@ -11,6 +11,9 @@ export type BottomSheetOptions = {
   backgroundStyle?: StyleProp<ViewStyle>;
 
   enablePanDownToClose?: boolean;
+
+  /** Called when the sheet is dismissed by swipe-down or backdrop tap (not by calling hide()). */
+  onDismiss?: () => void;
 };
 
 export type BottomSheetContextType = {

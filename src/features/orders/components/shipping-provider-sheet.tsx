@@ -1,11 +1,10 @@
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { Modal, Pressable, Text, TouchableWithoutFeedback, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
-export type ShippingProvider = "manual" | "ghtk";
+export type ShippingProvider = "manual" | "ghtk" | "spx";
 
 type Props = {
-  visible: boolean;
   selected: ShippingProvider;
   onClose: () => void;
   onSelect: (provider: ShippingProvider) => void;
@@ -30,23 +29,18 @@ type DisabledProviderConfig = {
 const CONNECTED: ProviderConfig[] = [
   { id: "manual", label: "Vận chuyển thủ công", initial: "M", color: "#2ca87b", connected: true },
   { id: "ghtk", label: "Giao Hàng Tiết Kiệm", initial: "G", color: "#EE0033", connected: true },
+  { id: "spx", label: "Shopee Express", initial: "S", color: "#ffb000", connected: true },
 ];
 
 const COMING: DisabledProviderConfig[] = [
-  { id: "shopee", label: "Shopee Express", initial: "S", color: "#ffb000", connected: false },
   { id: "viettelpost", label: "Viettel Post", initial: "V", color: "#cc0000", connected: false },
 ];
 
-export function ShippingProviderSheet({ visible, selected, onClose, onSelect }: Props) {
+export function ShippingProviderSheet({ selected, onClose, onSelect }: Props) {
   const { colors } = useThemes();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay} />
-      </TouchableWithoutFeedback>
-
-      <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
+    <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
         <View style={styles.dragHandle} />
         <Text style={[styles.title, { color: colors.neutral900 }]}>Phương thức vận chuyển</Text>
 
@@ -97,12 +91,10 @@ export function ShippingProviderSheet({ visible, selected, onClose, onSelect }: 
           <Text style={[styles.cancelText, { color: colors.neutral500 }]}>Huỷ</Text>
         </Pressable>
       </View>
-    </Modal>
   );
 }
 
 const styles = createStyles(({ colors, textPresets }) => ({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
   sheet: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
