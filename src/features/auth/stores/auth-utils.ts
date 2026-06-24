@@ -127,6 +127,11 @@ export function normalizeMeBootstrap(raw: any): MeBootstrapResponse {
     source.tiktokChannels || source.tiktok_channels,
   );
 
+  const canUseApp =
+    typeof source.canUseApp === "boolean"
+      ? source.canUseApp
+      : isLicenseUsable(license);
+
   return {
     user,
     profile,
@@ -134,10 +139,7 @@ export function normalizeMeBootstrap(raw: any): MeBootstrapResponse {
     shop,
     license,
     tiktokChannels,
-    canUseApp:
-      typeof source.canUseApp === "boolean"
-        ? source.canUseApp
-        : isLicenseUsable(license),
+    canUseApp,
     reason: source.reason || null,
     hasOrders: source.hasOrders === true,
     hasHistory: source.hasHistory === true,
