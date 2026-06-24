@@ -10,7 +10,7 @@ import { formatMoney } from "@features/orders/utils/order";
 import { createStyles } from "@utils/createStyles";
 import { router, useLocalSearchParams } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
-import { Linking, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Linking, ScrollView, Text, View } from "react-native";
 import { OrderDetailCustomerSection } from "../../../app/order-detail/components/OrderDetailCustomerSection";
 import { OrderDetailFooterActions } from "../../../app/order-detail/components/OrderDetailFooterActions";
 import {
@@ -103,7 +103,9 @@ export const OrderDetail = memo(() => {
       <Header title="Tổng quan đơn hàng" />
       <View style={styles.container}>
         {detail.loading ? (
-          <Text style={styles.message}>Đang tải đơn hàng...</Text>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#FF6B8A" />
+          </View>
         ) : null}
 
         {!detail.loading && detail.error ? (
@@ -221,6 +223,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   scrollContent: {
     paddingBottom: 16,
+  },
+  loadingBox: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   message: {
     padding: 16,
