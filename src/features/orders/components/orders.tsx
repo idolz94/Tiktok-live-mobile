@@ -28,6 +28,8 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     orderFilter,
     reloadOrders,
     orderLoading,
+    toggleDepositStatus,
+    depositLoadingIds,
   } = orderManager;
 
   const { colors } = useThemes();
@@ -109,9 +111,20 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
 
   const keyExtractor = useCallback((item: OrderWithTikTok) => item.id, []);
 
+  const listExtraData = useMemo(
+    () => ({ depositLoadingIds, orderFilter }),
+    [depositLoadingIds, orderFilter],
+  );
+
   const renderItem = useCallback(
-    ({ item }: { item: OrderWithTikTok }) => <OrderItem item={item} />,
-    [],
+    ({ item }: { item: OrderWithTikTok }) => (
+      <OrderItem
+        item={item}
+        depositLoading={depositLoadingIds.has(item.id)}
+        onToggleDeposit={toggleDepositStatus}
+      />
+    ),
+    [depositLoadingIds, toggleDepositStatus],
   );
 
   useEffect(() => {
@@ -163,7 +176,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
       data={filteredOrders}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
-      extraData={orderFilter}
+      extraData={listExtraData}
       ListHeaderComponent={listHeader}
       // START: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
       refreshing={orderLoading}

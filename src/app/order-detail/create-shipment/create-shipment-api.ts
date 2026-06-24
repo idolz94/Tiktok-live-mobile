@@ -11,7 +11,7 @@ import {
   ShopAddressPayload,
   updateShopAddressApi,
 } from "@features/settings/service/shop-addresses-api";
-import type { Transport, PickupOption } from "./types";
+import type { Transport, PickupOption, PaymentSide } from "./types";
 
 export {
   createShopAddressApi,
@@ -71,10 +71,19 @@ export type SubmitShippingPayload = {
   pickOption?: PickupOption;
 };
 
+type ShippingFeeResult = {
+  providerCode: "ghtk" | "manual";
+  fee: number;
+  insuranceFee?: number;
+  delivery?: boolean;
+  extFees?: Array<{ title: string; amount: number; type: string }>;
+  raw?: unknown;
+};
+
 type ManualShippingPayload = {
-  trackingCode: string;
-  providerName?: string;
+  paymentSide: PaymentSide;
   shippingFee?: number;
+  codAmount?: number;
   note?: string;
 };
 
@@ -139,7 +148,7 @@ export async function getShippingFeeApi(
   orderId: string,
   payload: ShippingFeePayload,
 ) {
-  return postRequest<{ fee: number }>(`/orders/${orderId}/shipping/fee`, payload);
+  return postRequest<{ fee: ShippingFeeResult }>(`/orders/${orderId}/shipping/fee`, payload);
 }
 
 export async function submitOrderToGhtkApi(
@@ -156,5 +165,19 @@ export async function submitManualShippingApi(
   return postRequest<{ shipping: unknown }>(
     `/orders/${orderId}/shipping/manual`,
     payload,
+  );
+}
+
+export async function getShippingTrackingApi(orderId: string) {
+  return getRequest<{ tracking: unknown }>(`/orders/${orderId}/shipping/tracking`);
+}
+
+export async function cancelShipmentApi(
+  orderId: string,
+  payload?: { trackingId?: string | null; reason?: string },
+) {
+  return postRequest<{ shipping: unknown }>(
+    `/orders/${orderId}/shipping/cancel`,
+    payload ?? {},
   );
 }

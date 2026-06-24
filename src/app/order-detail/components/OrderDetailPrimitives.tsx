@@ -72,6 +72,8 @@ type CurrencyInputRowProps = {
 
 export function CurrencyInputRow({ label, value, onChangeAmount }: CurrencyInputRowProps) {
   const { colors } = useThemes();
+  const inputValueDigits = value.replace(/\D/g, "");
+  const inputValue = inputValueDigits ? Number(inputValueDigits).toLocaleString("vi-VN") : "";
 
   return (
     <View style={styles.shippingInputRow}>
@@ -81,7 +83,7 @@ export function CurrencyInputRow({ label, value, onChangeAmount }: CurrencyInput
       <View style={[styles.shippingInputBox, { borderColor: colors.border10 }]}>
         <TextInput
           style={[styles.shippingInput, { color: colors.neutral900 }]}
-          value={value}
+          value={inputValue}
           onChangeText={(text) => {
             const digits = text.replace(/\D/g, "");
             const amount = digits ? Number(digits) : 0;

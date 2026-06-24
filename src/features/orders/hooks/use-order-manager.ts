@@ -28,7 +28,7 @@ type UseOrderManagerParams = {
   hasOrders?: boolean;
 };
 
-type CustomerSummaryWithTikTok = CustomerSummary & {
+export type CustomerSummaryWithTikTok = CustomerSummary & {
   customerTikTokUsername?: string;
   customerId?: string | null;
 };

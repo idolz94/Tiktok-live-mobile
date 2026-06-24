@@ -1,12 +1,15 @@
-import { CustomerSummary } from "@app-types/index";
 import { Avatar } from "@components/avatar";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
 import { Screen } from "@components/screen";
 import { useAuth } from "@features/auth/hooks/use-auth";
-import { useOrderManager } from "@features/orders/hooks/use-order-manager";
+import {
+  CustomerSummaryWithTikTok,
+  useOrderManager,
+} from "@features/orders/hooks/use-order-manager";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { createStyles } from "@utils/createStyles";
+import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,13 +23,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type CustomerTab = "all" | "new" | "tiktok";
 
-type CustomerWithTikTok = CustomerSummary & {
-  customerTikTokUsername?: string;
-};
-
 const TAB_LABELS: Record<CustomerTab, string> = {
   all: "Tất cả",
-  new: "Khách mới",
+  new: "Chưa TikTok",
   tiktok: "TikTok",
 };
 
@@ -50,7 +49,7 @@ export default function CustomersTab() {
     hasOrders: user?.hasOrders ?? false,
   });
 
-  const customers = orderManager.customers as CustomerWithTikTok[];
+  const customers: CustomerSummaryWithTikTok[] = orderManager.customers;
   const tiktokCustomers = useMemo(
     () => customers.filter((customer) => !!customer.customerTikTokUsername),
     [customers],
@@ -146,7 +145,15 @@ export default function CustomersTab() {
 
               return (
                 <View key={customerKey}>
-                  <Pressable style={styles.row}>
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: "/customer-detail",
+                        params: { customerKey },
+                      })
+                    }
+                    style={styles.row}
+                  >
                     <Avatar
                       uri={customer.avatar}
                       username={customer.username}

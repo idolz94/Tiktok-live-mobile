@@ -142,31 +142,23 @@ export async function updateOrderStatusApi({
   return normalizeOrderResponse(data);
 }
 
-// START: Thêm sản phẩm vào đơn hàng và chuẩn hoá lại order trả về
 export async function addOrderItemApi(
   orderId: string,
   payload: OrderItemPayload,
-): Promise<OrderWithTikTok> {
-  const data = await postRequest<any>(`/orders/${orderId}/items`, payload);
-
-  return normalizeOrderResponse(data);
+) {
+  return postRequest<{ item: unknown }>(`/orders/${orderId}/items`, payload);
 }
-// END: Thêm sản phẩm vào đơn hàng và chuẩn hoá lại order trả về
 
-// START: Cập nhật sản phẩm trong đơn hàng và chuẩn hoá lại order trả về
 export async function updateOrderItemApi(
   orderId: string,
   itemId: string,
   payload: Partial<OrderItemPayload>,
-): Promise<OrderWithTikTok> {
-  const data = await patchRequest<any>(
+) {
+  return patchRequest<{ item: unknown }>(
     `/orders/${orderId}/items/${itemId}`,
     payload,
   );
-
-  return normalizeOrderResponse(data);
 }
-// END: Cập nhật sản phẩm trong đơn hàng và chuẩn hoá lại order trả về
 
 export async function deleteOrderApi(orderId: string) {
   return deleteRequest<{ ok: boolean }>(`/orders/${orderId}`);

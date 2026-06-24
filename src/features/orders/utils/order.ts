@@ -147,6 +147,7 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
   return {
     id: String(order?.id || createId()),
     orderCode,
+    source: order?.source || undefined,
     username: String(
       order?.username ||
         order?.customerName ||

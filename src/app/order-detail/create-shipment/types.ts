@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export type Transport = "road" | "fly";
-export type PaymentOption = "sender" | "receiver";
+export type PaymentSide = 0 | 1;
 export type ViewCondition = "fragile" | "viewable" | "no_open";
 export type PickupOption = "cod" | "post";
 export type DeliveryPolicy = "full" | "partial";

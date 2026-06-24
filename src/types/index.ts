@@ -141,6 +141,7 @@ export type OrderAddressData = {
 export type Order = {
   id: string;
   orderCode: string;
+  source?: string;
   username: string;
   customerId?: string | null;
   customerName?: string;

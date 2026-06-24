@@ -14,6 +14,8 @@ import { router } from "expo-router";
 
 interface OrderItemProps {
   item: Order;
+  depositLoading?: boolean;
+  onToggleDeposit: (orderId: string) => void;
 }
 
 function createDisplayCode(orderCode: string) {
@@ -21,8 +23,9 @@ function createDisplayCode(orderCode: string) {
   return (numbers || orderCode).slice(-6).padStart(6, "0");
 }
 
-export const OrderItem = memo(({ item }: OrderItemProps) => {
-  const { colors } = useThemes();
+export const OrderItem = memo(
+  ({ item, depositLoading = false, onToggleDeposit }: OrderItemProps) => {
+    const { colors } = useThemes();
 
   const products = item.products?.length ? item.products : [];
   const total = item.subtotalAmount || getOrderTotal(products);
@@ -30,21 +33,15 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
   const isPaid =
     item.depositStatus === "paid" || item.depositStatus === "deposited";
 
-  const onOpenCustomer = useCallback(() => {}, []);
-  const onPrintOrder = useCallback(() => {}, []);
-  const onOpenMoreMenu = useCallback(() => {}, []);
-  const onOpenNoteEditor = useCallback(() => {}, []);
-  const onDeleteOrder = useCallback(() => {}, []);
-  const onToggleDeposit = useCallback(() => {}, []);
+    const handleToggleDeposit = useCallback(() => {
+      onToggleDeposit(item.id);
+    }, [item.id, onToggleDeposit]);
   const onOpenOrderOverview = useCallback(() => {
     router.push({
       pathname: "/order-detail",
       params: { id: item.id },
     });
   }, [item.id]);
-  const onSaveOrderChanges = useCallback(() => {}, []);
-  const onOpenTikTokProfile = useCallback(() => {}, []);
-  const onUpdateOrder = useCallback(() => {}, []);
 
   return (
     <View style={styles.container}>
@@ -122,8 +119,8 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
       <View style={styles.footer}>
         <Button
           title={isPaid ? "Đã cọc" : "Chưa cọc"}
-          loading={false}
-          onPress={onToggleDeposit}
+          loading={depositLoading}
+          onPress={handleToggleDeposit}
           txtBtnStyle={[
             styles.txtNotPaid,
             {
@@ -145,11 +142,13 @@ export const OrderItem = memo(({ item }: OrderItemProps) => {
           onPress={onOpenOrderOverview}
           gradientType="gra_primary"
           containerStyle={styles.btnSubmit}
+          txtBtnStyle={styles.txtSubmit}
         />
       </View>
     </View>
   );
-});
+  },
+);
 
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
@@ -247,13 +246,20 @@ const styles = createStyles(({ colors, textPresets }) => ({
     ...textPresets.fs14_500,
   },
   btnStatus: {
+    flex: 0,
+    minWidth: 96,
     backgroundColor: colors.primaryLight,
     borderRadius: 99,
     overflow: "hidden",
   },
   btnSubmit: {
+    flex: 0,
     borderRadius: 99,
     overflow: "hidden",
+  },
+  txtSubmit: {
+    color: colors.neutral100,
+    ...textPresets.fs14_500,
   },
   typeCustomer: {
     padding: 6,

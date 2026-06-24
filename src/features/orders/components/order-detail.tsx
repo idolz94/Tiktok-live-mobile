@@ -56,11 +56,15 @@ export const OrderDetail = memo(() => {
       pathname: "/order-detail/create-shipment",
       params: {
         order: JSON.stringify(detail.order),
-        shippingFee: String(detail.shippingFee),
+        shippingFee: String(
+          shippingFeeDisplay
+            ? Number(shippingFeeDisplay.replace(/\D/g, ""))
+            : detail.shippingFee,
+        ),
         provider: selectedProvider,
       },
     });
-  }, [detail.order, detail.shippingFee, selectedProvider]);
+  }, [detail.order, detail.shippingFee, selectedProvider, shippingFeeDisplay]);
 
   const handleSaveNewProduct = useCallback(
     (data: { name: string; price: number; quantity: number }) => {
@@ -114,12 +118,16 @@ export const OrderDetail = memo(() => {
                 status={detail.order.status}
               />
               <Divider />
-              <OrderDetailCustomerSection
-                order={detail.order}
-                displayName={displayName}
-                onTikTok={() => {}}
-              />
-              <Divider />
+              {detail.order.source !== "manual" ? (
+                <>
+                  <OrderDetailCustomerSection
+                    order={detail.order}
+                    displayName={displayName}
+                    onTikTok={() => {}}
+                  />
+                  <Divider />
+                </>
+              ) : null}
               <OrderDetailProductsSection
                 products={detail.products}
                 displayProducts={detail.displayProducts}

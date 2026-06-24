@@ -26,7 +26,7 @@ import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, 
 import { AddressPickerSheet } from "./components/AddressPickerSheet";
 import { AddressFormModal } from "./components/AddressFormModal";
 import { PackageDimModal } from "./components/PackageDimModal";
-import { AddrFormValues, Transport, PaymentOption, ViewCondition, PickupOption, DeliveryPolicy, RefusalFee } from "./types";
+import { AddrFormValues, Transport, PaymentSide, ViewCondition, PickupOption, DeliveryPolicy, RefusalFee } from "./types";
 import { useShipmentAddresses } from "./hooks/use-shipment-addresses";
 import { parseLocaleNumber, formatLocaleInput, formInitialValues, addressPayload } from "./utils";
 
@@ -49,14 +49,12 @@ export default function CreateShipmentScreen() {
   const [editingAddr, setEditingAddr] = useState<ShopAddress | CustomerAddress | null>(null);
   const [isSavingAddr, setIsSavingAddr] = useState(false);
   const [transport, setTransport] = useState<Transport>("road");
-  const [paymentOption, setPaymentOption] = useState<PaymentOption>("sender");
+  const [paymentSide, setPaymentSide] = useState<PaymentSide>(0);
   const [viewCondition, setViewCondition] = useState<ViewCondition>("viewable");
   const [pickupOption, setPickupOption] = useState<PickupOption>("cod");
   const [deliveryPolicy, setDeliveryPolicy] = useState<DeliveryPolicy>("full");
   const [refusalFee, setRefusalFee] = useState<RefusalFee>("free");
   const [weightInput, setWeightInput] = useState("500");
-  const [manualTrackingCode, setManualTrackingCode] = useState("");
-  const [manualProviderName, setManualProviderName] = useState("");
   const [manualNote, setManualNote] = useState("");
   const [manualShippingFee, setManualShippingFee] = useState(() => formatLocaleInput(String(params.shippingFee ?? "")));
   const [dimLength, setDimLength] = useState("40");
@@ -76,10 +74,12 @@ export default function CreateShipmentScreen() {
   const displayQuantity = orderProducts.reduce((sum, item) => sum + (item.quantity || 0), 0) || order?.quantity || 1;
   const isManualProvider = params.provider === "manual";
   const orderTotal = useMemo(() => getOrderTotal(orderProducts), [orderProducts]);
+  const [manualCodAmount, setManualCodAmount] = useState(() => formatLocaleInput(String(order?.codAmount ?? orderTotal)));
   const manualFee = useMemo(() => parseLocaleNumber(manualShippingFee), [manualShippingFee]);
   const shippingFee = isManualProvider ? manualFee : estimatedFee ?? parseLocaleNumber(String(params.shippingFee ?? ""));
-  const codAmount = paymentOption === "sender" ? orderTotal + shippingFee : orderTotal;
-  const codAmountDisplay = useMemo(() => formatLocaleInput(String(codAmount)), [codAmount]);
+  const codAmount = isManualProvider ? parseLocaleNumber(manualCodAmount) : order?.codAmount ?? orderTotal;
+  const codAmountDisplay = useMemo(() => isManualProvider ? manualCodAmount : formatLocaleInput(String(codAmount)), [codAmount, isManualProvider, manualCodAmount]);
+  const totalCollected = paymentSide === 0 ? codAmount + shippingFee : codAmount;
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
   const formTitle = addrFormTarget === "sender"
     ? addrFormMode === "add" ? "Thêm địa chỉ người gửi" : "Sửa địa chỉ người gửi"
@@ -124,7 +124,7 @@ export default function CreateShipmentScreen() {
         transport,
       });
       if (!mountedRef.current) return;
-      setEstimatedFee(result.fee);
+      setEstimatedFee(result.fee.fee);
     } catch {
       if (!mountedRef.current) return;
       setEstimatedFee(null);
@@ -239,21 +239,17 @@ export default function CreateShipmentScreen() {
       receiverWard: selectedRecipient.ward ?? "",
       receiverTel: selectedRecipient.phone ?? "",
       note,
-      isFreeShip: paymentOption === "sender" ? 0 : 1,
+      isFreeShip: paymentSide,
       transport,
       pickOption: pickupOption,
     };
     setIsSubmitting(true);
     try {
       if (isManualProvider) {
-        if (!manualTrackingCode.trim()) {
-          Alert.alert("Thiếu mã vận đơn", "Vui lòng nhập mã vận đơn.");
-          return;
-        }
         await submitManualShippingApi(order.id, {
-          trackingCode: manualTrackingCode.trim(),
-          providerName: manualProviderName.trim() || undefined,
+          paymentSide,
           shippingFee: manualShippingFee.trim() ? manualFee : undefined,
+          codAmount: manualCodAmount.trim() ? parseLocaleNumber(manualCodAmount) : undefined,
           note: manualNote.trim() || undefined,
         });
       } else {
@@ -267,7 +263,7 @@ export default function CreateShipmentScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isManualProvider, manualFee, manualNote, manualProviderName, manualShippingFee, manualTrackingCode, note, order, paymentOption, pickupOption, selectedRecipient, selectedSender, transport]);
+  }, [isManualProvider, manualCodAmount, manualFee, manualNote, manualShippingFee, note, order, paymentSide, pickupOption, selectedRecipient, selectedSender, transport]);
 
   if (!order) {
     return (
@@ -304,8 +300,9 @@ export default function CreateShipmentScreen() {
         </SectionBlock>
         <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
 
-        <SectionBlock title="Thông tin đơn hàng" actionLabel="Kích thước" onActionPress={() => setDimensionsOpen(true)}>
-          <View style={[shipmentStyles.orderCard, { backgroundColor: colors.neutral50 }]}>
+        {!isManualProvider ? (
+          <SectionBlock title="Thông tin đơn hàng" actionLabel="Kích thước" onActionPress={() => setDimensionsOpen(true)}>
+            <View style={[shipmentStyles.orderCard, { backgroundColor: colors.neutral50 }]}>
             <View style={shipmentStyles.orderMetaRow}>
               <View style={shipmentStyles.productTitle}>
                 <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]} numberOfLines={2}>{primaryProduct?.name ?? order.productName ?? "—"}</Text>
@@ -337,16 +334,22 @@ export default function CreateShipmentScreen() {
                 </Pressable>
               </View>
             </View>
-          </View>
-        </SectionBlock>
-        <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
+            </View>
+          </SectionBlock>
+        ) : null}
+        {!isManualProvider ? <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} /> : null}
 
         <SectionBlock title="Thông tin thanh toán">
-          <MoneyField label="Tiền thu hộ (COD)" value={codAmountDisplay} editable={false} />
+          <MoneyField
+            label="Tiền thu hộ (COD)"
+            value={codAmountDisplay}
+            onChangeText={(text) => setManualCodAmount(formatLocaleInput(text))}
+            editable={isManualProvider}
+          />
           <MoneyField label="Tổng giá trị hàng hóa" value={goodsValueDisplay} editable={false} />
           <View style={shipmentStyles.optionGrid}>
-            <OptionChip label="Bên gửi trả phí" selected={paymentOption === "sender"} onPress={() => setPaymentOption("sender")} />
-            <OptionChip label="Bên nhận trả phí" selected={paymentOption === "receiver"} onPress={() => setPaymentOption("receiver")} />
+            <OptionChip label="Bên nhận trả phí" selected={paymentSide === 0} onPress={() => setPaymentSide(0)} />
+            <OptionChip label="Bên gửi trả phí" selected={paymentSide === 1} onPress={() => setPaymentSide(1)} />
           </View>
         </SectionBlock>
         <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
@@ -354,8 +357,6 @@ export default function CreateShipmentScreen() {
         <SectionBlock title="Thông tin vận chuyển">
           {isManualProvider ? (
             <>
-              <ShipmentInput label="Mã vận đơn *" value={manualTrackingCode} onChangeText={setManualTrackingCode} placeholder="Nhập mã vận đơn" />
-              <ShipmentInput label="Tên đơn vị vận chuyển" value={manualProviderName} onChangeText={setManualProviderName} placeholder="VD: GHTK, GHN, J&T..." />
               <ShipmentInput label="Phí vận chuyển" value={manualShippingFee} onChangeText={(text) => setManualShippingFee(formatLocaleInput(text))} placeholder="0" keyboardType="numeric" />
               <ShipmentInput label="Ghi chú" value={manualNote} onChangeText={setManualNote} placeholder="Nhập ghi chú" multiline />
             </>
@@ -363,8 +364,8 @@ export default function CreateShipmentScreen() {
             <>
               <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>Phương thức dịch vụ</Text>
               <View style={shipmentStyles.optionGrid}>
-                <OptionChip label="Viettel Post chuyển nhanh" selected={transport === "fly"} onPress={() => setTransport("fly")} />
-                <OptionChip label="Viettel Post chuyển tiết kiệm" selected={transport === "road"} onPress={() => setTransport("road")} />
+                <OptionChip label="GHTK hàng không" selected={transport === "fly"} onPress={() => setTransport("fly")} />
+                <OptionChip label="GHTK đường bộ" selected={transport === "road"} onPress={() => setTransport("road")} />
               </View>
               <View style={[shipmentStyles.feeBox, { backgroundColor: colors.neutral50, borderColor: colors.border10, marginTop: 8 }]}>
                 {feeLoading ? <ActivityIndicator size="small" color={colors.primary} /> : feeError ? <Text style={[textPresets.fs12_400, { color: colors.error }]}>{feeError}</Text> : estimatedFee !== null ? (
@@ -390,8 +391,8 @@ export default function CreateShipmentScreen() {
             {feeLoading && !isManualProvider ? <ActivityIndicator size="small" color={colors.primary} /> : <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>}
           </View>
           <View style={[screenStyles.summaryRow, screenStyles.summaryRowTotal]}>
-            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>Tổng cộng</Text>
-            <Text style={[textPresets.fs14_500, { color: colors.primary }]}>{(orderTotal + shippingFee).toLocaleString("vi-VN")}đ</Text>
+            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>Shipper thu</Text>
+            <Text style={[textPresets.fs14_500, { color: colors.primary }]}>{totalCollected.toLocaleString("vi-VN")}đ</Text>
           </View>
         </View>
         <Pressable onPress={handleSubmitShipment} disabled={isSubmitting || !selectedSender || !selectedRecipient} style={[screenStyles.submitButton, { backgroundColor: !isSubmitting && selectedSender && selectedRecipient ? colors.primary : colors.neutral300 }]}>

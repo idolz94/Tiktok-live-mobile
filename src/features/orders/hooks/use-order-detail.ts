@@ -60,6 +60,19 @@ export function useOrderDetail(orderId: string) {
     }
   }, [orderId]);
 
+  // Refresh data mà không bật loading toàn màn — dùng sau item mutation
+  const silentRefetch = useCallback(async () => {
+    if (!orderId) return;
+    const requestId = ++requestRef.current;
+    try {
+      const result = await getOrderByIdApi(orderId);
+      if (requestId !== requestRef.current) return;
+      if (result) setOrder(result);
+    } catch {
+      // bỏ qua lỗi silent — UI vẫn giữ data cũ, không hiện thông báo lỗi
+    }
+  }, [orderId]);
+
   useEffect(() => {
     void fetchOrder();
   }, [fetchOrder]);
@@ -131,37 +144,37 @@ export function useOrderDetail(orderId: string) {
   // START: Thêm sản phẩm vào đơn
   const handleAddProduct = useCallback(
     async (payload: OrderItemPayload) => {
-      if (!orderId_ || addingProduct) return;
+      if (!orderId || addingProduct) return;
 
       setAddingProduct(true);
       try {
-        const updatedOrder = await addOrderItemApi(orderId_, payload);
-        setOrder(updatedOrder);
+        await addOrderItemApi(orderId, payload);
+        await silentRefetch();
         setAddProductOpen(false);
       } finally {
         setAddingProduct(false);
       }
     },
-    [addingProduct, orderId_],
+    [addingProduct, orderId, silentRefetch],
   );
   // END: Thêm sản phẩm vào đơn
 
   // START: Cập nhật sản phẩm trong đơn
   const handleUpdateProduct = useCallback(
     async (itemId: string, payload: UpdateOrderItemPayload) => {
-      if (!orderId_ || updatingProduct) return;
+      if (!orderId || updatingProduct) return;
 
       setUpdatingProduct(true);
       try {
-        const updatedOrder = await updateOrderItemApi(orderId_, itemId, payload);
-        setOrder(updatedOrder);
+        await updateOrderItemApi(orderId, itemId, payload);
+        await silentRefetch();
         setEditProductOpen(false);
         setSelectedProductId(null);
       } finally {
         setUpdatingProduct(false);
       }
     },
-    [orderId_, updatingProduct],
+    [orderId, silentRefetch, updatingProduct],
   );
   // END: Cập nhật sản phẩm trong đơn
 
