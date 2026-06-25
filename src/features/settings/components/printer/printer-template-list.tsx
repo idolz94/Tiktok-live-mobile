@@ -1,16 +1,10 @@
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { createStyles } from "@utils/createStyles";
 import { icons } from "@assets/icons";
-import { printerSettingsStyles as s } from "./printer-settings.styles";
 
-type PrinterTemplateItem = {
-  key: "live" | "shipment";
-  label: string;
-  onPress?: () => void;
-};
-
-const TEMPLATE_ITEMS: PrinterTemplateItem[] = [
-  { key: "live", label: "Điều chỉnh mẫu in Live" },
-  { key: "shipment", label: "Điều chỉnh mẫu in vận đơn (SHIP)" },
+const TEMPLATE_ITEMS = [
+  { key: "live" as const, label: "Điều chỉnh mẫu in Live" },
+  { key: "shipment" as const, label: "Điều chỉnh mẫu in vận đơn (SHIP)" },
 ];
 
 type PrinterTemplateListProps = {
@@ -28,27 +22,58 @@ export function PrinterTemplateList({
   }));
 
   return (
-    <View style={s.templateList}>
+    <View style={styles.templateList}>
       {items.map((item, index) => (
         <View key={item.key}>
           <TouchableOpacity
-            style={s.templateRow}
+            style={styles.templateRow}
             activeOpacity={0.75}
             onPress={item.onPress}
           >
-            <View style={s.templateLeft}>
+            <View style={styles.templateLeft}>
               <Image
                 source={icons.settings}
-                style={s.templateIcon}
+                style={styles.templateIcon}
                 resizeMode="contain"
               />
-              <Text style={s.templateText}>{item.label}</Text>
+              <Text style={styles.templateText}>{item.label}</Text>
             </View>
-            <Text style={s.chevron}>›</Text>
+            <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
-          {index < items.length - 1 ? <View style={s.templateDivider} /> : null}
+          {index < items.length - 1 ? <View style={styles.templateDivider} /> : null}
         </View>
       ))}
     </View>
   );
 }
+
+const styles = createStyles(({ colors }) => ({
+  templateList: { gap: 0 },
+  templateRow: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  templateLeft: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  templateIcon: { width: 24, height: 24, tintColor: colors.neutral900 },
+  templateText: { flex: 1, color: colors.neutral900, fontSize: 14, lineHeight: 22 },
+  templateDivider: {
+    height: 0.5,
+    backgroundColor: colors.border10,
+    marginVertical: 16,
+  },
+  chevron: {
+    color: colors.neutral900,
+    fontSize: 24,
+    lineHeight: 24,
+    transform: [{ rotate: "180deg" }],
+  },
+}));

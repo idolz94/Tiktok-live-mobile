@@ -1,8 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import { ThermalPrinter } from "@finan-me/react-native-thermal-printer";
 import { usePrinterStore } from "../stores/printer-store";
-import type { PrinterConfig, PrinterConnectionType, PrinterPaperSize, PrinterFontSize } from "../types/printer";
+import type {
+  PrinterConfig,
+  PrinterConnectionType,
+  PrinterPaperSize,
+  PrinterFontSize,
+  PrinterConnectionState,
+} from "../types/printer";
+
+export type { PrinterConnectionState };
+
+// ─── Address helpers ──────────────────────────────────────────────────────────
 
 function buildPrinterAddress(config: PrinterConfig): string {
   if (config.connectionType === "bluetooth") {
@@ -10,6 +20,13 @@ function buildPrinterAddress(config: PrinterConfig): string {
   }
   return `lan:${config.ipAddress}:9100`;
 }
+
+function hasValidAddress(config: PrinterConfig): boolean {
+  if (config.connectionType === "wifi") return !!config.ipAddress;
+  return !!config.macAddress;
+}
+
+// ─── Print helpers ────────────────────────────────────────────────────────────
 
 function buildPaperWidthMm(paperSize: PrinterPaperSize): number {
   return paperSize === "58mm" ? 58 : 80;
@@ -21,36 +38,126 @@ function buildFontSize(fontSize: PrinterFontSize): 1 | 2 | 3 {
   return 2;
 }
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function usePrinterSettings() {
   const { config, setConfig } = usePrinterStore();
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [connectionState, setConnectionState] = useState<PrinterConnectionState>("idle");
 
-  const handleSave = useCallback(
-    async (values: Partial<PrinterConfig>) => {
-      setIsSaving(true);
-      try {
-        setConfig(values);
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [setConfig],
-  );
+  // Track whether the printer was connected so we can detect unexpected disconnects
+  const wasConnectedRef = useRef(false);
 
-  const handleTestPrint = useCallback(async () => {
-    const address = buildPrinterAddress(config);
+  // ─── Connection event listener ──────────────────────────────────────────────
+  // Subscribe to native connection state changes for the current printer address.
+  // Fires Alert on unexpected disconnect (not triggered by handleDisconnect).
+  // Re-subscribes whenever the address changes (config dependency).
+  useEffect(() => {
+    if (!hasValidAddress(config)) return;
 
-    if (config.connectionType === "wifi" && !config.ipAddress) {
-      Alert.alert("Chưa cấu hình máy in", "Vui lòng nhập địa chỉ IP máy in trước khi in thử.");
+    const subscription = ThermalPrinter.addConnectionEventListener(
+      "EVENT_CONNECTION_STATE_CHANGED",
+      ({ state, reason }) => {
+        if (state === "connected") {
+          wasConnectedRef.current = true;
+          setConnectionState("connected");
+        }
+
+        if (state === "disconnected") {
+          const wasConnected = wasConnectedRef.current;
+          wasConnectedRef.current = false;
+          setConnectionState("disconnected");
+
+          // Only alert on unexpected disconnect (not manual disconnect)
+          if (wasConnected) {
+            const msg = reason ? `Lý do: ${reason}` : "Vui lòng kiểm tra lại máy in.";
+            Alert.alert("Máy in đã ngắt kết nối", msg);
+          }
+        }
+      },
+    );
+
+    return () => {
+      ThermalPrinter.removeConnectionEventListener(subscription);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.connectionType, config.ipAddress, config.macAddress]);
+
+  // ─── Reset state when address changes ──────────────────────────────────────
+  // Prevent stale "connected" badge when user switches to a different printer.
+  useEffect(() => {
+    wasConnectedRef.current = false;
+    setConnectionState("idle");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.connectionType, config.ipAddress, config.macAddress]);
+
+  // ─── Connect ────────────────────────────────────────────────────────────────
+
+  const handleConnect = useCallback(async () => {
+    if (!hasValidAddress(config)) {
+      const msg =
+        config.connectionType === "wifi"
+          ? "Vui lòng nhập địa chỉ IP máy in trước khi kết nối."
+          : "Vui lòng chọn máy in Bluetooth trước khi kết nối.";
+      Alert.alert("Chưa cấu hình máy in", msg);
       return;
     }
-    if (config.connectionType === "bluetooth" && !config.macAddress) {
-      Alert.alert("Chưa cấu hình máy in", "Vui lòng chọn máy in Bluetooth trước khi in thử.");
+
+    setConnectionState("connecting");
+    const address = buildPrinterAddress(config);
+
+    try {
+      const result = await ThermalPrinter.testConnection(address);
+
+      if (result.success) {
+        wasConnectedRef.current = true;
+        setConnectionState("connected");
+        const deviceLabel = result.deviceName ?? address;
+        Alert.alert("Kết nối thành công", `Đã kết nối với ${deviceLabel}.`);
+      } else {
+        setConnectionState("disconnected");
+        const msg = result.error?.message ?? "Không thể kết nối máy in.";
+        Alert.alert("Kết nối thất bại", msg);
+      }
+    } catch (e: unknown) {
+      setConnectionState("disconnected");
+      const msg = e instanceof Error ? e.message : "Không thể kết nối máy in.";
+      Alert.alert("Kết nối thất bại", msg);
+    }
+  }, [config]);
+
+  // ─── Disconnect ─────────────────────────────────────────────────────────────
+
+  const handleDisconnect = useCallback(async () => {
+    const address = buildPrinterAddress(config);
+    // Mark as not connected before calling native so the event listener
+    // does not fire a "disconnected" Alert (user initiated this).
+    wasConnectedRef.current = false;
+    setConnectionState("idle");
+
+    try {
+      await ThermalPrinter.disconnect(address);
+    } catch {
+      // Disconnect errors are non-critical — state is already reset
+    }
+  }, [config]);
+
+  // ─── Test print ─────────────────────────────────────────────────────────────
+
+  const handleTestPrint = useCallback(async () => {
+    if (!hasValidAddress(config)) {
+      const msg =
+        config.connectionType === "wifi"
+          ? "Vui lòng nhập địa chỉ IP máy in trước khi in thử."
+          : "Vui lòng chọn máy in Bluetooth trước khi in thử.";
+      Alert.alert("Chưa cấu hình máy in", msg);
       return;
     }
 
     setIsTesting(true);
+    const address = buildPrinterAddress(config);
+
     try {
       const result = await ThermalPrinter.printReceipt({
         printers: [
@@ -92,15 +199,19 @@ export function usePrinterSettings() {
     }
   }, [config]);
 
-  const handleTestConnection = useCallback(async (): Promise<boolean> => {
-    const address = buildPrinterAddress(config);
-    try {
-      const result = await ThermalPrinter.testConnection(address);
-      return result.success;
-    } catch {
-      return false;
-    }
-  }, [config]);
+  // ─── Config setters ──────────────────────────────────────────────────────────
+
+  const handleSave = useCallback(
+    async (values: Partial<PrinterConfig>) => {
+      setIsSaving(true);
+      try {
+        setConfig(values);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [setConfig],
+  );
 
   const setConnectionType = useCallback(
     (connectionType: PrinterConnectionType) => setConfig({ connectionType }),
@@ -127,13 +238,17 @@ export function usePrinterSettings() {
     [setConfig],
   );
 
+  // ─── Return ──────────────────────────────────────────────────────────────────
+
   return {
     config,
+    connectionState,
     isSaving,
     isTesting,
     handleSave,
+    handleConnect,
+    handleDisconnect,
     handleTestPrint,
-    handleTestConnection,
     setConnectionType,
     setIpAddress,
     setMacAddress,
