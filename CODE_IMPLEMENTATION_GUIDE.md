@@ -943,7 +943,168 @@ Route file chỉ re-export screen component — không có logic nào khác.
 
 ---
 
-## 12. Tóm tắt quy tắc
+## 12. Styling — dùng `createStyles` thay vì `StyleSheet`
+
+Toàn bộ dự án dùng `createStyles` từ `@utils/createStyles` thay vì `StyleSheet.create` trực tiếp từ React Native. `createStyles` cung cấp theme tokens qua callback, đảm bảo màu sắc và spacing đồng nhất.
+
+### Cách dùng
+
+```tsx
+// ✅ Đúng
+import { createStyles } from "@utils/createStyles";
+
+const styles = createStyles(({ colors }) => ({
+  container: {
+    flex: 1,
+    backgroundColor: colors.neutral100,
+  },
+  text: {
+    color: colors.neutral900,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  divider: {
+    height: 0.5,           // thay StyleSheet.hairlineWidth
+    backgroundColor: colors.border10,
+  },
+}));
+
+// ❌ Sai
+import { StyleSheet } from "react-native";
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#fff",  // hardcode hex
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+  },
+});
+```
+
+### Các token màu thường dùng
+
+| Token | Giá trị | Dùng khi |
+|---|---|---|
+| `colors.neutral900` | `#000000` | text chính, icon |
+| `colors.neutral400` | `#484848` | label phụ, placeholder |
+| `colors.neutral100` | `#ffffff` | background trắng |
+| `colors.neutral50` | `rgba(242,242,242,1)` | background card, input |
+| `colors.border10` | `rgba(0,0,0,0.1)` | divider, border nhẹ |
+| `colors.primary` | `#FF6B8A` | accent, nút chính |
+| `colors.success` | `rgba(44,168,123,1)` | trạng thái thành công |
+| `colors.warning` | `rgba(255,168,0,1)` | trạng thái cảnh báo |
+| `colors.pinkLight` | `rgba(255,239,228,1)` | background notice card |
+
+### Lưu ý
+
+- Không import `StyleSheet` từ `react-native` trừ khi cần `StyleSheet.absoluteFill` (không có trong `createStyles`)
+- Thay `StyleSheet.hairlineWidth` bằng `0.5` — đây là giá trị thực trên cả iOS và Android
+- Không hardcode hex (`"#fff"`, `"#000"`) — luôn dùng token từ `colors`
+
+---
+
+## 13. Bottom Sheet — dùng `useBottomSheet` thay vì `Modal`
+
+Toàn bộ dự án dùng `useBottomSheet` từ `@components/bottom-sheet/hook` để hiển thị overlay content. Không dùng `Modal` của React Native.
+
+### Cách dùng
+
+```tsx
+// ✅ Đúng
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+
+function MyScreen() {
+  const { show, hide } = useBottomSheet();
+
+  const openPicker = () => {
+    show({
+      content: (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+          <Text style={styles.sheetTitle}>Chọn option</Text>
+          <TouchableOpacity onPress={() => { doSomething(); hide(); }}>
+            <Text>Option A</Text>
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  };
+
+  return <TouchableOpacity onPress={openPicker} />;
+}
+
+// ❌ Sai
+import { Modal } from "react-native";
+
+function MyScreen() {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      {/* ... */}
+    </Modal>
+  );
+}
+```
+
+### API của `useBottomSheet`
+
+```ts
+const { show, hide, update, isVisible } = useBottomSheet();
+
+show({
+  content: ReactNode,         // bắt buộc — nội dung hiển thị
+  snapPoints?: (string | number)[],
+  showDragIndicator?: boolean,
+  backgroundStyle?: StyleProp<ViewStyle>,
+  enablePanDownToClose?: boolean,
+});
+
+hide();   // đóng sheet
+
+update(Partial<BottomSheetOptions>);  // cập nhật content khi đang mở
+```
+
+### Pattern chuẩn cho option picker
+
+Khi cần cho user chọn 1 trong nhiều option (picker), build danh sách option trong `content` và gọi `hide()` sau khi chọn:
+
+```tsx
+const openOptionSheet = useCallback(
+  (title: string, options: Option[], selected: string, onSelect: (v: string) => void) => {
+    show({
+      content: (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+          <Text style={styles.sheetTitle}>{title}</Text>
+          {options.map((opt) => {
+            const isSelected = opt.value === selected;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => { onSelect(opt.value); hide(); }}
+              >
+                <Text>{opt.label}</Text>
+                {isSelected && <Text>✓</Text>}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ),
+    });
+  },
+  [show, hide],
+);
+```
+
+### Lưu ý
+
+- `useBottomSheet` phải được dùng trong component con của `BottomSheetProvider` (đã có ở root app)
+- Không nên gọi `show()` trong `useEffect` — chỉ gọi từ event handler (onPress, onSubmit...)
+- Truyền `content` như một JSX element — không phải function
+
+---
+
+## 14. Tóm tắt quy tắc
 
 | Câu hỏi | Câu trả lời |
 |---|---|
