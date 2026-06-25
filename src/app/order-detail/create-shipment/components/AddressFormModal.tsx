@@ -22,18 +22,17 @@ import { absoluteFill } from "../utils";
 type AddressFormModalProps = {
   title: string;
   initialValues?: Partial<AddrFormValues>;
-  isSaving: boolean;
   onClose: () => void;
-  onSave: (vals: AddrFormValues) => void;
+  onSave: (vals: AddrFormValues) => Promise<void>;
 };
 
 export function AddressFormModal({
   title,
   initialValues,
-  isSaving,
   onClose,
   onSave,
 }: AddressFormModalProps) {
+  const [isSaving, setIsSaving] = useState(false);
   const {
     control,
     handleSubmit,
@@ -275,17 +274,17 @@ export function AddressFormModal({
           />
 
           <Pressable
-            onPress={handleSubmit(onSave)}
+            onPress={handleSubmit(async (vals) => {
+              setIsSaving(true);
+              try { await onSave(vals); } finally { setIsSaving(false); }
+            })}
             disabled={isSaving || !isValid}
             style={[formModalStyles.saveBtn, (isSaving || !isValid) && formModalStyles.saveBtnDisabled]}
           >
-            {isSaving ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={formModalStyles.saveBtnText}>
-                {title.toLowerCase().includes("sửa") ? "CẬP NHẬT ĐỊA CHỈ" : "+ THÊM ĐỊA CHỈ"}
-              </Text>
-            )}
+            {isSaving && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />}
+            <Text style={formModalStyles.saveBtnText}>
+              {title.toLowerCase().includes("sửa") ? "CẬP NHẬT ĐỊA CHỈ" : "+ THÊM ĐỊA CHỈ"}
+            </Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -462,6 +461,7 @@ const formModalStyles = createStyles(() => ({
     height: 50,
     borderRadius: 8,
     backgroundColor: "#ebb140",
+    flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     marginTop: 4,

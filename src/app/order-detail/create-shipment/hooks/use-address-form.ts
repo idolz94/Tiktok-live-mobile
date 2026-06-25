@@ -88,24 +88,29 @@ export function useAddressForm(deps: Deps) {
     setOrder({ ...order, customerAddressId: addr.id, customerAddressData: addr });
   }, [order, setOrder, setSelectedRecipient]);
 
-  const handleSaveAddress = useCallback(async (values: AddrFormValues) => {
-    if (!addrFormTarget || !order) return;
-    if (addrFormTarget === "recipient" && !order.customerId) {
+  const handleSaveAddress = useCallback(async (
+    values: AddrFormValues,
+    target: "sender" | "recipient",
+    editingAddrOverride?: ShopAddress | CustomerAddress | null,
+  ) => {
+    if (!order || isSavingAddr) return;
+    if (target === "recipient" && !order.customerId) {
       Alert.alert("Không thể lưu", "Đơn hàng chưa có khách hàng.");
       return;
     }
     const payload = addressPayload(values);
+    const editing = editingAddrOverride !== undefined ? editingAddrOverride : editingAddr;
     setIsSavingAddr(true);
     try {
-      if (addrFormTarget === "sender") {
-        const saved = addrFormMode === "edit" && editingAddr
-          ? await updateShopAddressApi(editingAddr.id, payload)
+      if (target === "sender") {
+        const saved = editing
+          ? await updateShopAddressApi(editing.id, payload)
           : await createShopAddressApi(payload);
         setSelectedSender(saved);
         await reloadShopAddresses();
       } else if (order.customerId) {
-        const saved = addrFormMode === "edit" && editingAddr
-          ? await updateCustomerAddressApi(order.customerId, editingAddr.id, payload)
+        const saved = editing
+          ? await updateCustomerAddressApi(order.customerId, editing.id, payload)
           : await createCustomerAddressApi(order.customerId, payload);
         setSelectedRecipient(saved);
         await patchOrderApi(order.id, { customerAddressId: saved.id });
@@ -119,7 +124,7 @@ export function useAddressForm(deps: Deps) {
     } finally {
       setIsSavingAddr(false);
     }
-  }, [addrFormMode, addrFormTarget, editingAddr, order, reloadCustomerAddresses, reloadShopAddresses, setOrder, setSelectedRecipient, setSelectedSender]);
+  }, [editingAddr, isSavingAddr, order, reloadCustomerAddresses, reloadShopAddresses, setOrder, setSelectedRecipient, setSelectedSender]);
 
   return {
     addrFormTarget,

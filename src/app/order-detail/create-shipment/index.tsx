@@ -32,7 +32,6 @@ export default function CreateShipmentScreen() {
     setAddrFormTarget,
     editingAddr,
     setEditingAddr,
-    isSavingAddr,
     transport,
     setTransport,
     paymentSide,
@@ -96,14 +95,15 @@ export default function CreateShipmentScreen() {
     const title = addr
       ? target === "sender" ? "Sửa địa chỉ người gửi" : "Sửa địa chỉ người nhận"
       : target === "sender" ? "Thêm địa chỉ người gửi" : "Thêm địa chỉ người nhận";
+    setAddrFormTarget(target);
+    if (addr) setEditingAddr(addr);
     show({
       content: (
         <AddressFormModal
           title={title}
           initialValues={formInitialValues(addr ?? null)}
-          isSaving={isSavingAddr}
           onClose={() => { hide(); setAddrFormTarget(null); setEditingAddr(null); }}
-          onSave={async (vals) => { await handleSaveAddress(vals); hide(); }}
+          onSave={async (vals) => { await handleSaveAddress(vals, target, addr ?? null); hide(); }}
         />
       ),
     });

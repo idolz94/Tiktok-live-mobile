@@ -110,12 +110,12 @@ export async function createCustomerAddressApi(
   customerId: string,
   payload: AddressPayload,
 ) {
-  const data = await postRequest<AddressResponse<CustomerAddress>>(
+  const raw = await postRequest<any>(
     `/customers/${customerId}/addresses`,
     payload,
   );
 
-  return data.address;
+  return (raw?.data?.address ?? raw?.address ?? raw) as CustomerAddress;
 }
 
 export async function updateCustomerAddressApi(
