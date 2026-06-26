@@ -1,7 +1,7 @@
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { router } from "expo-router";
 import { useCallback } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { createStyles } from "@utils/createStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { type PrinterSheet } from "../../types/printer";import { usePrinterSettings } from "../../hooks/use-printer-settings";
@@ -51,6 +51,7 @@ export function PrinterSettingsScreen() {
   const {
     config,
     connectionState,
+    connectedDevice,
     isTesting,
     handleTestPrint,
     handleConnect,
@@ -59,6 +60,7 @@ export function PrinterSettingsScreen() {
     setIpAddress,
     setPaperSize,
     setFontSize,
+    handleSave,
   } = usePrinterSettings();
 
   const handleBack = () => {
@@ -147,6 +149,7 @@ export function PrinterSettingsScreen() {
           paperSize={config.paperSize}
           fontSize={config.fontSize}
           connectionState={connectionState}
+          connectedDevice={connectedDevice}
           onChangeConnectionType={setConnectionType}
           onChangeIpAddress={setIpAddress}
           onChangePaperSize={setPaperSize}
@@ -155,6 +158,120 @@ export function PrinterSettingsScreen() {
           onConnect={handleConnect}
           onDisconnect={handleDisconnect}
         />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Nội dung hóa đơn</Text>
+        </View>
+
+        <View style={styles.configCard}>
+          {/* Tên công ty */}
+          <View style={styles.configRow}>
+            <Text style={styles.configRowLabel}>Tên công ty</Text>
+            <View style={styles.configInputContainer}>
+              <TextInput
+                style={styles.configTextInput}
+                value={config.companyName}
+                onChangeText={(val) => handleSave({ companyName: val })}
+                placeholder="Ví dụ: CÔNG TY ABC"
+                placeholderTextColor="#bdbdbd"
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <View style={styles.configDivider} />
+
+          {/* Địa chỉ công ty */}
+          <View style={styles.configRow}>
+            <Text style={styles.configRowLabel}>Địa chỉ công ty</Text>
+            <View style={styles.configInputContainer}>
+              <TextInput
+                style={styles.configTextInput}
+                value={config.companyAddress}
+                onChangeText={(val) => handleSave({ companyAddress: val })}
+                placeholder="Địa chỉ văn phòng / cửa hàng"
+                placeholderTextColor="#bdbdbd"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <View style={styles.configDivider} />
+
+          {/* Tên khách hàng / Kênh */}
+          <View style={styles.configRow}>
+            <Text style={styles.configRowLabel}>Tên khách hàng</Text>
+            <View style={styles.configInputContainer}>
+              <TextInput
+                style={styles.configTextInput}
+                value={config.tiktokUsername}
+                onChangeText={(val) => handleSave({ tiktokUsername: val })}
+                placeholder="Tên người nhận hàng"
+                placeholderTextColor="#bdbdbd"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <View style={styles.configDivider} />
+
+          {/* Số điện thoại */}
+          <View style={styles.configRow}>
+            <Text style={styles.configRowLabel}>Số điện thoại</Text>
+            <View style={styles.configInputContainer}>
+              <TextInput
+                style={styles.configTextInput}
+                value={config.userPhone}
+                onChangeText={(val) => handleSave({ userPhone: val })}
+                placeholder="SĐT liên hệ"
+                placeholderTextColor="#bdbdbd"
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <View style={styles.configDivider} />
+
+          {/* Địa chỉ khách hàng */}
+          <View style={styles.configRow}>
+            <Text style={styles.configRowLabel}>Địa chỉ giao hàng</Text>
+            <View style={styles.configInputContainer}>
+              <TextInput
+                style={styles.configTextInput}
+                value={config.userAddress}
+                onChangeText={(val) => handleSave({ userAddress: val })}
+                placeholder="Số nhà, tên đường, thành phố..."
+                placeholderTextColor="#bdbdbd"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <View style={styles.configDivider} />
+
+          {/* Số hóa đơn */}
+          <View style={styles.configRow}>
+            <Text style={styles.configRowLabel}>Số hóa đơn bắt đầu</Text>
+            <View style={styles.configInputContainer}>
+              <TextInput
+                style={styles.configTextInput}
+                value={config.recordNumb?.toString()}
+                onChangeText={(val) => {
+                  const num = parseInt(val, 10);
+                  handleSave({ recordNumb: isNaN(num) ? 0 : num });
+                }}
+                placeholder="Ví dụ: 12345"
+                placeholderTextColor="#bdbdbd"
+                keyboardType="number-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+        </View>
 
         <TouchableOpacity
           style={[styles.testButton, isTesting && styles.testButtonDisabled]}
@@ -242,6 +359,44 @@ const styles = createStyles(({ colors }) => ({
   },
   testButtonText: { color: colors.neutral900, fontSize: 14, lineHeight: 22, fontWeight: "500" },
   testButtonDisabled: { opacity: 0.5 },
+  sectionHeader: { marginTop: 8, paddingHorizontal: 4 },
+  sectionTitle: { fontSize: 13, fontWeight: "600", color: colors.neutral500 },
+  configCard: {
+    borderRadius: 16,
+    borderWidth: 0.5,
+    borderColor: colors.border10,
+    backgroundColor: colors.neutral50,
+    padding: 16,
+    gap: 16,
+  },
+  configRow: {
+    minHeight: 22,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  configRowLabel: { width: 120, color: colors.neutral400, fontSize: 12, lineHeight: 18 },
+  configInputContainer: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  configTextInput: {
+    flex: 1,
+    color: colors.neutral900,
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: "500",
+    padding: 0,
+    textAlign: "right",
+  },
+  configDivider: {
+    height: 0.5,
+    backgroundColor: colors.border10,
+  },
   sheetContent: { paddingHorizontal: 16, paddingBottom: 16 },
   sheetTitle: {
     color: colors.neutral900,

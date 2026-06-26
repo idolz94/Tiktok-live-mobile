@@ -26,6 +26,7 @@ type PrinterConnectionCardProps = {
   paperSize: PrinterPaperSize;
   fontSize: PrinterFontSize;
   connectionState: PrinterConnectionState;
+  connectedDevice: { name: string; type?: string } | null;
   onChangeConnectionType: (value: PrinterConnectionType) => void;
   onChangeIpAddress: (value: string) => void;
   onChangePaperSize: (value: PrinterPaperSize) => void;
@@ -42,6 +43,7 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
   paperSize,
   fontSize,
   connectionState,
+  connectedDevice,
   onChangeConnectionType: _onChangeConnectionType,
   onChangeIpAddress,
   onChangePaperSize: _onChangePaperSize,
@@ -134,6 +136,34 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
       </TouchableOpacity>
 
       <View style={styles.divider} />
+
+      {/* Connected device name/type */}
+      {/* {isConnected && connectedDevice ? (
+        <>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>Tên máy in</Text>
+            <View style={styles.rowTextWrap}>
+              <Text style={styles.rowValue} numberOfLines={1}>
+                {connectedDevice.name}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.divider} />
+          {connectedDevice.type ? (
+            <>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Loại máy</Text>
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowValue} numberOfLines={1}>
+                    {connectedDevice.type}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.divider} />
+            </>
+          ) : null}
+        </>
+      ) : null} */}
 
       {/*  Connect / Disconnect  */}
       <View style={styles.connectRow}>

@@ -43,8 +43,14 @@ function buildFontSize(fontSize: PrinterFontSize): 1 | 2 | 3 {
 export function usePrinterSettings() {
   const { config, setConfig } = usePrinterStore();
   const [isTesting, setIsTesting] = useState(false);
+  const isTestingPrintRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [connectionState, setConnectionState] = useState<PrinterConnectionState>("idle");
+  const [connectionState, setConnectionState] =
+    useState<PrinterConnectionState>("idle");
+  const [connectedDevice, setConnectedDevice] = useState<{
+    name: string;
+    type?: string;
+  } | null>(null);
 
   // Track whether the printer was connected so we can detect unexpected disconnects
   const wasConnectedRef = useRef(false);
@@ -62,16 +68,22 @@ export function usePrinterSettings() {
         if (state === "connected") {
           wasConnectedRef.current = true;
           setConnectionState("connected");
+          setConnectedDevice((prev) => prev || {
+            name: config.connectionType === "bluetooth" ? "Máy in Bluetooth" : "Máy in LAN / WiFi",
+          });
         }
 
         if (state === "disconnected") {
           const wasConnected = wasConnectedRef.current;
           wasConnectedRef.current = false;
           setConnectionState("disconnected");
+          setConnectedDevice(null);
 
           // Only alert on unexpected disconnect (not manual disconnect)
           if (wasConnected) {
-            const msg = reason ? `Lý do: ${reason}` : "Vui lòng kiểm tra lại máy in.";
+            const msg = reason
+              ? `Lý do: ${reason}`
+              : "Vui lòng kiểm tra lại máy in.";
             Alert.alert("Máy in đã ngắt kết nối", msg);
           }
         }
@@ -81,7 +93,7 @@ export function usePrinterSettings() {
     return () => {
       ThermalPrinter.removeConnectionEventListener(subscription);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.connectionType, config.ipAddress, config.macAddress]);
 
   // ─── Reset state when address changes ──────────────────────────────────────
@@ -89,7 +101,8 @@ export function usePrinterSettings() {
   useEffect(() => {
     wasConnectedRef.current = false;
     setConnectionState("idle");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setConnectedDevice(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.connectionType, config.ipAddress, config.macAddress]);
 
   // ─── Connect ────────────────────────────────────────────────────────────────
@@ -104,6 +117,9 @@ export function usePrinterSettings() {
       return;
     }
 
+    if (isTestingPrintRef.current) return;
+    isTestingPrintRef.current = true;
+
     setConnectionState("connecting");
     const address = buildPrinterAddress(config);
 
@@ -113,17 +129,27 @@ export function usePrinterSettings() {
       if (result.success) {
         wasConnectedRef.current = true;
         setConnectionState("connected");
-        const deviceLabel = result.deviceName ?? address;
-        Alert.alert("Kết nối thành công", `Đã kết nối với ${deviceLabel}.`);
+        const fallbackName = config.connectionType === "bluetooth" ? "Máy in Bluetooth" : "Máy in LAN / WiFi";
+        const deviceName = result.deviceName || fallbackName;
+        setConnectedDevice({
+          name: deviceName,
+          type: result.deviceType,
+        });
+        Alert.alert("Kết nối thành công", `Đã kết nối với ${deviceName}.`);
       } else {
         setConnectionState("disconnected");
+        setConnectedDevice(null);
         const msg = result.error?.message ?? "Không thể kết nối máy in.";
         Alert.alert("Kết nối thất bại", msg);
       }
     } catch (e: unknown) {
       setConnectionState("disconnected");
+      setConnectedDevice(null);
       const msg = e instanceof Error ? e.message : "Không thể kết nối máy in.";
       Alert.alert("Kết nối thất bại", msg);
+    } finally {
+      isTestingPrintRef.current = false;
+      setIsTesting(false);
     }
   }, [config]);
 
@@ -135,6 +161,7 @@ export function usePrinterSettings() {
     // does not fire a "disconnected" Alert (user initiated this).
     wasConnectedRef.current = false;
     setConnectionState("idle");
+    setConnectedDevice(null);
 
     try {
       await ThermalPrinter.disconnect(address);
@@ -155,6 +182,8 @@ export function usePrinterSettings() {
       return;
     }
 
+    if (isTestingPrintRef.current) return;
+    isTestingPrintRef.current = true;
     setIsTesting(true);
     const address = buildPrinterAddress(config);
 
@@ -171,14 +200,114 @@ export function usePrinterSettings() {
         ],
         documents: [
           [
-            { type: "text", content: "--- In thử ---", style: { align: "center", bold: true, size: buildFontSize(config.fontSize) } },
+            // 1. TOP HEADER (Website & Phone number)
+            {
+              type: "columns",
+              columns: [
+                { content: "HTTPS://LUMILIVE.VN/", width: 50, align: "left" },
+                { content: config.userPhone || "+84 912 345 678", width: 50, align: "right" },
+              ],
+            },
             { type: "feed", lines: 1 },
-            { type: "text", content: "Lumi Live", style: { align: "center", size: buildFontSize(config.fontSize) } },
-            { type: "text", content: `Khổ giấy: ${config.paperSize}`, style: { align: "center" } },
-            { type: "text", content: `Kết nối: ${config.connectionType === "wifi" ? "LAN/WiFi" : "Bluetooth"}`, style: { align: "center" } },
+
+            // 2. COMPANY NAME & ADDRESS
+            {
+              type: "text",
+              content: config.companyName || "CÔNG TY ABC",
+              style: {
+                align: "center",
+                bold: true,
+                size: 2,
+              },
+            },
+            {
+              type: "text",
+              content: config.companyAddress || "123 ĐƯỜNG ABC, THÀNH PHỐ DEF",
+              style: { align: "center" },
+            },
             { type: "feed", lines: 1 },
-            { type: "text", content: "Máy in hoạt động bình thường", style: { align: "center" } },
-            { type: "feed", lines: 2 },
+            { type: "line" },
+
+            // 3. CUSTOMER & INVOICE INFO
+            {
+              type: "columns",
+              columns: [
+                {
+                  content: `${config.tiktokUsername || "ANH A"}\n${config.userPhone || "+84 912 345 678"}\n${config.userAddress || "Số 123 Đường ABC,\nThành phố DEF"}`,
+                  width: 55,
+                  align: "left",
+                },
+                {
+                  content: `Hóa đơn số ${config.recordNumb || 12345}\nNgày 19/06/2026`,
+                  width: 45,
+                  align: "right",
+                },
+              ],
+            },
+            { type: "feed", lines: 1 },
+            { type: "line" },
+
+            // 4. ITEMS TABLE
+            {
+              type: "table",
+              headers: ["Hạng mục", "Số lượng", "Đơn giá", "Thành tiền"],
+              rows: [
+                ["A1", "1", "3.000.000đ", "3.000.000đ"],
+                ["A2", "2", "3.000.000đ", "6.000.000đ"],
+                ["A6", "1", "3.000.000đ", "3.000.000đ"],
+              ],
+              columnWidths: [35, 15, 25, 25],
+              alignments: ["left", "center", "right", "right"],
+            },
+            { type: "line" },
+
+            // 5. SUMMARY
+            {
+              type: "columns",
+              columns: [
+                { content: "", width: 50 },
+                { content: "Tổng", width: 20, align: "left" },
+                { content: "12.000.000đ", width: 30, align: "right" },
+              ],
+            },
+            {
+              type: "columns",
+              columns: [
+                { content: "", width: 50 },
+                { content: "Thuế (0%)", width: 20, align: "left" },
+                { content: "0đ", width: 30, align: "right" },
+              ],
+            },
+            { type: "line" },
+            {
+              type: "columns",
+              columns: [
+                { content: "", width: 50 },
+                { content: "Tổng cộng", width: 22, align: "left", style: { bold: true } },
+                { content: "12.000.000đ", width: 28, align: "right", style: { bold: true } },
+              ],
+            },
+            { type: "line" },
+            { type: "feed", lines: 1 },
+
+            // 6. BOTTOM PAYMENT INFO & THANK YOU
+            {
+              type: "columns",
+              columns: [
+                {
+                  content: "Thông tin thanh toán\nNgân hàng ABC\nTên tài khoản: A\nSố tài khoản: 123456789\nThanh toán ngày: 19/06/2026",
+                  width: 60,
+                  align: "left",
+                },
+                {
+                  content: `\n\n${config.tiktokUsername || "ABC"}\nXIN CẢM ƠN`,
+                  width: 40,
+                  align: "right",
+                  style: { bold: true },
+                },
+              ],
+            },
+            { type: "feed", lines: 3 },
             { type: "cut" },
           ],
         ],
@@ -188,13 +317,15 @@ export function usePrinterSettings() {
       if (printerResult?.success) {
         Alert.alert("In thử thành công", "Máy in đang hoạt động bình thường.");
       } else {
-        const msg = printerResult?.error?.message ?? "Không thể kết nối máy in.";
+        const msg =
+          printerResult?.error?.message ?? "Không thể kết nối máy in.";
         Alert.alert("In thử thất bại", msg);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Không thể kết nối máy in.";
       Alert.alert("In thử thất bại", msg);
     } finally {
+      isTestingPrintRef.current = false;
       setIsTesting(false);
     }
   }, [config]);
@@ -243,6 +374,7 @@ export function usePrinterSettings() {
   return {
     config,
     connectionState,
+    connectedDevice,
     isSaving,
     isTesting,
     handleSave,
