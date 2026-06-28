@@ -1,8 +1,9 @@
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Pressable, Text, TextInput, View } from "react-native";
+import { useState } from "react";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { ShopAddress, CustomerAddress } from "../create-shipment-api";
-import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition, ServiceType, CollectType } from "../types";
+import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition, ServiceType, CollectType, SpxTimeslot } from "../types";
 import { addressLine } from "../utils";
 
 export type SectionBlockProps = {
@@ -112,6 +113,69 @@ export function OptionChip({ label, selected, onPress }: OptionChipProps) {
       </View>
       <Text style={[{ color: colors.neutral900 }, textPresets.fs14_400]}>{label}</Text>
     </Pressable>
+  );
+}
+
+type TimeslotSelectProps = {
+  timeslots: SpxTimeslot[];
+  selectedKey: string | null;
+  onSelect: (id: number, key: string) => void;
+};
+
+type FlatSlot = { key: string; id: number; label: string };
+
+function flattenTimeslots(ts: SpxTimeslot[]): FlatSlot[] {
+  return ts.flatMap((g) =>
+    g.slots.map((s) => ({
+      key: `${g.pickupTime}-${s.id}`,
+      id: s.id,
+      label: `${g.date} ${s.range}`,
+    }))
+  );
+}
+
+export function TimeslotSelect({ timeslots, selectedKey, onSelect }: TimeslotSelectProps) {
+  const { colors, textPresets } = useThemes();
+  const [open, setOpen] = useState(false);
+  const items = flattenTimeslots(timeslots);
+  const selected = items.find((i) => i.key === selectedKey);
+
+  return (
+    <>
+      <Pressable
+        onPress={() => setOpen(true)}
+        style={[shipmentStyles.selectTrigger, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}
+      >
+        <Text style={[{ color: selected ? colors.neutral900 : colors.neutral300, flex: 1 }, textPresets.fs14_400]} numberOfLines={1}>
+          {selected ? selected.label : "Chọn khung giờ lấy hàng"}
+        </Text>
+        <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>▼</Text>
+      </Pressable>
+
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={shipmentStyles.selectOverlay} onPress={() => setOpen(false)}>
+          <View style={[shipmentStyles.selectDropdown, { backgroundColor: colors.surface, borderColor: colors.border10 }]}>
+            <FlatList
+              data={items}
+              keyExtractor={(item) => item.key}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    onSelect(item.id, item.key);
+                    setOpen(false);
+                  }}
+                  style={[shipmentStyles.selectItem, item.key === selectedKey && { backgroundColor: colors.primaryLight }]}
+                >
+                  <Text style={[textPresets.fs14_400, { color: item.key === selectedKey ? colors.primary : colors.neutral900 }]}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -231,9 +295,11 @@ type SpxOptionsProps = {
   collectType: CollectType;
   setCollectType: (value: CollectType) => void;
   pickupTimeRangeId: number | null;
-  setPickupTimeRangeId: (value: number | null) => void;
-  timeslots: Array<{ id: number; range: string }>;
+  pickupTimeKey: string | null;
+  setPickupTime: (id: number, key: string) => void;
+  timeslots: SpxTimeslot[];
   timeslotsLoading: boolean;
+  timeslotsError?: string | null;
   parcelItemName: string;
   setParcelItemName: (value: string) => void;
   declaredValue: number;
@@ -247,10 +313,11 @@ export function SpxOptions({
   setServiceType,
   collectType,
   setCollectType,
-  pickupTimeRangeId,
-  setPickupTimeRangeId,
+  pickupTimeKey,
+  setPickupTime,
   timeslots,
   timeslotsLoading,
+  timeslotsError,
   parcelItemName,
   setParcelItemName,
   declaredValue,
@@ -276,317 +343,80 @@ export function SpxOptions({
 
       {collectType === 1 && (
         <>
-          <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>
-            Khung giờ lấy hàng
-          </Text>
+          <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>Khung giờ lấy hàng</Text>
           {timeslotsLoading ? (
             <View style={[shipmentStyles.feeBox, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}>
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
+          ) : timeslotsError ? (
+            <Text style={[{ color: colors.error }, textPresets.fs12_400]}>{timeslotsError}</Text>
           ) : timeslots.length > 0 ? (
-            <View style={shipmentStyles.optionGrid}>
-              {timeslots.map((slot) => (
-                <OptionChip
-                  key={slot.id}
-                  label={slot.range}
-                  selected={pickupTimeRangeId === slot.id}
-                  onPress={() => setPickupTimeRangeId(slot.id)}
-                />
-              ))}
-            </View>
+            <TimeslotSelect timeslots={timeslots} selectedKey={pickupTimeKey} onSelect={setPickupTime} />
           ) : (
-            <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>
-              Không có khung giờ nào
-            </Text>
+            <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>Không có khung giờ nào</Text>
           )}
         </>
       )}
 
-      <ShipmentInput
-        label="Tên hàng hóa"
-        value={parcelItemName}
-        onChangeText={setParcelItemName}
-        placeholder="VD: Áo thun, Giày, ..."
-        topSpacing
-      />
-
-      <ShipmentInput
-        label="Giá trị khai báo (VND)"
-        value={String(declaredValue)}
-        onChangeText={(text) => setDeclaredValue(parseInt(text.replace(/\D/g, ""), 10) || 0)}
-        placeholder="0"
-        keyboardType="numeric"
-        topSpacing
-      />
-
-      <ShipmentInput
-        label="Ghi chú"
-        value={note}
-        onChangeText={setNote}
-        placeholder="Nhập ghi chú"
-        multiline
-        topSpacing
-      />
+      <ShipmentInput label="Tên hàng hóa" value={parcelItemName} onChangeText={setParcelItemName} placeholder="VD: Áo thun, Giày, ..." topSpacing />
+      <ShipmentInput label="Giá trị khai báo (VND)" value={String(declaredValue)} onChangeText={(text) => setDeclaredValue(parseInt(text.replace(/\D/g, ""), 10) || 0)} placeholder="0" keyboardType="numeric" topSpacing />
+      <ShipmentInput label="Ghi chú" value={note} onChangeText={setNote} placeholder="Nhập ghi chú" multiline topSpacing />
     </>
   );
 }
 
 export const shipmentStyles = createStyles(() => ({
-  sectionBlock: {
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    gap: 14,
-  },
-  sectionHeader: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-  },
-  addressCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
-    gap: 12,
-    minHeight: 108,
-    justifyContent: "center" as const,
-  },
-  addAddressCard: {
-    height: 76,
-    borderWidth: 1,
-    borderStyle: "dashed" as const,
-    borderRadius: 16,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    gap: 10,
-  },
-  addCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  addressTopRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 10,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
+  sectionBlock: { paddingHorizontal: 16, paddingVertical: 18, gap: 14 },
+  sectionHeader: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const },
+  addressCard: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 12, minHeight: 108, justifyContent: "center" as const },
+  addAddressCard: { height: 76, borderWidth: 1, borderStyle: "dashed" as const, borderRadius: 16, flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "center" as const, gap: 10 },
+  addCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, alignItems: "center" as const, justifyContent: "center" as const },
+  addressTopRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: 10 },
+  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: "center" as const, justifyContent: "center" as const },
   addressInfo: { flex: 1, gap: 4 },
-  addressNameRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 8,
-  },
+  addressNameRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: 8 },
   addressName: { flexShrink: 1 },
-  changePill: {
-    height: 32,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  defaultBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
+  changePill: { height: 32, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, alignItems: "center" as const, justifyContent: "center" as const },
+  defaultBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   addressLine: { lineHeight: 22 },
-  divider: {
-    height: 8,
-  },
-  orderCard: {
-    borderRadius: 16,
-    padding: 14,
-    gap: 12,
-  },
-  orderMetaRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    gap: 12,
-  },
+  divider: { height: 8 },
+  orderCard: { borderRadius: 16, padding: 14, gap: 12 },
+  orderMetaRow: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const, gap: 12 },
   productTitle: { flex: 1 },
-  detailGrid: {
-    flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
-    gap: 8,
-  },
-  detailCell: {
-    width: "48%" as const,
-    borderRadius: 12,
-    padding: 12,
-    gap: 4,
-  },
-  quantityRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-  },
-  stepper: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    borderRadius: 18,
-    overflow: "hidden" as const,
-  },
-  stepperBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  stepperValue: {
-    minWidth: 42,
-    textAlign: "center" as const,
-  },
+  detailGrid: { flexDirection: "row" as const, flexWrap: "wrap" as const, gap: 8 },
+  detailCell: { width: "48%" as const, borderRadius: 12, padding: 12, gap: 4 },
+  quantityRow: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const },
+  stepper: { flexDirection: "row" as const, alignItems: "center" as const, borderRadius: 18, overflow: "hidden" as const },
+  stepperBtn: { width: 36, height: 36, alignItems: "center" as const, justifyContent: "center" as const },
+  stepperValue: { minWidth: 42, textAlign: "center" as const },
   moneyFieldWrap: { gap: 8 },
-  moneyField: {
-    height: 52,
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 10,
-  },
+  moneyField: { height: 52, borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row" as const, alignItems: "center" as const, gap: 10 },
   moneyInput: { flex: 1, padding: 0 },
-  optionGrid: {
-    gap: 10,
-  },
-  optionChip: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 10,
-  },
-  optionDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  optionDotInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  noteInput: {
-    minHeight: 96,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    textAlignVertical: "top" as const,
-  },
+  optionGrid: { gap: 10 },
+  optionChip: { minHeight: 48, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row" as const, alignItems: "center" as const, gap: 10 },
+  optionDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, alignItems: "center" as const, justifyContent: "center" as const },
+  optionDotInner: { width: 8, height: 8, borderRadius: 4 },
+  selectTrigger: { height: 48, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row" as const, alignItems: "center" as const, gap: 10, marginTop: 8 },
+  selectOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" as const },
+  selectDropdown: { borderTopLeftRadius: 16, borderTopRightRadius: 16, borderWidth: 1, borderBottomWidth: 0, maxHeight: 400 },
+  selectItem: { paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
+  noteInput: { minHeight: 96, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, textAlignVertical: "top" as const },
   formGroup: { gap: 6 },
   fieldLabel: { fontSize: 12, lineHeight: 18 },
-  textInput: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-  },
-  feeBox: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 44,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  feeBoxRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    width: "100%" as const,
-  },
-  summaryRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-  },
-  sheetOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
-  sheetContainer: {
-    position: "absolute" as const,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  sheetPanel: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-    paddingTop: 12,
-    maxHeight: 520,
-    gap: 16,
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E5E5E5",
-    alignSelf: "center" as const,
-    marginBottom: 4,
-  },
+  textInput: { height: 48, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14 },
+  feeBox: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 44, alignItems: "center" as const, justifyContent: "center" as const },
+  feeBoxRow: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const, width: "100%" as const },
+  summaryRow: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const },
+  sheetOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
+  sheetContainer: { position: "absolute" as const, bottom: 0, left: 0, right: 0 },
+  sheetPanel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingBottom: 32, paddingTop: 12, maxHeight: 520, gap: 16 },
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: "#E5E5E5", alignSelf: "center" as const, marginBottom: 4 },
   sheetTitle: { textAlign: "center" as const, marginBottom: 4 },
-  sheetFooter: {
-    flexDirection: "row" as const,
-    gap: 12,
-    paddingTop: 8,
-  },
-  sheetCancelBtn: {
-    flex: 1,
-    height: 52,
-    borderWidth: 1,
-    borderRadius: 16,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  sheetSaveBtn: {
-    flex: 2,
-    height: 52,
-    borderRadius: 16,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  dimRow: {
-    flexDirection: "row" as const,
-    gap: 10,
-  },
+  sheetFooter: { flexDirection: "row" as const, gap: 12, paddingTop: 8 },
+  sheetCancelBtn: { flex: 1, height: 52, borderWidth: 1, borderRadius: 16, alignItems: "center" as const, justifyContent: "center" as const },
+  sheetSaveBtn: { flex: 2, height: 52, borderRadius: 16, alignItems: "center" as const, justifyContent: "center" as const },
+  dimRow: { flexDirection: "row" as const, gap: 10 },
   dimField: { flex: 1, gap: 6 },
-  dimAutoScaleRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 10,
-    marginTop: 12,
-    paddingVertical: 8,
-  },
-  dimCheckbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 1.5,
-    borderRadius: 4,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
+  dimAutoScaleRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: 10, marginTop: 12, paddingVertical: 8 },
+  dimCheckbox: { width: 20, height: 20, borderWidth: 1.5, borderRadius: 4, alignItems: "center" as const, justifyContent: "center" as const },
 }));

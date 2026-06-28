@@ -11,16 +11,15 @@ import {
   ShopAddressPayload,
   updateShopAddressApi,
 } from "@features/settings/service/shop-addresses-api";
-import type { Transport, PickupOption, PaymentSide, ServiceType, CollectType, SpxTimeslot } from "./types";
+import type { PaymentSide, ServiceType, CollectType, SpxTimeslot } from "./types";
 
 export {
   createShopAddressApi,
   listShopAddressesApi,
   updateShopAddressApi,
+  ShopAddress,
 };
-export type { ShopAddress };
-
-export type AddressPayload = ShopAddressPayload;
+export type { ShopAddressPayload as AddressPayload };
 
 export type CustomerAddress = {
   id: string;
@@ -37,48 +36,9 @@ export type CustomerAddress = {
   updatedAt: string;
 };
 
+type AddressPayload = ShopAddressPayload;
+
 type AddressResponse<T> = { address: T };
-
-type ShippingFeePayload = {
-  pickProvince: string;
-  pickDistrict: string;
-  pickWard?: string;
-  pickAddress?: string;
-  receiverProvince: string;
-  receiverDistrict: string;
-  receiverWard?: string;
-  receiverAddress?: string;
-  weight?: number;
-  transport?: Transport;
-};
-
-export type SubmitShippingPayload = {
-  pickName: string;
-  pickAddress: string;
-  pickProvince: string;
-  pickDistrict: string;
-  pickWard?: string;
-  pickTel: string;
-  receiverName: string;
-  receiverAddress: string;
-  receiverProvince: string;
-  receiverDistrict: string;
-  receiverWard: string;
-  receiverTel: string;
-  note?: string;
-  isFreeShip?: 0 | 1;
-  transport?: Transport;
-  pickOption?: PickupOption;
-};
-
-type ShippingFeeResult = {
-  providerCode: "ghtk" | "manual" | "spx";
-  fee: number;
-  insuranceFee?: number;
-  delivery?: boolean;
-  extFees?: Array<{ title: string; amount: number; type: string }>;
-  raw?: unknown;
-};
 
 type ManualShippingPayload = {
   paymentSide: PaymentSide;
@@ -142,20 +102,6 @@ export async function deleteCustomerAddressApi(
 
 export async function patchOrderApi(orderId: string, payload: PatchOrderPayload) {
   return patchRequest<{ order: unknown }>(`/orders/${orderId}`, payload);
-}
-
-export async function getShippingFeeApi(
-  orderId: string,
-  payload: ShippingFeePayload,
-) {
-  return postRequest<{ fee: ShippingFeeResult }>(`/orders/${orderId}/shipping/fee`, payload);
-}
-
-export async function submitOrderToGhtkApi(
-  orderId: string,
-  payload: SubmitShippingPayload,
-) {
-  return postRequest<{ shipping: unknown }>(`/orders/${orderId}/shipping`, payload);
 }
 
 export async function submitManualShippingApi(

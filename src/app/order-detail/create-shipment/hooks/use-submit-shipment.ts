@@ -5,9 +5,7 @@ import { router } from "expo-router";
 import {
   CustomerAddress,
   ShopAddress,
-  SubmitShippingPayload,
   submitManualShippingApi,
-  submitOrderToGhtkApi,
   submitSpxApi,
 } from "../create-shipment-api";
 import { PaymentSide, PickupOption, Transport, ServiceType, CollectType } from "../types";
@@ -120,26 +118,9 @@ export function useSubmitShipment(deps: Deps) {
         });
         setSubmitState("success");
       } else {
-        const payload: SubmitShippingPayload = {
-          pickName: selectedSender.name ?? "",
-          pickAddress: selectedSender.address ?? "",
-          pickProvince: selectedSender.province ?? "",
-          pickDistrict: selectedSender.district ?? "",
-          pickWard: selectedSender.ward ?? undefined,
-          pickTel: selectedSender.phone ?? "",
-          receiverName: selectedRecipient.name ?? "",
-          receiverAddress: selectedRecipient.address ?? "",
-          receiverProvince: selectedRecipient.province ?? "",
-          receiverDistrict: selectedRecipient.district ?? "",
-          receiverWard: selectedRecipient.ward ?? "",
-          receiverTel: selectedRecipient.phone ?? "",
-          note,
-          isFreeShip: paymentSide,
-          transport,
-          pickOption: pickupOption,
-        };
-        await submitOrderToGhtkApi(order.id, payload);
-        setSubmitState("success");
+        Alert.alert("Thiếu thông tin", "Vui lòng chọn phương thức vận chuyển.");
+        setSubmitState("idle");
+        return;
       }
 
       Alert.alert("Tạo vận đơn thành công", "Đơn hàng đã được gửi sang đơn vị vận chuyển.", [

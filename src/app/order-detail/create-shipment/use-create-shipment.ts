@@ -5,9 +5,9 @@ import { useLocalSearchParams } from "expo-router";
 import { Transport, PaymentSide, ViewCondition, PickupOption, DeliveryPolicy, RefusalFee, ServiceType, CollectType } from "./types";
 import { useShipmentAddresses } from "./hooks/use-shipment-addresses";
 import { useAddressForm } from "./hooks/use-address-form";
-import { useShippingFee } from "./hooks/use-shipping-fee";
 import { useSubmitShipment } from "./hooks/use-submit-shipment";
 import { getSpxTimeslotsApi } from "./create-shipment-api";
+import type { SpxTimeslot } from "./types";
 import { formatLocaleInput, parseLocaleNumber } from "./utils";
 
 const generateUuid = () => {
@@ -53,26 +53,36 @@ export function useCreateShipment() {
   const [serviceType, setServiceType] = useState<ServiceType>(1);
   const [collectType, setCollectType] = useState<CollectType>(1);
   const [pickupTimeRangeId, setPickupTimeRangeId] = useState<number | null>(null);
+  const [pickupTimeKey, setPickupTimeKey] = useState<string | null>(null);
+  const setPickupTime = (id: number, key: string) => {
+    setPickupTimeRangeId(id);
+    setPickupTimeKey(key);
+  };
   const [parcelItemName, setParcelItemName] = useState("");
   const [declaredValue, setDeclaredValue] = useState(0);
-  const [timeslots, setTimeslots] = useState<Array<{ id: number; range: string }>>([]);
+  const [timeslots, setTimeslots] = useState<SpxTimeslot[]>([]);
   const [timeslotsLoading, setTimeslotsLoading] = useState(false);
+  const [timeslotsError, setTimeslotsError] = useState<string | null>(null);
   const [idempotencyKey] = useState(() => generateUuid());
 
   useEffect(() => {
     if (!isSpxProvider || collectType !== 1) {
       setTimeslots([]);
+      setTimeslotsError(null);
       return;
     }
     let cancelled = false;
     setTimeslotsLoading(true);
+    setTimeslotsError(null);
     getSpxTimeslotsApi(serviceType).then((res) => {
       if (cancelled) return;
-      setTimeslots((res.timeslots ?? []).flatMap((g) => g.slots));
+      setTimeslots(res.timeslots ?? []);
       setTimeslotsLoading(false);
-    }).catch(() => {
+    }).catch((err: unknown) => {
       if (cancelled) return;
+      console.error("[SPX timeslots]", err);
       setTimeslots([]);
+      setTimeslotsError("Không tải được khung giờ. Thử lại.");
       setTimeslotsLoading(false);
     });
     return () => { cancelled = true; };
@@ -92,12 +102,8 @@ export function useCreateShipment() {
     reloadCustomerAddresses,
   });
 
-  const { estimatedFee, feeLoading, feeError } = useShippingFee(
-    order, isManualProvider, selectedSender, selectedRecipient, weightInput, transport, isSpxProvider ? serviceType : undefined,
-  );
-
   const manualFee = useMemo(() => parseLocaleNumber(manualShippingFee), [manualShippingFee]);
-  const shippingFee = isManualProvider ? manualFee : estimatedFee ?? parseLocaleNumber(String(params.shippingFee ?? ""));
+  const shippingFee = isManualProvider ? manualFee : parseLocaleNumber(String(params.shippingFee ?? ""));
   const codAmount = isManualProvider ? parseLocaleNumber(manualCodAmount) : order?.codAmount ?? orderTotal;
   const codAmountDisplay = useMemo(() => isManualProvider ? manualCodAmount : formatLocaleInput(String(codAmount)), [codAmount, isManualProvider, manualCodAmount]);
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
@@ -158,9 +164,6 @@ export function useCreateShipment() {
     setDimHeight,
     autoScale,
     setAutoScale,
-    estimatedFee,
-    feeLoading,
-    feeError,
     shippingFee,
     codAmountDisplay,
     goodsValueDisplay,
@@ -183,13 +186,15 @@ export function useCreateShipment() {
     collectType,
     setCollectType,
     pickupTimeRangeId,
-    setPickupTimeRangeId,
+    pickupTimeKey,
+    setPickupTime,
     parcelItemName,
     setParcelItemName,
     declaredValue,
     setDeclaredValue,
     timeslots,
     timeslotsLoading,
+    timeslotsError,
     idempotencyKey,
   };
 }

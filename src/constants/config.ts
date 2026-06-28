@@ -10,6 +10,7 @@ export const API_URL_ENDPOINT =
 export const API_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "";
 
 export const MOBILE_APP_KEY = process.env.EXPO_PUBLIC_MOBILE_APP_KEY || "";
+export const MOBILE_APP_SECRET = process.env.EXPO_PUBLIC_MOBILE_APP_SECRET || "";
 
 export const WEB_URL_ORIGIN = process.env.EXPO_PUBLIC_WEB_URL_ORIGIN || "";
 export const WEB_URL_REFERER = process.env.EXPO_PUBLIC_WEB_URL_REFERER || "";

@@ -32,8 +32,6 @@ export default function CreateShipmentScreen() {
     setAddrFormTarget,
     editingAddr,
     setEditingAddr,
-    transport,
-    setTransport,
     paymentSide,
     setPaymentSide,
     viewCondition,
@@ -54,9 +52,6 @@ export default function CreateShipmentScreen() {
     setDimHeight,
     autoScale,
     setAutoScale,
-    estimatedFee,
-    feeLoading,
-    feeError,
     shippingFee,
     codAmountDisplay,
     goodsValueDisplay,
@@ -82,13 +77,15 @@ export default function CreateShipmentScreen() {
     collectType,
     setCollectType,
     pickupTimeRangeId,
-    setPickupTimeRangeId,
+    pickupTimeKey,
+    setPickupTime,
     parcelItemName,
     setParcelItemName,
     declaredValue,
     setDeclaredValue,
     timeslots,
     timeslotsLoading,
+    timeslotsError,
   } = useCreateShipment();
 
   const openAddressForm = (target: "sender" | "recipient", addr?: typeof editingAddr) => {
@@ -267,9 +264,11 @@ export default function CreateShipmentScreen() {
               collectType={collectType}
               setCollectType={setCollectType}
               pickupTimeRangeId={pickupTimeRangeId}
-              setPickupTimeRangeId={setPickupTimeRangeId}
+              pickupTimeKey={pickupTimeKey}
+              setPickupTime={setPickupTime}
               timeslots={timeslots}
               timeslotsLoading={timeslotsLoading}
+              timeslotsError={timeslotsError}
               parcelItemName={parcelItemName}
               setParcelItemName={setParcelItemName}
               declaredValue={declaredValue}
@@ -279,19 +278,6 @@ export default function CreateShipmentScreen() {
             />
           ) : (
             <>
-              <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>Phương thức dịch vụ</Text>
-              <View style={shipmentStyles.optionGrid}>
-                <OptionChip label="GHTK hàng không" selected={transport === "fly"} onPress={() => setTransport("fly")} />
-                <OptionChip label="GHTK đường bộ" selected={transport === "road"} onPress={() => setTransport("road")} />
-              </View>
-              <View style={[shipmentStyles.feeBox, { backgroundColor: colors.neutral50, borderColor: colors.border10, marginTop: 8 }]}>
-                {feeLoading ? <ActivityIndicator size="small" color={colors.primary} /> : feeError ? <Text style={[textPresets.fs12_400, { color: colors.error }]}>{feeError}</Text> : estimatedFee !== null ? (
-                  <View style={shipmentStyles.feeBoxRow}>
-                    <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>Phí vận chuyển ước tính</Text>
-                    <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{estimatedFee.toLocaleString("vi-VN")}đ</Text>
-                  </View>
-                ) : <Text style={[textPresets.fs12_400, { color: colors.neutral400 }]}>Chọn địa chỉ gửi và nhận để tính phí</Text>}
-              </View>
               <ShippingOptions viewCondition={viewCondition} setViewCondition={setViewCondition} deliveryPolicy={deliveryPolicy} setDeliveryPolicy={setDeliveryPolicy} refusalFee={refusalFee} setRefusalFee={setRefusalFee} pickupOption={pickupOption} setPickupOption={setPickupOption} />
               <ShipmentInput label="Ghi chú" value={note} onChangeText={setNote} placeholder="Nhập ghi chú" multiline topSpacing />
             </>
@@ -316,7 +302,7 @@ export default function CreateShipmentScreen() {
           <SummaryRow label="Tiền hàng" value={`${orderTotal.toLocaleString("vi-VN")}đ`} />
           <View style={screenStyles.summaryRow}>
             <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>Phí vận chuyển</Text>
-            {feeLoading && !isManualProvider && !isSpxProvider ? <ActivityIndicator size="small" color={colors.primary} /> : <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>}
+            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>
           </View>
           <View style={[screenStyles.summaryRow, screenStyles.summaryRowTotal]}>
             <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>Shipper thu</Text>

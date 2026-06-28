@@ -27,7 +27,7 @@ export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useOrderDetail(id ?? "");
   const { show, hide } = useBottomSheet();
-  const [selectedProvider, setSelectedProvider] = useState<ShippingProvider>("manual");
+  const [selectedProvider, setSelectedProvider] = useState<ShippingProvider>("spx");
   const [shippingFeeDisplay, setShippingFeeDisplay] = useState("");
   const [prepaidDisplay, setPrepaidDisplay] = useState("");
 

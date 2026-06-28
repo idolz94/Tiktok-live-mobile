@@ -2,7 +2,7 @@ import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Pressable, Text, View } from "react-native";
 
-export type ShippingProvider = "manual" | "ghtk" | "spx";
+export type ShippingProvider = "manual" | "spx";
 
 type Props = {
   selected: ShippingProvider;
@@ -28,7 +28,6 @@ type DisabledProviderConfig = {
 
 const CONNECTED: ProviderConfig[] = [
   { id: "manual", label: "Vận chuyển thủ công", initial: "M", color: "#2ca87b", connected: true },
-  { id: "ghtk", label: "Giao Hàng Tiết Kiệm", initial: "G", color: "#EE0033", connected: true },
   { id: "spx", label: "Shopee Express", initial: "S", color: "#ffb000", connected: true },
 ];
 
