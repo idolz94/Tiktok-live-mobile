@@ -3,7 +3,8 @@ import { Avatar } from "@components/avatar";
 import { useShippingTab, type ShippingOrder } from "@features/orders/hooks/use-shipping-tab";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Linking, Pressable, RefreshControl, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
   not_shipped: "Chưa giao",
@@ -57,6 +58,14 @@ function providerName(value?: string | null) {
   return value || "Đơn vị vận chuyển";
 }
 
+function getTrackingUrl(item: ShippingOrder) {
+  const trackingLink = item.trackingLink?.trim();
+  if (trackingLink) return trackingLink;
+
+  const trackingCode = item.trackingCode?.trim();
+  return trackingCode ? `https://test.spx.co.th/track?${encodeURIComponent(trackingCode)}` : null;
+}
+
 function SummaryCard({ value, label, tone }: { value: number; label: string; tone: "success" | "info" | "error" }) {
   const { colors, textPresets } = useThemes();
   const toneColor = tone === "success" ? colors.success : tone === "info" ? colors.info : colors.error;
@@ -89,6 +98,7 @@ function InfoRow({ label, value, last = false }: { label: string; value: string;
 function TrackingInfo({ item }: { item: ShippingOrder }) {
   const { colors, textPresets } = useThemes();
   const color = statusColor(item.shippingStatus, colors);
+  const trackingUrl = getTrackingUrl(item);
   return (
     <View style={[styles.trackingBox, { borderColor: colors.border10 }]}>
       <View style={styles.trackingCodeRow}>
@@ -104,10 +114,19 @@ function TrackingInfo({ item }: { item: ShippingOrder }) {
             <Text style={[styles.carrierName, { color: colors.text, ...textPresets.fs14_500 }]}>{providerName(item.providerName)}</Text>
             <Text style={[styles.carrierStatus, { color, ...textPresets.fs12_400 }]}>{STATUS_LABEL[item.shippingStatus]}</Text>
           </View>
-          <View style={styles.followButton}>
+          <Pressable
+            style={styles.followButton}
+            onPress={() => {
+              if (!trackingUrl) {
+                Alert.alert("Chưa có link theo dõi", `Mã SPX: ${item.trackingCode}`);
+                return;
+              }
+              void Linking.openURL(trackingUrl);
+            }}
+          >
             <Text style={[styles.followText, { color: colors.text, ...textPresets.fs12_500 }]}>Theo dõi</Text>
             <Text style={[styles.followText, { color: colors.text }]}>›</Text>
-          </View>
+          </Pressable>
         </View>
         <View style={styles.trackingMetaRow}>
           <Text style={[styles.muted12, { color: colors.neutral400, ...textPresets.fs12_400 }]}>{formatDate(item.updatedAt || item.createdAt)}</Text>
@@ -141,6 +160,7 @@ function OrderCard({ item }: { item: ShippingOrder }) {
 export default function ShippingTab() {
   const { orders, loading, refreshing, error, refresh, summary } = useShippingTab();
   const { colors, textPresets } = useThemes();
+  const insets = useSafeAreaInsets();
 
   if (loading) {
     return (
@@ -158,7 +178,7 @@ export default function ShippingTab() {
       contentContainerStyle={styles.container}
       ListHeaderComponent={
         <View>
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
             <Text style={[styles.title, { color: colors.text, ...textPresets.fs24_800 }]}>Quản lý vận đơn</Text>
             <View style={[styles.searchButton, { backgroundColor: colors.white }]}>
               <Text style={[styles.searchIcon, { color: colors.text }]}>⌕</Text>

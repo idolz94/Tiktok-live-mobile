@@ -2394,6 +2394,11 @@ expo-symbols@^56.0.6:
     "@expo-google-fonts/material-symbols" "^0.4.1"
     sf-symbols-typescript "^2.0.0"
 
+expo-web-browser@~56.0.5:
+  version "56.0.5"
+  resolved "https://registry.yarnpkg.com/expo-web-browser/-/expo-web-browser-56.0.5.tgz#1869c2ffcd75d1be3b57706f366f631d45a9c0e7"
+  integrity sha512-kaN+wcR5lHwPCH1IgrU1XyPUQvBRzdF1TMp65uAF9iUCyipqYnmrvV87eqAmrdkFFopWVgU7FcxPu1UZw+gvUQ==
+
 expo@~56.0.11:
   version "56.0.11"
   resolved "https://registry.npmjs.org/expo/-/expo-56.0.11.tgz"

@@ -179,10 +179,12 @@ export type Order = {
   paymentStatus?: PaymentStatus;
   shippingStatus?: ShippingStatus;
   trackingCode?: string | null;
+  trackingLink?: string | null;
   providerName?: string | null;
   subtotalAmount?: number;
   shippingFee?: number;
   discountAmount?: number;
+  depositAmount?: number;
   totalAmount?: number;
   codAmount?: number;
   note?: string;

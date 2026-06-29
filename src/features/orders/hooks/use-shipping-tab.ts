@@ -23,9 +23,13 @@ export function useShippingTab() {
     try {
       const all = await getShippingOrdersApi();
       // ponytail: only show orders that have an active shipment
-      const withShipment = all.filter(
-        (o) => o.trackingCode && o.shippingStatus !== "not_shipped",
-      ) as ShippingOrder[];
+      const withShipment = all
+        .filter((o) => o.trackingCode && o.shippingStatus !== "not_shipped")
+        .sort((a, b) => {
+          const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
+          const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+          return bTime - aTime;
+        }) as ShippingOrder[];
       setOrders(withShipment);
     } catch (e: any) {
       setError(e?.message ?? "Lỗi tải dữ liệu");

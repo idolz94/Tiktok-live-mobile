@@ -153,6 +153,7 @@ type SubmitSpxPayload = {
   note?: string;
   idempotencyKey: string;
   voucherCode?: string;
+  customerAddressId?: string;
 };
 
 export async function submitSpxApi(

@@ -189,11 +189,12 @@ export function useCreateShipment() {
 
   const manualFee = useMemo(() => parseLocaleNumber(manualShippingFee), [manualShippingFee]);
   const shippingFee = isManualProvider ? manualFee : isSpxProvider ? (estimatedFee ?? 0) : parseLocaleNumber(String(params.shippingFee ?? ""));
-  const codAmount = isManualProvider ? parseLocaleNumber(manualCodAmount) : order?.codAmount ?? orderTotal;
+  const orderCodAmount = Math.max(0, Number(order?.totalAmount ?? orderTotal) - Number(order?.depositAmount ?? 0));
+  const codAmount = isManualProvider ? parseLocaleNumber(manualCodAmount) : orderCodAmount;
   const codAmountDisplay = useMemo(() => isManualProvider ? manualCodAmount : formatLocaleInput(String(codAmount)), [codAmount, isManualProvider, manualCodAmount]);
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
   const totalCollected = isSpxProvider
-    ? orderTotal + shippingFee
+    ? codAmount + shippingFee
     : paymentSide === 0 ? codAmount + shippingFee : codAmount;
 
   const { isSubmitting, submitState, handleSubmitShipment, handleRetryOutcomeUnknown } = useSubmitShipment({
@@ -214,6 +215,7 @@ export function useCreateShipment() {
     dimHeight: isSpxProvider ? (parseInt(dimHeight.replace(/\D/g, ""), 10) || undefined) : undefined,
     idempotencyKey,
     voucherCode: selectedVoucherCode ?? undefined,
+    customerAddressId: selectedRecipient?.id,
   });
 
   return {

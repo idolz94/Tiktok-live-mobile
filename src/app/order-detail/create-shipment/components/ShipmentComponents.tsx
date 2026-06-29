@@ -456,7 +456,7 @@ export const shipmentStyles = createStyles(() => ({
   optionDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, alignItems: "center" as const, justifyContent: "center" as const },
   optionDotInner: { width: 8, height: 8, borderRadius: 4 },
   selectTrigger: { height: 48, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row" as const, alignItems: "center" as const, gap: 10, marginTop: 8 },
-  selectOverlay: { position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" as const },
+  selectOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" as const },
   selectDropdown: { borderTopLeftRadius: 16, borderTopRightRadius: 16, borderWidth: 1, borderBottomWidth: 0, maxHeight: 400 },
   selectCloseRow: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
   selectItem: { paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },

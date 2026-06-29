@@ -142,7 +142,15 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
   const subtotalAmount = Number(
     order?.subtotalAmount ?? order?.subtotal_amount ?? getOrderTotal(products),
   );
-  const totalAmount = subtotalAmount;
+  const shippingFee = Number(order?.shippingFee ?? order?.shipping_fee ?? 0);
+  const discountAmount = Number(order?.discountAmount ?? order?.discount_amount ?? 0);
+  const depositAmount = Number(order?.depositAmount ?? order?.deposit_amount ?? 0);
+  const totalAmount = Number(
+    order?.totalAmount ?? order?.total_amount ?? Math.max(0, subtotalAmount + shippingFee - discountAmount),
+  );
+  const codAmount = Number(
+    order?.codAmount ?? order?.cod_amount ?? Math.max(0, totalAmount - depositAmount),
+  );
 
   return {
     id: String(order?.id || createId()),
@@ -212,6 +220,12 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
       order?.shipment?.spxTrackingNo ||
       order?.shipment?.spx_tracking_no ||
       null,
+    trackingLink:
+      order?.trackingLink ||
+      order?.tracking_link ||
+      order?.shipment?.trackingLink ||
+      order?.shipment?.tracking_link ||
+      null,
     providerName:
       order?.providerName ||
       order?.provider_name ||
@@ -219,12 +233,11 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
       order?.shipment?.provider_code ||
       null,
     subtotalAmount,
-    shippingFee: Number(order?.shippingFee || order?.shipping_fee || 0),
-    discountAmount: Number(
-      order?.discountAmount || order?.discount_amount || 0,
-    ),
+    shippingFee,
+    discountAmount,
+    depositAmount,
     totalAmount,
-    codAmount: Number(order?.codAmount ?? order?.cod_amount ?? 0),
+    codAmount,
     note: String(order?.note || ""),
     createdAt,
     updatedAt: String(order?.updatedAt || order?.updated_at || ""),

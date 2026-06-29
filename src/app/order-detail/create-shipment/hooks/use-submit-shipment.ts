@@ -39,6 +39,7 @@ type Deps = {
   dimHeight?: number;
   idempotencyKey: string;
   voucherCode?: string;
+  customerAddressId?: string;
 };
 
 type SubmitState = "idle" | "submitting" | "success" | "outcome_unknown" | "error";
@@ -73,6 +74,7 @@ export function useSubmitShipment(deps: Deps) {
       dimHeight,
       idempotencyKey,
       voucherCode,
+      customerAddressId,
     } = deps;
 
     if (!order || !selectedSender || !selectedRecipient) {
@@ -119,6 +121,7 @@ export function useSubmitShipment(deps: Deps) {
           note,
           idempotencyKey,
           voucherCode,
+          customerAddressId,
         });
         setSubmitState("success");
       } else {
