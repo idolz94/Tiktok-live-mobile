@@ -58,8 +58,8 @@ function normalizeOrderResponse(data: any) {
   return normalizeApiOrderForUi(rawOrder);
 }
 
-export async function getOrdersApi(): Promise<OrderWithTikTok[]> {
-  const data = await getRequest<any>("/orders?status=draft");
+export async function getOrdersApi(status: string | null = "draft"): Promise<OrderWithTikTok[]> {
+  const data = await getRequest<any>(status ? `/orders?status=${status}` : "/orders");
   const rows = pickArrayResponse(data, ["orders", "items", "data"]);
 
   return rows.map((order: any) => normalizeApiOrderForUi(order));
@@ -76,7 +76,7 @@ export async function getShippingOrdersApi(): Promise<OrderWithTikTok[]> {
 export async function getOrderByIdApi(
   orderId: string,
 ): Promise<OrderWithTikTok | null> {
-  const orders = await getOrdersApi();
+  const orders = await getOrdersApi(null);
 
   return orders.find((o) => o.id === orderId) ?? null;
 }

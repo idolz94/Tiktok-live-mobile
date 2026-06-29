@@ -1,5 +1,6 @@
 import "@declare";
 import { BottomSheetProvider } from "@components/bottom-sheet/provider";
+import { ToastProvider } from "@components/toast";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { sessionExpiredEmitter } from "@utils/http/session-event";
 import { Stack } from "expo-router";
@@ -73,33 +74,35 @@ function RootContent() {
     <>
       <SafeAreaProvider>
         <KeyboardProvider>
-          <BottomSheetProvider>
-            <StatusBar style="dark" />
-            <View style={{ flex: 1 }}>
-              {showStack && (
-                <View style={{ flex: 1 }} onLayout={handleRootLayout}>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="(auth)" />
-                    <Stack.Screen name="onboarding" />
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen name="printer-settings" />
-                    <Stack.Screen name="shipping-settings" />
-                    <Stack.Screen name="(sheets)" />
-                    <Stack.Screen name="manage-tiktok-channel" />
-                    <Stack.Screen name="order-detail" />
-                    <Stack.Screen name="customer-detail" />
-                    <Stack.Screen name="license-expired" />
-                  </Stack>
-                </View>
-              )}
-              {showSplashOverlay && (
-                <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                  <Splash />
-                </View>
-              )}
-            </View>
-          </BottomSheetProvider>
+          <ToastProvider>
+            <BottomSheetProvider>
+              <StatusBar style="dark" />
+              <View style={{ flex: 1 }}>
+                {showStack && (
+                  <View style={{ flex: 1 }} onLayout={handleRootLayout}>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="index" />
+                      <Stack.Screen name="(auth)" />
+                      <Stack.Screen name="onboarding" />
+                      <Stack.Screen name="(tabs)" />
+                      <Stack.Screen name="printer-settings" />
+                      <Stack.Screen name="shipping-settings" />
+                      <Stack.Screen name="(sheets)" />
+                      <Stack.Screen name="manage-tiktok-channel" />
+                      <Stack.Screen name="order-detail" />
+                      <Stack.Screen name="customer-detail" />
+                      <Stack.Screen name="license-expired" />
+                    </Stack>
+                  </View>
+                )}
+                {showSplashOverlay && (
+                  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                    <Splash />
+                  </View>
+                )}
+              </View>
+            </BottomSheetProvider>
+          </ToastProvider>
         </KeyboardProvider>
       </SafeAreaProvider>
     </>

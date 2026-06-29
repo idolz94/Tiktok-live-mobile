@@ -2,9 +2,10 @@ import type { Order, OrderProduct } from "@app-types/index";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { updateCustomerApi } from "@features/customers/service/api";
 import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
+import { cancelShipmentApi, refreshShippingStatusApi } from "../order-detail/create-shipment/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export type DetailTab = "info" | "orders";
 
@@ -61,9 +62,10 @@ export function useCustomerDetail() {
   const [referenceInfo, setReferenceInfo] = useState("");
   const [address, setAddress] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const { user } = useAuth();
-  const orderManager = useOrderManager({ comments: [], hasOrders: user?.hasOrders ?? false });
+  const orderManager = useOrderManager({ comments: [], hasOrders: user?.hasOrders ?? false, allStatuses: true });
 
   const customer = useMemo(
     () => orderManager.customers.find((item) => getCustomerKey(item) === customerKey),
@@ -113,6 +115,21 @@ export function useCustomerDetail() {
     }
   };
 
+  const handleCancelShipment = useCallback(
+    async (order: Order) => {
+      if (!order.trackingCode || cancellingId) return;
+      setCancellingId(order.id);
+      try {
+        await cancelShipmentApi(order.id, { trackingId: order.trackingCode });
+        await refreshShippingStatusApi(order.id);
+        await orderManager.reloadOrders();
+      } finally {
+        setCancellingId(null);
+      }
+    },
+    [cancellingId, orderManager],
+  );
+
   return {
     activeTab, setActiveTab,
     customerType, setCustomerType,
@@ -125,5 +142,7 @@ export function useCustomerDetail() {
     productCount, confirmedCount, depositedCount, unpaidCount, draftCount,
     loading, notFound,
     handleSave,
+    handleCancelShipment,
+    cancellingId,
   };
 }

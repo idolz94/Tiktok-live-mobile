@@ -9,9 +9,10 @@ import { useOrderDetail } from "@features/orders/hooks/use-order-detail";
 import { formatMoney } from "@features/orders/utils/order";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { createStyles } from "@utils/createStyles";
+import { cancelShipmentApi, refreshShippingStatusApi } from "../../../app/order-detail/create-shipment/create-shipment-api";
 import { router, useLocalSearchParams } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Linking, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, ScrollView, Text, View } from "react-native";
 import { OrderDetailCustomerSection } from "../../../app/order-detail/components/OrderDetailCustomerSection";
 import { OrderDetailFooterActions } from "../../../app/order-detail/components/OrderDetailFooterActions";
 import {
@@ -67,6 +68,31 @@ export const OrderDetail = memo(() => {
       },
     });
   }, [detail.order, detail.shippingFee, selectedProvider, shippingFeeDisplay]);
+
+  const handleCancelShipment = useCallback(() => {
+    const order = detail.order;
+    if (!order?.trackingCode) return;
+
+    Alert.alert("Huỷ vận đơn", `Huỷ vận đơn ${order.trackingCode}?`, [
+      { text: "Không" },
+      {
+        text: "Huỷ vận đơn",
+        style: "destructive",
+        onPress: () => {
+          void cancelShipmentApi(order.id, { trackingId: order.trackingCode })
+            .then(() => refreshShippingStatusApi(order.id))
+            .then(() => detail.fetchOrder())
+            .then(() => Alert.alert("Thành công", "Đã huỷ vận đơn."))
+            .catch((err) => {
+              Alert.alert(
+                "Không huỷ được vận đơn",
+                err instanceof Error ? err.message : "Vui lòng thử lại.",
+              );
+            });
+        },
+      },
+    ]);
+  }, [detail]);
 
   const handleSaveNewProduct = useCallback(
     (data: { name: string; price: number; quantity: number }) => {
@@ -213,18 +239,19 @@ export const OrderDetail = memo(() => {
               ) : null}
               <Divider />
               <OrderDetailFooterActions
-                isDeposited={detail.isPaid}
-                isConfirmed={detail.order.status === "confirmed"}
-                depositLoading={detail.depositLoading}
-                confirmLoading={detail.confirmLoading}
                 onPrint={() => {}}
-                onDepositOrConfirm={
-                  detail.isPaid ? detail.handleToggleConfirm : detail.handleToggleDeposit
-                }
                 onShare={() => {}}
               />
             </ScrollView>
-            <OrderDetailShipBar onShip={handleShip} />
+            <OrderDetailShipBar
+              onShip={handleShip}
+              trackingCode={detail.order.trackingCode}
+              providerName={detail.order.providerName}
+              hasShipment={!!detail.order.trackingCode}
+              shippingStatus={detail.order.shippingStatus}
+              onCancel={handleCancelShipment}
+              onPrint={() => {}}
+            />
           </>
         ) : null}
       </View>

@@ -123,33 +123,38 @@ export const OrderItem = memo(
       </View>
 
       <View style={styles.footer}>
-        <Button
-          title={isPaid ? "Đã cọc" : "Chưa cọc"}
-          loading={depositLoading}
-          onPress={handleToggleDeposit}
-          txtBtnStyle={[
-            styles.txtNotPaid,
-            {
-              color: isPaid ? colors.success : colors.primary,
-            },
-          ]}
-          containerStyle={[
-            styles.btnStatus,
-            {
-              backgroundColor: isPaid
-                ? colors.successLight
-                : colors.primaryLight,
-            },
-          ]}
-        />
-        <Button
-          title="Tổng quan đơn hàng"
-          loading={false}
-          onPress={onOpenOrderOverview}
-          gradientType="gra_primary"
-          containerStyle={styles.btnSubmit}
-          txtBtnStyle={styles.txtSubmit}
-        />
+        <View style={styles.btnWrap}>
+          <Button
+            title={isPaid ? "Đã cọc" : "Chưa cọc"}
+            loading={depositLoading}
+            loadingType="center"
+            onPress={handleToggleDeposit}
+            txtBtnStyle={[
+              styles.txtNotPaid,
+              {
+                color: isPaid ? colors.success : colors.primary,
+              },
+            ]}
+            containerStyle={[
+              styles.btnStatus,
+              {
+                backgroundColor: isPaid
+                  ? colors.successLight
+                  : colors.primaryLight,
+              },
+            ]}
+          />
+        </View>
+        <View style={styles.btnWrap}>
+          <Button
+            title="Tổng quan đơn hàng"
+            loading={false}
+            onPress={onOpenOrderOverview}
+            gradientType="gra_primary"
+            containerStyle={styles.btnSubmit}
+            txtBtnStyle={styles.txtSubmit}
+          />
+        </View>
       </View>
     </View>
   );
@@ -251,15 +256,15 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.primary,
     ...textPresets.fs14_500,
   },
+  btnWrap: {
+    flex: 1,
+  },
   btnStatus: {
-    flex: 0,
-    minWidth: 96,
     backgroundColor: colors.primaryLight,
     borderRadius: 99,
     overflow: "hidden",
   },
   btnSubmit: {
-    flex: 0,
     borderRadius: 99,
     overflow: "hidden",
   },

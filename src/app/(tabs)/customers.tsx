@@ -47,6 +47,7 @@ export default function CustomersTab() {
     comments,
     liveSessionId: currentLiveSessionId,
     hasOrders: user?.hasOrders ?? false,
+    allStatuses: true,
   });
 
   const customers: CustomerSummaryWithTikTok[] = orderManager.customers;

@@ -1,4 +1,5 @@
 import { LiveComment } from "@app-types/index";
+import { useToast } from "@components/toast";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { useCallback, useEffect, useRef } from "react";
@@ -7,8 +8,9 @@ import { Alert } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import type { ConnectedLiveProps } from "../types/types";
 
-export function useConnectedLive({ orderManager, onNavigateToOrders, onPrintOrder }: ConnectedLiveProps) {
+export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLiveProps) {
   const { comments, isConnected } = useTikTokLiveSocketContext();
+  const showToast = useToast();
 
   const listRef = useRef<ComponentRef<typeof FlashList<LiveComment>>>(null);
   const createdCommentKeysRef = useRef<Set<string>>(new Set());
@@ -46,10 +48,7 @@ export function useConnectedLive({ orderManager, onNavigateToOrders, onPrintOrde
         createdCommentKeysRef.current.add(commentKey);
         const result = await orderManager.createOrderFromComment(comment);
 
-        Alert.alert("Tạo đơn thành công", 'Di chuyển sang "Đơn đã tạo" để kiểm tra', [
-          { text: "Huỷ", style: "cancel" },
-          { text: "OK", onPress: () => onNavigateToOrders?.() },
-        ]);
+        showToast("Tạo đơn thành công", "success");
 
         return { success: true, orderId: result?.orderId ?? "" };
       } catch (error) {
@@ -59,7 +58,7 @@ export function useConnectedLive({ orderManager, onNavigateToOrders, onPrintOrde
         return { success: false, orderId: "" };
       }
     },
-    [onNavigateToOrders, orderManager],
+    [orderManager, showToast],
   );
 
   const handlePrintOrder = useCallback(

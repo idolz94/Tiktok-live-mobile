@@ -2,9 +2,11 @@ import type { ShippingStatus } from "@app-types/index";
 import { Avatar } from "@components/avatar";
 import { useShippingTab, type ShippingFilterKey, type ShippingOrder } from "@features/orders/hooks/use-shipping-tab";
 import { useThemes } from "@hooks/use-theme";
+import { Ionicons } from "@expo/vector-icons";
 import { createStyles } from "@utils/createStyles";
-import { useState } from "react";
-import { Alert, FlatList, Linking, Modal, Pressable, RefreshControl, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, FlatList, Linking, Modal, Pressable, RefreshControl, Text, View } from "react-native";
+import { cancelShipmentApi, refreshShippingStatusApi } from "../order-detail/create-shipment/create-shipment-api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
@@ -138,7 +140,7 @@ function TrackingInfo({ item }: { item: ShippingOrder }) {
   );
 }
 
-function OrderCard({ item }: { item: ShippingOrder }) {
+function OrderCard({ item, onCancelShipment, cancelling }: { item: ShippingOrder; onCancelShipment: () => void; cancelling: boolean }) {
   const { colors, textPresets } = useThemes();
   const name = item.customerName || item.username || "Khách live";
   const count = item.products?.reduce((sum, p) => sum + Number(p.quantity || 0), 0) || item.quantity || 0;
@@ -153,6 +155,26 @@ function OrderCard({ item }: { item: ShippingOrder }) {
         <InfoRow label="Số lượng sản phẩm" value={String(count)} />
         <InfoRow label="Phí vận chuyển" value={formatMoney(Number(item.shippingFee || 0))} />
         <InfoRow label="Tiền thu hộ (COD)" value={formatMoney(Number(item.codAmount || 0))} last />
+      </View>
+      <View style={[styles.shipmentActions, { borderTopColor: colors.border10 }]}>
+        <Pressable style={styles.printShipmentButton}>
+          <Ionicons name="print-outline" size={17} color={colors.text} />
+          <Text style={[styles.shipmentButtonText, { color: colors.text }]}>In Đơn</Text>
+        </Pressable>
+        {item.shippingStatus !== "cancelled" && item.shippingStatus !== "returned" && item.shippingStatus !== "delivered" && (
+          <Pressable
+            style={[styles.cancelShipmentButton, { borderLeftColor: colors.border10 }]}
+            onPress={onCancelShipment}
+            disabled={cancelling}
+          >
+            {cancelling ? (
+              <ActivityIndicator size="small" color="#EF4444" />
+            ) : (
+              <Ionicons name="close-circle-outline" size={17} color="#EF4444" />
+            )}
+            <Text style={styles.cancelShipmentText}>{cancelling ? "Đang huỷ..." : "Huỷ Vận Đơn"}</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -248,6 +270,30 @@ export default function ShippingTab() {
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
   const [filterOpen, setFilterOpen] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const handleCancelShipment = useCallback((item: ShippingOrder) => {
+    if (!item.trackingCode) return;
+    Alert.alert("Huỷ vận đơn", `Huỷ vận đơn ${item.trackingCode}?`, [
+      { text: "Không" },
+      {
+        text: "Huỷ vận đơn",
+        style: "destructive",
+        onPress: () => {
+          setCancellingId(item.id);
+          cancelShipmentApi(item.id, { trackingId: item.trackingCode })
+            .then(() => refreshShippingStatusApi(item.id))
+            .then(() => refresh())
+            .then(() => Alert.alert("Thành công", "Đã huỷ vận đơn."))
+            .catch((err: unknown) => {
+              const msg = err instanceof Error ? err.message : "Vui lòng thử lại.";
+              Alert.alert("Không huỷ được vận đơn", msg);
+            })
+            .finally(() => setCancellingId(null));
+        },
+      },
+    ]);
+  }, [refresh]);
 
   if (loading) return <ShippingSkeleton />;
 
@@ -288,7 +334,7 @@ export default function ShippingTab() {
             <Text style={[styles.emptyText, { color: colors.textMuted, ...textPresets.fs15_800 }]}>Chưa có vận đơn nào.</Text>
           </View>
         }
-        renderItem={({ item }) => <OrderCard item={item} />}
+        renderItem={({ item }) => <OrderCard item={item} cancelling={cancellingId === item.id} onCancelShipment={() => handleCancelShipment(item)} />}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
       />
       <FilterSheet visible={filterOpen} filter={filter} onClose={() => setFilterOpen(false)} onSelect={setFilter} />
@@ -354,4 +400,9 @@ const styles = createStyles(() => ({
   empty: { padding: 40, alignItems: "center" },
   emptyText: {},
   error: { paddingHorizontal: 16, paddingBottom: 12 },
+  shipmentActions: { borderTopWidth: 1, flexDirection: "row" },
+  printShipmentButton: { flex: 1, height: 42, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  shipmentButtonText: { fontSize: 13, fontWeight: "700" as const },
+  cancelShipmentButton: { flex: 1, height: 42, borderLeftWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  cancelShipmentText: { color: "#EF4444", fontSize: 13, fontWeight: "700" as const },
 }));

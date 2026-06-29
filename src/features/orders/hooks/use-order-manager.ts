@@ -26,6 +26,7 @@ type UseOrderManagerParams = {
   liveSessionId?: string | null;
   onAfterCreateOrder?: () => void;
   hasOrders?: boolean;
+  allStatuses?: boolean;
 };
 
 export type CustomerSummaryWithTikTok = CustomerSummary & {
@@ -82,6 +83,7 @@ export function useOrderManager({
   liveSessionId,
   onAfterCreateOrder,
   hasOrders = false,
+  allStatuses = false,
 }: UseOrderManagerParams) {
   const [orders, setOrders] = useState<OrderWithTikTok[]>([]);
   const [orderLoading, setOrderLoading] = useState(false);
@@ -99,7 +101,7 @@ export function useOrderManager({
     try {
       setOrderLoading(true);
       setOrderError("");
-      const nextOrders = await getOrdersApi();
+      const nextOrders = await getOrdersApi(allStatuses ? null : undefined);
       setOrders(nextOrders);
     } catch (error) {
       if (__DEV__) console.error("LOAD ORDERS ERROR:", error);
