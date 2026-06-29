@@ -1,9 +1,10 @@
 import type { ShippingStatus } from "@app-types/index";
 import { Avatar } from "@components/avatar";
-import { useShippingTab, type ShippingOrder } from "@features/orders/hooks/use-shipping-tab";
+import { useShippingTab, type ShippingFilterKey, type ShippingOrder } from "@features/orders/hooks/use-shipping-tab";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { ActivityIndicator, Alert, FlatList, Linking, Pressable, RefreshControl, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, FlatList, Linking, Modal, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
@@ -157,56 +158,141 @@ function OrderCard({ item }: { item: ShippingOrder }) {
   );
 }
 
-export default function ShippingTab() {
-  const { orders, loading, refreshing, error, refresh, summary } = useShippingTab();
+const FILTER_LABELS: Record<ShippingFilterKey, string> = {
+  all: "Tất cả",
+  waiting: "Chờ lấy hàng",
+  transit: "Đang vận chuyển",
+  delivered: "Đã giao hàng",
+  returning: "Trả hàng",
+  other: "Khác",
+};
+
+const filterKeys: ShippingFilterKey[] = ["all", "waiting", "transit", "delivered", "returning", "other"];
+
+function FilterSheet({ visible, filter, onClose, onSelect }: { visible: boolean; filter: ShippingFilterKey; onClose: () => void; onSelect: (key: ShippingFilterKey) => void }) {
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.sheetOverlay} onPress={onClose}>
+        <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]} onPress={(event) => event.stopPropagation()}>
+          <View style={styles.sheetHeader}>
+            <View style={styles.sheetHeaderSpacer} />
+            <Text style={[styles.sheetTitle, { color: colors.text, ...textPresets.fs18_500 }]}>Trạng thái đơn hàng</Text>
+            <Pressable style={styles.sheetCloseButton} onPress={onClose}>
+              <Text style={[styles.sheetCloseText, { color: colors.text }]}>×</Text>
+            </Pressable>
+          </View>
+          <View style={styles.sheetContent}>
+            {filterKeys.map((key) => (
+              <Pressable
+                key={key}
+                style={styles.sheetRow}
+                onPress={() => {
+                  onSelect(key);
+                  onClose();
+                }}
+              >
+                <Text style={[styles.sheetRowText, { color: colors.text, ...textPresets.fs16_400 }]}>{FILTER_LABELS[key]}</Text>
+                {filter === key ? <Text style={[styles.sheetCheck, { color: colors.text }]}>✓</Text> : null}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={colors.primary} />
+function SkeletonBox({ style }: { style?: object }) {
+  return <View style={[styles.skeletonBox, style]} />;
+}
+
+function ShippingSkeleton() {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.container, { paddingBottom: 34 }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <SkeletonBox style={{ width: 180, height: 28, borderRadius: 6 }} />
+        <SkeletonBox style={{ width: 44, height: 44, borderRadius: 999 }} />
       </View>
-    );
-  }
+      <View style={styles.summaryWrap}>
+        <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
+        <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
+        <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
+      </View>
+      <View style={[styles.countRow, { paddingBottom: 20 }]}>
+        <View style={{ gap: 6 }}>
+          <SkeletonBox style={{ width: 120, height: 22, borderRadius: 6 }} />
+          <SkeletonBox style={{ width: 60, height: 16, borderRadius: 4 }} />
+        </View>
+        <SkeletonBox style={{ width: 72, height: 36, borderRadius: 999 }} />
+      </View>
+      {[0, 1].map((i) => (
+        <View key={i} style={[styles.orderCard, { paddingBottom: 16 }]}>
+          <View style={styles.userRow}>
+            <SkeletonBox style={{ width: 40, height: 40, borderRadius: 999 }} />
+            <SkeletonBox style={{ flex: 1, height: 20, borderRadius: 6 }} />
+          </View>
+          <SkeletonBox style={{ height: 96, borderRadius: 12 }} />
+          <SkeletonBox style={{ height: 80, borderRadius: 8 }} />
+          {i < 1 && <View style={styles.divider} />}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export default function ShippingTab() {
+  const { orders, loading, refreshing, error, refresh, summary, filter, setFilter } = useShippingTab();
+  const { colors, textPresets } = useThemes();
+  const insets = useSafeAreaInsets();
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  if (loading) return <ShippingSkeleton />;
 
   return (
-    <FlatList
-      data={orders}
-      keyExtractor={(item) => item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
-      contentContainerStyle={styles.container}
-      ListHeaderComponent={
-        <View>
-          <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-            <Text style={[styles.title, { color: colors.text, ...textPresets.fs24_800 }]}>Quản lý vận đơn</Text>
-            <View style={[styles.searchButton, { backgroundColor: colors.white }]}>
-              <Text style={[styles.searchIcon, { color: colors.text }]}>⌕</Text>
+    <>
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
+        contentContainerStyle={styles.container}
+        ListHeaderComponent={
+          <View>
+            <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+              <Text style={[styles.title, { color: colors.text, ...textPresets.fs24_800 }]}>Quản lý vận đơn</Text>
+              <View style={[styles.searchButton, { backgroundColor: colors.white }]}>
+                <Text style={[styles.searchIcon, { color: colors.text }]}>⌕</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.summaryWrap}>
-            <SummaryCard value={summary.codAmount} label="Tổng tiền thu hộ (COD)" tone="success" />
-            <SummaryCard value={summary.revenue} label="Tổng doanh thu" tone="info" />
-            <SummaryCard value={summary.shippingFee} label="Tổng phí vận chuyển" tone="error" />
-          </View>
-          <View style={styles.countRow}>
-            <View>
-              <Text style={[styles.countTitle, { color: colors.text, ...textPresets.fs20_600 }]}>{summary.orderCount} đơn hàng</Text>
-              <Text style={[styles.countSubtitle, { color: colors.neutral400, ...textPresets.fs14_400 }]}>Đang xử lý ›</Text>
+            <View style={styles.summaryWrap}>
+              <SummaryCard value={summary.codAmount} label="Tổng tiền thu hộ (COD)" tone="success" />
+              <SummaryCard value={summary.revenue} label="Tổng doanh thu" tone="info" />
+              <SummaryCard value={summary.shippingFee} label="Tổng phí vận chuyển" tone="error" />
             </View>
-            <Text style={[styles.filterText, { color: colors.text, ...textPresets.fs14_500 }]}>Filter</Text>
+            <View style={styles.countRow}>
+              <View>
+                <Text style={[styles.countTitle, { color: colors.text, ...textPresets.fs20_600 }]}>{summary.orderCount} đơn hàng</Text>
+                <Text style={[styles.countSubtitle, { color: colors.neutral400, ...textPresets.fs14_400 }]}>{FILTER_LABELS[filter]} ›</Text>
+              </View>
+              <Pressable style={[styles.filterTrigger, { borderColor: colors.border10 }]} onPress={() => setFilterOpen(true)}>
+                <Text style={[styles.filterText, { color: colors.text, ...textPresets.fs14_500 }]}>Filter</Text>
+              </Pressable>
+            </View>
+            {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
           </View>
-          {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
-        </View>
-      }
-      ListEmptyComponent={
-        <View style={styles.empty}>
-          <Text style={[styles.emptyText, { color: colors.textMuted, ...textPresets.fs15_800 }]}>Chưa có vận đơn nào.</Text>
-        </View>
-      }
-      renderItem={({ item }) => <OrderCard item={item} />}
-      ItemSeparatorComponent={() => <View style={styles.divider} />}
-    />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={[styles.emptyText, { color: colors.textMuted, ...textPresets.fs15_800 }]}>Chưa có vận đơn nào.</Text>
+          </View>
+        }
+        renderItem={({ item }) => <OrderCard item={item} />}
+        ItemSeparatorComponent={() => <View style={styles.divider} />}
+      />
+      <FilterSheet visible={filterOpen} filter={filter} onClose={() => setFilterOpen(false)} onSelect={setFilter} />
+    </>
   );
 }
 
@@ -225,11 +311,24 @@ const styles = createStyles(() => ({
   summaryValue: { lineHeight: 24 },
   summaryLabel: { lineHeight: 18 },
   chevron: { fontSize: 24, lineHeight: 24 },
-  countRow: { padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  countRow: { paddingHorizontal: 16, paddingBottom: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   countTitle: { lineHeight: 24 },
   countSubtitle: { marginTop: 4, lineHeight: 22 },
+  filterTrigger: { borderWidth: 1, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 16 },
   filterText: { lineHeight: 22 },
+  sheetOverlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.35)" },
+  sheet: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: "hidden" },
+  sheetHeader: { padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16 },
+  sheetHeaderSpacer: { width: 32, height: 32 },
+  sheetTitle: { flex: 1, textAlign: "center", lineHeight: 24 },
+  sheetCloseButton: { width: 32, height: 32, borderRadius: 999, backgroundColor: "#F2F2F2", alignItems: "center", justifyContent: "center" },
+  sheetCloseText: { fontSize: 24, lineHeight: 28 },
+  sheetContent: { paddingHorizontal: 16, paddingTop: 8, gap: 12 },
+  sheetRow: { height: 48, borderRadius: 8, backgroundColor: "#F2F2F2", paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 16 },
+  sheetRowText: { flex: 1, lineHeight: 24 },
+  sheetCheck: { fontSize: 18, lineHeight: 22 },
   orderCard: { paddingHorizontal: 16, gap: 16 },
+  skeletonBox: { backgroundColor: "#EBEBEB" },
   userRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   userName: { flex: 1, lineHeight: 24 },
   trackingBox: { borderWidth: 1, borderRadius: 12, overflow: "hidden" },
