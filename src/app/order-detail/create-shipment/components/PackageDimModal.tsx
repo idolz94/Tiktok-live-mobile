@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import { shipmentStyles } from "./ShipmentComponents";
@@ -31,6 +32,22 @@ export function PackageDimModal({
 }: PackageDimModalProps) {
   const { colors, textPresets } = useThemes();
 
+  const [localLength, setLocalLength] = useState(dimLength);
+  const [localWidth, setLocalWidth] = useState(dimWidth);
+  const [localHeight, setLocalHeight] = useState(dimHeight);
+  const [localWeightKg, setLocalWeightKg] = useState(
+    weightInput ? String((parseInt(weightInput, 10) || 0) / 1000) : ""
+  );
+
+  const handleConfirm = () => {
+    onChangeDimLength(localLength);
+    onChangeDimWidth(localWidth);
+    onChangeDimHeight(localHeight);
+    const kg = parseFloat(localWeightKg.replace(",", ".")) || 0;
+    onChangeWeightInput(String(Math.round(kg * 1000)));
+    onClose();
+  };
+
   return (
     <View style={[shipmentStyles.sheetPanel, { backgroundColor: colors.surface }]}>
       <View style={shipmentStyles.sheetHandle} />
@@ -43,8 +60,8 @@ export function PackageDimModal({
           <View style={shipmentStyles.dimField}>
             <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>Dài (cm)</Text>
             <TextInput
-              value={dimLength}
-              onChangeText={onChangeDimLength}
+              value={localLength}
+              onChangeText={setLocalLength}
               keyboardType="numeric"
               style={[shipmentStyles.textInput, { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 }, textPresets.fs14_400]}
               placeholder="0"
@@ -54,8 +71,8 @@ export function PackageDimModal({
           <View style={shipmentStyles.dimField}>
             <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>Rộng (cm)</Text>
             <TextInput
-              value={dimWidth}
-              onChangeText={onChangeDimWidth}
+              value={localWidth}
+              onChangeText={setLocalWidth}
               keyboardType="numeric"
               style={[shipmentStyles.textInput, { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 }, textPresets.fs14_400]}
               placeholder="0"
@@ -65,8 +82,8 @@ export function PackageDimModal({
           <View style={shipmentStyles.dimField}>
             <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>Cao (cm)</Text>
             <TextInput
-              value={dimHeight}
-              onChangeText={onChangeDimHeight}
+              value={localHeight}
+              onChangeText={setLocalHeight}
               keyboardType="numeric"
               style={[shipmentStyles.textInput, { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 }, textPresets.fs14_400]}
               placeholder="0"
@@ -76,13 +93,13 @@ export function PackageDimModal({
         </View>
 
         <View style={[shipmentStyles.formGroup, { marginTop: 12 }]}>
-          <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>Khối lượng (gram)</Text>
+          <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>Khối lượng (kg)</Text>
           <TextInput
-            value={weightInput}
-            onChangeText={(text) => onChangeWeightInput(text.replace(/\D/g, ""))}
-            keyboardType="numeric"
+            value={localWeightKg}
+            onChangeText={setLocalWeightKg}
+            keyboardType="decimal-pad"
             style={[shipmentStyles.textInput, { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 }, textPresets.fs14_400]}
-            placeholder="500"
+            placeholder="0.5"
             placeholderTextColor={colors.neutral300}
           />
         </View>
@@ -101,7 +118,7 @@ export function PackageDimModal({
         <Pressable style={[shipmentStyles.sheetCancelBtn, { borderColor: colors.border10 }]} onPress={onClose}>
           <Text style={[textPresets.fs15_400, { color: colors.neutral900 }]}>Huỷ</Text>
         </Pressable>
-        <Pressable style={[shipmentStyles.sheetSaveBtn, { backgroundColor: colors.primary }]} onPress={onClose}>
+        <Pressable style={[shipmentStyles.sheetSaveBtn, { backgroundColor: colors.primary }]} onPress={handleConfirm}>
           <Text style={[textPresets.fs15_400, { color: "#fff" }]}>Xác nhận</Text>
         </Pressable>
       </View>

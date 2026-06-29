@@ -4,13 +4,14 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert } from "react-native";
+// import { Pressable, Text, View } from "react-native"; // TODO: bỏ comment khi bật lại validate địa chỉ kho hàng
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import type PagerView from "react-native-pager-view";
-import { router } from "expo-router";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { listShopAddressesApi } from "@features/settings/service/shop-addresses-api";
+// import { router } from "expo-router"; // TODO: bỏ comment khi bật lại validate địa chỉ kho hàng
+// import { listShopAddressesApi } from "@features/settings/service/shop-addresses-api"; // TODO: bỏ comment khi bật lại validate địa chỉ kho hàng
 import { useThemes } from "@hooks/use-theme";
 import type { PagerViewOnPageSelectedEvent } from "react-native-pager-view";
 import { TikTokLiveChannel } from "./tiktok-page";
@@ -24,6 +25,7 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
   const opacity = useSharedValue(0);
 
   const {
+    isConnected,
     tiktokUsername,
     changeTikTokUsername,
     stopLiveSession,
@@ -62,6 +64,16 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
   }, [opacity, translateY]);
 
   useEffect(() => {
+    if (isConnected) {
+      setVisible(true);
+      opacity.value = 1;
+      translateY.value = 0;
+    }
+  // ponytail: run once on mount to restore connected view if SSE session persists across tab switch
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (!liveError || alertShownRef.current) return;
     alertShownRef.current = true;
     Alert.alert("Phiên live kết thúc", liveError, [
@@ -94,6 +106,27 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     }
   }, []);
 
+  useEffect(() => {
+    if (!user?.tiktokChannels?.length) return;
+    setLocalChannels(
+      user.tiktokChannels.map((c) => ({
+        id: c.id,
+        username: normalizeTikTokUsername(c.tiktokUsername),
+        isDefault: c.isDefault,
+      })),
+    );
+  }, [user?.tiktokChannels]);
+
+  useEffect(() => {
+    if (activeIndex !== 0) {
+      opacity.value = withTiming(0, { duration: ANIMATION_DURATION });
+      translateY.value = withTiming(INITIAL_OFFSET, { duration: ANIMATION_DURATION });
+    } else if (visible) {
+      opacity.value = withTiming(1, { duration: ANIMATION_DURATION });
+      translateY.value = withTiming(0, { duration: ANIMATION_DURATION });
+    }
+  }, [activeIndex, visible, opacity, translateY]);
+
   const selectedChannel = useMemo(
     () =>
       localChannels.find(
@@ -107,36 +140,37 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
       const nextUsername = normalizeTikTokUsername(item ? item.username : tiktokUsername);
       if (!nextUsername) return false;
 
-      try {
-        const addresses = await listShopAddressesApi();
-        const hasDefault = addresses.some((a: { isDefault: boolean }) => a.isDefault);
-        if (!hasDefault) {
-          show({
-            content: (
-              <View style={{ padding: 24, gap: 16 }}>
-                <Text style={{ fontSize: 16, fontWeight: "600", color: colors.neutral900 }}>
-                  Yêu cầu cài đặt địa chỉ Kho Hàng
-                </Text>
-                <Text style={{ fontSize: 14, color: colors.neutral500, lineHeight: 22 }}>
-                  Bạn cần thiết lập địa chỉ kho hàng mặc định trước khi kết nối live.
-                </Text>
-                <Pressable
-                  onPress={() => { hide(); router.push("/shipping-settings"); }}
-                  style={{ backgroundColor: colors.primary, borderRadius: 12, height: 48, alignItems: "center", justifyContent: "center" }}
-                >
-                  <Text style={{ color: colors.white, fontSize: 15, fontWeight: "600" }}>
-                    Cài Đặt Cấu Hình Vận Chuyển
-                  </Text>
-                </Pressable>
-              </View>
-            ),
-            showDragIndicator: true,
-          });
-          return false;
-        }
-      } catch {
-        // ponytail: nếu check fail, vẫn cho connect tiếp — không block user vì lỗi mạng
-      }
+      // TODO: bật lại khi cần validate địa chỉ kho hàng trước khi kết nối TikTok Live
+      // try {
+      //   const addresses = await listShopAddressesApi();
+      //   const hasDefault = addresses.some((a: { isDefault: boolean }) => a.isDefault);
+      //   if (!hasDefault) {
+      //     show({
+      //       content: (
+      //         <View style={{ padding: 24, gap: 16 }}>
+      //           <Text style={{ fontSize: 16, fontWeight: "600", color: colors.neutral900 }}>
+      //             Yêu cầu cài đặt địa chỉ Kho Hàng
+      //           </Text>
+      //           <Text style={{ fontSize: 14, color: colors.neutral500, lineHeight: 22 }}>
+      //             Bạn cần thiết lập địa chỉ kho hàng mặc định trước khi kết nối live.
+      //           </Text>
+      //           <Pressable
+      //             onPress={() => { hide(); router.push("/shipping-settings"); }}
+      //             style={{ backgroundColor: colors.primary, borderRadius: 12, height: 48, alignItems: "center", justifyContent: "center" }}
+      //           >
+      //             <Text style={{ color: colors.white, fontSize: 15, fontWeight: "600" }}>
+      //               Cài Đặt Cấu Hình Vận Chuyển
+      //             </Text>
+      //           </Pressable>
+      //         </View>
+      //       ),
+      //       showDragIndicator: true,
+      //     });
+      //     return false;
+      //   }
+      // } catch {
+      //   // nếu check fail, vẫn cho connect tiếp — không block user vì lỗi mạng
+      // }
 
       try {
         const success = await changeTikTokUsername(nextUsername);

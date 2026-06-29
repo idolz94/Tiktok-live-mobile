@@ -30,10 +30,10 @@ export const addrSchema = z.object({
     .string()
     .trim()
     .refine((v) => VN_PHONE_RE.test(v), "Số điện thoại không hợp lệ"),
-  address: z.string(),
   province: z.string().trim().min(1, "Vui lòng chọn Tỉnh/Thành phố"),
   district: z.string().trim().min(1, "Vui lòng chọn Quận/Huyện"),
   ward: z.string().trim().min(1, "Vui lòng chọn Phường/Xã"),
+  address: z.string().trim(),
   isDefault: z.boolean(),
 });
 

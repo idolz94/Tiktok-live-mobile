@@ -14,6 +14,7 @@ export interface AuthStoreState {
   logout: () => void;
   setUserFromBootstrap: (user: AuthUser | null) => void;
   setLoginState: (username: string, remember: boolean) => void;
+  patchTiktokChannels: (channels: ShopTikTokChannel[]) => void;
 }
 
 export type BootstrapUser = {

@@ -10,6 +10,7 @@ import { AddressPickerSheet } from "./components/AddressPickerSheet";
 import { AddressFormModal } from "./components/AddressFormModal";
 import { PackageDimModal } from "./components/PackageDimModal";
 import { formInitialValues } from "./utils";
+import type { AddrFormValues } from "./types";
 import { useCreateShipment } from "./use-create-shipment";
 
 export default function CreateShipmentScreen() {
@@ -86,6 +87,8 @@ export default function CreateShipmentScreen() {
     timeslots,
     timeslotsLoading,
     timeslotsError,
+    feeLoading,
+    feeError,
   } = useCreateShipment();
 
   const openAddressForm = (target: "sender" | "recipient", addr?: typeof editingAddr) => {
@@ -94,11 +97,14 @@ export default function CreateShipmentScreen() {
       : target === "sender" ? "Thêm địa chỉ người gửi" : "Thêm địa chỉ người nhận";
     setAddrFormTarget(target);
     if (addr) setEditingAddr(addr);
+    const defaultValues: Partial<AddrFormValues> = addr
+      ? (formInitialValues(addr) ?? {})
+      : {};
     show({
       content: (
         <AddressFormModal
           title={title}
-          initialValues={formInitialValues(addr ?? null)}
+          initialValues={defaultValues}
           onClose={() => { hide(); setAddrFormTarget(null); setEditingAddr(null); }}
           onSave={async (vals) => { await handleSaveAddress(vals, target, addr ?? null); hide(); }}
         />
@@ -211,7 +217,7 @@ export default function CreateShipmentScreen() {
                 { label: "Dài", value: dimLength ? `${dimLength} cm` : "—" },
                 { label: "Rộng", value: dimWidth ? `${dimWidth} cm` : "—" },
                 { label: "Cao", value: dimHeight ? `${dimHeight} cm` : "—" },
-                { label: "Khối lượng", value: `${weightInput} gram` },
+                { label: "Khối lượng", value: `${((parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })} kg` },
               ].map((cell) => (
                 <View key={cell.label} style={[shipmentStyles.detailCell, { backgroundColor: colors.surface }]}>
                   <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>{cell.label}</Text>
@@ -302,7 +308,13 @@ export default function CreateShipmentScreen() {
           <SummaryRow label="Tiền hàng" value={`${orderTotal.toLocaleString("vi-VN")}đ`} />
           <View style={screenStyles.summaryRow}>
             <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>Phí vận chuyển</Text>
-            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>
+            {feeLoading ? (
+              <Text style={[textPresets.fs14_500, { color: colors.neutral400 }]}>Đang tính...</Text>
+            ) : feeError ? (
+              <Text style={[textPresets.fs12_400, { color: colors.error }]}>{feeError}</Text>
+            ) : (
+              <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>
+            )}
           </View>
           <View style={[screenStyles.summaryRow, screenStyles.summaryRowTotal]}>
             <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>Shipper thu</Text>

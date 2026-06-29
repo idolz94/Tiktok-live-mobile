@@ -19,8 +19,6 @@ type Props = {
 
 export const AccountConnected = memo(
   ({ onClose, selectedChannel, channels, onSelectChannel }: Props) => {
-    console.log("🚀 ~ selectedChannel:", selectedChannel);
-
     const { show, hide } = useBottomSheet();
 
     const showListChannels = () =>
@@ -85,7 +83,7 @@ export const AccountConnected = memo(
   },
 );
 
-const styles = createStyles(({ colors, textPresets, shadows }) => ({
+const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     flex: 1,
     backgroundColor: colors.neutral100,

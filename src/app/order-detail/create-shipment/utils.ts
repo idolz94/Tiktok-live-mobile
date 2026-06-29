@@ -30,10 +30,10 @@ export function formInitialValues(addr: ShopAddress | CustomerAddress | null): P
     label: addr.label ?? "",
     name: addr.name ?? "",
     phone: addr.phone ?? "",
-    address: addr.address ?? "",
     province: addr.province ?? "",
     district: addr.district ?? "",
     ward: addr.ward ?? "",
+    address: addr.address ?? "",
     isDefault: Boolean(addr.isDefault),
   };
 }

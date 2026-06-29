@@ -72,6 +72,10 @@ export const useAuthStore = create<AuthStoreState>()(
       setUserFromBootstrap: (user) => {
         set({ user });
       },
+
+      patchTiktokChannels: (channels) => {
+        set((state) => state.user ? { user: { ...state.user, tiktokChannels: channels } } : {});
+      },
     }),
     {
       name: "tiktok-live-auth-storage",

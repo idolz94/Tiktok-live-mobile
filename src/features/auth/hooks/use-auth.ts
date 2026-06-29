@@ -222,16 +222,35 @@ export const useAuth = () => {
 
   const register = useCallback(
     async ({ username, password, fullName, tiktokId }: RegisterParams) => {
-      const response = await registerApi({
-        username,
-        password,
-        fullName,
-        tiktokId,
-      });
+      setIsBootstrapping(true);
+      try {
+        const response = await registerApi({ username, password, fullName, tiktokId });
+        const accessToken = extractAccessToken(response);
+        const refreshToken = extractRefreshToken(response);
 
-      return response.data?.data ?? response.data;
+        if (!accessToken) {
+          throw new Error("Không tìm thấy access token từ server");
+        }
+
+        await secureStorage.setAccessToken(accessToken);
+        if (refreshToken) {
+          await secureStorage.setRefreshToken(refreshToken);
+        }
+
+        setLoginState(username.trim(), false);
+        resetBootstrapGuard();
+        beginAuthResume();
+        try {
+          await bootstrapAuth({ background: false, setUserFromBootstrap, setError });
+          bootstrapDone = true;
+        } finally {
+          endAuthResume();
+        }
+      } finally {
+        setIsBootstrapping(false);
+      }
     },
-    [],
+    [setLoginState, setUserFromBootstrap],
   );
 
   const logout = useCallback(async () => {

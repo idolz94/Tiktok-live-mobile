@@ -119,17 +119,18 @@ export function OptionChip({ label, selected, onPress }: OptionChipProps) {
 type TimeslotSelectProps = {
   timeslots: SpxTimeslot[];
   selectedKey: string | null;
-  onSelect: (id: number, key: string) => void;
+  onSelect: (id: number, key: string, pickupTime: number) => void;
 };
 
-type FlatSlot = { key: string; id: number; label: string };
+type FlatSlot = { key: string; id: number; label: string; pickupTime: number };
 
 function flattenTimeslots(ts: SpxTimeslot[]): FlatSlot[] {
   return ts.flatMap((g) =>
-    g.slots.map((s) => ({
+    (g.slots ?? []).map((s) => ({
       key: `${g.pickupTime}-${s.id}`,
       id: s.id,
       label: `${g.date} ${s.range}`,
+      pickupTime: g.pickupTime,
     }))
   );
 }
@@ -153,15 +154,21 @@ export function TimeslotSelect({ timeslots, selectedKey, onSelect }: TimeslotSel
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={shipmentStyles.selectOverlay} onPress={() => setOpen(false)}>
+        <View style={shipmentStyles.selectOverlay}>
+          <Pressable style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} onPress={() => setOpen(false)} />
           <View style={[shipmentStyles.selectDropdown, { backgroundColor: colors.surface, borderColor: colors.border10 }]}>
+            <Pressable onPress={() => setOpen(false)} style={[shipmentStyles.selectCloseRow, { borderBottomColor: colors.border10 }]}>
+              <Text style={[textPresets.fs14_400, { color: colors.neutral500 }]}>Khung giờ lấy hàng</Text>
+              <Text style={[textPresets.fs18_700, { color: colors.neutral400, lineHeight: 22 }]}>×</Text>
+            </Pressable>
             <FlatList
               data={items}
               keyExtractor={(item) => item.key}
+              keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
-                    onSelect(item.id, item.key);
+                    onSelect(item.id, item.key, item.pickupTime);
                     setOpen(false);
                   }}
                   style={[shipmentStyles.selectItem, item.key === selectedKey && { backgroundColor: colors.primaryLight }]}
@@ -173,7 +180,7 @@ export function TimeslotSelect({ timeslots, selectedKey, onSelect }: TimeslotSel
               )}
             />
           </View>
-        </Pressable>
+        </View>
       </Modal>
     </>
   );
@@ -296,7 +303,7 @@ type SpxOptionsProps = {
   setCollectType: (value: CollectType) => void;
   pickupTimeRangeId: number | null;
   pickupTimeKey: string | null;
-  setPickupTime: (id: number, key: string) => void;
+  setPickupTime: (id: number, key: string, pickupTime: number) => void;
   timeslots: SpxTimeslot[];
   timeslotsLoading: boolean;
   timeslotsError?: string | null;
@@ -397,8 +404,9 @@ export const shipmentStyles = createStyles(() => ({
   optionDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, alignItems: "center" as const, justifyContent: "center" as const },
   optionDotInner: { width: 8, height: 8, borderRadius: 4 },
   selectTrigger: { height: 48, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row" as const, alignItems: "center" as const, gap: 10, marginTop: 8 },
-  selectOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" as const },
+  selectOverlay: { position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" as const },
   selectDropdown: { borderTopLeftRadius: 16, borderTopRightRadius: 16, borderWidth: 1, borderBottomWidth: 0, maxHeight: 400 },
+  selectCloseRow: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
   selectItem: { paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
   noteInput: { minHeight: 96, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, textAlignVertical: "top" as const },
   formGroup: { gap: 6 },

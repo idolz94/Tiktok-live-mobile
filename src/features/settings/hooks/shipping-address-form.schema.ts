@@ -23,7 +23,7 @@ export const addressFormSchema = z.object({
     .refine((value) => VN_PHONE_RE.test(value), "Số điện thoại không đúng nhà mạng Việt Nam"),
   address: z.string(),
   province: z.string().trim().min(1, { error: "Vui lòng chọn Tỉnh/Thành phố" }),
-  district: z.string().trim().min(1, { error: "Vui lòng chọn Huyện/Quận" }),
+  district: z.string().trim().min(1, { error: "Vui lòng chọn Quận/Huyện" }),
   ward: z.string().trim().min(1, { error: "Vui lòng chọn Phường/Xã" }),
   isDefault: z.boolean(),
 });
@@ -31,7 +31,7 @@ export const addressFormSchema = z.object({
 export type AddressForm = z.infer<typeof addressFormSchema>;
 
 export type GeoPickerState = {
-  type: "province" | "district" | "ward";
+  type: "province" | "ward";
   title: string;
   placeholder: string;
   items: VnGeoItem[];
@@ -63,5 +63,5 @@ export function buildAddressPayload(values: AddressForm): ShopAddressPayload {
 }
 
 export function formatShopAddress(address: ShopAddress) {
-  return [address.address, address.ward, address.district, address.province].filter(Boolean).join(", ") || "Chưa có địa chỉ";
+  return [address.address, address.ward, address.province].filter(Boolean).join(", ") || "Chưa có địa chỉ";
 }

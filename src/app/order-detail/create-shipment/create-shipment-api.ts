@@ -38,8 +38,6 @@ export type CustomerAddress = {
 
 type AddressPayload = ShopAddressPayload;
 
-type AddressResponse<T> = { address: T };
-
 type ManualShippingPayload = {
   paymentSide: PaymentSide;
   shippingFee?: number;
@@ -83,12 +81,12 @@ export async function updateCustomerAddressApi(
   addressId: string,
   payload: AddressPayload,
 ) {
-  const data = await patchRequest<AddressResponse<CustomerAddress>>(
+  const raw = await patchRequest<any>(
     `/customers/${customerId}/addresses/${addressId}`,
     payload,
   );
 
-  return data.address;
+  return (raw?.data?.address ?? raw?.address ?? raw) as CustomerAddress;
 }
 
 export async function deleteCustomerAddressApi(
@@ -134,6 +132,7 @@ type SubmitSpxPayload = {
   serviceType: ServiceType;
   collectType: CollectType;
   pickupTimeRangeId?: number;
+  pickupTime?: number;
   parcelWeightGram: number;
   parcelLengthCm?: number;
   parcelWidthCm?: number;
@@ -156,6 +155,26 @@ export async function submitSpxApi(
 
 export async function getSpxTimeslotsApi(serviceType: number) {
   return getRequest<{ timeslots: SpxTimeslot[] }>(`/orders/spx/timeslots?serviceType=${serviceType}`);
+}
+
+type ShippingFeePayload = {
+  providerCode: "spx";
+  pickProvince: string;
+  pickDistrict: string;
+  pickWard: string;
+  pickAddress?: string;
+  receiverProvince: string;
+  receiverDistrict: string;
+  receiverWard: string;
+  receiverAddress?: string;
+  weightGram?: number;
+};
+
+export async function getShippingFeeApi(orderId: string, payload: ShippingFeePayload) {
+  return postRequest<{ fee: { providerCode: string; fee: number } }>(
+    `/orders/${orderId}/shipping/fee`,
+    payload,
+  );
 }
 
 export async function getShipmentLabelApi(orderId: string) {

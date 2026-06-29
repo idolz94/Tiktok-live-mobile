@@ -50,7 +50,7 @@ export function GeoPickerSheet({
 
       <FlatList
         data={filtered}
-        keyExtractor={(item) => String(item.code)}
+        keyExtractor={(item) => item.name}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => {

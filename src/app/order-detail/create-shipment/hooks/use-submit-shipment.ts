@@ -30,6 +30,7 @@ type Deps = {
   serviceType?: ServiceType;
   collectType?: CollectType;
   pickupTimeRangeId?: number;
+  pickupTime?: number;
   parcelItemName?: string;
   declaredValue?: number;
   weightGram?: number;
@@ -64,6 +65,7 @@ export function useSubmitShipment(deps: Deps) {
       serviceType,
       collectType,
       pickupTimeRangeId,
+      pickupTime,
       parcelItemName,
       declaredValue,
       weightGram,
@@ -107,6 +109,7 @@ export function useSubmitShipment(deps: Deps) {
           serviceType,
           collectType,
           pickupTimeRangeId,
+          pickupTime,
           parcelWeightGram: weightGram,
           parcelLengthCm: dimLength,
           parcelWidthCm: dimWidth,

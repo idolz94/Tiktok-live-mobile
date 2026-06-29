@@ -1,9 +1,8 @@
 import { ShopTikTokChannel } from "@app-types/database";
-import { useAuth } from "@features/auth/hooks/use-auth";
+import { useAuthStore } from "@features/auth/stores";
 import {
   deleteTikTokChannelApi,
   getTikTokChannelsApi,
-  updateDefaultTiktokUsernameApi,
   updateTikTokChannelApi,
 } from "@features/auth/services/api";
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
@@ -18,7 +17,8 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export function useManageTiktokChannel() {
-  const { user, refreshAuth } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const patchTiktokChannels = useAuthStore((state) => state.patchTiktokChannels);
 
   const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);
@@ -78,10 +78,9 @@ export function useManageTiktokChannel() {
   }, [channels, reloadChannels]);
 
   const refreshData = useCallback(async () => {
-    await refreshAuth({ force: true });
-    const fallback = sortChannels(user?.tiktokChannels ?? []);
-    await reloadChannels(fallback);
-  }, [reloadChannels, refreshAuth, user?.tiktokChannels]);
+    const next = await reloadChannels(sortChannels(user?.tiktokChannels ?? []));
+    patchTiktokChannels(next);
+  }, [reloadChannels, patchTiktokChannels, user?.tiktokChannels]);
 
   const usedUsernames = useMemo(
     () => new Set(channels.map((c) => c.tiktokUsername)),
@@ -94,9 +93,6 @@ export function useManageTiktokChannel() {
       const normalizedCurrent = normalizeTikTokUsername(channel.tiktokUsername);
       if (normalizedNext === normalizedCurrent) return;
       await updateTikTokChannelApi(channel.id, { tiktokUsername: normalizedNext });
-      if (channel.isDefault) {
-        await updateDefaultTiktokUsernameApi(normalizedNext);
-      }
       await refreshData();
     },
     [refreshData],

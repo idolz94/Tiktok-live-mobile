@@ -1,6 +1,6 @@
 # Source Structure Guide
 
-Tài liệu này mô tả cách tổ chức source code cho app TikTok Live Tools — Expo Router + React Native. Được viết để intern đọc cũng hiểu được và biết đặt file mới ở đâu.
+Tài liệu này mô tả cách tổ chức source code cho app Lumi Live — Expo Router + React Native. Được viết để intern đọc cũng hiểu được và biết đặt file mới ở đâu.
 
 ## 1. Mô hình đang dùng: route mỏng + feature module dày
 

@@ -4,7 +4,6 @@ import {
   ShopAddress,
   updateShopAddressApi,
 } from "@features/settings/service/shop-addresses-api";
-import { VnGeoItem } from "@features/settings/service/vn-geo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -45,7 +44,6 @@ export function useShippingSettings() {
 
   const geo = useShippingGeoPicker({
     province: addressForm.province,
-    district: addressForm.district,
     ward: addressForm.ward,
     setAddressField,
   });
@@ -82,14 +80,13 @@ export function useShippingSettings() {
       isDefault: addresses.length === 0,
     });
     setAddressModalVisible(true);
-    geo.ensureProvinces();
   };
 
   const openEditAddressModal = (address: ShopAddress) => {
     setEditingAddress(address);
     setFormError(null);
     setUseOldAddressFormat(false);
-    geo.setInitialGeoSelection(address.province, address.district);
+    geo.setInitialGeoSelection(address.province);
     form.reset({
       label: address.label ?? "Kho hàng",
       name: address.name ?? "",
@@ -101,7 +98,6 @@ export function useShippingSettings() {
       isDefault: address.isDefault,
     });
     setAddressModalVisible(true);
-    geo.ensureProvinces();
   };
 
   const closeAddressModal = () => {
@@ -149,13 +145,10 @@ export function useShippingSettings() {
     isSavingAddress,
     loadAddresses,
     openCreateAddressModal,
-    openDistrictPicker: geo.openDistrictPicker,
     openEditAddressModal,
     openProvincePicker: geo.openProvincePicker,
     openWardPicker: geo.openWardPicker,
-    selectGeoItem: geo.selectGeoItem as (item: VnGeoItem) => Promise<void>,
-    selectedDistrict: geo.selectedDistrict,
-    selectedProvince: geo.selectedProvince,
+    selectGeoItem: geo.selectGeoItem,
     setFormError,
     setGeoPicker: geo.setGeoPicker,
     setUseOldAddressFormat,

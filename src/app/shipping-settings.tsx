@@ -22,13 +22,10 @@ export default function ShippingSettingsScreen() {
       formError={s.formError}
       geoPicker={s.geoPicker}
       isSavingAddress={s.isSavingAddress}
-      selectedDistrict={s.selectedDistrict}
-      selectedProvince={s.selectedProvince}
       useOldAddressFormat={s.useOldAddressFormat}
       onClose={() => { s.closeAddressModal(); hide(); }}
       onSave={s.handleSaveAddress}
       onSelectGeoItem={s.selectGeoItem}
-      onOpenDistrictPicker={s.openDistrictPicker}
       onOpenProvincePicker={s.openProvincePicker}
       onOpenWardPicker={s.openWardPicker}
       setFormError={s.setFormError}
@@ -46,7 +43,7 @@ export default function ShippingSettingsScreen() {
       hide();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.isAddressModalVisible, s.editingAddress, s.addressForm, s.formError, s.geoPicker, s.isSavingAddress, s.selectedDistrict, s.selectedProvince, s.useOldAddressFormat]);
+  }, [s.isAddressModalVisible, s.editingAddress, s.addressForm, s.formError, s.geoPicker, s.isSavingAddress, s.useOldAddressFormat]);
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();

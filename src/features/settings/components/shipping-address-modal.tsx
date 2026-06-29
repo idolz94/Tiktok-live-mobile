@@ -21,13 +21,10 @@ type ShippingAddressModalProps = {
   formError: string | null;
   geoPicker: GeoPickerState;
   isSavingAddress: boolean;
-  selectedDistrict: unknown;
-  selectedProvince: unknown;
   useOldAddressFormat: boolean;
   onClose: () => void;
   onSave: () => void;
   onSelectGeoItem: (item: VnGeoItem) => void;
-  onOpenDistrictPicker: () => void;
   onOpenProvincePicker: () => void;
   onOpenWardPicker: () => void;
   setFormError: (error: string | null) => void;
@@ -42,13 +39,10 @@ export function ShippingAddressModal({
   formError,
   geoPicker,
   isSavingAddress,
-  selectedDistrict,
-  selectedProvince,
   useOldAddressFormat,
   onClose,
   onSave,
   onSelectGeoItem,
-  onOpenDistrictPicker,
   onOpenProvincePicker,
   onOpenWardPicker,
   setFormError,
@@ -137,22 +131,26 @@ export function ShippingAddressModal({
               error={errors.province?.message}
               dirty={Boolean(dirtyFields.province)}
             />
-            <PickerField
-              label="Huyện/Quận"
-              required
-              value={addressForm.district}
-              placeholder="Chọn huyện/quận"
-              disabled={!selectedProvince}
-              onPress={onOpenDistrictPicker}
-              error={errors.district?.message}
-              dirty={Boolean(dirtyFields.district)}
+            <Controller
+              control={control}
+              name="district"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <AddressInput
+                  label="Quận/Huyện"
+                  required
+                  value={value}
+                  onChangeText={(next: string) => { onChange(next); setFormError(null); }}
+                  onBlur={onBlur}
+                  placeholder="Nhập quận/huyện"
+                />
+              )}
             />
             <PickerField
               label="Phường/Xã"
               required
               value={addressForm.ward}
               placeholder="Chọn phường/xã"
-              disabled={!selectedDistrict}
+              disabled={!addressForm.province}
               onPress={onOpenWardPicker}
               error={errors.ward?.message}
               dirty={Boolean(dirtyFields.ward)}

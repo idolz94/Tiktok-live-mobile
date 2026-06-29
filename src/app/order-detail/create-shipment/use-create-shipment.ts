@@ -6,7 +6,7 @@ import { Transport, PaymentSide, ViewCondition, PickupOption, DeliveryPolicy, Re
 import { useShipmentAddresses } from "./hooks/use-shipment-addresses";
 import { useAddressForm } from "./hooks/use-address-form";
 import { useSubmitShipment } from "./hooks/use-submit-shipment";
-import { getSpxTimeslotsApi } from "./create-shipment-api";
+import { getSpxTimeslotsApi, getShippingFeeApi } from "./create-shipment-api";
 import type { SpxTimeslot } from "./types";
 import { formatLocaleInput, parseLocaleNumber } from "./utils";
 
@@ -54,16 +54,23 @@ export function useCreateShipment() {
   const [collectType, setCollectType] = useState<CollectType>(1);
   const [pickupTimeRangeId, setPickupTimeRangeId] = useState<number | null>(null);
   const [pickupTimeKey, setPickupTimeKey] = useState<string | null>(null);
-  const setPickupTime = (id: number, key: string) => {
+  const [pickupTimestamp, setPickupTimestamp] = useState<number | null>(null);
+  const setPickupTime = (id: number, key: string, pickupTime: number) => {
     setPickupTimeRangeId(id);
     setPickupTimeKey(key);
+    setPickupTimestamp(pickupTime);
   };
-  const [parcelItemName, setParcelItemName] = useState("");
-  const [declaredValue, setDeclaredValue] = useState(0);
+  const [parcelItemName, setParcelItemName] = useState(() => primaryProduct?.name ?? "");
+  const [declaredValue, setDeclaredValue] = useState(() => orderTotal);
   const [timeslots, setTimeslots] = useState<SpxTimeslot[]>([]);
   const [timeslotsLoading, setTimeslotsLoading] = useState(false);
   const [timeslotsError, setTimeslotsError] = useState<string | null>(null);
   const [idempotencyKey] = useState(() => generateUuid());
+
+  // SPX estimated fee
+  const [estimatedFee, setEstimatedFee] = useState<number | null>(null);
+  const [feeLoading, setFeeLoading] = useState(false);
+  const [feeError, setFeeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSpxProvider || collectType !== 1) {
@@ -91,6 +98,54 @@ export function useCreateShipment() {
   const addresses = useShipmentAddresses(order);
   const { shopAddresses, customerAddresses, selectedSender, setSelectedSender, selectedRecipient, setSelectedRecipient, isLoadingSender, isLoadingRecipient, reloadShopAddresses, reloadCustomerAddresses } = addresses;
 
+  useEffect(() => {
+    if (!isSpxProvider || !order?.id) return;
+    const senderProvince = selectedSender?.province;
+    const senderDistrict = selectedSender?.district;
+    const senderWard = selectedSender?.ward;
+    const receiverProvince = selectedRecipient?.province;
+    const receiverDistrict = selectedRecipient?.district;
+    const receiverWard = selectedRecipient?.ward;
+    if (!senderProvince || !senderDistrict || !senderWard || !receiverProvince || !receiverDistrict || !receiverWard) {
+      setEstimatedFee(null);
+      if (!senderDistrict || !senderWard) {
+        setFeeError("Địa chỉ lấy hàng chưa đủ Quận/Huyện và Phường/Xã");
+      } else if (!receiverDistrict || !receiverWard) {
+        setFeeError("Địa chỉ giao hàng chưa đủ Quận/Huyện và Phường/Xã");
+      } else {
+        setFeeError(null);
+      }
+      return;
+    }
+    const weightGram = parseInt(weightInput.replace(/\D/g, ""), 10) || undefined;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setFeeLoading(true);
+      setFeeError(null);
+      getShippingFeeApi(order.id, {
+        providerCode: "spx",
+        pickProvince: senderProvince,
+        pickDistrict: senderDistrict,
+        pickWard: senderWard,
+        pickAddress: selectedSender?.address ?? undefined,
+        receiverProvince,
+        receiverDistrict,
+        receiverWard,
+        receiverAddress: selectedRecipient?.address ?? undefined,
+        weightGram,
+      }).then((res) => {
+        if (cancelled) return;
+        setEstimatedFee(res.fee?.fee ?? null);
+        setFeeLoading(false);
+      }).catch(() => {
+        if (cancelled) return;
+        setFeeError("Không tính được phí");
+        setFeeLoading(false);
+      });
+    }, 600);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [isSpxProvider, order?.id, selectedSender, selectedRecipient, weightInput, pickupTimeKey]);
+
   const addrForm = useAddressForm({
     order,
     setOrder,
@@ -103,11 +158,13 @@ export function useCreateShipment() {
   });
 
   const manualFee = useMemo(() => parseLocaleNumber(manualShippingFee), [manualShippingFee]);
-  const shippingFee = isManualProvider ? manualFee : parseLocaleNumber(String(params.shippingFee ?? ""));
+  const shippingFee = isManualProvider ? manualFee : isSpxProvider ? (estimatedFee ?? 0) : parseLocaleNumber(String(params.shippingFee ?? ""));
   const codAmount = isManualProvider ? parseLocaleNumber(manualCodAmount) : order?.codAmount ?? orderTotal;
   const codAmountDisplay = useMemo(() => isManualProvider ? manualCodAmount : formatLocaleInput(String(codAmount)), [codAmount, isManualProvider, manualCodAmount]);
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
-  const totalCollected = paymentSide === 0 ? codAmount + shippingFee : codAmount;
+  const totalCollected = isSpxProvider
+    ? orderTotal + shippingFee
+    : paymentSide === 0 ? codAmount + shippingFee : codAmount;
 
   const { isSubmitting, submitState, handleSubmitShipment, handleRetryOutcomeUnknown } = useSubmitShipment({
     order, isManualProvider, isSpxProvider, selectedSender, selectedRecipient,
@@ -118,6 +175,7 @@ export function useCreateShipment() {
     serviceType: isSpxProvider ? serviceType : undefined,
     collectType: isSpxProvider ? collectType : undefined,
     pickupTimeRangeId: isSpxProvider ? pickupTimeRangeId ?? undefined : undefined,
+    pickupTime: isSpxProvider ? pickupTimestamp ?? undefined : undefined,
     parcelItemName: isSpxProvider ? parcelItemName || undefined : undefined,
     declaredValue: isSpxProvider ? declaredValue || undefined : undefined,
     weightGram: isSpxProvider ? (parseInt(weightInput.replace(/\D/g, ""), 10) || undefined) : undefined,
@@ -196,5 +254,8 @@ export function useCreateShipment() {
     timeslotsLoading,
     timeslotsError,
     idempotencyKey,
+    estimatedFee,
+    feeLoading,
+    feeError,
   };
 }

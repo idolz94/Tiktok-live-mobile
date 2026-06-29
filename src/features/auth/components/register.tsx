@@ -23,10 +23,9 @@ type Props = {
   animatedStyle: AnimatedStyleHandle<{
     opacity: number;
   }>;
-  switchToLogin: () => void;
 };
 
-export const Register = ({ animatedStyle, switchToLogin }: Props) => {
+export const Register = ({ animatedStyle }: Props) => {
   const { colors } = useThemes();
   const { register } = useAuth();
 
@@ -56,12 +55,6 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
           fullName: fullName.trim(),
           tiktokId: tiktokId.trim().replace(/^@/, ""),
         });
-
-        Alert.alert(
-          "Đăng ký thành công",
-          "Vui lòng đăng nhập để tiếp tục.",
-          [{ text: "Đồng ý", onPress: switchToLogin }],
-        );
       } catch (error: any) {
         Alert.alert(
           "Đăng ký thất bại",
@@ -71,7 +64,7 @@ export const Register = ({ animatedStyle, switchToLogin }: Props) => {
         setIsLoading(false);
       }
     })();
-  }, [formMethod, register, switchToLogin]);
+  }, [formMethod, register]);
 
   return (
     <FormProvider {...formMethod}>
