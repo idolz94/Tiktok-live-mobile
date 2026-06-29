@@ -81,11 +81,10 @@ export const OrderDetail = memo(() => {
   );
 
   const handleSaveProductEdit = useCallback(
-    (data: { name: string; price: number; quantity: number }) => {
-      if (!detail.selectedProduct) return;
+    (itemId: string, data: { price: number; quantity: number }) => {
+      if (!itemId) return;
       hide();
-      void detail.handleUpdateProduct(detail.selectedProduct.id, {
-        name: data.name,
+      void detail.handleUpdateProduct(itemId, {
         price: data.price,
         quantity: data.quantity,
       });
@@ -162,18 +161,19 @@ export const OrderDetail = memo(() => {
                     ),
                   });
                 }}
-                onEditProduct={() => {
+                onEditProduct={(product) => {
+                  detail.openEditProduct(product);
                   show({
                     content: (
                       <ProductSheet
                         mode="edit"
-                        initialCode={detail.selectedProduct?.code}
-                        initialName={detail.selectedProduct?.name}
-                        initialPrice={detail.selectedProduct?.price}
-                        initialQty={detail.selectedProduct?.quantity}
+                        initialCode={product.code}
+                        initialName={product.name}
+                        initialPrice={product.price}
+                        initialQty={product.quantity}
                         loading={detail.updatingProduct}
                         onClose={hide}
-                        onSave={handleSaveProductEdit}
+                        onSave={(data) => handleSaveProductEdit(product.id, data)}
                       />
                     ),
                   });

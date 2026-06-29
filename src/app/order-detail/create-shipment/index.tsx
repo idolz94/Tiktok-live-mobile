@@ -9,6 +9,7 @@ import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, 
 import { AddressPickerSheet } from "./components/AddressPickerSheet";
 import { AddressFormModal } from "./components/AddressFormModal";
 import { PackageDimModal } from "./components/PackageDimModal";
+import { VoucherSelectSheet } from "./components/VoucherSelectSheet";
 import { formInitialValues } from "./utils";
 import type { AddrFormValues } from "./types";
 import { useCreateShipment } from "./use-create-shipment";
@@ -73,8 +74,6 @@ export default function CreateShipmentScreen() {
     submitState,
     handleRetryOutcomeUnknown,
     // SPX
-    serviceType,
-    setServiceType,
     collectType,
     setCollectType,
     pickupTimeRangeId,
@@ -87,6 +86,11 @@ export default function CreateShipmentScreen() {
     timeslots,
     timeslotsLoading,
     timeslotsError,
+    vouchers,
+    vouchersLoading,
+    vouchersError,
+    selectedVoucherCode,
+    setSelectedVoucherCode,
     feeLoading,
     feeError,
   } = useCreateShipment();
@@ -162,6 +166,24 @@ export default function CreateShipmentScreen() {
           onChangeDimHeight={setDimHeight}
           onChangeWeightInput={setWeightInput}
           onToggleAutoScale={() => setAutoScale((v) => !v)}
+          onClose={hide}
+        />
+      ),
+    });
+  };
+
+  const openVoucherSheet = () => {
+    show({
+      content: (
+        <VoucherSelectSheet
+          vouchers={vouchers}
+          loading={vouchersLoading}
+          error={vouchersError}
+          selectedCode={selectedVoucherCode}
+          onSelect={(code) => {
+            setSelectedVoucherCode(code);
+            hide();
+          }}
           onClose={hide}
         />
       ),
@@ -265,8 +287,6 @@ export default function CreateShipmentScreen() {
             </>
           ) : isSpxProvider ? (
             <SpxOptions
-              serviceType={serviceType}
-              setServiceType={setServiceType}
               collectType={collectType}
               setCollectType={setCollectType}
               pickupTimeRangeId={pickupTimeRangeId}
@@ -275,6 +295,11 @@ export default function CreateShipmentScreen() {
               timeslots={timeslots}
               timeslotsLoading={timeslotsLoading}
               timeslotsError={timeslotsError}
+              vouchers={vouchers}
+              vouchersLoading={vouchersLoading}
+              vouchersError={vouchersError}
+              selectedVoucherCode={selectedVoucherCode}
+              onOpenVoucherSheet={openVoucherSheet}
               parcelItemName={parcelItemName}
               setParcelItemName={setParcelItemName}
               declaredValue={declaredValue}

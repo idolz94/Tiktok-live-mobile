@@ -4,6 +4,7 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { Alert } from "react-native";
 // import { Pressable, Text, View } from "react-native"; // TODO: bỏ comment khi bật lại validate địa chỉ kho hàng
 import { useSharedValue, withTiming } from "react-native-reanimated";
@@ -37,6 +38,11 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
 
   const { show, hide } = useBottomSheet();
   const { user } = useAuth();
+  const { ordersTab, refreshOrders } = useLocalSearchParams<{
+    ordersTab?: string;
+    refreshOrders?: string;
+  }>();
+  const handledRefreshOrdersRef = useRef<string | null>(null);
   const orderManager = useOrderManager({
     comments,
     liveSessionId: currentLiveSessionId,
@@ -45,6 +51,15 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (ordersTab !== "created" || !refreshOrders || handledRefreshOrdersRef.current === refreshOrders) return;
+
+    handledRefreshOrdersRef.current = refreshOrders;
+    setActiveIndex(1);
+    pagerRef.current?.setPage(1);
+    void orderManager.reloadOrders();
+  }, [orderManager, ordersTab, pagerRef, refreshOrders]);
   const [localChannels, setLocalChannels] = useState<TikTokLiveChannel[]>(() =>
     (user?.tiktokChannels ?? []).map((c) => ({
       id: c.id,

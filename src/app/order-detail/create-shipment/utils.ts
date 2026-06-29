@@ -31,7 +31,6 @@ export function formInitialValues(addr: ShopAddress | CustomerAddress | null): P
     name: addr.name ?? "",
     phone: addr.phone ?? "",
     province: addr.province ?? "",
-    district: addr.district ?? "",
     ward: addr.ward ?? "",
     address: addr.address ?? "",
     isDefault: Boolean(addr.isDefault),
@@ -45,7 +44,7 @@ export function addressPayload(values: AddrFormValues): AddressPayload {
     phone: values.phone.trim(),
     address: values.address.trim() || null,
     province: values.province.trim(),
-    district: values.district.trim(),
+    district: null,
     ward: values.ward.trim(),
     isDefault: values.isDefault,
   };

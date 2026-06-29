@@ -38,6 +38,7 @@ type Deps = {
   dimWidth?: number;
   dimHeight?: number;
   idempotencyKey: string;
+  voucherCode?: string;
 };
 
 type SubmitState = "idle" | "submitting" | "success" | "outcome_unknown" | "error";
@@ -54,8 +55,6 @@ export function useSubmitShipment(deps: Deps) {
       selectedSender,
       selectedRecipient,
       paymentSide,
-      transport,
-      pickupOption,
       note,
       manualShippingFee,
       manualCodAmount,
@@ -73,6 +72,7 @@ export function useSubmitShipment(deps: Deps) {
       dimWidth,
       dimHeight,
       idempotencyKey,
+      voucherCode,
     } = deps;
 
     if (!order || !selectedSender || !selectedRecipient) {
@@ -118,6 +118,7 @@ export function useSubmitShipment(deps: Deps) {
           declaredValue,
           note,
           idempotencyKey,
+          voucherCode,
         });
         setSubmitState("success");
       } else {
@@ -127,7 +128,14 @@ export function useSubmitShipment(deps: Deps) {
       }
 
       Alert.alert("Tạo vận đơn thành công", "Đơn hàng đã được gửi sang đơn vị vận chuyển.", [
-        { text: "OK", onPress: () => router.back() },
+        {
+          text: "OK",
+          onPress: () =>
+            router.replace({
+              pathname: "/(tabs)/shipping",
+              params: { refreshShipping: String(Date.now()) },
+            }),
+        },
       ]);
     } catch (err) {
       const isNetworkTimeout =

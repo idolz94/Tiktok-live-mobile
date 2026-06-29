@@ -38,6 +38,17 @@ export type CustomerAddress = {
 
 type AddressPayload = ShopAddressPayload;
 
+export type SpxVoucher = {
+  voucherCode: string;
+  voucherName: string;
+  discountBy: number;
+  voucherAmount: string;
+  voucherCap: string;
+  minSpend: string;
+  validStartTime: number;
+  validEndTime: number;
+};
+
 type ManualShippingPayload = {
   paymentSide: PaymentSide;
   shippingFee?: number;
@@ -141,6 +152,7 @@ type SubmitSpxPayload = {
   declaredValue?: number;
   note?: string;
   idempotencyKey: string;
+  voucherCode?: string;
 };
 
 export async function submitSpxApi(
@@ -157,14 +169,16 @@ export async function getSpxTimeslotsApi(serviceType: number) {
   return getRequest<{ timeslots: SpxTimeslot[] }>(`/orders/spx/timeslots?serviceType=${serviceType}`);
 }
 
+export async function getSpxVouchersApi() {
+  return getRequest<{ vouchers: SpxVoucher[] }>("/orders/spx/vouchers");
+}
+
 type ShippingFeePayload = {
   providerCode: "spx";
   pickProvince: string;
-  pickDistrict: string;
   pickWard: string;
   pickAddress?: string;
   receiverProvince: string;
-  receiverDistrict: string;
   receiverWard: string;
   receiverAddress?: string;
   weightGram?: number;

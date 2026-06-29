@@ -23,7 +23,6 @@ export const addressFormSchema = z.object({
     .refine((value) => VN_PHONE_RE.test(value), "Số điện thoại không đúng nhà mạng Việt Nam"),
   address: z.string(),
   province: z.string().trim().min(1, { error: "Vui lòng chọn Tỉnh/Thành phố" }),
-  district: z.string().trim().min(1, { error: "Vui lòng chọn Quận/Huyện" }),
   ward: z.string().trim().min(1, { error: "Vui lòng chọn Phường/Xã" }),
   isDefault: z.boolean(),
 });
@@ -44,7 +43,6 @@ export const emptyAddressForm: AddressForm = {
   phone: "",
   address: "",
   province: "",
-  district: "",
   ward: "",
   isDefault: false,
 };
@@ -56,7 +54,7 @@ export function buildAddressPayload(values: AddressForm): ShopAddressPayload {
     phone: values.phone.trim(),
     address: values.address.trim() || null,
     province: values.province.trim(),
-    district: values.district.trim(),
+    district: null,
     ward: values.ward.trim(),
     isDefault: values.isDefault,
   };

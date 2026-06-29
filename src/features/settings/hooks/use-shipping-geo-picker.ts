@@ -5,7 +5,7 @@ import { GeoPickerState } from "./shipping-address-form.schema";
 type UseShippingGeoPickerParams = {
   province: string;
   ward: string;
-  setAddressField: (key: "province" | "district" | "ward", value: string) => void;
+  setAddressField: (key: "province" | "ward", value: string) => void;
 };
 
 export function useShippingGeoPicker({
@@ -41,7 +41,6 @@ export function useShippingGeoPicker({
 
     if (geoPicker.type === "province") {
       setAddressField("province", item.name);
-      setAddressField("district", "");
       setAddressField("ward", "");
       setGeoPicker(null);
       return;

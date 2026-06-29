@@ -16,9 +16,8 @@ import { GeoPickerSheet } from "@components/geo-picker";
 import { Icon } from "@components/icon";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import {
-  fetchDistricts,
   fetchProvinces,
-  fetchWards,
+  getWards,
   VnGeoItem,
 } from "@features/settings/service/vn-geo";
 import { addrSchema, AddrFormValues } from "../types";
@@ -53,7 +52,6 @@ export function AddressFormModal({
       name: "",
       phone: "",
       province: "",
-      district: "",
       ward: "",
       address: "",
       isDefault: false,
@@ -62,17 +60,12 @@ export function AddressFormModal({
   });
 
   const [provinceItems, setProvinceItems] = useState<VnGeoItem[]>([]);
-  const [districtItems, setDistrictItems] = useState<VnGeoItem[]>([]);
   const [wardItems, setWardItems] = useState<VnGeoItem[]>([]);
-  const [geoPicker, setGeoPicker] = useState<"province" | "district" | "ward" | null>(null);
+  const [geoPicker, setGeoPicker] = useState<"province" | "ward" | null>(null);
 
   const province = watch("province");
-  const district = watch("district");
   const ward = watch("ward");
   const isDefault = watch("isDefault");
-
-  const selectedProvinceCode = provinceItems.find((item) => item.name === province)?.code;
-  const selectedDistrictCode = districtItems.find((item) => item.name === district)?.code;
 
   const { isVisible } = useBottomSheet();
   useEffect(() => {
@@ -85,7 +78,6 @@ export function AddressFormModal({
       name: "",
       phone: "",
       province: "",
-      district: "",
       ward: "",
       address: "",
       isDefault: false,
@@ -99,29 +91,15 @@ export function AddressFormModal({
 
   const openProvincePicker = () => setGeoPicker("province");
 
-  const openDistrictPicker = async () => {
-    if (!selectedProvinceCode) return;
-    const items = await fetchDistricts(selectedProvinceCode).catch(() => []);
-    setDistrictItems(items);
-    setGeoPicker("district");
-  };
-
-  const openWardPicker = async () => {
-    if (!selectedDistrictCode) return;
-    const items = await fetchWards(selectedDistrictCode).catch(() => []);
-    setWardItems(items);
+  const openWardPicker = () => {
+    if (!province) return;
+    setWardItems(getWards(province));
     setGeoPicker("ward");
   };
 
   const handleSelectGeoItem = (item: VnGeoItem) => {
     if (geoPicker === "province") {
       setValue("province", item.name, { shouldDirty: true, shouldValidate: true });
-      setValue("district", "", { shouldDirty: true, shouldValidate: true });
-      setValue("ward", "", { shouldDirty: true, shouldValidate: true });
-      setDistrictItems([]);
-      setWardItems([]);
-    } else if (geoPicker === "district") {
-      setValue("district", item.name, { shouldDirty: true, shouldValidate: true });
       setValue("ward", "", { shouldDirty: true, shouldValidate: true });
       setWardItems([]);
     } else if (geoPicker === "ward") {
@@ -193,29 +171,13 @@ export function AddressFormModal({
             </Pressable>
           </FormField>
 
-          <FormField label="Quận/Huyện" error={dirtyFields.district ? errors.district?.message : undefined}>
-            <Pressable
-              onPress={openDistrictPicker}
-              style={[
-                formModalStyles.pickerField,
-                dirtyFields.district && errors.district ? formModalStyles.inputError : null,
-                !province && formModalStyles.pickerDisabled,
-              ]}
-            >
-              <Text style={[formModalStyles.pickerText, !district && formModalStyles.pickerPlaceholder]}>
-                {district || "Chọn quận/huyện"}
-              </Text>
-              <Icon name="arrow_down" size={16} tintColor="neutral400" />
-            </Pressable>
-          </FormField>
-
           <FormField label="Phường/Xã" error={dirtyFields.ward ? errors.ward?.message : undefined}>
             <Pressable
               onPress={openWardPicker}
               style={[
                 formModalStyles.pickerField,
                 dirtyFields.ward && errors.ward ? formModalStyles.inputError : null,
-                !district && formModalStyles.pickerDisabled,
+                !province && formModalStyles.pickerDisabled,
               ]}
             >
               <Text style={[formModalStyles.pickerText, !ward && formModalStyles.pickerPlaceholder]}>
@@ -275,30 +237,10 @@ export function AddressFormModal({
         <View style={formModalStyles.geoModalWrapper}>
           <Pressable style={formModalStyles.backdrop} onPress={() => setGeoPicker(null)} />
           <GeoPickerSheet
-            title={
-              geoPicker === "province"
-                ? "Chọn Tỉnh / Thành phố"
-                : geoPicker === "district"
-                  ? "Chọn Quận / Huyện"
-                  : "Chọn Phường / Xã"
-            }
-            items={
-              geoPicker === "province"
-                ? provinceItems
-                : geoPicker === "district"
-                  ? districtItems
-                  : wardItems
-            }
-            selectedName={
-              geoPicker === "province" ? province : geoPicker === "district" ? district : ward
-            }
-            placeholder={
-              geoPicker === "province"
-                ? "Tìm tỉnh/thành phố..."
-                : geoPicker === "district"
-                  ? "Tìm quận/huyện..."
-                  : "Tìm phường/xã..."
-            }
+            title={geoPicker === "province" ? "Chọn Tỉnh / Thành phố" : "Chọn Phường / Xã"}
+            items={geoPicker === "province" ? provinceItems : wardItems}
+            selectedName={geoPicker === "province" ? province : ward}
+            placeholder={geoPicker === "province" ? "Tìm tỉnh/thành phố..." : "Tìm phường/xã..."}
             onSelect={handleSelectGeoItem}
             onClose={() => setGeoPicker(null)}
           />

@@ -115,7 +115,7 @@ export function ShippingAddressModal({
                     onChangeText={(next) => { onChange(next); setFormError(null); }}
                     style={[styles.input, styles.textArea]}
                     placeholderTextColor="#d1d5db"
-                    placeholder={"Số nhà, tên đường\nPhường/Xã, Quận/Huyện\nTỉnh/Thành phố"}
+                    placeholder={"Số nhà, tên đường\nPhường/Xã\nTỉnh/Thành phố"}
                     multiline
                   />
                 )}
@@ -130,20 +130,6 @@ export function ShippingAddressModal({
               onPress={onOpenProvincePicker}
               error={errors.province?.message}
               dirty={Boolean(dirtyFields.province)}
-            />
-            <Controller
-              control={control}
-              name="district"
-              render={({ field: { onBlur, onChange, value } }) => (
-                <AddressInput
-                  label="Quận/Huyện"
-                  required
-                  value={value}
-                  onChangeText={(next: string) => { onChange(next); setFormError(null); }}
-                  onBlur={onBlur}
-                  placeholder="Nhập quận/huyện"
-                />
-              )}
             />
             <PickerField
               label="Phường/Xã"

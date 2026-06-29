@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { ShopAddress, CustomerAddress } from "../create-shipment-api";
-import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition, ServiceType, CollectType, SpxTimeslot } from "../types";
+import type { SpxVoucher } from "../create-shipment-api";
+import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition, CollectType, SpxTimeslot } from "../types";
 import { addressLine } from "../utils";
 
 export type SectionBlockProps = {
@@ -125,14 +126,18 @@ type TimeslotSelectProps = {
 type FlatSlot = { key: string; id: number; label: string; pickupTime: number };
 
 function flattenTimeslots(ts: SpxTimeslot[]): FlatSlot[] {
-  return ts.flatMap((g) =>
-    (g.slots ?? []).map((s) => ({
-      key: `${g.pickupTime}-${s.id}`,
+  if (!Array.isArray(ts)) return [];
+
+  return ts.flatMap((g, groupIndex) => {
+    if (!Array.isArray(g.slots)) return [];
+
+    return g.slots.map((s, slotIndex) => ({
+      key: `${g.pickupTime}-${s.id}-${groupIndex}-${slotIndex}`,
       id: s.id,
       label: `${g.date} ${s.range}`,
       pickupTime: g.pickupTime,
-    }))
-  );
+    }));
+  });
 }
 
 export function TimeslotSelect({ timeslots, selectedKey, onSelect }: TimeslotSelectProps) {
@@ -297,8 +302,6 @@ export function SummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 type SpxOptionsProps = {
-  serviceType: ServiceType;
-  setServiceType: (value: ServiceType) => void;
   collectType: CollectType;
   setCollectType: (value: CollectType) => void;
   pickupTimeRangeId: number | null;
@@ -307,6 +310,11 @@ type SpxOptionsProps = {
   timeslots: SpxTimeslot[];
   timeslotsLoading: boolean;
   timeslotsError?: string | null;
+  vouchers: SpxVoucher[];
+  vouchersLoading: boolean;
+  vouchersError?: string | null;
+  selectedVoucherCode: string | null;
+  onOpenVoucherSheet: () => void;
   parcelItemName: string;
   setParcelItemName: (value: string) => void;
   declaredValue: number;
@@ -315,9 +323,13 @@ type SpxOptionsProps = {
   setNote: (value: string) => void;
 };
 
+function formatVoucherAmount(voucher: SpxVoucher) {
+  const amount = Number(voucher.voucherAmount);
+  if (!amount) return null;
+  return voucher.discountBy === 2 ? `${amount}%` : `${amount.toLocaleString("vi-VN")}đ`;
+}
+
 export function SpxOptions({
-  serviceType,
-  setServiceType,
   collectType,
   setCollectType,
   pickupTimeKey,
@@ -325,6 +337,11 @@ export function SpxOptions({
   timeslots,
   timeslotsLoading,
   timeslotsError,
+  vouchers,
+  vouchersLoading,
+  vouchersError,
+  selectedVoucherCode,
+  onOpenVoucherSheet,
   parcelItemName,
   setParcelItemName,
   declaredValue,
@@ -336,13 +353,7 @@ export function SpxOptions({
 
   return (
     <>
-      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>Loại dịch vụ</Text>
-      <View style={shipmentStyles.optionGrid}>
-        <OptionChip label="SPX Standard" selected={serviceType === 1} onPress={() => setServiceType(1)} />
-        <OptionChip label="SPX Express" selected={serviceType === 2} onPress={() => setServiceType(2)} />
-      </View>
-
-      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>Hình thức lấy hàng</Text>
+      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>Hình thức lấy hàng</Text>
       <View style={shipmentStyles.optionGrid}>
         <OptionChip label="Lấy tại nhà" selected={collectType === 1} onPress={() => setCollectType(1)} />
         <OptionChip label="Lấy tại bưu cục" selected={collectType === 2} onPress={() => setCollectType(2)} />
@@ -364,6 +375,47 @@ export function SpxOptions({
           )}
         </>
       )}
+
+      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>Voucher SPX</Text>
+      <Pressable
+        onPress={onOpenVoucherSheet}
+        disabled={vouchersLoading || !!vouchersError || vouchers.length === 0}
+        style={[shipmentStyles.voucherCard, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+      >
+        {vouchersLoading ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : vouchersError ? (
+          <Text style={[{ color: colors.error, flex: 1 }, textPresets.fs12_400]}>{vouchersError}</Text>
+        ) : vouchers.length === 0 ? (
+          <Text style={[{ color: colors.neutral400, flex: 1 }, textPresets.fs14_400]}>Không có voucher khả dụng</Text>
+        ) : (
+          <>
+            <View style={shipmentStyles.voucherCardInfo}>
+              {(() => {
+                const selectedVoucher = vouchers.find((voucher) => voucher.voucherCode === selectedVoucherCode);
+                const amount = selectedVoucher ? formatVoucherAmount(selectedVoucher) : null;
+
+                return selectedVoucher ? (
+                  <>
+                    <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]} numberOfLines={1}>
+                      {selectedVoucher.voucherName || selectedVoucher.voucherCode}
+                    </Text>
+                    <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]} numberOfLines={1}>
+                      {amount ? `Đang chọn · Giảm ${amount}` : "Đang chọn voucher"}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>Chọn voucher</Text>
+                    <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>{vouchers.length} voucher khả dụng</Text>
+                  </>
+                );
+              })()}
+            </View>
+            <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
+          </>
+        )}
+      </Pressable>
 
       <ShipmentInput label="Tên hàng hóa" value={parcelItemName} onChangeText={setParcelItemName} placeholder="VD: Áo thun, Giày, ..." topSpacing />
       <ShipmentInput label="Giá trị khai báo (VND)" value={String(declaredValue)} onChangeText={(text) => setDeclaredValue(parseInt(text.replace(/\D/g, ""), 10) || 0)} placeholder="0" keyboardType="numeric" topSpacing />
@@ -427,4 +479,6 @@ export const shipmentStyles = createStyles(() => ({
   dimField: { flex: 1, gap: 6 },
   dimAutoScaleRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: 10, marginTop: 12, paddingVertical: 8 },
   dimCheckbox: { width: 20, height: 20, borderWidth: 1.5, borderRadius: 4, alignItems: "center" as const, justifyContent: "center" as const },
+  voucherCard: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 44, flexDirection: "row" as const, alignItems: "center" as const, gap: 10, marginTop: 8 },
+  voucherCardInfo: { flex: 1, gap: 2 },
 }));

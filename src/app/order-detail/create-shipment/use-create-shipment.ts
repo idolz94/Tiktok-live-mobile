@@ -6,7 +6,8 @@ import { Transport, PaymentSide, ViewCondition, PickupOption, DeliveryPolicy, Re
 import { useShipmentAddresses } from "./hooks/use-shipment-addresses";
 import { useAddressForm } from "./hooks/use-address-form";
 import { useSubmitShipment } from "./hooks/use-submit-shipment";
-import { getSpxTimeslotsApi, getShippingFeeApi } from "./create-shipment-api";
+import { getSpxTimeslotsApi, getSpxVouchersApi, getShippingFeeApi } from "./create-shipment-api";
+import type { SpxVoucher } from "./create-shipment-api";
 import type { SpxTimeslot } from "./types";
 import { formatLocaleInput, parseLocaleNumber } from "./utils";
 
@@ -50,7 +51,7 @@ export function useCreateShipment() {
   const [manualCodAmount, setManualCodAmount] = useState(() => formatLocaleInput(String(order?.codAmount ?? orderTotal)));
 
   // SPX state
-  const [serviceType, setServiceType] = useState<ServiceType>(1);
+  const serviceType: ServiceType = 1;
   const [collectType, setCollectType] = useState<CollectType>(1);
   const [pickupTimeRangeId, setPickupTimeRangeId] = useState<number | null>(null);
   const [pickupTimeKey, setPickupTimeKey] = useState<string | null>(null);
@@ -65,12 +66,40 @@ export function useCreateShipment() {
   const [timeslots, setTimeslots] = useState<SpxTimeslot[]>([]);
   const [timeslotsLoading, setTimeslotsLoading] = useState(false);
   const [timeslotsError, setTimeslotsError] = useState<string | null>(null);
+  const [vouchers, setVouchers] = useState<SpxVoucher[]>([]);
+  const [vouchersLoading, setVouchersLoading] = useState(false);
+  const [vouchersError, setVouchersError] = useState<string | null>(null);
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState<string | null>(null);
   const [idempotencyKey] = useState(() => generateUuid());
 
   // SPX estimated fee
   const [estimatedFee, setEstimatedFee] = useState<number | null>(null);
   const [feeLoading, setFeeLoading] = useState(false);
   const [feeError, setFeeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isSpxProvider) {
+      setVouchers([]);
+      setVouchersError(null);
+      setSelectedVoucherCode(null);
+      return;
+    }
+    let cancelled = false;
+    setVouchersLoading(true);
+    setVouchersError(null);
+    getSpxVouchersApi().then((res) => {
+      if (cancelled) return;
+      setVouchers(res.vouchers ?? []);
+      setVouchersLoading(false);
+    }).catch((err: unknown) => {
+      if (cancelled) return;
+      console.error("[SPX vouchers]", err);
+      setVouchers([]);
+      setVouchersError("Không tải được voucher. Thử lại.");
+      setVouchersLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [isSpxProvider]);
 
   useEffect(() => {
     if (!isSpxProvider || collectType !== 1) {
@@ -100,18 +129,21 @@ export function useCreateShipment() {
 
   useEffect(() => {
     if (!isSpxProvider || !order?.id) return;
+    if (collectType === 1 && !pickupTimeRangeId) {
+      setEstimatedFee(null);
+      setFeeError("Vui lòng chọn khung giờ lấy hàng");
+      return;
+    }
     const senderProvince = selectedSender?.province;
-    const senderDistrict = selectedSender?.district;
     const senderWard = selectedSender?.ward;
     const receiverProvince = selectedRecipient?.province;
-    const receiverDistrict = selectedRecipient?.district;
     const receiverWard = selectedRecipient?.ward;
-    if (!senderProvince || !senderDistrict || !senderWard || !receiverProvince || !receiverDistrict || !receiverWard) {
+    if (!senderProvince || !senderWard || !receiverProvince || !receiverWard) {
       setEstimatedFee(null);
-      if (!senderDistrict || !senderWard) {
-        setFeeError("Địa chỉ lấy hàng chưa đủ Quận/Huyện và Phường/Xã");
-      } else if (!receiverDistrict || !receiverWard) {
-        setFeeError("Địa chỉ giao hàng chưa đủ Quận/Huyện và Phường/Xã");
+      if (!senderWard) {
+        setFeeError("Địa chỉ lấy hàng chưa đủ Phường/Xã");
+      } else if (!receiverWard) {
+        setFeeError("Địa chỉ giao hàng chưa đủ Phường/Xã");
       } else {
         setFeeError(null);
       }
@@ -125,11 +157,9 @@ export function useCreateShipment() {
       getShippingFeeApi(order.id, {
         providerCode: "spx",
         pickProvince: senderProvince,
-        pickDistrict: senderDistrict,
         pickWard: senderWard,
         pickAddress: selectedSender?.address ?? undefined,
         receiverProvince,
-        receiverDistrict,
         receiverWard,
         receiverAddress: selectedRecipient?.address ?? undefined,
         weightGram,
@@ -144,7 +174,7 @@ export function useCreateShipment() {
       });
     }, 600);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [isSpxProvider, order?.id, selectedSender, selectedRecipient, weightInput, pickupTimeKey]);
+  }, [isSpxProvider, order?.id, selectedSender, selectedRecipient, weightInput, collectType, pickupTimeRangeId, pickupTimeKey]);
 
   const addrForm = useAddressForm({
     order,
@@ -183,6 +213,7 @@ export function useCreateShipment() {
     dimWidth: isSpxProvider ? (parseInt(dimWidth.replace(/\D/g, ""), 10) || undefined) : undefined,
     dimHeight: isSpxProvider ? (parseInt(dimHeight.replace(/\D/g, ""), 10) || undefined) : undefined,
     idempotencyKey,
+    voucherCode: selectedVoucherCode ?? undefined,
   });
 
   return {
@@ -240,7 +271,6 @@ export function useCreateShipment() {
     handleRetryOutcomeUnknown,
     // SPX
     serviceType,
-    setServiceType,
     collectType,
     setCollectType,
     pickupTimeRangeId,
@@ -253,6 +283,11 @@ export function useCreateShipment() {
     timeslots,
     timeslotsLoading,
     timeslotsError,
+    vouchers,
+    vouchersLoading,
+    vouchersError,
+    selectedVoucherCode,
+    setSelectedVoucherCode,
     idempotencyKey,
     estimatedFee,
     feeLoading,

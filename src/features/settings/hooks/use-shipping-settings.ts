@@ -37,7 +37,7 @@ export function useShippingSettings() {
     [addresses],
   );
 
-  const setAddressField = (key: "province" | "district" | "ward", value: string) => {
+  const setAddressField = (key: "province" | "ward", value: string) => {
     form.setValue(key, value, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     setFormError(null);
   };
@@ -93,7 +93,6 @@ export function useShippingSettings() {
       phone: address.phone ?? "",
       address: address.address ?? "",
       province: address.province ?? "",
-      district: address.district ?? "",
       ward: address.ward ?? "",
       isDefault: address.isDefault,
     });

@@ -124,7 +124,18 @@ export type ShippingStatus =
   | "shipping"
   | "delivered"
   | "failed"
-  | "returned";
+  | "returned"
+  | "submitted"
+  | "pending_pickup"
+  | "in_transit"
+  | "delivering"
+  | "on_hold"
+  | "pickup_failed"
+  | "damaged"
+  | "lost"
+  | "returning"
+  | "return_failed"
+  | "cancelled";
 
 export type OrderAddressData = {
   id: string;

@@ -59,6 +59,13 @@ function normalizeOrderResponse(data: any) {
 }
 
 export async function getOrdersApi(): Promise<OrderWithTikTok[]> {
+  const data = await getRequest<any>("/orders?status=draft");
+  const rows = pickArrayResponse(data, ["orders", "items", "data"]);
+
+  return rows.map((order: any) => normalizeApiOrderForUi(order));
+}
+
+export async function getShippingOrdersApi(): Promise<OrderWithTikTok[]> {
   const data = await getRequest<any>("/orders");
   const rows = pickArrayResponse(data, ["orders", "items", "data"]);
 
