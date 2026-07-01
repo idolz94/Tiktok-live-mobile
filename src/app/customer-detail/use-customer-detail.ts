@@ -4,6 +4,7 @@ import { updateCustomerApi } from "@features/customers/service/api";
 import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
 import { cancelShipmentApi, refreshShippingStatusApi } from "../order-detail/create-shipment/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
+import { usePhoneField } from "@hooks/use-phone-field";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -58,7 +59,7 @@ export function useCustomerDetail() {
 
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
   const [customerType, setCustomerType] = useState("Lẻ");
-  const [phone, setPhone] = useState("");
+  const { phone, setPhone, phoneError, validate: validatePhone, reset: resetPhone } = usePhoneField();
   const [referenceInfo, setReferenceInfo] = useState("");
   const [address, setAddress] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -97,15 +98,16 @@ export function useCustomerDetail() {
 
   useEffect(() => {
     if (!customerKey || !latestOrder) return;
-    setPhone(latestOrder.customerPhone || "");
+    resetPhone(latestOrder.customerPhone || "");
     setAddress(latestOrder.customerAddress || latestOrder.customerAddressData?.address || "");
     setReferenceInfo(latestOrder.note || customer?.latestComment || "");
-  }, [customerKey]);
+  }, [customerKey, latestOrder?.id]);
 
   const loading = orderManager.orderLoading && !customer && customerOrders.length === 0;
   const notFound = !loading && !customer && customerOrders.length === 0;
 
   const handleSave = async () => {
+    if (!validatePhone()) return;
     if (!customer?.customerId || isSaving) return;
     setIsSaving(true);
     try {
@@ -134,6 +136,7 @@ export function useCustomerDetail() {
     activeTab, setActiveTab,
     customerType, setCustomerType,
     phone, setPhone,
+    phoneError, validatePhone,
     referenceInfo, setReferenceInfo,
     address, setAddress,
     isSaving,

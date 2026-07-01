@@ -98,7 +98,7 @@ export const OrderDetail = memo(() => {
     (data: { name: string; price: number; quantity: number }) => {
       hide();
       void detail.handleAddProduct({
-        name: data.name,
+        productName: data.name,
         price: data.price,
         quantity: data.quantity,
       });
@@ -107,10 +107,11 @@ export const OrderDetail = memo(() => {
   );
 
   const handleSaveProductEdit = useCallback(
-    (itemId: string, data: { price: number; quantity: number }) => {
+    (itemId: string, data: { name: string; price: number; quantity: number }) => {
       if (!itemId) return;
       hide();
       void detail.handleUpdateProduct(itemId, {
+        productName: data.name,
         price: data.price,
         quantity: data.quantity,
       });
@@ -163,6 +164,7 @@ export const OrderDetail = memo(() => {
                   <OrderDetailCustomerSection
                     order={detail.order}
                     displayName={displayName}
+                    customerDefaultAddress={detail.customerDefaultAddress}
                     onTikTok={handleTikTok}
                   />
                   <Divider />
@@ -175,6 +177,7 @@ export const OrderDetail = memo(() => {
                 hiddenCount={hiddenCount}
                 totalQuantity={detail.totalQuantity}
                 productTotal={detail.productTotal}
+                isEditable={detail.order.status === "draft"}
                 onAddProduct={() => {
                   show({
                     content: (
@@ -193,7 +196,6 @@ export const OrderDetail = memo(() => {
                     content: (
                       <ProductSheet
                         mode="edit"
-                        initialCode={product.code}
                         initialName={product.name}
                         initialPrice={product.price}
                         initialQty={product.quantity}
@@ -212,8 +214,9 @@ export const OrderDetail = memo(() => {
                 order={detail.order}
                 selectedProvider={selectedProvider}
                 shippingFeeDisplay={shippingFeeDisplay || formatMoney(detail.shippingFee)}
-                prepaidDisplay={prepaidDisplay || formatMoney(detail.codAmount)}
+                prepaidDisplay={prepaidDisplay || formatMoney(0)}
                 remain={detail.remain}
+                isEditable={detail.order.status === "draft"}
                 onOpenProvider={() => {
                   show({
                     content: (

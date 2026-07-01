@@ -60,9 +60,6 @@ export const OrderItem = memo(
           </Pressable>
           <View style={styles.info}>
             <Text style={styles.displayName}>{displayName}</Text>
-            <Text
-              style={styles.orderId}
-            >{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
           </View>
           <View style={styles.actions}>
             <Image
@@ -74,6 +71,7 @@ export const OrderItem = memo(
           </View>
         </View>
         <View style={styles.tags}>
+          <Text style={styles.orderId}>{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
           <View style={styles.typeCustomer}>
             <Icon name="king" size={16} />
             <Text style={styles.txtTag}>VIP</Text>
@@ -91,35 +89,35 @@ export const OrderItem = memo(
         </View>
       </View>
 
-      <View style={styles.productRow}>
-        <View style={styles.productInfo}>
-          <View style={styles.productNameWrap}>
-            <Text numberOfLines={2} style={styles.txtProduct}>
+      <View style={styles.productList}>
+        {products.length > 0 ? (
+          products.map((p) => (
+            <View key={p.id} style={styles.productRow}>
+              <Text numberOfLines={2} style={[styles.txtProduct, styles.productName]}>
+                {p.name || "Sản phẩm"}
+              </Text>
+              <Text style={styles.txtProductPrice}>
+                {formatMoney(Number(p.price || 0) * Number(p.quantity || 1))}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <View style={styles.productRow}>
+            <Text numberOfLines={2} style={[styles.txtProduct, styles.productName]}>
               {item.productName || item.comment || "Sản phẩm"}
             </Text>
+            <Text style={styles.txtProductPrice}>
+              {formatMoney(Number(item.price || 0) * Number(item.quantity || 1))}
+            </Text>
           </View>
-          <Text style={styles.txtOrderTime}>
-            {new Date(item.createdAt).toLocaleTimeString()}
-          </Text>
-        </View>
-        <Text style={styles.txtProductPrice}>
-          {`${formatMoney(Number(item.price || 0) * Number(item.quantity || 1))} x ${item.quantity}`}
-        </Text>
+        )}
       </View>
 
       <Separator type="horizontal" size={1} style={styles.separator} />
 
       <View style={styles.subtotalRow}>
-        <View style={styles.subtotalLabels}>
-          <Text style={styles.txtProduct}>Tạm tính</Text>
-          <Text style={styles.txtProduct}>Thu tiền hộ (COD)</Text>
-        </View>
-        <View style={styles.subtotalValues}>
-          <Text style={styles.txtProductPrice}>{formatMoney(total)}</Text>
-          <Text
-            style={[styles.txtProductPrice, { textAlign: "right" }]}
-          >{`${item.discountAmount}đ`}</Text>
-        </View>
+        <Text style={styles.txtProduct}>Tạm tính</Text>
+        <Text style={styles.txtProductPrice}>{formatMoney(total)}</Text>
       </View>
 
       <View style={styles.footer}>
@@ -190,22 +188,20 @@ const styles = createStyles(({ colors, textPresets }) => ({
   tags: {
     flexDirection: "row",
     alignItems: "center",
-    columnGap: 4,
-    paddingLeft: 72,
+    columnGap: 8,
+  },
+  productList: {
+    marginTop: 12,
+    rowGap: 6,
   },
   productRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     columnGap: 12,
-    paddingTop: 12,
   },
-  productInfo: {
+  productName: {
     flex: 1,
-    rowGap: 2,
-  },
-  productNameWrap: {
-    flexShrink: 1,
   },
   separator: {
     marginVertical: 12,
@@ -214,12 +210,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  subtotalLabels: {
-    rowGap: 4,
-  },
-  subtotalValues: {
-    rowGap: 4,
   },
   footer: {
     flexDirection: "row",
@@ -247,10 +237,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   txtProductPrice: {
     color: colors.neutral900,
     ...textPresets.fs14_500,
-  },
-  txtOrderTime: {
-    color: colors.neutral300,
-    ...textPresets.fs12_400,
   },
   txtNotPaid: {
     color: colors.primary,

@@ -1,11 +1,10 @@
 import { createStyles } from "@utils/createStyles";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Setting } from "../constants";
 
 export function SettingItem({ icon, label, onPress }: Setting) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <Pressable
       style={styles.settingItem}
       onPress={onPress}
     >
@@ -16,7 +15,7 @@ export function SettingItem({ icon, label, onPress }: Setting) {
         <Text style={styles.settingText}>{label}</Text>
       </View>
       <Text style={styles.chevron}>›</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

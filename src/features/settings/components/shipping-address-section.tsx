@@ -1,6 +1,6 @@
 import { ShopAddress } from "@features/settings/service/shop-addresses-api";
 import { formatShopAddress } from "@features/settings/hooks/shipping-address-form.schema";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 
 type ShippingAddressSectionProps = {
@@ -17,10 +17,10 @@ export function ShippingAddressSection({ address, isLoading, onAdd, onEdit }: Sh
 
       <AddressContent address={address} isLoading={isLoading} onEdit={onEdit} />
 
-      <TouchableOpacity style={styles.addButton} activeOpacity={0.75} onPress={onAdd}>
+      <Pressable style={styles.addButton} onPress={onAdd}>
         <Text style={styles.addIcon}>＋</Text>
         <Text style={styles.addText}>Thêm mới</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
@@ -54,10 +54,10 @@ function AddressContent({ address, isLoading, onEdit }: Omit<ShippingAddressSect
           <Text style={styles.storeName}>{address.name || address.label || "Kho hàng"}</Text>
           {address.isDefault ? <Text style={styles.storeDefaultText}>Mặc định</Text> : null}
         </View>
-        <TouchableOpacity style={styles.editButton} activeOpacity={0.75} onPress={() => onEdit(address)}>
+        <Pressable style={styles.editButton} onPress={() => onEdit(address)}>
           <Text style={styles.editIcon}>✎</Text>
           <Text style={styles.editText}>Sửa</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <View style={styles.warehouseMeta}>

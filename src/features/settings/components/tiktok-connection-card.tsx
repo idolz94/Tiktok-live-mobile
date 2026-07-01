@@ -1,5 +1,5 @@
 import { createStyles } from "@utils/createStyles";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 type TikTokConnectionCardProps = {
   label: string;
@@ -40,9 +40,9 @@ export function TikTokConnectionCard({
         placeholder={placeholder}
         placeholderTextColor={placeholderTextColor}
       />
-      <TouchableOpacity style={styles.changeButton} onPress={onSubmit} activeOpacity={0.85}>
+      <Pressable style={styles.changeButton} onPress={onSubmit}>
         <Text style={styles.changeButtonText}>{connectLabel}</Text>
-      </TouchableOpacity>
+      </Pressable>
       <Text numberOfLines={1} style={styles.serverText}>
         {serverText}
       </Text>

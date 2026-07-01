@@ -177,10 +177,6 @@ export default function CustomersTab() {
                         <Text style={styles.metaText}>
                           {customer.totalOrders} đơn
                         </Text>
-                        <Text style={styles.metaDot}>•</Text>
-                        <Text style={styles.metaText}>
-                          {customer.totalComments} comment
-                        </Text>
                       </View>
                     </View>
                     <Text style={styles.chevron}>›</Text>

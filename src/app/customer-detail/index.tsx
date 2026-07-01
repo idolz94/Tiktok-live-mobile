@@ -3,6 +3,8 @@ import { Avatar } from "@components/avatar";
 import { Screen } from "@components/screen";
 import { Ionicons } from "@expo/vector-icons";
 import { formatMoney, getOrderTotal, statusLabel } from "@features/orders/utils/order";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { openTikTokProfile } from "@utils/tiktok";
 import { router } from "expo-router";
@@ -30,7 +32,9 @@ type FieldProps = {
   value: string;
   placeholder?: string;
   multiline?: boolean;
+  keyboardType?: import("react-native").TextInputProps["keyboardType"];
   onChangeText: (value: string) => void;
+  onBlur?: () => void;
 };
 
 const TABS: { key: DetailTab; label: string }[] = [
@@ -59,7 +63,57 @@ function ActionPill({ label, onPress }: { label: string; onPress: () => void }) 
   );
 }
 
-function Field({ label, value, placeholder, multiline, onChangeText }: FieldProps) {
+const CUSTOMER_TYPES = ["Lẻ", "Sỉ", "Boom"];
+
+function SelectField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const { colors, textPresets } = useThemes();
+  const { show, hide } = useBottomSheet();
+
+  const openSheet = () => {
+    show({
+      content: (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+          <Text style={{ paddingVertical: 16, color: colors.neutral500, ...textPresets.fs15_800 }}>{label}</Text>
+          {CUSTOMER_TYPES.map((opt) => {
+            const selected = value === opt;
+            return (
+              <Pressable
+                key={opt}
+                onPress={() => { onChange(opt); hide(); }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 14,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border10,
+                }}
+              >
+                <Text style={[textPresets.fs15_400, { color: selected ? colors.primary : colors.neutral900 }]}>{opt}</Text>
+                {selected && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+              </Pressable>
+            );
+          })}
+        </View>
+      ),
+      snapPoints: ["35%"],
+    });
+  };
+
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <Pressable onPress={openSheet} style={styles.selectInput}>
+        <Text style={[textPresets.fs14_400, { color: value ? colors.neutral900 : colors.neutral300, flex: 1 }]}>
+          {value || "Chọn loại khách hàng"}
+        </Text>
+        <Ionicons name="chevron-down" size={16} color={colors.neutral400} />
+      </Pressable>
+    </View>
+  );
+}
+
+function Field({ label, value, placeholder, multiline, keyboardType, onChangeText, onBlur }: FieldProps) {
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -68,7 +122,9 @@ function Field({ label, value, placeholder, multiline, onChangeText }: FieldProp
         placeholder={placeholder}
         placeholderTextColor="#A0A0A0"
         multiline={multiline}
+        keyboardType={keyboardType}
         onChangeText={onChangeText}
+        onBlur={onBlur}
         style={[styles.input, multiline && styles.inputMultiline]}
         textAlignVertical={multiline ? "top" : "center"}
       />
@@ -314,6 +370,7 @@ export default function CustomerDetail() {
     activeTab, setActiveTab,
     customerType, setCustomerType,
     phone, setPhone,
+    phoneError, validatePhone,
     referenceInfo, setReferenceInfo,
     address, setAddress,
     isSaving,
@@ -397,8 +454,9 @@ export default function CustomerDetail() {
 
             {activeTab === "info" ? (
               <View style={styles.infoContent}>
-                <Field label="Loại khách hàng" value={customerType} onChangeText={setCustomerType} />
-                <Field label="Số điện thoại" value={phone} placeholder="Nhập số điện thoại" onChangeText={setPhone} />
+                <SelectField label="Loại khách hàng" value={customerType} onChange={setCustomerType} />
+                <Field label="Số điện thoại" value={phone} placeholder="Nhập số điện thoại" onChangeText={setPhone} keyboardType="phone-pad" onBlur={() => validatePhone()} />
+                {!!phoneError && <Text style={styles.fieldError}>{phoneError}</Text>}
                 <Field
                   label="Thông tin tham khảo"
                   value={referenceInfo}
@@ -591,6 +649,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     fontSize: 14,
     fontWeight: "600",
   },
+  fieldError: {
+    marginTop: 4,
+    color: colors.error,
+    fontSize: 12,
+  },
   input: {
     minHeight: 48,
     borderWidth: 1,
@@ -605,6 +668,16 @@ const styles = createStyles(({ colors, textPresets }) => ({
     minHeight: 88,
     paddingTop: 14,
     paddingBottom: 14,
+  },
+  selectInput: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: colors.border10,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    backgroundColor: colors.white,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
   },
   ordersContent: {
     paddingTop: 16,

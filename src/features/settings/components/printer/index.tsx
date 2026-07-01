@@ -1,7 +1,7 @@
 import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { router } from "expo-router";
+import { Header } from "@components/header";
 import { useCallback } from "react";
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TextInput, Pressable, View } from "react-native";
 import { createStyles } from "@utils/createStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { type PrinterSheet } from "../../types/printer";import { usePrinterSettings } from "../../hooks/use-printer-settings";
@@ -29,17 +29,16 @@ function OptionList<T extends string>({
       {options.map((opt) => {
         const isSelected = opt.value === selected;
         return (
-          <TouchableOpacity
+          <Pressable
             key={opt.value}
             style={[styles.sheetOption, isSelected && styles.sheetOptionSelected]}
-            activeOpacity={0.7}
             onPress={() => onSelect(opt.value)}
           >
             <Text style={[styles.sheetOptionText, isSelected && styles.sheetOptionTextSelected]}>
               {opt.label}
             </Text>
             {isSelected ? <Text style={styles.sheetSelectedMark}>✓</Text> : null}
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
     </View>
@@ -62,10 +61,6 @@ export function PrinterSettingsScreen() {
     setFontSize,
     handleSave,
   } = usePrinterSettings();
-
-  const handleBack = () => {
-    if (router.canGoBack()) router.back();
-  };
 
   const openSheet = useCallback(
     (sheet: PrinterSheet) => {
@@ -123,14 +118,8 @@ export function PrinterSettingsScreen() {
       : "Bluetooth phải bật và máy in đã được ghép đôi với điện thoại.";
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.headerButton} activeOpacity={0.8}>
-          <Text style={styles.backIcon}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Cài đặt máy in</Text>
-        <View style={styles.headerPlaceholder} />
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
+      <Header title="Cài đặt máy in" />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -273,16 +262,15 @@ export function PrinterSettingsScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.testButton, isTesting && styles.testButtonDisabled]}
-          activeOpacity={0.85}
           onPress={handleTestPrint}
           disabled={isTesting}
         >
           <Text style={styles.testButtonText}>
             {isTesting ? "Đang in thử..." : "In thử"}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <PrinterTemplateList />
       </ScrollView>
@@ -292,35 +280,6 @@ export function PrinterSettingsScreen() {
 
 const styles = createStyles(({ colors }) => ({
   safeArea: { flex: 1, backgroundColor: colors.neutral100 },
-  header: {
-    minHeight: 72,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.neutral100,
-  },
-  headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.neutral50,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backIcon: { color: colors.neutral900, fontSize: 34, lineHeight: 34, marginTop: -4 },
-  headerPlaceholder: { width: 44, height: 44, opacity: 0 },
-  title: {
-    flex: 1,
-    marginHorizontal: 12,
-    color: colors.neutral900,
-    textAlign: "center",
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "500",
-  },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,

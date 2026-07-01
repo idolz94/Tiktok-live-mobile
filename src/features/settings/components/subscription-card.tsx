@@ -1,6 +1,6 @@
 import { LinearGradient } from "@components/linear-gradient";
 import { createStyles } from "@utils/createStyles";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 type SubscriptionCardProps = {
   title: string;
@@ -25,11 +25,11 @@ export function SubscriptionCard({
         </View>
         <Text style={styles.chevron}>›</Text>
       </View>
-      <TouchableOpacity activeOpacity={0.85}>
+      <Pressable>
         <LinearGradient type="gra_primary" style={styles.upgradeButton}>
           <Text style={styles.upgradeText}>{upgradeLabel}</Text>
         </LinearGradient>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }

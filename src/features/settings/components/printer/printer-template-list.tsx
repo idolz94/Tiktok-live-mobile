@@ -1,4 +1,4 @@
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { createStyles } from "@utils/createStyles";
 import { icons } from "@assets/icons";
 
@@ -25,9 +25,8 @@ export function PrinterTemplateList({
     <View style={styles.templateList}>
       {items.map((item, index) => (
         <View key={item.key}>
-          <TouchableOpacity
+          <Pressable
             style={styles.templateRow}
-            activeOpacity={0.75}
             onPress={item.onPress}
           >
             <View style={styles.templateLeft}>
@@ -39,7 +38,7 @@ export function PrinterTemplateList({
               <Text style={styles.templateText}>{item.label}</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
-          </TouchableOpacity>
+          </Pressable>
           {index < items.length - 1 ? <View style={styles.templateDivider} /> : null}
         </View>
       ))}

@@ -6,14 +6,22 @@ import { createStyles } from "@utils/createStyles";
 import { Section } from "./OrderDetailPrimitives";
 import { useCallback } from "react";
 import { router } from "expo-router";
+import type { CustomerAddress } from "@app/order-detail/create-shipment/create-shipment-api";
 
 type OrderDetailCustomerSectionProps = {
   order: OrderWithTikTok;
   displayName: string;
+  customerDefaultAddress?: CustomerAddress | null;
   onTikTok?: () => void;
 };
 
-export function OrderDetailCustomerSection({ order, displayName, onTikTok }: OrderDetailCustomerSectionProps) {
+function formatCustomerAddress(addr: CustomerAddress): string {
+  return [addr.address, addr.ward, addr.district, addr.province]
+    .filter(Boolean)
+    .join(", ");
+}
+
+export function OrderDetailCustomerSection({ order, displayName, customerDefaultAddress, onTikTok }: OrderDetailCustomerSectionProps) {
   const handlePhone = useCallback(() => {
     if (!order.customerPhone) return;
     Linking.openURL(`tel:${order.customerPhone}`);
@@ -53,8 +61,10 @@ export function OrderDetailCustomerSection({ order, displayName, onTikTok }: Ord
         </View>
         <View style={styles.contactRow}>
           <Icon name="truck" size={16} tintColor="neutral400" />
-          <Text style={[styles.contactText, !order.customerAddress && styles.contactTextMuted]}>
-            {order.customerAddress || "Chưa có địa chỉ"}
+          <Text style={[styles.contactText, !customerDefaultAddress && !order.customerAddress && styles.contactTextMuted]}>
+            {customerDefaultAddress
+              ? formatCustomerAddress(customerDefaultAddress)
+              : (order.customerAddress || "Chưa có địa chỉ")}
           </Text>
         </View>
       </View>

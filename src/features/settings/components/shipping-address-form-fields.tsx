@@ -1,4 +1,4 @@
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 import { AnimatedErrorText } from "@components/animated-error-text";
 
@@ -43,13 +43,12 @@ export function SwitchRow({ title, subtitle, value, onPress }: {
         <Text style={styles.switchTitle}>{title}</Text>
         {subtitle ? <Text style={styles.switchSubtitle}>{subtitle}</Text> : null}
       </View>
-      <TouchableOpacity
+      <Pressable
         style={[styles.switchTrack, value ? styles.switchTrackActive : styles.switchTrackInactive]}
-        activeOpacity={0.8}
         onPress={onPress}
       >
         <View style={[styles.switchThumb, value ? styles.switchThumbActive : styles.switchThumbInactive]} />
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
@@ -69,15 +68,14 @@ export function PickerField({ label, required = false, value, placeholder, disab
       <Text style={styles.inputLabel}>
         {label} {required ? <Text style={styles.requiredMark}>*</Text> : null}
       </Text>
-      <TouchableOpacity
+      <Pressable
         style={[styles.pickerButton, dirty && error && styles.inputError, disabled && styles.pickerButtonDisabled]}
-        activeOpacity={0.75}
         disabled={disabled}
         onPress={onPress}
       >
         <Text style={[styles.pickerButtonText, !value && styles.pickerPlaceholder]}>{value || placeholder}</Text>
         <Text style={styles.pickerChevron}>⌄</Text>
-      </TouchableOpacity>
+      </Pressable>
       <AnimatedErrorText message={dirty && error ? error : undefined} />
     </View>
   );

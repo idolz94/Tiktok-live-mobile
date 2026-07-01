@@ -1,5 +1,5 @@
 import { images } from "@assets/images";
-import { Image, ImageSourcePropType, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageSourcePropType, Pressable, Text, View } from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 
 const connectedPartners = [
@@ -66,7 +66,7 @@ function PartnerGroup({ title, partners }: { title: string; partners: readonly P
 
 function PartnerCard({ partner }: { partner: Partner }) {
   return (
-    <TouchableOpacity style={styles.partnerCard} activeOpacity={0.75}>
+    <Pressable style={styles.partnerCard}>
       <View style={styles.partnerContent}>
         <DeliveryLogo color={partner.color} image={images.ship} />
         <View style={styles.partnerTextWrap}>
@@ -82,7 +82,7 @@ function PartnerCard({ partner }: { partner: Partner }) {
         </View>
       </View>
       <Text style={styles.chevron}>›</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

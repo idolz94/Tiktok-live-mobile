@@ -7,9 +7,9 @@ import { router } from "expo-router";
 import {
   Image,
   ImageSourcePropType,
+  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -76,12 +76,12 @@ export default function SettingsTab() {
           <View style={styles.topBar}>
             <Text style={styles.title}>Hồ sơ</Text>
             <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.roundButton} activeOpacity={0.8}>
+              <Pressable style={styles.roundButton}>
                 <Text style={styles.roundButtonIcon}>⌕</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.roundButton} activeOpacity={0.8}>
+              </Pressable>
+              <Pressable style={styles.roundButton}>
                 <Text style={styles.roundButtonIcon}>⚙</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
 
@@ -112,11 +112,11 @@ export default function SettingsTab() {
               </View>
               <Text style={styles.chevron}>›</Text>
             </View>
-            <TouchableOpacity activeOpacity={0.85}>
+            <Pressable>
               <LinearGradient type="gra_primary" style={styles.upgradeButton}>
                 <Text style={styles.upgradeText}>Nâng cấp</Text>
               </LinearGradient>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <View style={styles.settingsContainer}>
@@ -135,8 +135,7 @@ export default function SettingsTab() {
                 <View style={styles.divider} />
               </View>
             ))}
-            <TouchableOpacity
-              activeOpacity={0.7}
+            <Pressable
               style={styles.settingItem}
               onPress={logout}
             >
@@ -151,7 +150,7 @@ export default function SettingsTab() {
                 <Text style={styles.settingText}>Đăng xuất</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </ScrollView>
@@ -161,9 +160,9 @@ export default function SettingsTab() {
 
 function SocialButton({ label }: { label: string }) {
   return (
-    <TouchableOpacity activeOpacity={0.8} style={styles.socialButton}>
+    <Pressable style={styles.socialButton}>
       <Text style={styles.socialIcon}>{label}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -176,25 +175,29 @@ function SettingItem({
   label: string;
   onPress?: () => void;
 }) {
-  const Wrapper = onPress ? TouchableOpacity : View;
+  if (!onPress) {
+    return (
+      <View style={styles.settingItem}>
+        <View style={styles.settingLeft}>
+          <View style={styles.settingIconBox}>
+            <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
+          </View>
+          <Text style={styles.settingText}>{label}</Text>
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </View>
+    );
+  }
   return (
-    <Wrapper
-      activeOpacity={0.7 as never}
-      style={styles.settingItem}
-      onPress={onPress as never}
-    >
+    <Pressable style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingLeft}>
         <View style={styles.settingIconBox}>
-          <Image
-            source={icon}
-            style={styles.settingIcon}
-            resizeMode="contain"
-          />
+          <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
         </View>
         <Text style={styles.settingText}>{label}</Text>
       </View>
       <Text style={styles.chevron}>›</Text>
-    </Wrapper>
+    </Pressable>
   );
 }
 

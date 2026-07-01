@@ -56,7 +56,6 @@ export default function CreateShipmentScreen() {
     setAutoScale,
     shippingFee,
     codAmountDisplay,
-    goodsValueDisplay,
     totalCollected,
     manualShippingFee,
     setManualShippingFee,
@@ -103,12 +102,13 @@ export default function CreateShipmentScreen() {
     if (addr) setEditingAddr(addr);
     const defaultValues: Partial<AddrFormValues> = addr
       ? (formInitialValues(addr) ?? {})
-      : {};
+      : { isDefault: target === "sender" ? shopAddresses.length === 0 : customerAddresses.length === 0 };
     show({
       content: (
         <AddressFormModal
           title={title}
           initialValues={defaultValues}
+          disableDefaultToggle={!addr && (target === "sender" ? shopAddresses.length === 0 : customerAddresses.length === 0)}
           onClose={() => { hide(); setAddrFormTarget(null); setEditingAddr(null); }}
           onSave={async (vals) => { await handleSaveAddress(vals, target, addr ?? null); hide(); }}
         />
@@ -271,7 +271,6 @@ export default function CreateShipmentScreen() {
             onChangeText={setManualCodAmount}
             editable={isManualProvider}
           />
-          <MoneyField label="Tổng giá trị hàng hóa" value={goodsValueDisplay} editable={false} />
           <View style={shipmentStyles.optionGrid}>
             <OptionChip label="Bên nhận trả phí" selected={paymentSide === 0} onPress={() => setPaymentSide(0)} />
             <OptionChip label="Bên gửi trả phí" selected={paymentSide === 1} onPress={() => setPaymentSide(1)} />
@@ -282,7 +281,7 @@ export default function CreateShipmentScreen() {
         <SectionBlock title="Thông tin vận chuyển">
           {isManualProvider ? (
             <>
-              <ShipmentInput label="Phí vận chuyển" value={manualShippingFee} onChangeText={setManualShippingFee} placeholder="0" keyboardType="numeric" />
+              <ShipmentInput label="Phí vận chuyển" value={manualShippingFee} onChangeText={setManualShippingFee} placeholder="0" keyboardType="numeric" money />
               <ShipmentInput label="Ghi chú" value={manualNote} onChangeText={setManualNote} placeholder="Nhập ghi chú" multiline />
             </>
           ) : isSpxProvider ? (

@@ -5,10 +5,10 @@ import { AddressForm, GeoPickerState } from "@features/settings/hooks/shipping-a
 import { Controller, UseFormReturn } from "react-hook-form";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { AddressInput, PickerField, SwitchRow } from "./shipping-address-form-fields";
@@ -55,9 +55,9 @@ export function ShippingAddressModal({
     <View style={styles.modalCard}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{editingAddress ? "Sửa địa chỉ kho" : "Thêm địa chỉ kho"}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.modalCloseButton} activeOpacity={0.75}>
+            <Pressable onPress={onClose} style={styles.modalCloseButton}>
               <Text style={styles.modalCloseText}>×</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalContent}>
@@ -160,9 +160,8 @@ export function ShippingAddressModal({
               </View>
             ) : null}
 
-            <TouchableOpacity
+            <Pressable
               style={[styles.saveButton, (isSavingAddress || !isValid) && styles.saveButtonDisabled]}
-              activeOpacity={0.8}
               onPress={onSave}
               disabled={isSavingAddress || !isValid}
             >
@@ -171,7 +170,7 @@ export function ShippingAddressModal({
               ) : (
                 <Text style={styles.saveButtonText}>{editingAddress ? "CẬP NHẬT ĐỊA CHỈ" : "+ THÊM ĐỊA CHỈ"}</Text>
               )}
-            </TouchableOpacity>
+            </Pressable>
           </ScrollView>
 
           {geoPicker ? (

@@ -1,9 +1,9 @@
 import { memo } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { createStyles } from "@utils/createStyles";
@@ -60,8 +60,7 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
   return (
     <View style={styles.card}>
       {/*  Connection type  */}
-      <TouchableOpacity
-        activeOpacity={0.75}
+      <Pressable
         style={[styles.row, styles.rowStacked]}
         onPress={() => onOpenSheet("connection")}
       >
@@ -72,11 +71,7 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
           </Text>
         </View>
         <Text style={styles.chevron}>›</Text>
-      </TouchableOpacity>
-
-      <View style={styles.divider} />
-
-      {/*  Address  */}
+      </Pressable>
       <View style={styles.row}>
         <Text style={styles.rowLabel}>{addressLabel}</Text>
         {connectionType === "wifi" ? (
@@ -104,8 +99,7 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
       <View style={styles.divider} />
 
       {/*  Paper size  */}
-      <TouchableOpacity
-        activeOpacity={0.75}
+      <Pressable
         style={styles.row}
         onPress={() => onOpenSheet("paper")}
       >
@@ -116,13 +110,12 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
           </Text>
         </View>
         <Text style={styles.chevron}>›</Text>
-      </TouchableOpacity>
+      </Pressable>
 
       <View style={styles.divider} />
 
       {/*  Font size  */}
-      <TouchableOpacity
-        activeOpacity={0.75}
+      <Pressable
         style={styles.row}
         onPress={() => onOpenSheet("font")}
       >
@@ -133,7 +126,7 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
           </Text>
         </View>
         <Text style={styles.chevron}>›</Text>
-      </TouchableOpacity>
+      </Pressable>
 
       <View style={styles.divider} />
 
@@ -193,8 +186,7 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
         </View>
 
         {isConnected ? (
-          <TouchableOpacity
-            activeOpacity={0.75}
+          <Pressable
             style={[styles.connectButton, styles.disconnectButton]}
             onPress={onDisconnect}
           >
@@ -203,10 +195,9 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
             >
               Ngắt kết nối
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         ) : (
-          <TouchableOpacity
-            activeOpacity={0.75}
+          <Pressable
             style={[
               styles.connectButton,
               isConnecting && styles.connectButtonDisabled,
@@ -217,7 +208,7 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
             <Text style={styles.connectButtonText}>
               {isConnecting ? "Đang kết nối..." : "Kết nối"}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
       {/*  End connect / disconnect  */}

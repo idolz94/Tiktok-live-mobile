@@ -13,6 +13,7 @@ type OrderDetailShippingSectionProps = {
   shippingFeeDisplay: string;
   prepaidDisplay: string;
   remain: number;
+  isEditable?: boolean;
   onOpenProvider: () => void;
   onChangeShippingFee: (amount: number, display: string) => void;
   onChangePrepaid: (amount: number, display: string) => void;
@@ -24,6 +25,7 @@ export function OrderDetailShippingSection({
   shippingFeeDisplay,
   prepaidDisplay,
   remain,
+  isEditable = true,
   onOpenProvider,
   onChangeShippingFee,
   onChangePrepaid,
@@ -35,7 +37,8 @@ export function OrderDetailShippingSection({
       <SectionHeader title="Phương thức vận chuyển" />
       <Pressable
         style={[styles.providerCard, { backgroundColor: colors.neutral50 }]}
-        onPress={onOpenProvider}
+        onPress={isEditable ? onOpenProvider : undefined}
+        disabled={!isEditable}
       >
         <View
           style={[
@@ -64,12 +67,14 @@ export function OrderDetailShippingSection({
         label="Phí vận chuyển"
         value={shippingFeeDisplay}
         onChangeAmount={onChangeShippingFee}
+        editable={isEditable}
       />
 
       <CurrencyInputRow
         label="Khách trả trước"
         value={prepaidDisplay}
         onChangeAmount={onChangePrepaid}
+        editable={isEditable}
       />
 
       <MoneyRow label="Còn lại" value={formatMoney(remain)} primary />

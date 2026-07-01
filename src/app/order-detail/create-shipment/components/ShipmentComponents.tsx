@@ -213,7 +213,7 @@ export function MoneyField({ label, value, onChangeText, editable = true }: Mone
           placeholder="0"
           placeholderTextColor={colors.neutral300}
         />
-        <Text style={[{ color: colors.neutral400 }, textPresets.fs14_500]}>VND</Text>
+        <Text style={[{ color: colors.neutral400 }, textPresets.fs14_500]}>VNĐ</Text>
       </View>
     </View>
   );
@@ -227,26 +227,46 @@ type ShipmentInputProps = {
   keyboardType?: "default" | "numeric";
   multiline?: boolean;
   topSpacing?: boolean;
+  required?: boolean;
+  money?: boolean;
 };
 
-export function ShipmentInput({ label, value, onChangeText, placeholder, keyboardType, multiline, topSpacing }: ShipmentInputProps) {
+export function ShipmentInput({ label, value, onChangeText, placeholder, keyboardType, multiline, topSpacing, required, money }: ShipmentInputProps) {
   const { colors, textPresets } = useThemes();
   return (
     <View style={[shipmentStyles.formGroup, topSpacing ? { marginTop: 8 } : null]}>
-      <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        multiline={multiline}
-        style={[
-          multiline ? shipmentStyles.noteInput : shipmentStyles.textInput,
-          { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 },
-          textPresets.fs14_400,
-        ]}
-        placeholder={placeholder}
-        placeholderTextColor={colors.neutral300}
-      />
+      <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>
+        {label}{required ? <Text style={{ color: colors.error }}> *</Text> : null}
+      </Text>
+      {money ? (
+        <View style={[shipmentStyles.moneyInputRow, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}>
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            keyboardType={keyboardType}
+            style={[shipmentStyles.moneyInputInner, { color: colors.neutral900 }, textPresets.fs14_400]}
+            placeholder={placeholder}
+            placeholderTextColor={colors.neutral300}
+          />
+          <View style={[shipmentStyles.moneyInputSuffix, { borderLeftColor: colors.border10 }]}>
+            <Text style={[textPresets.fs12_500, { color: colors.neutral400 }]}>VNĐ</Text>
+          </View>
+        </View>
+      ) : (
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType={keyboardType}
+          multiline={multiline}
+          style={[
+            multiline ? shipmentStyles.noteInput : shipmentStyles.textInput,
+            { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 },
+            textPresets.fs14_400,
+          ]}
+          placeholder={placeholder}
+          placeholderTextColor={colors.neutral300}
+        />
+      )}
     </View>
   );
 }
@@ -418,7 +438,7 @@ export function SpxOptions({
       </Pressable>
 
       <ShipmentInput label="Tên hàng hóa" value={parcelItemName} onChangeText={setParcelItemName} placeholder="VD: Áo thun, Giày, ..." topSpacing />
-      <ShipmentInput label="Giá trị khai báo (VND)" value={String(declaredValue)} onChangeText={(text) => setDeclaredValue(parseInt(text.replace(/\D/g, ""), 10) || 0)} placeholder="0" keyboardType="numeric" topSpacing />
+      <ShipmentInput label="Giá trị bưu gửi" required value={declaredValue > 0 ? declaredValue.toLocaleString("vi-VN") : ""} onChangeText={(text) => setDeclaredValue(parseInt(text.replace(/\D/g, ""), 10) || 0)} placeholder="0" keyboardType="numeric" topSpacing money />
       <ShipmentInput label="Ghi chú" value={note} onChangeText={setNote} placeholder="Nhập ghi chú" multiline topSpacing />
     </>
   );
@@ -481,4 +501,7 @@ export const shipmentStyles = createStyles(() => ({
   dimCheckbox: { width: 20, height: 20, borderWidth: 1.5, borderRadius: 4, alignItems: "center" as const, justifyContent: "center" as const },
   voucherCard: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 44, flexDirection: "row" as const, alignItems: "center" as const, gap: 10, marginTop: 8 },
   voucherCardInfo: { flex: 1, gap: 2 },
+  moneyInputRow: { flexDirection: "row" as const, alignItems: "center" as const, height: 48, borderWidth: 1, borderRadius: 12, overflow: "hidden" as const },
+  moneyInputInner: { flex: 1, paddingHorizontal: 14, height: "100%" as const },
+  moneyInputSuffix: { paddingHorizontal: 12, height: "100%" as const, alignItems: "center" as const, justifyContent: "center" as const, borderLeftWidth: 1 },
 }));

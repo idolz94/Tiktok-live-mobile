@@ -68,9 +68,10 @@ type CurrencyInputRowProps = {
   label: string;
   value: string;
   onChangeAmount: (amount: number, display: string) => void;
+  editable?: boolean;
 };
 
-export function CurrencyInputRow({ label, value, onChangeAmount }: CurrencyInputRowProps) {
+export function CurrencyInputRow({ label, value, onChangeAmount, editable = true }: CurrencyInputRowProps) {
   const { colors } = useThemes();
   const inputValueDigits = value.replace(/\D/g, "");
   const inputValue = inputValueDigits ? Number(inputValueDigits).toLocaleString("vi-VN") : "";
@@ -80,9 +81,9 @@ export function CurrencyInputRow({ label, value, onChangeAmount }: CurrencyInput
       <Text style={[styles.shippingInputLabel, { color: colors.neutral400 }]}>
         {label}
       </Text>
-      <View style={[styles.shippingInputBox, { borderColor: colors.border10 }]}>
+      <View style={[styles.shippingInputBox, { borderColor: colors.border10, backgroundColor: editable ? undefined : colors.neutral50 }]}>
         <TextInput
-          style={[styles.shippingInput, { color: colors.neutral900 }]}
+          style={[styles.shippingInput, { color: editable ? colors.neutral900 : colors.neutral400 }]}
           value={inputValue}
           onChangeText={(text) => {
             const digits = text.replace(/\D/g, "");
@@ -93,6 +94,7 @@ export function CurrencyInputRow({ label, value, onChangeAmount }: CurrencyInput
           placeholderTextColor={colors.neutral300}
           keyboardType="numeric"
           textAlign="right"
+          editable={editable}
         />
         <View style={[styles.shippingInputSuffix, { borderLeftColor: colors.border10, backgroundColor: colors.neutral50 }]}>
           <Text style={[styles.shippingInputSuffixText, { color: colors.neutral400 }]}>VNĐ</Text>

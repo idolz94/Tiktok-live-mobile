@@ -1,9 +1,9 @@
 import { ShopAddress, ShopAddressPayload } from "@features/settings/service/shop-addresses-api";
 import { VnGeoItem } from "@features/settings/service/vn-geo";
+import { VN_PHONE_RE } from "@utils/validate-phone";
 import { z } from "zod";
 
 const fullNamePattern = /^[\p{L}\s]+$/u;
-const VN_PHONE_RE = /^(\+84|0)(3[2-9]|5[25689]|7[06-9]|8[1-689]|9[0-46-8])\d{7}$/;
 
 export const addressFormSchema = z.object({
   label: z.string(),

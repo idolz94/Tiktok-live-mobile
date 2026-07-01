@@ -1,7 +1,7 @@
 import { settingGroups, Setting } from "../constants";
 import { SettingItem } from "./setting-item";
 import { createStyles } from "@utils/createStyles";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 type SettingsSectionProps = {
   groups?: Setting[][];
@@ -31,7 +31,7 @@ export function SettingsSection({
           <View style={styles.divider} />
         </View>
       ))}
-      <TouchableOpacity activeOpacity={0.7} style={styles.settingItem} onPress={onLogout}>
+      <Pressable style={styles.settingItem} onPress={onLogout}>
         <View style={styles.settingLeft}>
           <View style={styles.settingIconBox}>
             <Text style={styles.settingIcon}>↗</Text>
@@ -39,7 +39,7 @@ export function SettingsSection({
           <Text style={styles.settingText}>{logoutLabel}</Text>
         </View>
         <Text style={styles.chevron}>›</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }

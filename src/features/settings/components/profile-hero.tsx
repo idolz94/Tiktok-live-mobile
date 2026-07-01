@@ -1,6 +1,5 @@
-import { LinearGradient } from "@components/linear-gradient";
 import { createStyles } from "@utils/createStyles";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 
 type ProfileHeroProps = {
   avatarUrl: string;
@@ -10,9 +9,9 @@ type ProfileHeroProps = {
 
 function SocialButton({ label }: { label: string }) {
   return (
-    <TouchableOpacity activeOpacity={0.8} style={styles.socialButton}>
+    <Pressable style={styles.socialButton}>
       <Text style={styles.socialIcon}>{label}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -29,12 +28,12 @@ export function ProfileHero({ avatarUrl, name, nickname }: ProfileHeroProps) {
       <View style={styles.topBar}>
         <Text style={styles.title}>Hồ sơ</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.roundButton} activeOpacity={0.8}>
+          <Pressable style={styles.roundButton}>
             <Text style={styles.roundButtonIcon}>⌕</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.roundButton} activeOpacity={0.8}>
+          </Pressable>
+          <Pressable style={styles.roundButton}>
             <Text style={styles.roundButtonIcon}>⚙</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 

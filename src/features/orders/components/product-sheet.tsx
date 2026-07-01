@@ -13,15 +13,13 @@ import {
 } from "react-native";
 
 const addProductSchema = z.object({
-  code: z.string().trim().min(1, "Mã sản phẩm không được bỏ trống"),
   name: z.string().trim().min(1, "Tên sản phẩm không được bỏ trống"),
   price: z.number().min(1, "Giá phải lớn hơn 0"),
   quantity: z.number().min(1, "Số lượng phải lớn hơn 0"),
 });
 
 const editProductSchema = z.object({
-  code: z.string().trim(),
-  name: z.string().trim(),
+  name: z.string().trim().min(1, "Tên sản phẩm không được bỏ trống"),
   price: z.number().min(1, "Giá phải lớn hơn 0"),
   quantity: z.number().min(1, "Số lượng phải lớn hơn 0"),
 });
@@ -30,13 +28,12 @@ type ProductForm = z.infer<typeof addProductSchema>;
 
 type ProductSheetProps = {
   mode: "add" | "edit";
-  initialCode?: string;
   initialName?: string;
   initialPrice?: number;
   initialQty?: number;
   loading?: boolean;
   onClose: () => void;
-  onSave: (data: { code: string; name: string; price: number; quantity: number }) => void;
+  onSave: (data: { name: string; price: number; quantity: number }) => void;
 };
 
 function parsePriceDisplay(formatted: string): number {
@@ -45,7 +42,6 @@ function parsePriceDisplay(formatted: string): number {
 
 export function ProductSheet({
   mode,
-  initialCode = "",
   initialName = "",
   initialPrice = 0,
   initialQty = 1,
@@ -65,7 +61,6 @@ export function ProductSheet({
     resolver: zodResolver(mode === "add" ? addProductSchema : editProductSchema),
     mode: "onChange",
     defaultValues: {
-      code: initialCode,
       name: initialName,
       price: initialPrice,
       quantity: initialQty < 1 ? 1 : initialQty,
@@ -76,7 +71,6 @@ export function ProductSheet({
 
   const onSubmit = handleSubmit((data) => {
     onSave({
-      code: data.code.trim(),
       name: data.name.trim(),
       price: data.price,
       quantity: data.quantity,
@@ -91,61 +85,31 @@ export function ProductSheet({
           {mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}
         </Text>
 
-        {mode === "add" && (
-          <>
-            <View style={{ rowGap: 6 }}>
-              <Text style={[styles.label, { color: colors.neutral400 }]}>Mã sản phẩm</Text>
-              <Controller
-                control={control}
-                name="code"
-                render={({ field: { onChange, value, onBlur } }) => (
-                  <>
-                    <TextInput
-                      style={[
-                        styles.input,
-                        { color: colors.neutral900, borderColor: dirtyFields.code && errors.code ? colors.error : colors.border10 },
-                      ]}
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="Nhập mã SP"
-                      placeholderTextColor={colors.neutral300}
-                      autoCapitalize="none"
-                    />
-                    <AnimatedErrorText
-                      message={dirtyFields.code && errors.code ? errors.code.message : undefined}
-                    />
-                  </>
-                )}
-              />
-            </View>
-            <View style={{ rowGap: 6 }}>
-              <Text style={[styles.label, { color: colors.neutral400 }]}>Tên sản phẩm</Text>
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, value, onBlur } }) => (
-                  <>
-                    <TextInput
-                      style={[
-                        styles.input,
-                        { color: colors.neutral900, borderColor: dirtyFields.name && errors.name ? colors.error : colors.border10 },
-                      ]}
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="Nhập tên SP"
-                      placeholderTextColor={colors.neutral300}
-                    />
-                    <AnimatedErrorText
-                      message={dirtyFields.name && errors.name ? errors.name.message : undefined}
-                    />
-                  </>
-                )}
-              />
-            </View>
-          </>
-        )}
+        <View style={{ rowGap: 6 }}>
+          <Text style={[styles.label, { color: colors.neutral400 }]}>Tên sản phẩm</Text>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, value, onBlur } }) => (
+              <>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { color: colors.neutral900, borderColor: dirtyFields.name && errors.name ? colors.error : colors.border10 },
+                  ]}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Nhập tên SP"
+                  placeholderTextColor={colors.neutral300}
+                />
+                <AnimatedErrorText
+                  message={dirtyFields.name && errors.name ? errors.name.message : undefined}
+                />
+              </>
+            )}
+          />
+        </View>
 
         <View style={{ rowGap: 6 }}>
           <Text style={[styles.label, { color: colors.neutral400 }]}>Đơn giá</Text>

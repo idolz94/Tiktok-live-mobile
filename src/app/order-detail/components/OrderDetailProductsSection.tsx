@@ -12,6 +12,7 @@ type OrderDetailProductsSectionProps = {
   hiddenCount: number;
   totalQuantity: number;
   productTotal: number;
+  isEditable?: boolean;
   onAddProduct: () => void;
   onEditProduct: (product: OrderProduct) => void;
   onDeleteProduct: (product: OrderProduct) => void;
@@ -25,6 +26,7 @@ export function OrderDetailProductsSection({
   hiddenCount,
   totalQuantity,
   productTotal,
+  isEditable = true,
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
@@ -32,21 +34,23 @@ export function OrderDetailProductsSection({
 }: OrderDetailProductsSectionProps) {
   return (
     <Section>
-      <SectionHeader title="Danh sách sản phẩm" actionLabel="Thêm mới" onAction={onAddProduct} />
+      <SectionHeader title="Danh sách sản phẩm" actionLabel={isEditable ? "Thêm mới" : undefined} onAction={isEditable ? onAddProduct : undefined} />
       <View style={styles.productList}>
         {displayProducts.map((product, index) => (
           <View key={product.id || index} style={styles.productItem}>
             <View style={styles.productInfo}>
               <View style={styles.productNameRow}>
                 <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
-                <View style={styles.productRowActions}>
-                  <Pressable onPress={() => onEditProduct(product)} hitSlop={8}>
-                    <Icon name="clock" size={16} tintColor="neutral400" />
-                  </Pressable>
-                  <Pressable onPress={() => onDeleteProduct(product)} hitSlop={8}>
-                    <Icon name="close" size={16} tintColor="neutral400" />
-                  </Pressable>
-                </View>
+                {isEditable ? (
+                  <View style={styles.productRowActions}>
+                    <Pressable onPress={() => onEditProduct(product)} hitSlop={8}>
+                      <Icon name="clock" size={16} tintColor="neutral400" />
+                    </Pressable>
+                    <Pressable onPress={() => onDeleteProduct(product)} hitSlop={8}>
+                      <Icon name="close" size={16} tintColor="neutral400" />
+                    </Pressable>
+                  </View>
+                ) : null}
               </View>
               <Text style={styles.productQty}>Số lượng: {product.quantity}</Text>
             </View>

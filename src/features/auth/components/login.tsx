@@ -299,7 +299,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
     overflow: "hidden",
   },
-  submitText: { color: colors.neutral900, ...textPresets.fs16_500 },
+  submitText: { color: colors.neutral100, ...textPresets.fs16_500 },
   forgotPass: {
     color: colors.neutral900,
     ...textPresets.fs14_400,

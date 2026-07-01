@@ -26,6 +26,7 @@ import { absoluteFill } from "../utils";
 type AddressFormModalProps = {
   title: string;
   initialValues?: Partial<AddrFormValues>;
+  disableDefaultToggle?: boolean;
   onClose: () => void;
   onSave: (vals: AddrFormValues) => Promise<void>;
 };
@@ -33,6 +34,7 @@ type AddressFormModalProps = {
 export function AddressFormModal({
   title,
   initialValues,
+  disableDefaultToggle = false,
   onClose,
   onSave,
 }: AddressFormModalProps) {
@@ -208,7 +210,10 @@ export function AddressFormModal({
             control={control}
             name="isDefault"
             render={({ field }) => (
-              <Pressable onPress={() => field.onChange(!field.value)} style={formModalStyles.switchRow}>
+              <Pressable
+                onPress={() => { if (!disableDefaultToggle) field.onChange(!field.value); }}
+                style={[formModalStyles.switchRow, disableDefaultToggle ? { opacity: 0.5 } : null]}
+              >
                 <Text style={formModalStyles.switchLabel}>Đặt làm địa chỉ mặc định</Text>
                 <View style={[formModalStyles.switchTrack, isDefault ? formModalStyles.switchTrackOn : formModalStyles.switchTrackOff]}>
                   <View style={[formModalStyles.switchThumb, isDefault ? formModalStyles.switchThumbOn : formModalStyles.switchThumbOff]} />

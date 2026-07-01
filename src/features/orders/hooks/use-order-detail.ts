@@ -16,6 +16,7 @@ import {
   updateOrderItemApi,
   updateOrderStatusApi,
 } from "../service/api";
+import { listCustomerAddressesApi, type CustomerAddress } from "@app/order-detail/create-shipment/create-shipment-api";
 
 // START: Stable fallback để tránh tạo array/object mới mỗi render khi order null
 const EMPTY_PRODUCTS: OrderProduct[] = [];
@@ -62,6 +63,7 @@ export function useOrderDetail(orderId: string) {
   const [order, setOrder] = useState<OrderWithTikTok | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [customerDefaultAddress, setCustomerDefaultAddress] = useState<CustomerAddress | null>(null);
 
   // START: Lưu selectedProductId thay vì object để tránh stale reference khi order update
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
@@ -149,6 +151,20 @@ export function useOrderDetail(orderId: string) {
     void fetchOrder();
   }, [fetchOrder]);
   // END: Fetch order khi màn mở
+
+  // Fetch địa chỉ mặc định của khách sau khi có customerId
+  useEffect(() => {
+    const customerId = order?.customerId;
+    if (!customerId) return;
+    let cancelled = false;
+    listCustomerAddressesApi(customerId)
+      .then((addresses) => {
+        if (cancelled) return;
+        setCustomerDefaultAddress(addresses.find((a) => a.isDefault) ?? null);
+      })
+      .catch(() => { /* bỏ qua — fallback hiển thị customerAddress từ order */ });
+    return () => { cancelled = true; };
+  }, [order?.customerId]);
 
   // START: Stable products — EMPTY_PRODUCTS tránh tạo [] mới mỗi render khi order null
   const products = order?.products ?? EMPTY_PRODUCTS;
@@ -338,6 +354,7 @@ export function useOrderDetail(orderId: string) {
     loading,
     error,
     fetchOrder,
+    customerDefaultAddress,
     products,
     ...summary,
     isPaid,
