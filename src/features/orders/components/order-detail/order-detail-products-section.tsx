@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Icon } from "@components/icon";
 import { OrderProduct } from "@app-types/index";
 import { formatMoney } from "@features/orders/utils/order";
@@ -13,6 +13,7 @@ type OrderDetailProductsSectionProps = {
   totalQuantity: number;
   productTotal: number;
   isEditable?: boolean;
+  isProductMutating?: boolean;
   onAddProduct: () => void;
   onEditProduct: (product: OrderProduct) => void;
   onDeleteProduct: (product: OrderProduct) => void;
@@ -27,6 +28,7 @@ export function OrderDetailProductsSection({
   totalQuantity,
   productTotal,
   isEditable = true,
+  isProductMutating = false,
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
@@ -34,28 +36,53 @@ export function OrderDetailProductsSection({
 }: OrderDetailProductsSectionProps) {
   return (
     <Section>
-      <SectionHeader title="Danh sách sản phẩm" actionLabel={isEditable ? "Thêm mới" : undefined} onAction={isEditable ? onAddProduct : undefined} />
+      <SectionHeader
+        title="Danh sách sản phẩm"
+        actionLabel={isEditable ? "Thêm mới" : undefined}
+        onAction={isEditable ? onAddProduct : undefined}
+      />
+      {isProductMutating ? (
+        <View style={styles.productLoadingRow}>
+          <ActivityIndicator size="small" color="#FF6B8A" />
+          <Text style={styles.productLoadingText}>
+            Đang cập nhật sản phẩm...
+          </Text>
+        </View>
+      ) : null}
       <View style={styles.productList}>
         {displayProducts.map((product, index) => (
           <View key={product.id || index} style={styles.productItem}>
             <View style={styles.productInfo}>
               <View style={styles.productNameRow}>
-                <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+                <Text style={styles.productName} numberOfLines={2}>
+                  {product.name}
+                </Text>
                 {isEditable ? (
                   <View style={styles.productRowActions}>
-                    <Pressable onPress={() => onEditProduct(product)} hitSlop={8}>
+                    <Pressable
+                      onPress={() => onEditProduct(product)}
+                      hitSlop={8}
+                    >
                       <Icon name="clock" size={16} tintColor="neutral400" />
                     </Pressable>
-                    <Pressable onPress={() => onDeleteProduct(product)} hitSlop={8}>
+                    <Pressable
+                      onPress={() => onDeleteProduct(product)}
+                      hitSlop={8}
+                    >
                       <Icon name="close" size={16} tintColor="neutral400" />
                     </Pressable>
                   </View>
                 ) : null}
               </View>
-              <Text style={styles.productQty}>Số lượng: {product.quantity}</Text>
+              <Text style={styles.productQty}>
+                Số lượng: {product.quantity}
+              </Text>
             </View>
             <Text style={styles.productPrice}>
-              {formatMoney(product.totalAmount || Number(product.price || 0) * Number(product.quantity || 0))}
+              {formatMoney(
+                product.totalAmount ||
+                  Number(product.price || 0) * Number(product.quantity || 0),
+              )}
             </Text>
           </View>
         ))}
@@ -77,6 +104,13 @@ export function OrderDetailProductsSection({
 
 const styles = createStyles(({ colors, textPresets }) => ({
   productList: { borderTopWidth: 1, borderTopColor: colors.border10 },
+  productLoadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+    paddingVertical: 8,
+  },
+  productLoadingText: { color: colors.neutral400, ...textPresets.fs12_400 },
   productItem: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -86,8 +120,16 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderBottomColor: colors.border10,
   },
   productInfo: { flex: 1, rowGap: 6 },
-  productNameRow: { flexDirection: "row", alignItems: "flex-start", columnGap: 8 },
-  productRowActions: { flexDirection: "row", alignItems: "center", columnGap: 8 },
+  productNameRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    columnGap: 8,
+  },
+  productRowActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+  },
   productName: { flex: 1, color: colors.neutral500, ...textPresets.fs14_500 },
   productQty: { color: colors.neutral300, ...textPresets.fs12_400 },
   productPrice: { color: colors.neutral900, ...textPresets.fs14_500 },
