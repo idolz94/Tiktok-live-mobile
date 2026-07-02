@@ -15,6 +15,12 @@ type Props = {
 export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
   const { colors } = useThemes();
 
+  const _onPressClose = () => {
+    if (typeof onClose === "function") {
+      onClose();
+    }
+  };
+
   const itemSeparator = () => <View style={{ height: 12 }} />;
 
   const renderItem: ListRenderItem<TikTokLiveChannel> = ({ item }) => {
@@ -44,7 +50,7 @@ export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Chuyển kênh</Text>
-        <Pressable style={styles.btnClose} onPress={onClose}>
+        <Pressable style={styles.btnClose} onPress={_onPressClose}>
           <Icon name="close" size={16} tintColor={colors.neutral900} />
         </Pressable>
       </View>

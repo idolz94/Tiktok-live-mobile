@@ -1,15 +1,14 @@
-import { BottomSheet } from "@expo/ui/community/bottom-sheet";
+import { BottomSheet, type BottomSheetMethods } from "@expo/ui/community/bottom-sheet";
 import { useThemes } from "@hooks/use-theme";
-import { memo, ReactNode } from "react";
+import { memo, ReactNode, Ref } from "react";
 import { StyleProp, ViewStyle } from "react-native";
 
-// Empty backdrop disables the dimmed overlay + tap-to-close for background sheets
 const NoBackdrop = () => null;
 
 type Props = {
+  sheetRef?: Ref<BottomSheetMethods | null>;
   open: boolean;
   onClose: () => void;
-  onAnimationClose?: () => void;
   children: ReactNode;
   snapPoints?: (string | number)[];
   showDragIndicator?: boolean;
@@ -20,9 +19,9 @@ type Props = {
 
 export const AppBottomSheet = memo(
   ({
+    sheetRef,
     open,
     onClose,
-    onAnimationClose,
     children,
     snapPoints,
     showDragIndicator = true,
@@ -34,9 +33,9 @@ export const AppBottomSheet = memo(
 
     return (
       <BottomSheet
+        ref={sheetRef}
         index={open ? 0 : -1}
         onClose={isTop ? onClose : undefined}
-        onChange={(index) => { if (index === -1) onAnimationClose?.(); }}
         snapPoints={snapPoints}
         handleComponent={showDragIndicator ? undefined : null}
         backgroundStyle={
@@ -44,7 +43,6 @@ export const AppBottomSheet = memo(
         }
         enablePanDownToClose={enablePanDownToClose}
         enableDynamicSizing={!snapPoints?.length}
-        // non-top sheets sit behind and don't intercept backdrop taps
         backdropComponent={isTop ? undefined : NoBackdrop}
         style={{ zIndex: 99 }}
       >
