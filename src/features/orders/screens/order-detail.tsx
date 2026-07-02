@@ -117,7 +117,7 @@ export const OrderDetail = memo(() => {
   const handleSaveNewProduct = useCallback(
     (data: { name: string; price: number; quantity: number }) => {
       hide();
-      void detail.handleAddProduct({
+      detail.handleAddProduct({
         productName: data.name,
         price: data.price,
         quantity: data.quantity,
@@ -133,7 +133,7 @@ export const OrderDetail = memo(() => {
     ) => {
       if (!itemId) return;
       hide();
-      void detail.handleUpdateProduct(itemId, {
+      detail.handleUpdateProduct(itemId, {
         productName: data.name,
         price: data.price,
         quantity: data.quantity,
@@ -201,6 +201,7 @@ export const OrderDetail = memo(() => {
                 totalQuantity={detail.totalQuantity}
                 productTotal={detail.productTotal}
                 isEditable={detail.order.status === "draft"}
+                isProductMutating={detail.addingProduct || detail.updatingProduct}
                 onAddProduct={() => {
                   show({
                     content: (
