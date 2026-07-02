@@ -2,7 +2,7 @@ import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
-import type { SpxVoucher } from "../create-shipment-api";
+import type { SpxVoucher } from "../lib/create-shipment-api";
 
 type Props = {
   vouchers: SpxVoucher[];

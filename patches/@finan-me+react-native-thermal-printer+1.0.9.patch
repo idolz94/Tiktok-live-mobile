@@ -1,0 +1,72 @@
+diff --git a/node_modules/@finan-me/react-native-thermal-printer/ios/Printing/PrintingModule.swift b/node_modules/@finan-me/react-native-thermal-printer/ios/Printing/PrintingModule.swift
+index 523bc6d..6ca7432 100644
+--- a/node_modules/@finan-me/react-native-thermal-printer/ios/Printing/PrintingModule.swift
++++ b/node_modules/@finan-me/react-native-thermal-printer/ios/Printing/PrintingModule.swift
+@@ -312,8 +312,8 @@ import UIKit
+      * Start cleanup timer
+      */
+     private func startCleanupTimer() {
+-        cleanupTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
+-            self.cleanupIdleConnections()
++        cleanupTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
++            self?.cleanupIdleConnections()
+         }
+     }
+ 
+@@ -421,6 +421,11 @@ import UIKit
+     @objc func cleanup() {
+         cleanupTimer?.invalidate()
+         cleanupTimer = nil
+-        disconnect() // Disconnect all
++        connectionQueue.sync(flags: .barrier) {
++            for (_, entry) in self.activeConnections {
++                entry.connection.close()
++            }
++            self.activeConnections.removeAll()
++        }
+     }
+ }
+\ No newline at end of file
+diff --git a/node_modules/@finan-me/react-native-thermal-printer/ios/RNThermalPrinterModule.swift b/node_modules/@finan-me/react-native-thermal-printer/ios/RNThermalPrinterModule.swift
+index 3dd312e..8875b32 100644
+--- a/node_modules/@finan-me/react-native-thermal-printer/ios/RNThermalPrinterModule.swift
++++ b/node_modules/@finan-me/react-native-thermal-printer/ios/RNThermalPrinterModule.swift
+@@ -184,6 +184,19 @@ class RNThermalPrinter: RCTEventEmitter {
+         }
+     }
+ 
++    /**
++     * Connect to printer (stub — connection is managed automatically per print job)
++     */
++    @objc(connect:withOptions:resolver:rejecter:)
++    func connect(
++        _ address: String,
++        withOptions options: NSDictionary?,
++        resolve: @escaping RCTPromiseResolveBlock,
++        reject: @escaping RCTPromiseRejectBlock
++    ) {
++        resolve(["success": true])
++    }
++
+     /**
+      * Disconnect printer(s)
+      * @param address Printer address or null/empty for all
+@@ -200,6 +213,18 @@ class RNThermalPrinter: RCTEventEmitter {
+         resolve(true)
+     }
+ 
++    /**
++     * Check if printer is connected (stub — always returns false since connections are ephemeral)
++     */
++    @objc(isConnected:resolver:rejecter:)
++    func isConnected(
++        _ address: String,
++        resolve: @escaping RCTPromiseResolveBlock,
++        reject: @escaping RCTPromiseRejectBlock
++    ) {
++        resolve(false)
++    }
++
+     /**
+      * Cleanup on deinit
+      */

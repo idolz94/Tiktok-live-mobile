@@ -5,13 +5,13 @@ import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, ShippingOptions, SpxOptions, SummaryRow, shipmentStyles } from "./components/ShipmentComponents";
-import { PackageDimModal } from "./components/PackageDimModal";
-import { useAddressPageStore } from "./address-page-store";
-import { VoucherSelectSheet } from "./components/VoucherSelectSheet";
-import { formInitialValues } from "./utils";
-import type { AddrFormValues } from "./types";
-import { useCreateShipment } from "./use-create-shipment";
+import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, ShippingOptions, SpxOptions, SummaryRow, shipmentStyles } from "@features/orders/create-shipment/components/ShipmentComponents";
+import { PackageDimModal } from "@features/orders/create-shipment/components/PackageDimModal";
+import { useAddressPageStore } from "@features/orders/create-shipment/lib/address-page-store";
+import { VoucherSelectSheet } from "@features/orders/create-shipment/components/VoucherSelectSheet";
+import { formInitialValues } from "@features/orders/create-shipment/lib/utils";
+import type { AddrFormValues } from "@features/orders/create-shipment/lib/types";
+import { useCreateShipment } from "@features/orders/create-shipment/lib/use-create-shipment";
 
 export default function CreateShipmentScreen() {
   const { colors, textPresets } = useThemes();

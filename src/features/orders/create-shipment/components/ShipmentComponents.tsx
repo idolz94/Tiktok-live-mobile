@@ -2,10 +2,10 @@ import { ActivityIndicator, FlatList, Modal, Pressable, Text, TextInput, View } 
 import { useState } from "react";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { ShopAddress, CustomerAddress } from "../create-shipment-api";
-import type { SpxVoucher } from "../create-shipment-api";
-import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition, CollectType, SpxTimeslot } from "../types";
-import { addressLine } from "../utils";
+import { ShopAddress, CustomerAddress } from "../lib/create-shipment-api";
+import type { SpxVoucher } from "../lib/create-shipment-api";
+import { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition, CollectType, SpxTimeslot } from "../lib/types";
+import { addressLine } from "../lib/utils";
 
 export type SectionBlockProps = {
   title: string;

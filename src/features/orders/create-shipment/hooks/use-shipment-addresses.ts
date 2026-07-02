@@ -5,7 +5,7 @@ import {
   ShopAddress,
   listCustomerAddressesApi,
   listShopAddressesApi,
-} from "../create-shipment-api";
+} from "../lib/create-shipment-api";
 import { OrderWithTikTok } from "@app-types/index";
 
 
