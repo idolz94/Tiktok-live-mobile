@@ -7,7 +7,7 @@ import { AccountConnected } from "./account-connected";
 import { Segment } from "./segment";
 import { UnConnectedLive } from "./unconnected-live";
 import { ConnectedLive } from "./connected-live";
-import { Orders } from "@features/orders/components/orders";
+import { Orders } from "@features/orders/screens/orders";
 import { useTiktokPage } from "./use-tiktok-page";
 
 export type TikTokLiveChannel = {

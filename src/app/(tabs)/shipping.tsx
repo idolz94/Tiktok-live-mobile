@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { createStyles } from "@utils/createStyles";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Linking, Modal, Pressable, RefreshControl, Text, View } from "react-native";
-import { cancelShipmentApi, refreshShippingStatusApi } from "@features/orders/create-shipment/lib/create-shipment-api";
+import { cancelShipmentApi, refreshShippingStatusApi } from "@features/orders/service/create-shipment-api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {

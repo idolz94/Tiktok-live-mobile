@@ -36,102 +36,97 @@ type PrinterConnectionCardProps = {
   onDisconnect: () => void;
 };
 
-export const PrinterConnectionCard = memo(function PrinterConnectionCard({
-  connectionType,
-  ipAddress,
-  macAddress,
-  paperSize,
-  fontSize,
-  connectionState,
-  connectedDevice,
-  onChangeConnectionType: _onChangeConnectionType,
-  onChangeIpAddress,
-  onChangePaperSize: _onChangePaperSize,
-  onChangeFontSize: _onChangeFontSize,
-  onOpenSheet,
-  onConnect,
-  onDisconnect,
-}: PrinterConnectionCardProps) {
-  const addressLabel = connectionType === "wifi" ? "IP máy in" : "Bluetooth";
-  const addressValue = connectionType === "wifi" ? ipAddress : macAddress;
-  const isConnected = connectionState === "connected";
-  const isConnecting = connectionState === "connecting";
+export const PrinterConnectionCard = memo(
+  ({
+    connectionType,
+    ipAddress,
+    macAddress,
+    paperSize,
+    fontSize,
+    connectionState,
+    connectedDevice,
+    onChangeConnectionType: _onChangeConnectionType,
+    onChangeIpAddress,
+    onChangePaperSize: _onChangePaperSize,
+    onChangeFontSize: _onChangeFontSize,
+    onOpenSheet,
+    onConnect,
+    onDisconnect,
+  }: PrinterConnectionCardProps) => {
+    const addressLabel = connectionType === "wifi" ? "IP máy in" : "Bluetooth";
+    const addressValue = connectionType === "wifi" ? ipAddress : macAddress;
+    const isConnected = connectionState === "connected";
+    const isConnecting = connectionState === "connecting";
 
-  return (
-    <View style={styles.card}>
-      {/*  Connection type  */}
-      <Pressable
-        style={[styles.row, styles.rowStacked]}
-        onPress={() => onOpenSheet("connection")}
-      >
-        <View style={[styles.rowTextWrap, styles.rowTextStacked]}>
-          <Text style={styles.rowLabel}>Máy in</Text>
-          <Text style={styles.rowValue}>
-            {PRINTER_CONNECTION_LABELS[connectionType]}
-          </Text>
-        </View>
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>{addressLabel}</Text>
-        {connectionType === "wifi" ? (
-          <View style={styles.ipInputContainer}>
-            <TextInput
-              style={styles.ipInput}
-              value={ipAddress}
-              onChangeText={onChangeIpAddress}
-              placeholder="192.168.1.x"
-              placeholderTextColor="#bdbdbd"
-              keyboardType="decimal-pad"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-        ) : (
-          <View style={styles.rowTextWrap}>
-            <Text style={styles.rowValue} numberOfLines={1}>
-              {addressValue || "Chưa chọn"}
+    return (
+      <View style={styles.card}>
+        {/*  Connection type  */}
+        <Pressable
+          style={[styles.row, styles.rowStacked]}
+          onPress={() => onOpenSheet("connection")}
+        >
+          <View style={[styles.rowTextWrap, styles.rowTextStacked]}>
+            <Text style={styles.rowLabel}>Máy in</Text>
+            <Text style={styles.rowValue}>
+              {PRINTER_CONNECTION_LABELS[connectionType]}
             </Text>
           </View>
-        )}
-      </View>
-
-      <View style={styles.divider} />
-
-      {/*  Paper size  */}
-      <Pressable
-        style={styles.row}
-        onPress={() => onOpenSheet("paper")}
-      >
-        <View style={styles.rowTextWrap}>
-          <Text style={styles.rowLabel}>Khổ giấy in</Text>
-          <Text style={styles.rowValue}>
-            {PRINTER_PAPER_SIZE_LABELS[paperSize]}
-          </Text>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>{addressLabel}</Text>
+          {connectionType === "wifi" ? (
+            <View style={styles.ipInputContainer}>
+              <TextInput
+                style={styles.ipInput}
+                value={ipAddress}
+                onChangeText={onChangeIpAddress}
+                placeholder="192.168.1.x"
+                placeholderTextColor="#bdbdbd"
+                keyboardType="decimal-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          ) : (
+            <View style={styles.rowTextWrap}>
+              <Text style={styles.rowValue} numberOfLines={1}>
+                {addressValue || "Chưa chọn"}
+              </Text>
+            </View>
+          )}
         </View>
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
 
-      <View style={styles.divider} />
+        <View style={styles.divider} />
 
-      {/*  Font size  */}
-      <Pressable
-        style={styles.row}
-        onPress={() => onOpenSheet("font")}
-      >
-        <View style={styles.rowTextWrap}>
-          <Text style={styles.rowLabel}>Cỡ chữ</Text>
-          <Text style={styles.rowValue}>
-            {PRINTER_FONT_SIZE_LABELS[fontSize]}
-          </Text>
-        </View>
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
+        {/*  Paper size  */}
+        <Pressable style={styles.row} onPress={() => onOpenSheet("paper")}>
+          <View style={styles.rowTextWrap}>
+            <Text style={styles.rowLabel}>Khổ giấy in</Text>
+            <Text style={styles.rowValue}>
+              {PRINTER_PAPER_SIZE_LABELS[paperSize]}
+            </Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
 
-      <View style={styles.divider} />
+        <View style={styles.divider} />
 
-      {/* Connected device name/type */}
-      {/* {isConnected && connectedDevice ? (
+        {/*  Font size  */}
+        <Pressable style={styles.row} onPress={() => onOpenSheet("font")}>
+          <View style={styles.rowTextWrap}>
+            <Text style={styles.rowLabel}>Cỡ chữ</Text>
+            <Text style={styles.rowValue}>
+              {PRINTER_FONT_SIZE_LABELS[fontSize]}
+            </Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+
+        <View style={styles.divider} />
+
+        {/* Connected device name/type */}
+        {/* {isConnected && connectedDevice ? (
         <>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Tên máy in</Text>
@@ -158,63 +153,64 @@ export const PrinterConnectionCard = memo(function PrinterConnectionCard({
         </>
       ) : null} */}
 
-      {/*  Connect / Disconnect  */}
-      <View style={styles.connectRow}>
-        <View style={styles.connectStatusWrap}>
-          {isConnecting ? (
-            <ActivityIndicator
-              size="small"
-              color="#ebb140"
-              style={styles.connectSpinner}
-            />
-          ) : (
-            <View
-              style={[
-                styles.connectDot,
-                isConnected ? styles.connectDotOn : styles.connectDotOff,
-              ]}
-            />
-          )}
-          <Text
-            style={[
-              styles.connectStatusText,
-              isConnected && styles.connectStatusTextOn,
-            ]}
-          >
-            {PRINTER_CONNECTION_STATE_LABELS[connectionState]}
-          </Text>
-        </View>
-
-        {isConnected ? (
-          <Pressable
-            style={[styles.connectButton, styles.disconnectButton]}
-            onPress={onDisconnect}
-          >
+        {/*  Connect / Disconnect  */}
+        <View style={styles.connectRow}>
+          <View style={styles.connectStatusWrap}>
+            {isConnecting ? (
+              <ActivityIndicator
+                size="small"
+                color="#ebb140"
+                style={styles.connectSpinner}
+              />
+            ) : (
+              <View
+                style={[
+                  styles.connectDot,
+                  isConnected ? styles.connectDotOn : styles.connectDotOff,
+                ]}
+              />
+            )}
             <Text
-              style={[styles.connectButtonText, styles.disconnectButtonText]}
+              style={[
+                styles.connectStatusText,
+                isConnected && styles.connectStatusTextOn,
+              ]}
             >
-              Ngắt kết nối
+              {PRINTER_CONNECTION_STATE_LABELS[connectionState]}
             </Text>
-          </Pressable>
-        ) : (
-          <Pressable
-            style={[
-              styles.connectButton,
-              isConnecting && styles.connectButtonDisabled,
-            ]}
-            onPress={onConnect}
-            disabled={isConnecting}
-          >
-            <Text style={styles.connectButtonText}>
-              {isConnecting ? "Đang kết nối..." : "Kết nối"}
-            </Text>
-          </Pressable>
-        )}
+          </View>
+
+          {isConnected ? (
+            <Pressable
+              style={[styles.connectButton, styles.disconnectButton]}
+              onPress={onDisconnect}
+            >
+              <Text
+                style={[styles.connectButtonText, styles.disconnectButtonText]}
+              >
+                Ngắt kết nối
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={[
+                styles.connectButton,
+                isConnecting && styles.connectButtonDisabled,
+              ]}
+              onPress={onConnect}
+              disabled={isConnecting}
+            >
+              <Text style={styles.connectButtonText}>
+                {isConnecting ? "Đang kết nối..." : "Kết nối"}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+        {/*  End connect / disconnect  */}
       </View>
-      {/*  End connect / disconnect  */}
-    </View>
-  );
-});
+    );
+  },
+);
 
 const styles = createStyles(({ colors }) => ({
   card: {

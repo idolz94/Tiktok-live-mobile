@@ -2,7 +2,7 @@ import type { Order, OrderProduct } from "@app-types/index";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { updateCustomerApi } from "@features/customers/service/api";
 import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
-import { cancelShipmentApi, refreshShippingStatusApi, listCustomerAddressesApi, type CustomerAddress } from "@features/orders/create-shipment/lib/create-shipment-api";
+import { cancelShipmentApi, refreshShippingStatusApi, listCustomerAddressesApi, type CustomerAddress } from "@features/orders/service/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
 import { usePhoneField } from "@hooks/use-phone-field";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
