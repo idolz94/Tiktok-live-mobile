@@ -1,6 +1,6 @@
 import { Text, TextInput, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import { shipmentStyles } from "./shipment-styles";
+import { createStyles } from "@utils/createStyles";
 
 type ShipmentInputProps = {
   label: string;
@@ -28,16 +28,16 @@ export function ShipmentInput({
   const { colors, textPresets } = useThemes();
   return (
     <View
-      style={[shipmentStyles.formGroup, topSpacing ? { marginTop: 8 } : null]}
+      style={[styles.formGroup, topSpacing ? { marginTop: 8 } : null]}
     >
-      <Text style={[shipmentStyles.fieldLabel, { color: colors.neutral400 }]}>
+      <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>
         {label}
         {required ? <Text style={{ color: colors.error }}> *</Text> : null}
       </Text>
       {money ? (
         <View
           style={[
-            shipmentStyles.moneyInputRow,
+            styles.moneyInputRow,
             { borderColor: colors.border10, backgroundColor: colors.neutral50 },
           ]}
         >
@@ -46,7 +46,7 @@ export function ShipmentInput({
             onChangeText={onChangeText}
             keyboardType={keyboardType}
             style={[
-              shipmentStyles.moneyInputInner,
+              styles.moneyInputInner,
               { color: colors.neutral900 },
               textPresets.fs14_400,
             ]}
@@ -55,7 +55,7 @@ export function ShipmentInput({
           />
           <View
             style={[
-              shipmentStyles.moneyInputSuffix,
+              styles.moneyInputSuffix,
               { borderLeftColor: colors.border10 },
             ]}
           >
@@ -71,7 +71,7 @@ export function ShipmentInput({
           keyboardType={keyboardType}
           multiline={multiline}
           style={[
-            multiline ? shipmentStyles.noteInput : shipmentStyles.textInput,
+            multiline ? styles.noteInput : styles.textInput,
             {
               borderColor: colors.border10,
               color: colors.neutral900,
@@ -87,3 +87,37 @@ export function ShipmentInput({
   );
 }
 
+const styles = createStyles(() => ({
+  noteInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    textAlignVertical: "top" as const,
+  },
+  formGroup: { gap: 6 },
+  fieldLabel: { fontSize: 12, lineHeight: 18 },
+  textInput: {
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+  },
+  moneyInputRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: "hidden" as const,
+  },
+  moneyInputInner: { flex: 1, paddingHorizontal: 14, height: "100%" as const },
+  moneyInputSuffix: {
+    paddingHorizontal: 12,
+    height: "100%" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderLeftWidth: 1,
+  },
+}));

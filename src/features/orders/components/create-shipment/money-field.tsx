@@ -1,6 +1,6 @@
 import { Text, TextInput, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import { shipmentStyles } from "./shipment-styles";
+import { createStyles } from "@utils/createStyles";
 
 type MoneyFieldProps = {
   label: string;
@@ -17,13 +17,13 @@ export function MoneyField({
 }: MoneyFieldProps) {
   const { colors, textPresets } = useThemes();
   return (
-    <View style={shipmentStyles.moneyFieldWrap}>
+    <View style={styles.moneyFieldWrap}>
       <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>
         {label}
       </Text>
       <View
         style={[
-          shipmentStyles.moneyField,
+          styles.moneyField,
           { borderColor: colors.border10, backgroundColor: colors.neutral50 },
         ]}
       >
@@ -33,7 +33,7 @@ export function MoneyField({
           editable={editable}
           keyboardType="number-pad"
           style={[
-            shipmentStyles.moneyInput,
+            styles.moneyInput,
             { color: colors.neutral900 },
             textPresets.fs16_500,
           ]}
@@ -48,3 +48,16 @@ export function MoneyField({
   );
 }
 
+const styles = createStyles(() => ({
+  moneyFieldWrap: { gap: 8 },
+  moneyField: {
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+  },
+  moneyInput: { flex: 1, padding: 0 },
+}));

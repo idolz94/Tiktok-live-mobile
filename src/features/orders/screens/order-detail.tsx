@@ -9,26 +9,37 @@ import { useOrderDetail } from "@features/orders/hooks/use-order-detail";
 import { formatMoney } from "@features/orders/utils/order";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { createStyles } from "@utils/createStyles";
-import { cancelShipmentApi, refreshShippingStatusApi } from "@features/orders/create-shipment/service/create-shipment-api";
+import {
+  cancelShipmentApi,
+  refreshShippingStatusApi,
+} from "@features/orders/service/create-shipment-api";
 import { router, useLocalSearchParams } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Linking, ScrollView, Text, View } from "react-native";
-import { OrderDetailCustomerSection } from "@features/orders/order-detail/components/order-detail-customer-section";
-import { OrderDetailFooterActions } from "@features/orders/order-detail/components/order-detail-footer-actions";
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { OrderDetailCustomerSection } from "@features/orders/components/order-detail/order-detail-customer-section";
+import { OrderDetailFooterActions } from "@features/orders/components/order-detail/order-detail-footer-actions";
 import {
   OrderDetailMetaSection,
   OrderDetailNoteSection,
-} from "@features/orders/order-detail/components/order-detail-info-sections";
-import { Divider } from "@features/orders/order-detail/components/order-detail-primitives";
-import { OrderDetailProductsSection } from "@features/orders/order-detail/components/order-detail-products-section";
-import { OrderDetailShipBar } from "@features/orders/order-detail/components/order-detail-ship-bar";
-import { OrderDetailShippingSection } from "@features/orders/order-detail/components/order-detail-shipping-section";
+} from "@features/orders/components/order-detail/order-detail-info-sections";
+import { Divider } from "@features/orders/components/order-detail/order-detail-primitives";
+import { OrderDetailProductsSection } from "@features/orders/components/order-detail/order-detail-products-section";
+import { OrderDetailShipBar } from "@features/orders/components/order-detail/order-detail-ship-bar";
+import { OrderDetailShippingSection } from "@features/orders/components/order-detail/order-detail-shipping-section";
 
 export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useOrderDetail(id ?? "");
   const { show, hide } = useBottomSheet();
-  const [selectedProvider, setSelectedProvider] = useState<ShippingProvider>("spx");
+  const [selectedProvider, setSelectedProvider] =
+    useState<ShippingProvider>("spx");
   const [shippingFeeDisplay, setShippingFeeDisplay] = useState("");
   const [prepaidDisplay, setPrepaidDisplay] = useState("");
 
@@ -42,15 +53,24 @@ export const OrderDetail = memo(() => {
     return new Date(detail.order.createdAt).toLocaleDateString("vi-VN");
   }, [detail.order?.createdAt]);
 
-  const hiddenCount = Math.max(detail.products.length - detail.displayProducts.length, 0);
+  const hiddenCount = Math.max(
+    detail.products.length - detail.displayProducts.length,
+    0,
+  );
 
-  const handleChangeShippingFee = useCallback((_amount: number, display: string) => {
-    setShippingFeeDisplay(display);
-  }, []);
+  const handleChangeShippingFee = useCallback(
+    (_amount: number, display: string) => {
+      setShippingFeeDisplay(display);
+    },
+    [],
+  );
 
-  const handleChangePrepaid = useCallback((_amount: number, display: string) => {
-    setPrepaidDisplay(display);
-  }, []);
+  const handleChangePrepaid = useCallback(
+    (_amount: number, display: string) => {
+      setPrepaidDisplay(display);
+    },
+    [],
+  );
 
   const handleShip = useCallback(() => {
     if (!detail.order) return;
@@ -107,7 +127,10 @@ export const OrderDetail = memo(() => {
   );
 
   const handleSaveProductEdit = useCallback(
-    (itemId: string, data: { name: string; price: number; quantity: number }) => {
+    (
+      itemId: string,
+      data: { name: string; price: number; quantity: number },
+    ) => {
       if (!itemId) return;
       hide();
       void detail.handleUpdateProduct(itemId, {
@@ -201,7 +224,9 @@ export const OrderDetail = memo(() => {
                         initialQty={product.quantity}
                         loading={detail.updatingProduct}
                         onClose={hide}
-                        onSave={(data) => handleSaveProductEdit(product.id, data)}
+                        onSave={(data) =>
+                          handleSaveProductEdit(product.id, data)
+                        }
                       />
                     ),
                   });
@@ -213,7 +238,9 @@ export const OrderDetail = memo(() => {
               <OrderDetailShippingSection
                 order={detail.order}
                 selectedProvider={selectedProvider}
-                shippingFeeDisplay={shippingFeeDisplay || formatMoney(detail.shippingFee)}
+                shippingFeeDisplay={
+                  shippingFeeDisplay || formatMoney(detail.shippingFee)
+                }
                 prepaidDisplay={prepaidDisplay || formatMoney(0)}
                 remain={detail.remain}
                 isEditable={detail.order.status === "draft"}
@@ -244,7 +271,9 @@ export const OrderDetail = memo(() => {
               <OrderDetailFooterActions
                 onPrint={() => {}}
                 onShare={() => {}}
-                onConfirm={() => { void detail.handleToggleConfirm(); }}
+                onConfirm={() => {
+                  void detail.handleToggleConfirm();
+                }}
                 isConfirmed={detail.order.status === "confirmed"}
                 confirmLoading={detail.confirmLoading}
               />

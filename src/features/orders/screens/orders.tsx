@@ -12,9 +12,9 @@ import {
   OrderStatCardData,
   OrderWithTikTok,
 } from "../types/order";
-import { OrderFilterBar } from "./order-filter";
-import { OrderItem } from "./order-item";
-import { OrderStatCard } from "./order-stat-card";
+import { OrderFilterBar } from "../components/order-filter";
+import { OrderItem } from "../components/order-item";
+import { OrderStatCard } from "../components/order-stat-card";
 
 export const Orders = memo(({ orderManager }: OrdersProps) => {
   const {

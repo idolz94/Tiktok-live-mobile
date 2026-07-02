@@ -1,8 +1,8 @@
 import { Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import type { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition } from "../types/shipment";
+import type { DeliveryPolicy, PickupOption, RefusalFee, ViewCondition } from "../../types/shipment";
 import { OptionChip } from "./option-chip";
-import { shipmentStyles } from "./shipment-styles";
+import { createStyles } from "@utils/createStyles";
 
 type ShippingOptionsProps = {
   viewCondition: ViewCondition;
@@ -37,7 +37,7 @@ export function ShippingOptions({
       >
         Điều kiện xem hàng
       </Text>
-      <View style={shipmentStyles.optionGrid}>
+      <View style={styles.optionGrid}>
         <OptionChip
           label="Không cho xem hàng"
           selected={viewCondition === "no_open"}
@@ -63,7 +63,7 @@ export function ShippingOptions({
       >
         Chính sách giao hàng
       </Text>
-      <View style={shipmentStyles.optionGrid}>
+      <View style={styles.optionGrid}>
         <OptionChip
           label="Giao toàn bộ đơn hàng"
           selected={deliveryPolicy === "full"}
@@ -84,7 +84,7 @@ export function ShippingOptions({
       >
         Phí hoàn trả
       </Text>
-      <View style={shipmentStyles.optionGrid}>
+      <View style={styles.optionGrid}>
         <OptionChip
           label="Miễn phí"
           selected={refusalFee === "free"}
@@ -105,7 +105,7 @@ export function ShippingOptions({
       >
         Hình thức lấy hàng
       </Text>
-      <View style={shipmentStyles.optionGrid}>
+      <View style={styles.optionGrid}>
         <OptionChip
           label="Tại cửa hàng"
           selected={pickupOption === "cod"}
@@ -121,3 +121,6 @@ export function ShippingOptions({
   );
 }
 
+const styles = createStyles(() => ({
+  optionGrid: { gap: 10 },
+}));
