@@ -19,8 +19,8 @@ import {
   getWards,
   VnGeoItem,
 } from "@features/settings/service/vn-geo";
-import { addrSchema, AddrFormValues } from "../types";
-import { absoluteFill } from "../utils";
+import { addrSchema, AddrFormValues } from "../lib/types";
+import { absoluteFill } from "../lib/utils";
 
 type AddressFormModalProps = {
   title: string;

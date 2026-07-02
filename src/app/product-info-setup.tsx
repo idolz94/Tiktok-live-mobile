@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { formatPrice, useProductInfoSetup } from "./use-product-info-setup";
+import { formatPrice, useProductInfoSetup } from "@features/product-info/use-product-info-setup";
 import { useEffect } from "react";
 
 export default function ProductInfoSetupScreen() {

@@ -5,8 +5,8 @@ import { router } from "expo-router";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { addressLine } from "./utils";
-import { useAddressPageStore } from "./address-page-store";
+import { addressLine } from "@features/orders/create-shipment/lib/utils";
+import { useAddressPageStore } from "@features/orders/create-shipment/lib/address-page-store";
 
 export default function AddressPickerPage() {
   const { colors, textPresets } = useThemes();

@@ -9,20 +9,20 @@ import { useOrderDetail } from "@features/orders/hooks/use-order-detail";
 import { formatMoney } from "@features/orders/utils/order";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { createStyles } from "@utils/createStyles";
-import { cancelShipmentApi, refreshShippingStatusApi } from "../../../app/order-detail/create-shipment/create-shipment-api";
+import { cancelShipmentApi, refreshShippingStatusApi } from "@features/orders/create-shipment/lib/create-shipment-api";
 import { router, useLocalSearchParams } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Linking, ScrollView, Text, View } from "react-native";
-import { OrderDetailCustomerSection } from "../../../app/order-detail/components/OrderDetailCustomerSection";
-import { OrderDetailFooterActions } from "../../../app/order-detail/components/OrderDetailFooterActions";
+import { OrderDetailCustomerSection } from "@features/orders/order-detail/components/OrderDetailCustomerSection";
+import { OrderDetailFooterActions } from "@features/orders/order-detail/components/OrderDetailFooterActions";
 import {
   OrderDetailMetaSection,
   OrderDetailNoteSection,
-} from "../../../app/order-detail/components/OrderDetailInfoSections";
-import { Divider } from "../../../app/order-detail/components/OrderDetailPrimitives";
-import { OrderDetailProductsSection } from "../../../app/order-detail/components/OrderDetailProductsSection";
-import { OrderDetailShipBar } from "../../../app/order-detail/components/OrderDetailShipBar";
-import { OrderDetailShippingSection } from "../../../app/order-detail/components/OrderDetailShippingSection";
+} from "@features/orders/order-detail/components/OrderDetailInfoSections";
+import { Divider } from "@features/orders/order-detail/components/OrderDetailPrimitives";
+import { OrderDetailProductsSection } from "@features/orders/order-detail/components/OrderDetailProductsSection";
+import { OrderDetailShipBar } from "@features/orders/order-detail/components/OrderDetailShipBar";
+import { OrderDetailShippingSection } from "@features/orders/order-detail/components/OrderDetailShippingSection";
 
 export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
