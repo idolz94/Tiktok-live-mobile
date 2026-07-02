@@ -1,9 +1,10 @@
-import { BottomSheet, type BottomSheetMethods } from "@expo/ui/community/bottom-sheet";
+import {
+  BottomSheet,
+  type BottomSheetMethods,
+} from "@expo/ui/community/bottom-sheet";
 import { useThemes } from "@hooks/use-theme";
 import { memo, ReactNode, Ref } from "react";
-import { StyleProp, ViewStyle } from "react-native";
-
-const NoBackdrop = () => null;
+import { StyleProp, ViewStyle, View } from "react-native";
 
 type Props = {
   sheetRef?: Ref<BottomSheetMethods | null>;
@@ -14,7 +15,7 @@ type Props = {
   showDragIndicator?: boolean;
   backgroundStyle?: StyleProp<ViewStyle>;
   enablePanDownToClose?: boolean;
-  isTop?: boolean;
+  hasNestedChild?: boolean;
 };
 
 export const AppBottomSheet = memo(
@@ -27,26 +28,27 @@ export const AppBottomSheet = memo(
     showDragIndicator = true,
     backgroundStyle,
     enablePanDownToClose = true,
-    isTop = true,
+    hasNestedChild = false,
   }: Props) => {
     const { colors } = useThemes();
+
+    const resolvedSnapPoints =
+      snapPoints?.length ? snapPoints : hasNestedChild ? ["90%"] : undefined;
 
     return (
       <BottomSheet
         ref={sheetRef}
         index={open ? 0 : -1}
-        onClose={isTop ? onClose : undefined}
-        snapPoints={snapPoints}
+        onClose={onClose}
+        snapPoints={resolvedSnapPoints}
         handleComponent={showDragIndicator ? undefined : null}
         backgroundStyle={
           backgroundStyle || { backgroundColor: colors.neutral100 }
         }
         enablePanDownToClose={enablePanDownToClose}
-        enableDynamicSizing={!snapPoints?.length}
-        backdropComponent={isTop ? undefined : NoBackdrop}
-        style={{ zIndex: 99 }}
+        enableDynamicSizing={!hasNestedChild && !resolvedSnapPoints?.length}
       >
-        {children}
+        <View style={{ flex: 1 }}>{children}</View>
       </BottomSheet>
     );
   },

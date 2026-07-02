@@ -22,7 +22,12 @@ function formatCustomerAddress(addr: CustomerAddress): string {
     .join(", ");
 }
 
-export function OrderDetailCustomerSection({ order, displayName, customerDefaultAddress, onTikTok }: OrderDetailCustomerSectionProps) {
+export function OrderDetailCustomerSection({
+  order,
+  displayName,
+  customerDefaultAddress,
+  onTikTok,
+}: OrderDetailCustomerSectionProps) {
   const { show } = useBottomSheet();
 
   const handlePhone = useCallback(() => {
@@ -32,7 +37,12 @@ export function OrderDetailCustomerSection({ order, displayName, customerDefault
 
   const handlePressAvatar = useCallback(() => {
     const customerKey = order.customerTikTokUsername || order.username;
-    if (customerKey) show({ content: <CustomerDetailSheet customerKey={customerKey} />, showDragIndicator: true, snapPoints: ["92%"] });
+    if (customerKey)
+      show({
+        content: <CustomerDetailSheet customerKey={customerKey} />,
+        showDragIndicator: true,
+        snapPoints: ["92%"],
+      });
   }, [order.customerTikTokUsername, order.username, show]);
 
   const handleZalo = useCallback(() => {
@@ -45,7 +55,11 @@ export function OrderDetailCustomerSection({ order, displayName, customerDefault
     <Section>
       <View style={styles.customerTopRow}>
         <Pressable onPress={handlePressAvatar}>
-          <Avatar uri={order.avatar || order.avatarUrl} username={displayName} size={40} />
+          <Avatar
+            uri={order.avatar || order.avatarUrl}
+            username={displayName}
+            size={40}
+          />
         </Pressable>
         <View style={styles.customerInfo}>
           <Text style={styles.customerName}>{displayName}</Text>
@@ -58,16 +72,28 @@ export function OrderDetailCustomerSection({ order, displayName, customerDefault
       <View style={styles.contactRows}>
         <View style={styles.contactRow}>
           <Icon name="group_user" size={16} tintColor="neutral400" />
-          <Text style={[styles.contactText, !order.customerPhone && styles.contactTextMuted]}>
+          <Text
+            style={[
+              styles.contactText,
+              !order.customerPhone && styles.contactTextMuted,
+            ]}
+          >
             {order.customerPhone || "Chưa có số điện thoại"}
           </Text>
         </View>
         <View style={styles.contactRow}>
           <Icon name="truck" size={16} tintColor="neutral400" />
-          <Text style={[styles.contactText, !customerDefaultAddress && !order.customerAddress && styles.contactTextMuted]}>
+          <Text
+            style={[
+              styles.contactText,
+              !customerDefaultAddress &&
+                !order.customerAddress &&
+                styles.contactTextMuted,
+            ]}
+          >
             {customerDefaultAddress
               ? formatCustomerAddress(customerDefaultAddress)
-              : (order.customerAddress || "Chưa có địa chỉ")}
+              : order.customerAddress || "Chưa có địa chỉ"}
           </Text>
         </View>
       </View>

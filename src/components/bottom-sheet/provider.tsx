@@ -1,100 +1,165 @@
 import { ReactNode, createRef, useCallback, useMemo, useRef, useState } from "react";
 import { type BottomSheetMethods } from "@expo/ui/community/bottom-sheet";
 import { BottomSheetContext } from "./context";
-import { BottomSheetContextType, BottomSheetOptions } from "./type";
-import { AppBottomSheet } from "./sheet";
+import {
+  BottomSheetContextType,
+  BottomSheetDisplayEntry,
+  BottomSheetEntry,
+  BottomSheetId,
+  BottomSheetOptions,
+  BottomSheetUpdate,
+} from "./type";
+import { BottomSheetRenderer } from "./renderer";
 
 type Props = {
   children: ReactNode;
 };
 
-type StackEntry = BottomSheetOptions & { key: number; sheetRef: React.RefObject<BottomSheetMethods | null> };
-type DisplayEntry = StackEntry & { open: boolean };
-
-// --- Thời gian animation dismiss của SwiftUI sheet (ms) ---
 const DISMISS_ANIMATION_MS = 350;
 
 export const BottomSheetProvider = ({ children }: Props) => {
-  const stackRef = useRef<StackEntry[]>([]);
-  const closingByCodeKeysRef = useRef(new Set<number>());
-  const keyCounterRef = useRef(0);
-  const [displayEntries, setDisplayEntries] = useState<DisplayEntry[]>([]);
+  const stackRef = useRef<BottomSheetEntry[]>([]);
+  const closingByCodeIdsRef = useRef(new Set<BottomSheetId>());
+  const idCounterRef = useRef(0);
+  const [displayEntries, setDisplayEntries] = useState<BottomSheetDisplayEntry[]>([]);
 
-  const show = useCallback((config: BottomSheetOptions) => {
-    const key = (keyCounterRef.current += 1, keyCounterRef.current);
+  const createEntry = useCallback((config: BottomSheetOptions): BottomSheetEntry => {
+    const id = `bottom-sheet-${(idCounterRef.current += 1)}`;
     const sheetRef = createRef<BottomSheetMethods | null>();
-    const entry: StackEntry = { ...config, key, sheetRef };
-    stackRef.current = [...stackRef.current, entry];
-    setDisplayEntries((prev) => [...prev.filter((e) => e.key !== key), { ...entry, open: true }]);
+    return { ...config, id, sheetRef };
   }, []);
 
-  // --- Đóng sheet bằng code (button close): gọi ref.close() để animate kéo xuống ---
-  const hide = useCallback(() => {
-    if (stackRef.current.length === 0) return;
-    const top = stackRef.current[stackRef.current.length - 1];
-    stackRef.current = stackRef.current.slice(0, -1);
-    closingByCodeKeysRef.current.add(top.key);
-    // Gọi native close để chạy animation kéo xuống
-    top.sheetRef.current?.close();
-    // Xóa khỏi DOM sau khi animation xong
+  const removeDisplayEntries = useCallback((ids: BottomSheetId[]) => {
     setTimeout(() => {
-      closingByCodeKeysRef.current.delete(top.key);
-      setDisplayEntries((prev) => prev.filter((e) => e.key !== top.key));
+      ids.forEach((id) => closingByCodeIdsRef.current.delete(id));
+      setDisplayEntries((prev) => prev.filter((entry) => !ids.includes(entry.id)));
     }, DISMISS_ANIMATION_MS);
   }, []);
-  // --- end Đóng sheet ---
 
-  const update = useCallback((patch: Partial<BottomSheetOptions>) => {
+  const closeEntries = useCallback(
+    (entries: BottomSheetEntry[]) => {
+      entries.forEach((entry) => {
+        closingByCodeIdsRef.current.add(entry.id);
+        entry.sheetRef.current?.close();
+      });
+      removeDisplayEntries(entries.map((entry) => entry.id));
+    },
+    [removeDisplayEntries],
+  );
+
+  const push = useCallback(
+    (config: BottomSheetOptions) => {
+      const entry = createEntry(config);
+      stackRef.current = [...stackRef.current, entry];
+      setDisplayEntries((prev) => [...prev, { ...entry, open: true }]);
+      return entry.id;
+    },
+    [createEntry],
+  );
+
+  const pop = useCallback(
+    (id?: BottomSheetId) => {
+      if (stackRef.current.length === 0) return;
+
+      const targetId = id ?? stackRef.current[stackRef.current.length - 1].id;
+      const targetIndex = stackRef.current.findIndex((entry) => entry.id === targetId);
+      if (targetIndex === -1) return;
+
+      const targets = stackRef.current.slice(targetIndex);
+      stackRef.current = stackRef.current.slice(0, targetIndex);
+      closeEntries(targets);
+    },
+    [closeEntries],
+  );
+
+  const dismissAll = useCallback(() => {
     if (stackRef.current.length === 0) return;
-    const topKey = stackRef.current[stackRef.current.length - 1].key;
-    const updated = [...stackRef.current];
-    updated[updated.length - 1] = { ...updated[updated.length - 1], ...patch };
-    stackRef.current = updated;
-    setDisplayEntries((prev) => prev.map((e) => e.key === topKey ? { ...e, ...patch } : e));
+
+    const targets = [...stackRef.current];
+    stackRef.current = [];
+    closeEntries(targets);
+  }, [closeEntries]);
+
+  const update = useCallback<BottomSheetUpdate>((idOrPatch, patchArg?) => {
+    const isTargetedUpdate = typeof idOrPatch === "string";
+    const targetId = isTargetedUpdate
+      ? idOrPatch
+      : stackRef.current[stackRef.current.length - 1]?.id;
+    const patch = isTargetedUpdate ? patchArg : idOrPatch;
+
+    if (!targetId || !patch) return;
+
+    stackRef.current = stackRef.current.map((entry) =>
+      entry.id === targetId ? { ...entry, ...patch } : entry,
+    );
+    setDisplayEntries((prev) =>
+      prev.map((entry) => (entry.id === targetId ? { ...entry, ...patch } : entry)),
+    );
   }, []);
 
-  // --- Xử lý khi sheet bị đóng bởi swipe/backdrop; bỏ qua onClose do button tự kích hoạt ---
-  const handleClose = useCallback((key: number) => {
-    if (closingByCodeKeysRef.current.has(key)) return;
-    const entry = stackRef.current.find((e) => e.key === key);
-    entry?.onDismiss?.();
-    stackRef.current = stackRef.current.filter((e) => e.key !== key);
-    setDisplayEntries((prev) => prev.filter((e) => e.key !== key));
+  const replace = useCallback(
+    (config: BottomSheetOptions, id?: BottomSheetId) => {
+      const targetId = id ?? stackRef.current[stackRef.current.length - 1]?.id;
+      if (!targetId) return push(config);
+
+      let replacedId = targetId;
+      stackRef.current = stackRef.current.map((entry) => {
+        if (entry.id !== targetId) return entry;
+        replacedId = entry.id;
+        return { ...config, id: entry.id, sheetRef: entry.sheetRef };
+      });
+      setDisplayEntries((prev) =>
+        prev.map((entry) =>
+          entry.id === targetId
+            ? { ...config, id: entry.id, sheetRef: entry.sheetRef, open: entry.open }
+            : entry,
+        ),
+      );
+      return replacedId;
+    },
+    [push],
+  );
+
+  const peek = useCallback(
+    () => stackRef.current[stackRef.current.length - 1],
+    [],
+  );
+
+  const handleClose = useCallback((id: BottomSheetId) => {
+    if (closingByCodeIdsRef.current.has(id)) return;
+
+    const targetIndex = stackRef.current.findIndex((entry) => entry.id === id);
+    if (targetIndex === -1) return;
+
+    const targets = stackRef.current.slice(targetIndex);
+    targets[0]?.onDismiss?.();
+    stackRef.current = stackRef.current.slice(0, targetIndex);
+    setDisplayEntries((prev) => {
+      const displayTargetIndex = prev.findIndex((entry) => entry.id === id);
+      return displayTargetIndex === -1 ? prev : prev.slice(0, displayTargetIndex);
+    });
   }, []);
-  // --- end Xử lý khi sheet bị đóng ---
 
   const value = useMemo<BottomSheetContextType>(
     () => ({
-      show,
-      hide,
+      push,
+      pop,
+      replace,
+      dismissAll,
       update,
-      isVisible: stackRef.current.length > 0,
+      peek,
+      show: push,
+      hide: pop,
+      hideAll: dismissAll,
+      isVisible: displayEntries.length > 0,
     }),
-    [show, hide, update],
+    [push, pop, replace, dismissAll, update, peek, displayEntries.length],
   );
 
   return (
     <BottomSheetContext.Provider value={value}>
       {children}
-
-      {displayEntries.map((entry, i) => {
-        const isTop = i === displayEntries.length - 1;
-        return (
-          <AppBottomSheet
-            key={entry.key}
-            sheetRef={entry.sheetRef}
-            open={entry.open}
-            onClose={() => handleClose(entry.key)}
-            snapPoints={entry.snapPoints}
-            showDragIndicator={entry.showDragIndicator}
-            backgroundStyle={entry.backgroundStyle}
-            enablePanDownToClose={isTop ? (entry.enablePanDownToClose ?? true) : false}
-            isTop={isTop}
-          >
-            {entry.content}
-          </AppBottomSheet>
-        );
-      })}
+      <BottomSheetRenderer entries={displayEntries} onClose={handleClose} />
     </BottomSheetContext.Provider>
   );
 };

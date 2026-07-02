@@ -2,14 +2,22 @@ import type { Order, OrderProduct } from "@app-types/index";
 import { Avatar } from "@components/avatar";
 import { Skeleton } from "@components/skeleton";
 import { Ionicons } from "@expo/vector-icons";
-import { formatMoney, getOrderTotal, statusLabel } from "@features/orders/utils/order";
+import {
+  formatMoney,
+  getOrderTotal,
+  statusLabel,
+} from "@features/orders/utils/order";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { openTikTokProfile } from "@utils/tiktok";
 import { addressLine } from "@features/orders/utils/shipment";
 import { useAddressPageStore } from "@features/orders/stores/address-page-store";
-import { createCustomerAddressApi, updateCustomerAddressApi, type CustomerAddress } from "@features/orders/service/create-shipment-api";
+import {
+  createCustomerAddressApi,
+  updateCustomerAddressApi,
+  type CustomerAddress,
+} from "@features/orders/service/create-shipment-api";
 import type { AddrFormValues } from "@features/orders/types/shipment";
 import { formInitialValues } from "@features/orders/utils/shipment";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,7 +27,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -62,7 +69,15 @@ function TikTokMark() {
   );
 }
 
-function ActionPill({ label, onPress, icon }: { label: string; onPress: () => void; icon?: React.ReactNode }) {
+function ActionPill({
+  label,
+  onPress,
+  icon,
+}: {
+  label: string;
+  onPress: () => void;
+  icon?: React.ReactNode;
+}) {
   return (
     <Pressable onPress={onPress} style={styles.actionPill}>
       {icon ?? <TikTokMark />}
@@ -73,45 +88,103 @@ function ActionPill({ label, onPress, icon }: { label: string; onPress: () => vo
 
 const CUSTOMER_TYPES = ["Lẻ", "Sỉ", "VIP", "Chốt Dạo", "Bomb"];
 
-function SelectField({ label, value, onChange, hint }: { label: string; value: string; onChange: (v: string) => void; hint?: string }) {
+function SelectField({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  hint?: string;
+}) {
   const { colors, textPresets } = useThemes();
-  const [open, setOpen] = useState(false);
+  const { push, hide } = useBottomSheet();
+
+  const handlePress = () => {
+    push({
+      content: (
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingBottom: 40,
+          }}
+        >
+          <Text
+            style={{
+              paddingVertical: 16,
+              color: colors.neutral500,
+              ...textPresets.fs15_800,
+            }}
+          >
+            {label}
+          </Text>
+          {CUSTOMER_TYPES.map((opt) => {
+            const selected = value === opt;
+            return (
+              <Pressable
+                key={opt}
+                onPress={() => {
+                  onChange(opt);
+                  hide();
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 14,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border10,
+                }}
+              >
+                <Text
+                  style={[
+                    textPresets.fs15_400,
+                    { color: selected ? colors.primary : colors.neutral900 },
+                  ]}
+                >
+                  {opt}
+                </Text>
+                {selected && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      ),
+    });
+  };
 
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <Pressable onPress={() => setOpen(true)} style={styles.selectInput}>
-        <Text style={[textPresets.fs14_400, { color: value ? colors.neutral900 : colors.neutral300, flex: 1 }]}>
+      <Pressable onPress={handlePress} style={styles.selectInput}>
+        <Text
+          style={[
+            textPresets.fs14_400,
+            { color: value ? colors.neutral900 : colors.neutral300, flex: 1 },
+          ]}
+        >
           {value || "Chọn loại khách hàng"}
         </Text>
         <Ionicons name="chevron-down" size={16} color={colors.neutral400} />
       </Pressable>
       {!!hint && <Text style={styles.fieldHint}>{hint}</Text>}
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }} onPress={() => setOpen(false)}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingBottom: 40 }}>
-            <Text style={{ paddingVertical: 16, color: colors.neutral500, ...textPresets.fs15_800 }}>{label}</Text>
-            {CUSTOMER_TYPES.map((opt) => {
-              const selected = value === opt;
-              return (
-                <Pressable
-                  key={opt}
-                  onPress={() => { onChange(opt); setOpen(false); }}
-                  style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border10 }}
-                >
-                  <Text style={[textPresets.fs15_400, { color: selected ? colors.primary : colors.neutral900 }]}>{opt}</Text>
-                  {selected && <Ionicons name="checkmark" size={18} color={colors.primary} />}
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
 
-function Field({ label, value, placeholder, multiline, keyboardType, onChangeText, onBlur }: FieldProps) {
+function Field({
+  label,
+  value,
+  placeholder,
+  multiline,
+  keyboardType,
+  onChangeText,
+  onBlur,
+}: FieldProps) {
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -147,12 +220,23 @@ function StatCard({ label, value, tone }: StatCardProps) {
 }
 
 function OrderStatusBadge({ order }: { order: Order }) {
-  const deposited = order.depositStatus === "paid" || order.depositStatus === "deposited";
+  const deposited =
+    order.depositStatus === "paid" || order.depositStatus === "deposited";
 
   return (
     <View style={styles.badgeRow}>
-      <View style={[styles.badge, deposited ? styles.badgeSuccess : styles.badgeWarning]}>
-        <Text style={[styles.badgeText, deposited ? styles.badgeTextSuccess : styles.badgeTextWarning]}>
+      <View
+        style={[
+          styles.badge,
+          deposited ? styles.badgeSuccess : styles.badgeWarning,
+        ]}
+      >
+        <Text
+          style={[
+            styles.badgeText,
+            deposited ? styles.badgeTextSuccess : styles.badgeTextWarning,
+          ]}
+        >
           {deposited ? "Đã cọc" : "Chưa cọc"}
         </Text>
       </View>
@@ -173,7 +257,8 @@ function ProductRow({ product }: { product: OrderProduct }) {
           {product.name || product.code || "Sản phẩm"}
         </Text>
         <Text style={styles.productMeta}>
-          {[product.color, product.size].filter(Boolean).join(" • ") || "Phân loại mặc định"}
+          {[product.color, product.size].filter(Boolean).join(" • ") ||
+            "Phân loại mặc định"}
         </Text>
       </View>
       <View style={styles.productPriceBox}>
@@ -188,7 +273,8 @@ function getProviderAbbr(name?: string | null) {
   if (!name) return "VC";
   const upper = name.toUpperCase();
   if (upper.includes("GIAO HANG NHANH") || upper.includes("GHN")) return "GHN";
-  if (upper.includes("GIAO HANG TIET KIEM") || upper.includes("GHTK")) return "GHTK";
+  if (upper.includes("GIAO HANG TIET KIEM") || upper.includes("GHTK"))
+    return "GHTK";
   if (upper.includes("VIETTEL") || upper.includes("VTP")) return "VTP";
   if (upper.includes("SHOPEE") || upper.includes("SPX")) return "SPX";
   return upper.slice(0, 4);
@@ -226,10 +312,12 @@ function TrackingRow({
     returned: "Đã hoàn",
     cancelled: "Đã hủy",
   };
-  const shippingStatusLabel = SHIPPING_STATUS_LABEL[order.shippingStatus ?? ""] ?? "Chờ lấy hàng";
-  const canCancel = order.shippingStatus !== "cancelled"
-    && order.shippingStatus !== "returned"
-    && order.shippingStatus !== "delivered";
+  const shippingStatusLabel =
+    SHIPPING_STATUS_LABEL[order.shippingStatus ?? ""] ?? "Chờ lấy hàng";
+  const canCancel =
+    order.shippingStatus !== "cancelled" &&
+    order.shippingStatus !== "returned" &&
+    order.shippingStatus !== "delivered";
 
   return (
     <View style={styles.trackingCard}>
@@ -259,7 +347,9 @@ function TrackingRow({
               })
             : "--:--"}
         </Text>
-        <Text style={styles.trackingOrderCode}>{order.orderCode || order.id}</Text>
+        <Text style={styles.trackingOrderCode}>
+          {order.orderCode || order.id}
+        </Text>
       </View>
 
       <View style={styles.shipmentActions}>
@@ -283,7 +373,9 @@ function TrackingRow({
                       .catch((err: unknown) => {
                         Alert.alert(
                           "Không huỷ được vận đơn",
-                          err instanceof Error ? err.message : "Vui lòng thử lại.",
+                          err instanceof Error
+                            ? err.message
+                            : "Vui lòng thử lại.",
                         );
                       });
                   },
@@ -296,7 +388,9 @@ function TrackingRow({
             ) : (
               <Ionicons name="close-circle-outline" size={17} color="#EF4444" />
             )}
-            <Text style={styles.cancelShipmentText}>{cancelling ? "Đang huỷ..." : "Huỷ Vận Đơn"}</Text>
+            <Text style={styles.cancelShipmentText}>
+              {cancelling ? "Đang huỷ..." : "Huỷ Vận Đơn"}
+            </Text>
           </Pressable>
         )}
       </View>
@@ -348,10 +442,7 @@ function OrderCard({
       </View>
 
       <View style={styles.orderActions}>
-        <Pressable
-          style={styles.detailButton}
-          onPress={onViewDetail}
-        >
+        <Pressable style={styles.detailButton} onPress={onViewDetail}>
           <Text style={styles.detailButtonText}>Xem chi tiết</Text>
         </Pressable>
       </View>
@@ -959,17 +1050,33 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
   const { hide } = useBottomSheet();
   const { setPicker, setForm } = useAddressPageStore();
   const {
-    activeTab, setActiveTab,
-    customerType, setCustomerType,
-    phone, setPhone,
+    activeTab,
+    setActiveTab,
+    customerType,
+    setCustomerType,
+    phone,
+    setPhone,
     phoneError,
-    referenceInfo, setReferenceInfo,
-    customerAddresses, selectedAddress, setSelectedAddress, addressesLoading, reloadCustomerAddresses,
+    referenceInfo,
+    setReferenceInfo,
+    customerAddresses,
+    selectedAddress,
+    setSelectedAddress,
+    addressesLoading,
+    reloadCustomerAddresses,
     isSaving,
-    displayName, avatar, tiktokUsername,
-    customer, groupedOrders,
-    productCount, confirmedCount, depositedCount, unpaidCount, draftCount,
-    loading, notFound,
+    displayName,
+    avatar,
+    tiktokUsername,
+    customer,
+    groupedOrders,
+    productCount,
+    confirmedCount,
+    depositedCount,
+    unpaidCount,
+    draftCount,
+    loading,
+    notFound,
     handleSave,
     handleCancelShipment,
     cancellingId,
@@ -988,7 +1095,7 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
       },
     });
     router.push("/order-detail/create-shipment/address-form");
-    requestAnimationFrame(hide);
+    requestAnimationFrame(() => hide());
   };
 
   const openAddressPicker = () => {
@@ -998,11 +1105,17 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
       selectedId: selectedAddress?.id,
       loading: addressesLoading,
       onSelect: (addr) => setSelectedAddress(addr as CustomerAddress),
-      onAddPress: () => { router.back(); setTimeout(() => openAddressForm(), 100); },
-      onEditPress: (addr) => { router.back(); setTimeout(() => openAddressForm(addr as CustomerAddress), 100); },
+      onAddPress: () => {
+        router.back();
+        setTimeout(() => openAddressForm(), 100);
+      },
+      onEditPress: (addr) => {
+        router.back();
+        setTimeout(() => openAddressForm(addr as CustomerAddress), 100);
+      },
     });
     router.push("/order-detail/create-shipment/address-picker");
-    requestAnimationFrame(hide);
+    requestAnimationFrame(() => hide());
   };
 
   return (
@@ -1043,44 +1156,90 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
             <View style={[styles.infoContent, { gap: 16 }]}>
               {/* label + select input */}
               <View style={styles.fieldGroup}>
-                <Skeleton height={14} width="40%" borderRadius={4} style={{ marginBottom: 8 }} />
+                <Skeleton
+                  height={14}
+                  width="40%"
+                  borderRadius={4}
+                  style={{ marginBottom: 8 }}
+                />
                 <Skeleton height={48} borderRadius={8} />
               </View>
               {/* label + phone input */}
               <View style={styles.fieldGroup}>
-                <Skeleton height={14} width="35%" borderRadius={4} style={{ marginBottom: 8 }} />
+                <Skeleton
+                  height={14}
+                  width="35%"
+                  borderRadius={4}
+                  style={{ marginBottom: 8 }}
+                />
                 <Skeleton height={48} borderRadius={8} />
               </View>
               {/* label + multiline textarea */}
               <View style={styles.fieldGroup}>
-                <Skeleton height={14} width="50%" borderRadius={4} style={{ marginBottom: 8 }} />
+                <Skeleton
+                  height={14}
+                  width="50%"
+                  borderRadius={4}
+                  style={{ marginBottom: 8 }}
+                />
                 <Skeleton height={88} borderRadius={8} />
               </View>
               {/* label + address picker */}
               <View style={styles.fieldGroup}>
-                <Skeleton height={14} width="45%" borderRadius={4} style={{ marginBottom: 8 }} />
+                <Skeleton
+                  height={14}
+                  width="45%"
+                  borderRadius={4}
+                  style={{ marginBottom: 8 }}
+                />
                 <Skeleton height={48} borderRadius={8} />
               </View>
               {/* save button */}
-              <Skeleton height={56} borderRadius={40} style={{ marginTop: 16 }} />
+              <Skeleton
+                height={56}
+                borderRadius={40}
+                style={{ marginTop: 16 }}
+              />
             </View>
           </ScrollView>
         </>
       ) : notFound ? (
         <View style={styles.stateBox}>
           <Text style={styles.stateTitle}>Không tìm thấy khách hàng</Text>
-          <Text style={styles.stateText}>Khách hàng này chưa có dữ liệu trong phiên hiện tại.</Text>
+          <Text style={styles.stateText}>
+            Khách hàng này chưa có dữ liệu trong phiên hiện tại.
+          </Text>
         </View>
       ) : (
         <>
           <View style={styles.actionsRow}>
-            <ActionPill label="TikTok" onPress={() => openTikTokProfile(tiktokUsername)} />
-            <ActionPill label="Zalo" onPress={() => {
-              if (phone) Linking.openURL(`zalo://chat?phone=${phone.replace(/^0/, "84")}`);
-            }} icon={<Ionicons name="chatbubble-ellipses-outline" size={16} color="#0068FF" />} />
-            <ActionPill label="Điện thoại" onPress={() => {
-              if (phone) Linking.openURL(`tel:${phone}`);
-            }} icon={<Ionicons name="call-outline" size={16} color="#484848" />} />
+            <ActionPill
+              label="TikTok"
+              onPress={() => openTikTokProfile(tiktokUsername)}
+            />
+            <ActionPill
+              label="Zalo"
+              onPress={() => {
+                if (phone)
+                  Linking.openURL(
+                    `zalo://chat?phone=${phone.replace(/^0/, "84")}`,
+                  );
+              }}
+              icon={
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={16}
+                  color="#0068FF"
+                />
+              }
+            />
+            <ActionPill
+              label="Điện thoại"
+              onPress={() => {
+                if (phone) Linking.openURL(`tel:${phone}`);
+              }}
+              icon={<Ionicons name="call-outline" size={16} color="#484848" />}
+            />
           </View>
 
           <View style={styles.tabBar}>
@@ -1092,7 +1251,11 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                   onPress={() => setActiveTab(tab.key)}
                   style={[styles.tabItem, active && styles.tabItemActive]}
                 >
-                  <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab.label}</Text>
+                  <Text
+                    style={[styles.tabText, active && styles.tabTextActive]}
+                  >
+                    {tab.label}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -1106,9 +1269,22 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.infoContent}>
-                <SelectField label="Loại khách hàng" value={customerType} onChange={setCustomerType} hint="Tỉ lệ đánh giá tốt từ các shop: 2/2" />
-                <Field label="Số điện thoại" value={phone} placeholder="Nhập số điện thoại" onChangeText={setPhone} keyboardType="phone-pad" />
-                {!!phoneError && <Text style={styles.fieldError}>{phoneError}</Text>}
+                <SelectField
+                  label="Loại khách hàng"
+                  value={customerType}
+                  onChange={setCustomerType}
+                  hint="Tỉ lệ đánh giá tốt từ các shop: 2/2"
+                />
+                <Field
+                  label="Số điện thoại"
+                  value={phone}
+                  placeholder="Nhập số điện thoại"
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                />
+                {!!phoneError && (
+                  <Text style={styles.fieldError}>{phoneError}</Text>
+                )}
                 <Field
                   label="Thông tin tham khảo"
                   value={referenceInfo}
@@ -1119,52 +1295,141 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>Địa chỉ giao hàng</Text>
                   {selectedAddress ? (
-                    <View style={[styles.addressCard, { borderColor: colors.border10, backgroundColor: colors.surface }]}>
+                    <View
+                      style={[
+                        styles.addressCard,
+                        {
+                          borderColor: colors.border10,
+                          backgroundColor: colors.surface,
+                        },
+                      ]}
+                    >
                       <View style={styles.addressTopRow}>
-                        <View style={[styles.addressAvatar, { backgroundColor: colors.primaryLight }]}>
-                          <Text style={[{ color: colors.primary }, textPresets.fs16_500]}>
-                            {(selectedAddress.name?.trim()?.charAt(0) || "L").toUpperCase()}
+                        <View
+                          style={[
+                            styles.addressAvatar,
+                            { backgroundColor: colors.primaryLight },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              { color: colors.primary },
+                              textPresets.fs16_500,
+                            ]}
+                          >
+                            {(
+                              selectedAddress.name?.trim()?.charAt(0) || "L"
+                            ).toUpperCase()}
                           </Text>
                         </View>
                         <View style={styles.addressInfo}>
                           <View style={styles.addressNameRow}>
-                            <Text style={[styles.addressName, { color: colors.neutral900 }, textPresets.fs16_500]} numberOfLines={1}>
+                            <Text
+                              style={[
+                                styles.addressName,
+                                { color: colors.neutral900 },
+                                textPresets.fs16_500,
+                              ]}
+                              numberOfLines={1}
+                            >
                               {selectedAddress.name ?? "—"}
                             </Text>
                             {selectedAddress.isDefault && (
-                              <View style={[styles.addressDefaultBadge, { backgroundColor: colors.primaryLight }]}>
-                                <Text style={[{ color: colors.primary }, textPresets.fs11_400]}>Mặc định</Text>
+                              <View
+                                style={[
+                                  styles.addressDefaultBadge,
+                                  { backgroundColor: colors.primaryLight },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    { color: colors.primary },
+                                    textPresets.fs11_400,
+                                  ]}
+                                >
+                                  Mặc định
+                                </Text>
                               </View>
                             )}
                           </View>
-                          <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>{selectedAddress.phone ?? "—"}</Text>
+                          <Text
+                            style={[
+                              { color: colors.neutral400 },
+                              textPresets.fs12_400,
+                            ]}
+                          >
+                            {selectedAddress.phone ?? "—"}
+                          </Text>
                         </View>
                         <Pressable
                           hitSlop={8}
-                          style={[styles.addressChangePill, { borderColor: colors.border10 }]}
+                          style={[
+                            styles.addressChangePill,
+                            { borderColor: colors.border10 },
+                          ]}
                           onPress={openAddressPicker}
                         >
-                          <Text style={[{ color: colors.primary }, textPresets.fs12_500]}>Thay đổi</Text>
+                          <Text
+                            style={[
+                              { color: colors.primary },
+                              textPresets.fs12_500,
+                            ]}
+                          >
+                            Thay đổi
+                          </Text>
                         </Pressable>
                       </View>
-                      <Text style={[styles.addressLineText, { color: colors.neutral400 }, textPresets.fs14_400]} numberOfLines={2}>
+                      <Text
+                        style={[
+                          styles.addressLineText,
+                          { color: colors.neutral400 },
+                          textPresets.fs14_400,
+                        ]}
+                        numberOfLines={2}
+                      >
                         {addressLine(selectedAddress)}
                       </Text>
                     </View>
                   ) : (
                     <Pressable
                       onPress={openAddressPicker}
-                      style={[styles.addAddressCard, { borderColor: colors.border20 }]}
+                      style={[
+                        styles.addAddressCard,
+                        { borderColor: colors.border20 },
+                      ]}
                     >
-                      <View style={[styles.addAddressCircle, { borderColor: colors.primary }]}>
-                        <Text style={[{ color: colors.primary }, textPresets.fs18_700]}>+</Text>
+                      <View
+                        style={[
+                          styles.addAddressCircle,
+                          { borderColor: colors.primary },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            { color: colors.primary },
+                            textPresets.fs18_700,
+                          ]}
+                        >
+                          +
+                        </Text>
                       </View>
-                      <Text style={[{ color: colors.primary }, textPresets.fs16_500]}>Thêm mới</Text>
+                      <Text
+                        style={[
+                          { color: colors.primary },
+                          textPresets.fs16_500,
+                        ]}
+                      >
+                        Thêm mới
+                      </Text>
                     </Pressable>
                   )}
                 </View>
                 <TouchableOpacity
-                  style={[styles.saveButtonWrapper, (isSaving || !customer?.customerId) && styles.saveButtonDisabled]}
+                  style={[
+                    styles.saveButtonWrapper,
+                    (isSaving || !customer?.customerId) &&
+                      styles.saveButtonDisabled,
+                  ]}
                   activeOpacity={0.8}
                   onPress={handleSave}
                   disabled={isSaving || !customer?.customerId}
@@ -1192,18 +1457,30 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
             >
               <View style={styles.ordersContent}>
                 <View style={styles.statGrid}>
-                  <StatCard label="Đã chốt" value={confirmedCount} tone="success" />
+                  <StatCard
+                    label="Đã chốt"
+                    value={confirmedCount}
+                    tone="success"
+                  />
                   <StatCard label="Đã cọc" value={depositedCount} tone="info" />
-                  <StatCard label="Chưa cọc" value={unpaidCount} tone="danger" />
+                  <StatCard
+                    label="Chưa cọc"
+                    value={unpaidCount}
+                    tone="danger"
+                  />
                   <StatCard label="Đơn nháp" value={draftCount} tone="muted" />
                 </View>
                 <View style={styles.orderToolbar}>
-                  <Text style={styles.productCount}>{productCount} sản phẩm</Text>
+                  <Text style={styles.productCount}>
+                    {productCount} sản phẩm
+                  </Text>
                 </View>
                 {groupedOrders.length === 0 ? (
                   <View style={styles.emptyOrders}>
                     <Text style={styles.stateTitle}>Chưa có đơn hàng</Text>
-                    <Text style={styles.stateText}>Các đơn hàng của khách sẽ hiển thị tại đây.</Text>
+                    <Text style={styles.stateText}>
+                      Các đơn hàng của khách sẽ hiển thị tại đây.
+                    </Text>
                   </View>
                 ) : (
                   groupedOrders.map((group) => (
@@ -1220,7 +1497,10 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                           onCancelShipment={handleCancelShipment}
                           onViewDetail={() => {
                             hide();
-                            router.push({ pathname: "/order-detail", params: { id: order.id } });
+                            router.push({
+                              pathname: "/order-detail",
+                              params: { id: order.id },
+                            });
                           }}
                         />
                       ))}
