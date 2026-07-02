@@ -1,7 +1,6 @@
 import { CustomTabBar } from "@components/bottom-tab";
 import { tabOptions } from "@components/bottom-tab/tabs-screen-options";
 import {
-  TikTokLiveSocketProvider,
   useTikTokLiveSocketContext,
   useTikTokLiveTimerContext,
 } from "@features/tiktok-live/contexts/tiktok-live-socket";
@@ -87,9 +86,7 @@ export default function TabLayout() {
   }
 
   return (
-    <TikTokLiveSocketProvider hasHistory={user.hasHistory}>
-      <TabContent />
-    </TikTokLiveSocketProvider>
+    <TabContent />
   );
 }
 

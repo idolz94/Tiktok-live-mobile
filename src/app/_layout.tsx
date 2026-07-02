@@ -2,6 +2,7 @@ import "@declare";
 import { BottomSheetProvider } from "@components/bottom-sheet/provider";
 import { ToastProvider } from "@components/toast";
 import { useAuth } from "@features/auth/hooks/use-auth";
+import { TikTokLiveSocketProvider } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { sessionExpiredEmitter } from "@utils/http/session-event";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -19,7 +20,7 @@ export default function RootLayout() {
 }
 
 function RootContent() {
-  const { isLoading, logout } = useAuth();
+  const { isLoading, logout, user } = useAuth();
 
   const [isStackReady, setIsStackReady] = useState(false);
   const [showSplashOverlay, setShowSplashOverlay] = useState(true);
@@ -68,7 +69,12 @@ function RootContent() {
     }, 300);
   }, [isStackReady, isLoading]);
 
+  // --- showStack chỉ bật 1 lần, không flicker false khi bootstrap re-run ---
+  const showStackOnceRef = useRef(false);
   const showStack = isStackReady && !isLoading;
+  if (showStack) showStackOnceRef.current = true;
+  const shouldRenderStack = showStackOnceRef.current;
+  // --- end showStack ---
 
   return (
     <>
@@ -78,8 +84,10 @@ function RootContent() {
             <BottomSheetProvider>
               <StatusBar style="dark" />
               <View style={{ flex: 1 }}>
-                {showStack && (
+                {shouldRenderStack && (
                   <View style={{ flex: 1 }} onLayout={handleRootLayout}>
+                    {/* --- Live provider ở root: không unmount khi navigate order-detail/browser --- */}
+                    <TikTokLiveSocketProvider hasHistory={user?.hasHistory}>
                     <Stack screenOptions={{ headerShown: false }}>
                       <Stack.Screen name="index" />
                       <Stack.Screen name="(auth)" />
@@ -92,6 +100,8 @@ function RootContent() {
                       <Stack.Screen name="order-detail" />
                       <Stack.Screen name="license-expired" />
                     </Stack>
+                    </TikTokLiveSocketProvider>
+                    {/* --- end Live provider --- */}
                   </View>
                 )}
                 {showSplashOverlay && (
