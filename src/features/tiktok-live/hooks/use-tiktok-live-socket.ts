@@ -64,6 +64,13 @@ function getPayloadUsername(payload: Record<string, any>) {
   );
 }
 
+// --- Debug vòng đời live khi app chuyển background/foreground ---
+function debugLiveLifecycle(label: string, payload?: Record<string, unknown>) {
+  if (!__DEV__) return;
+  console.log(`[LIVE_LIFECYCLE] ${label}`, payload ?? {});
+}
+// --- end Debug vòng đời live ---
+
 export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   // ---start: narrow authStore selector — only re-render when user existence changes, not on bootstrap enrich---
   const hasAuthUser = useAuthStore((state) => Boolean(state.user));
@@ -75,6 +82,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const isAuthFailedRef = useRef(false);
   const isConnectedRef = useRef(false);
   const isResumingRef = useRef(false);
+  const isAppActiveRef = useRef(true);
+  const ignoreTransientDisconnectRef = useRef(false);
   const onOrderShippingUpdatedRef = useRef(options.onOrderShippingUpdated);
 
   const pendingCommentsRef = useRef<any[]>([]);
@@ -131,6 +140,16 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
   const handleServerEvent = useCallback(
     (type: string, payload: Record<string, any>) => {
+      debugLiveLifecycle("SSE_EVENT", {
+        type,
+        payloadUsername: getPayloadUsername(payload),
+        isConnected: isConnectedRef.current,
+        isManualClose: isManualCloseRef.current,
+        isResuming: isResumingRef.current,
+        ignoreTransientDisconnect: ignoreTransientDisconnectRef.current,
+        currentUsername: tiktokUsernameRef.current,
+      });
+
       if (type === "CONNECTED") {
         setStatus("Đã kết nối Backend SSE");
         setIsConnected(true);
@@ -204,6 +223,17 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         type === "LIVE_ERROR" ||
         type === "COLLECTOR_STOPPED"
       ) {
+        // --- Bỏ qua disconnect/error tạm thời khi app đang resume từ background ---
+        if (ignoreTransientDisconnectRef.current && type !== "LIVE_TIME_ENDED") {
+          debugLiveLifecycle("IGNORE_TRANSIENT_TERMINAL_EVENT", {
+            type,
+            payload,
+            isResuming: isResumingRef.current,
+            currentUsername: tiktokUsernameRef.current,
+          });
+          return;
+        }
+        // --- end bỏ qua disconnect tạm thời ---
         if (type === "LIVE_ERROR" || type === "COLLECTOR_STOPPED") {
           finalizeCurrentSessionLocally(
             type === "LIVE_ERROR" ? "live_error" : "collector_stopped",
@@ -211,6 +241,13 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         } else {
           endSessionFromPayload(payload);
         }
+        debugLiveLifecycle("APPLY_TERMINAL_EVENT_CLEAR_ROOM", {
+          type,
+          payload,
+          currentUsername: tiktokUsernameRef.current,
+          isAppActive: isAppActiveRef.current,
+          isResuming: isResumingRef.current,
+        });
         clearResumeUsername();
 
         // LIVE_ERROR means start succeeded but collector failed later, so cleanup backend collector explicitly.
@@ -335,6 +372,14 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       retryTimerRef.current = null;
     }
 
+    debugLiveLifecycle("CONNECT_SSE_START", {
+      clientId,
+      url,
+      currentUsername: tiktokUsernameRef.current,
+      isManualClose: isManualCloseRef.current,
+      hasExistingAbortController: Boolean(abortControllerRef.current),
+    });
+
     isManualCloseRef.current = false;
     try {
       abortControllerRef.current?.abort();
@@ -349,6 +394,11 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       },
       signal: abortControllerRef.current.signal,
       onOpen: () => {
+        debugLiveLifecycle("SSE_OPEN", {
+          currentUsername: tiktokUsernameRef.current,
+          clientId: clientIdRef.current,
+          isResuming: isResumingRef.current,
+        });
         retryCountRef.current = 0;
         setIsConnected(true);
         setStatus("Đã kết nối Backend SSE");
@@ -362,6 +412,13 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         }
       },
       onError: (error) => {
+        debugLiveLifecycle("SSE_ERROR", {
+          error: error instanceof Error ? error.message : String(error),
+          isManualClose: isManualCloseRef.current,
+          isResuming: isResumingRef.current,
+          isAppActive: isAppActiveRef.current,
+          currentUsername: tiktokUsernameRef.current,
+        });
         if (isManualCloseRef.current) return;
         setIsConnected(false);
 
@@ -501,10 +558,23 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   }, [connectSse, finalizeCurrentSessionLocally]);
 
   const restoreOrClearSessionOnForeground = useCallback(async () => {
+    debugLiveLifecycle("RESTORE_START", {
+      isManualClose: isManualCloseRef.current,
+      tiktokUsernameRef: tiktokUsernameRef.current,
+      currentSessionId: currentLiveSession?.id,
+      currentSessionUsername: currentLiveSession?.username,
+      isConnected: isConnectedRef.current,
+      ignoreTransientDisconnect: ignoreTransientDisconnectRef.current,
+    });
+
     if (isManualCloseRef.current || false) return;
 
     const username = tiktokUsernameRef.current.replace(/^@/, "");
     if (!username) {
+      debugLiveLifecycle("RESTORE_NO_USERNAME_CLEAR_ROOM", {
+        currentSessionId: currentLiveSession?.id,
+        currentSessionUsername: currentLiveSession?.username,
+      });
       clearCurrentSession();
       clearResumeUsername();
       clearComments();
@@ -542,14 +612,20 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       const status = await resolveLiveSessionStatus();
       const active = Boolean((status as { active?: boolean })?.active);
 
+      debugLiveLifecycle("RESTORE_STATUS_RESULT", {
+        active,
+        username,
+        currentSessionId: currentLiveSession?.id,
+        statusResponse: status,
+      });
+
       if (!active) {
-        clearCurrentSession();
-        clearResumeUsername();
-        clearComments();
+        // --- Không clear nếu chỉ vừa quay lại từ external link (background ngắn) ---
+        // Giữ nguyên session/comments local, chỉ đánh dấu disconnected
         setIsConnected(false);
         setIsConnecting(false);
-        setStatus("Phiên live đã kết thúc");
         return;
+        // --- end giữ session khi background ngắn ---
       }
 
       if (currentLiveSession) {
@@ -598,14 +674,33 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   }, [connectSse]);
   // ---end: connectSseRef---
 
-  // ---start: setup effect with stable deps, use batchAddCommentsToSession for 1 render per batch---
+  // ---start: restoreOrClearRef — đảm bảo foreground luôn dùng closure mới nhất có currentLiveSession đúng ---
+  const restoreOrClearRef = useRef(restoreOrClearSessionOnForeground);
+  useEffect(() => {
+    restoreOrClearRef.current = restoreOrClearSessionOnForeground;
+  }, [restoreOrClearSessionOnForeground]);
+  // ---end: restoreOrClearRef ---
+
+  // ---start: stable refs cho addComments/batchAdd — tránh effect teardown khi reference thay đổi ---
+  const addCommentsToListRef = useRef(addCommentsToList);
+  useEffect(() => {
+    addCommentsToListRef.current = addCommentsToList;
+  }, [addCommentsToList]);
+
+  const batchAddCommentsToSessionRef = useRef(batchAddCommentsToSession);
+  useEffect(() => {
+    batchAddCommentsToSessionRef.current = batchAddCommentsToSession;
+  }, [batchAddCommentsToSession]);
+  // ---end: stable refs ---
+
+  // ---start: setup effect — deps rỗng, dùng refs để tránh teardown/remount gây mất SSE ---
   useEffect(() => {
     batchFlushTimerRef.current = setInterval(() => {
       if (pendingCommentsRef.current.length === 0) return;
       const batch = pendingCommentsRef.current.splice(0);
-      const added = addCommentsToList(batch);
+      const added = addCommentsToListRef.current(batch);
       if (added.length > 0) {
-        batchAddCommentsToSession(added);
+        batchAddCommentsToSessionRef.current(added);
       }
     }, 200);
 
@@ -613,36 +708,81 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     // On app active: check backend live status → reconnect SSE if still active,
     // clear local state if session ended. Token refresh only on 401 (lazy).
     const appStateSub = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active" && !isManualCloseRef.current) {
+      debugLiveLifecycle("APP_STATE_CHANGE", {
+        nextState,
+        isManualClose: isManualCloseRef.current,
+        isResuming: isResumingRef.current,
+        isConnected: isConnectedRef.current,
+        currentUsername: tiktokUsernameRef.current,
+      });
+
+      if (nextState !== "active") {
+        isAppActiveRef.current = false;
+        return;
+      }
+      isAppActiveRef.current = true;
+
+      if (isManualCloseRef.current) return;
+
         setTimeout(async () => {
+          debugLiveLifecycle("RESUME_TIMER_FIRED", {
+            isManualClose: isManualCloseRef.current,
+            isResuming: isResumingRef.current,
+            isConnected: isConnectedRef.current,
+            hasAbortController: Boolean(abortControllerRef.current),
+            currentUsername: tiktokUsernameRef.current,
+          });
+
           if (isManualCloseRef.current) return;
           if (isResumingRef.current) return;
 
           isResumingRef.current = true;
+          // --- Bỏ qua disconnect/error tạm thời trong lúc resume ---
+          ignoreTransientDisconnectRef.current = true;
           try {
             const token = await getAuthToken();
             if (!token) return;
 
             if (isManualCloseRef.current || false) return;
 
-            await restoreOrClearSessionOnForeground();
+            await restoreOrClearRef.current();
 
             if (isManualCloseRef.current || false) return;
 
-            try {
-              abortControllerRef.current?.abort();
-            } catch {}
-            abortControllerRef.current = null;
-            connectSseRef.current();
+            // --- Chỉ reconnect khi SSE thực sự đã mất, tránh cắt ngang connection đang sống ---
+            if (!isConnectedRef.current) {
+              debugLiveLifecycle("RESUME_RECONNECT_SSE", {
+                hasAbortController: Boolean(abortControllerRef.current),
+                currentUsername: tiktokUsernameRef.current,
+              });
+              try {
+                abortControllerRef.current?.abort();
+              } catch {}
+              abortControllerRef.current = null;
+              connectSseRef.current();
+            } else {
+              debugLiveLifecycle("RESUME_KEEP_EXISTING_SSE", {
+                currentUsername: tiktokUsernameRef.current,
+              });
+            }
+            // --- end reconnect guard ---
           } finally {
             isResumingRef.current = false;
+            // Tắt ignore sau 2s để tránh miss event thật sau khi resume xong
+            setTimeout(() => {
+              ignoreTransientDisconnectRef.current = false;
+            }, 2000);
           }
         }, 500);
-      }
     });
     // ---end: foreground resume---
 
     return () => {
+      debugLiveLifecycle("SETUP_EFFECT_CLEANUP", {
+        currentUsername: tiktokUsernameRef.current,
+        isConnected: isConnectedRef.current,
+        hasAbortController: Boolean(abortControllerRef.current),
+      });
       isManualCloseRef.current = true;
       try {
         abortControllerRef.current?.abort();
@@ -658,8 +798,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
       appStateSub.remove();
     };
-  }, [addCommentsToList, batchAddCommentsToSession]);
-  // ---end: setup effect with stable deps---
+  }, []);
+  // ---end: setup effect---
 
   return {
     status,
