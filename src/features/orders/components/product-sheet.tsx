@@ -58,7 +58,9 @@ export function ProductSheet({
     watch,
     formState: { errors, isValid, dirtyFields },
   } = useForm<ProductForm>({
-    resolver: zodResolver(mode === "add" ? addProductSchema : editProductSchema),
+    resolver: zodResolver(
+      mode === "add" ? addProductSchema : editProductSchema,
+    ),
     mode: "onChange",
     defaultValues: {
       name: initialName,
@@ -79,131 +81,204 @@ export function ProductSheet({
 
   return (
     <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
-        <View style={styles.dragHandle} />
+      <Text style={[styles.title, { color: colors.neutral900 }]}>
+        {mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}
+      </Text>
 
-        <Text style={[styles.title, { color: colors.neutral900 }]}>
-          {mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}
+      <View style={{ rowGap: 6 }}>
+        <Text style={[styles.label, { color: colors.neutral400 }]}>
+          Tên sản phẩm
         </Text>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onChange, value, onBlur } }) => (
+            <>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    color: colors.neutral900,
+                    borderColor:
+                      dirtyFields.name && errors.name
+                        ? colors.error
+                        : colors.border10,
+                  },
+                ]}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="Nhập tên SP"
+                placeholderTextColor={colors.neutral300}
+              />
+              <AnimatedErrorText
+                message={
+                  dirtyFields.name && errors.name
+                    ? errors.name.message
+                    : undefined
+                }
+              />
+            </>
+          )}
+        />
+      </View>
 
-        <View style={{ rowGap: 6 }}>
-          <Text style={[styles.label, { color: colors.neutral400 }]}>Tên sản phẩm</Text>
+      <View style={{ rowGap: 6 }}>
+        <Text style={[styles.label, { color: colors.neutral400 }]}>
+          Đơn giá
+        </Text>
+        <View
+          style={[
+            styles.priceRow,
+            {
+              borderColor:
+                dirtyFields.price && errors.price
+                  ? colors.error
+                  : colors.border10,
+            },
+          ]}
+        >
           <Controller
             control={control}
-            name="name"
+            name="price"
             render={({ field: { onChange, value, onBlur } }) => (
-              <>
-                <TextInput
-                  style={[
-                    styles.input,
-                    { color: colors.neutral900, borderColor: dirtyFields.name && errors.name ? colors.error : colors.border10 },
-                  ]}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder="Nhập tên SP"
-                  placeholderTextColor={colors.neutral300}
-                />
-                <AnimatedErrorText
-                  message={dirtyFields.name && errors.name ? errors.name.message : undefined}
-                />
-              </>
+              <TextInput
+                style={[styles.priceInput, { color: colors.neutral900 }]}
+                value={value > 0 ? Number(value).toLocaleString("vi-VN") : ""}
+                onChangeText={(text) => onChange(parsePriceDisplay(text))}
+                onBlur={onBlur}
+                placeholder="0"
+                placeholderTextColor={colors.neutral300}
+                keyboardType="numeric"
+              />
             )}
           />
-        </View>
-
-        <View style={{ rowGap: 6 }}>
-          <Text style={[styles.label, { color: colors.neutral400 }]}>Đơn giá</Text>
           <View
             style={[
-              styles.priceRow,
-              { borderColor: dirtyFields.price && errors.price ? colors.error : colors.border10 },
+              styles.priceSuffix,
+              {
+                backgroundColor: colors.neutral50,
+                borderLeftColor: colors.border10,
+              },
             ]}
           >
-            <Controller
-              control={control}
-              name="price"
-              render={({ field: { onChange, value, onBlur } }) => (
-                <TextInput
-                  style={[styles.priceInput, { color: colors.neutral900 }]}
-                  value={value > 0 ? Number(value).toLocaleString("vi-VN") : ""}
-                  onChangeText={(text) => onChange(parsePriceDisplay(text))}
-                  onBlur={onBlur}
-                  placeholder="0"
-                  placeholderTextColor={colors.neutral300}
-                  keyboardType="numeric"
-                />
-              )}
-            />
-            <View style={[styles.priceSuffix, { backgroundColor: colors.neutral50, borderLeftColor: colors.border10 }]}>
-              <Text style={[styles.priceSuffixText, { color: colors.neutral400 }]}>VNĐ</Text>
-            </View>
-          </View>
-          <AnimatedErrorText
-            message={dirtyFields.price && errors.price ? errors.price.message : undefined}
-          />
-        </View>
-
-        <View style={{ rowGap: 6 }}>
-          <Text style={[styles.label, { color: colors.neutral400 }]}>Số lượng</Text>
-          <View style={styles.qtyRow}>
-            <Pressable
-              style={[styles.qtyBtn, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
-              onPress={() => setValue("quantity", Math.max(1, quantity - 1), { shouldDirty: true, shouldValidate: true })}
+            <Text
+              style={[styles.priceSuffixText, { color: colors.neutral400 }]}
             >
-              <Text style={[styles.qtyBtnText, { color: colors.neutral900 }]}>−</Text>
-            </Pressable>
-            <Controller
-              control={control}
-              name="quantity"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={[styles.qtyInput, { color: colors.neutral900, borderColor: colors.border10 }]}
-                  value={String(value)}
-                  onChangeText={(t) => {
-                    const n = parseInt(t, 10);
-                    if (!isNaN(n) && n > 0) onChange(n);
-                  }}
-                  keyboardType="numeric"
-                  textAlign="center"
-                />
-              )}
-            />
-            <Pressable
-              style={[styles.qtyBtn, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
-              onPress={() => setValue("quantity", quantity + 1, { shouldDirty: true, shouldValidate: true })}
-            >
-              <Text style={[styles.qtyBtnText, { color: colors.neutral900 }]}>+</Text>
-            </Pressable>
+              VNĐ
+            </Text>
           </View>
-          <AnimatedErrorText
-            message={dirtyFields.quantity && errors.quantity ? errors.quantity.message : undefined}
-          />
         </View>
+        <AnimatedErrorText
+          message={
+            dirtyFields.price && errors.price ? errors.price.message : undefined
+          }
+        />
+      </View>
 
-        <View style={styles.actions}>
-          <Pressable
-            style={[styles.cancelBtn, { borderColor: colors.border10 }]}
-            onPress={onClose}
-            disabled={loading}
-          >
-            <Text style={[styles.cancelText, { color: colors.neutral500 }]}>Huỷ</Text>
-          </Pressable>
+      <View style={{ rowGap: 6 }}>
+        <Text style={[styles.label, { color: colors.neutral400 }]}>
+          Số lượng
+        </Text>
+        <View style={styles.qtyRow}>
           <Pressable
             style={[
-              styles.saveBtn,
-              { backgroundColor: isValid && !loading ? colors.primary : colors.neutral300 },
+              styles.qtyBtn,
+              {
+                backgroundColor: colors.neutral50,
+                borderColor: colors.border10,
+              },
             ]}
-            onPress={onSubmit}
-            disabled={!isValid || loading}
+            onPress={() =>
+              setValue("quantity", Math.max(1, quantity - 1), {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
           >
-            {loading ? (
-              <ActivityIndicator size="small" color={colors.neutral100} />
-            ) : (
-              <Text style={[styles.saveText, { color: colors.neutral100 }]}>Lưu</Text>
+            <Text style={[styles.qtyBtnText, { color: colors.neutral900 }]}>
+              −
+            </Text>
+          </Pressable>
+          <Controller
+            control={control}
+            name="quantity"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                style={[
+                  styles.qtyInput,
+                  { color: colors.neutral900, borderColor: colors.border10 },
+                ]}
+                value={String(value)}
+                onChangeText={(t) => {
+                  const n = parseInt(t, 10);
+                  if (!isNaN(n) && n > 0) onChange(n);
+                }}
+                keyboardType="numeric"
+                textAlign="center"
+              />
             )}
+          />
+          <Pressable
+            style={[
+              styles.qtyBtn,
+              {
+                backgroundColor: colors.neutral50,
+                borderColor: colors.border10,
+              },
+            ]}
+            onPress={() =>
+              setValue("quantity", quantity + 1, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          >
+            <Text style={[styles.qtyBtnText, { color: colors.neutral900 }]}>
+              +
+            </Text>
           </Pressable>
         </View>
+        <AnimatedErrorText
+          message={
+            dirtyFields.quantity && errors.quantity
+              ? errors.quantity.message
+              : undefined
+          }
+        />
       </View>
+
+      <View style={styles.actions}>
+        <Pressable
+          style={[styles.cancelBtn, { borderColor: colors.border10 }]}
+          onPress={onClose}
+          disabled={loading}
+        >
+          <Text style={[styles.cancelText, { color: colors.neutral500 }]}>
+            Huỷ
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[
+            styles.saveBtn,
+            {
+              backgroundColor:
+                isValid && !loading ? colors.primary : colors.neutral300,
+            },
+          ]}
+          onPress={onSubmit}
+          disabled={!isValid || loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.neutral100} />
+          ) : (
+            <Text style={[styles.saveText, { color: colors.neutral100 }]}>
+              Lưu
+            </Text>
+          )}
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -215,14 +290,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     paddingBottom: 36,
     paddingTop: 12,
     rowGap: 8,
-  },
-  dragHandle: {
-    alignSelf: "center",
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.neutral300,
-    marginBottom: 8,
   },
   title: {
     ...textPresets.fs16_600,

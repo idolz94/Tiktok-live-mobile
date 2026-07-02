@@ -215,6 +215,7 @@ export default function CreateShipmentScreen() {
           onClose={hide}
         />
       ),
+      showDragIndicator: false,
     });
   };
 
@@ -258,10 +259,7 @@ export default function CreateShipmentScreen() {
         <Pressable
           onPress={() => router.back()}
           hitSlop={12}
-          style={[
-            styles.headerButton,
-            { backgroundColor: colors.neutral50 },
-          ]}
+          style={[styles.headerButton, { backgroundColor: colors.neutral50 }]}
         >
           <View style={styles.backIcon}>
             <Icon name="arrow_down" size={22} tintColor="neutral900" />
@@ -269,10 +267,7 @@ export default function CreateShipmentScreen() {
         </Pressable>
         <Pressable
           hitSlop={12}
-          style={[
-            styles.headerButton,
-            { backgroundColor: colors.neutral50 },
-          ]}
+          style={[styles.headerButton, { backgroundColor: colors.neutral50 }]}
         >
           <Icon name="settings" size={22} tintColor="neutral900" />
         </Pressable>
@@ -294,12 +289,7 @@ export default function CreateShipmentScreen() {
             onAddPress={() => openAddressForm("sender")}
           />
         </SectionBlock>
-        <View
-          style={[
-            styles.divider,
-            { backgroundColor: colors.neutral50 },
-          ]}
-        />
+        <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
 
         <SectionBlock title="Thông tin người nhận">
           <FigmaAddressCard
@@ -309,12 +299,7 @@ export default function CreateShipmentScreen() {
             onAddPress={() => openAddressForm("recipient")}
           />
         </SectionBlock>
-        <View
-          style={[
-            styles.divider,
-            { backgroundColor: colors.neutral50 },
-          ]}
-        />
+        <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
 
         {!isManualProvider ? (
           <SectionBlock
@@ -323,10 +308,7 @@ export default function CreateShipmentScreen() {
             onActionPress={openDimensions}
           >
             <View
-              style={[
-                styles.orderCard,
-                { backgroundColor: colors.neutral50 },
-              ]}
+              style={[styles.orderCard, { backgroundColor: colors.neutral50 }]}
             >
               <View style={styles.orderMetaRow}>
                 <View style={styles.productTitle}>
@@ -452,10 +434,7 @@ export default function CreateShipmentScreen() {
         ) : null}
         {!isManualProvider ? (
           <View
-            style={[
-              styles.divider,
-              { backgroundColor: colors.neutral50 },
-            ]}
+            style={[styles.divider, { backgroundColor: colors.neutral50 }]}
           />
         ) : null}
 
@@ -479,12 +458,7 @@ export default function CreateShipmentScreen() {
             />
           </View>
         </SectionBlock>
-        <View
-          style={[
-            styles.divider,
-            { backgroundColor: colors.neutral50 },
-          ]}
-        />
+        <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
 
         <SectionBlock title="Thông tin vận chuyển">
           {isManualProvider ? (
