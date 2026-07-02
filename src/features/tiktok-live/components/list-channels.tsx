@@ -21,9 +21,12 @@ export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
     return (
       <Pressable onPress={() => onSelected(item)} style={styles.itemContainer}>
         <View style={styles.leftItem}>
-          <Image source={images.logo_app} style={styles.avatar} />
+          <Image
+            source={item.avatarUrl ? { uri: item.avatarUrl } : images.logo_app}
+            style={styles.avatar}
+          />
           <View>
-            <Text style={styles.name}>{item.username}</Text>
+            <Text style={styles.name}>{item.displayName || item.username}</Text>
             <View style={styles.nameArea}>
               <Image
                 source={images.logo_tiktok}

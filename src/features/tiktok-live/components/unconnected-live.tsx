@@ -127,9 +127,12 @@ export const UnConnectedLive = memo(
       return (
         <View style={styles.itemContainer}>
           <View style={styles.leftItem}>
-            <Image source={images.logo_app} style={styles.avatar} />
+            <Image
+              source={item.avatarUrl ? { uri: item.avatarUrl } : images.logo_app}
+              style={styles.avatar}
+            />
             <View style={{ rowGap: 2 }}>
-              <Text style={styles.name}>{item.username}</Text>
+              <Text style={styles.name}>{item.displayName || item.username}</Text>
               <Text style={styles.txtId}>{`ID: @${item.username}`}</Text>
             </View>
           </View>

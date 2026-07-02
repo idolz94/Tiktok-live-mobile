@@ -68,6 +68,9 @@ export type ShopTikTokChannel = {
   id: ID;
   shopId: ID;
   tiktokUsername: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  followerCount: number | null;
   isDefault: boolean;
   createdAt: ISODateString;
   updatedAt: ISODateString;

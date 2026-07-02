@@ -1,18 +1,17 @@
 import { useAuth } from "@features/auth/hooks/use-auth";
-import { getTikTokChannelsApi } from "@features/auth/services/api";
+import { createTikTokChannelApi, getTikTokChannelsApi } from "@features/auth/services/api";
+import { useAuthStore } from "@features/auth/stores";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
-import { Alert } from "react-native";
-// import { Pressable, Text, View } from "react-native"; // TODO: bỏ comment khi bật lại validate địa chỉ kho hàng
+import { router, useLocalSearchParams } from "expo-router";
+import { Alert, Pressable, Text, View } from "react-native";
+import { listProductPresetsApi } from "@features/settings/service/product-presets-api";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import type PagerView from "react-native-pager-view";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
-// import { router } from "expo-router"; // TODO: bỏ comment khi bật lại validate địa chỉ kho hàng
-// import { listShopAddressesApi } from "@features/settings/service/shop-addresses-api"; // TODO: bỏ comment khi bật lại validate địa chỉ kho hàng
 import { useThemes } from "@hooks/use-theme";
 import type { PagerViewOnPageSelectedEvent } from "react-native-pager-view";
 import { TikTokLiveChannel } from "./tiktok-page";
@@ -38,6 +37,7 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
 
   const { show, hide } = useBottomSheet();
   const { user } = useAuth();
+  const patchTiktokChannels = useAuthStore((state) => state.patchTiktokChannels);
   const { ordersTab, refreshOrders } = useLocalSearchParams<{
     ordersTab?: string;
     refreshOrders?: string;
@@ -65,6 +65,9 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
       id: c.id,
       username: normalizeTikTokUsername(c.tiktokUsername),
       isDefault: c.isDefault,
+      displayName: c.displayName ?? null,
+      avatarUrl: c.avatarUrl ?? null,
+      followerCount: c.followerCount ?? null,
     })),
   );
 
@@ -108,10 +111,13 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     try {
       const data = await getTikTokChannelsApi();
       if (requestId !== fetchRequestIdRef.current) return [];
-      const options: TikTokLiveChannel[] = data.map((c) => ({
+    const options: TikTokLiveChannel[] = data.map((c) => ({
         id: c.id,
         username: normalizeTikTokUsername(c.tiktokUsername),
         isDefault: c.isDefault,
+        displayName: c.displayName ?? null,
+        avatarUrl: c.avatarUrl ?? null,
+        followerCount: c.followerCount ?? null,
       }));
       if (options.length > 0) setLocalChannels(options);
       return options;
@@ -128,6 +134,9 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
         id: c.id,
         username: normalizeTikTokUsername(c.tiktokUsername),
         isDefault: c.isDefault,
+        displayName: c.displayName ?? null,
+        avatarUrl: c.avatarUrl ?? null,
+        followerCount: c.followerCount ?? null,
       })),
     );
   }, [user?.tiktokChannels]);
@@ -154,6 +163,36 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     async (item?: TikTokLiveChannel): Promise<boolean> => {
       const nextUsername = normalizeTikTokUsername(item ? item.username : tiktokUsername);
       if (!nextUsername) return false;
+
+      try {
+        const presets = await listProductPresetsApi();
+        if (presets.length === 0) {
+          show({
+            content: (
+              <View style={{ padding: 24, gap: 16 }}>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: colors.neutral900 }}>
+                  Yêu cầu cài đặt thông tin sản phẩm
+                </Text>
+                <Text style={{ fontSize: 14, color: colors.neutral500, lineHeight: 22 }}>
+                  Bạn cần thêm ít nhất một sản phẩm trước khi kết nối live.
+                </Text>
+                <Pressable
+                  onPress={() => { hide(); router.push("/product-info-setup"); }}
+                  style={{ backgroundColor: colors.primary, borderRadius: 12, height: 48, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Text style={{ color: colors.neutral100, fontSize: 15, fontWeight: "600" }}>
+                    Cài đặt thông tin SP
+                  </Text>
+                </Pressable>
+              </View>
+            ),
+            showDragIndicator: true,
+          });
+          return false;
+        }
+      } catch {
+        // không block nếu check fail
+      }
 
       // TODO: bật lại khi cần validate địa chỉ kho hàng trước khi kết nối TikTok Live
       // try {
@@ -233,11 +272,25 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     async (name: string): Promise<boolean> => {
       const normalizedName = normalizeTikTokUsername(name);
       if (!normalizedName) return false;
-      const nextChannel: TikTokLiveChannel = { id: `${Date.now()}`, username: normalizedName, isDefault: false };
+
+      const created = await createTikTokChannelApi({ tiktokUsername: normalizedName });
+      const nextChannel: TikTokLiveChannel = {
+        id: created.id,
+        username: normalizeTikTokUsername(created.tiktokUsername),
+        isDefault: created.isDefault,
+        displayName: created.displayName ?? null,
+        avatarUrl: created.avatarUrl ?? null,
+        followerCount: created.followerCount ?? null,
+      };
       setLocalChannels((prev) => [...prev, nextChannel]);
+
+      getTikTokChannelsApi()
+        .then((fresh) => patchTiktokChannels(fresh))
+        .catch(() => { /* non-blocking */ });
+
       return connectSelectedChannel(nextChannel);
     },
-    [connectSelectedChannel],
+    [connectSelectedChannel, patchTiktokChannels],
   );
 
   const onDisconnectAccount = useCallback(async () => {

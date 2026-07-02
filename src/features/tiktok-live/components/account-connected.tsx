@@ -1,5 +1,4 @@
 import { images } from "@assets/images";
-import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { Separator } from "@components/separator";
@@ -7,41 +6,24 @@ import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { ListChannels } from "./list-channels";
 import { TikTokLiveChannel } from "./tiktok-page";
 
 type Props = {
   onClose: () => void;
   selectedChannel?: TikTokLiveChannel;
-  channels: TikTokLiveChannel[];
-  onSelectChannel: (item: TikTokLiveChannel) => void;
 };
 
 export const AccountConnected = memo(
-  ({ onClose, selectedChannel, channels, onSelectChannel }: Props) => {
-    const { show, hide } = useBottomSheet();
-
-    const showListChannels = () =>
-      show({
-        content: (
-          <ListChannels
-            channels={channels}
-            onClose={hide}
-            onSelected={(item) => {
-              onSelectChannel(item);
-              hide();
-            }}
-          />
-        ),
-        showDragIndicator: false,
-      });
-
+  ({ onClose, selectedChannel }: Props) => {
     return (
       <View style={styles.container}>
         <View style={styles.left}>
-          <Image source={images.logo_app} style={styles.avatar} />
+          <Image
+            source={selectedChannel?.avatarUrl ? { uri: selectedChannel.avatarUrl } : images.logo_app}
+            style={styles.avatar}
+          />
           <View style={{ rowGap: 2 }}>
-            <Text style={styles.name}>{selectedChannel?.username ?? ""}</Text>
+            <Text style={styles.name}>{selectedChannel?.displayName || selectedChannel?.username || ""}</Text>
             <View style={styles.info}>
               <View
                 style={{
@@ -51,7 +33,11 @@ export const AccountConnected = memo(
                 }}
               >
                 <Icon name="followers" size={16} tintColor="neutral300" />
-                <Text style={styles.textCount}>1.000</Text>
+                <Text style={styles.textCount}>
+                  {selectedChannel?.followerCount
+                    ? (selectedChannel.followerCount / 1000).toFixed(3).replace(/\.?0+$/, "")
+                    : "—"}
+                </Text>
               </View>
               <Separator type="vertical" size={1} />
               <View
@@ -70,12 +56,6 @@ export const AccountConnected = memo(
         <View style={styles.right}>
           <Pressable onPress={onClose}>
             <Icon name="disconnect" size={24} tintColor="neutral900" />
-          </Pressable>
-          <Pressable>
-            <Icon name="filter" size={24} tintColor="neutral900" />
-          </Pressable>
-          <Pressable onPress={showListChannels}>
-            <Icon name="arrow_down" size={24} tintColor="neutral900" />
           </Pressable>
         </View>
       </View>

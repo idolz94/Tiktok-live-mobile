@@ -14,6 +14,9 @@ export type TikTokLiveChannel = {
   id: string;
   username: string;
   isDefault: boolean;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  followerCount?: number | null;
 };
 
 const SUB_TABS = ["Live", "Đơn đã tạo"];
@@ -30,7 +33,6 @@ export const TiktokPage = memo(() => {
     translateY,
     fetchChannels,
     connectSelectedChannel,
-    onSelectChannel,
     addChannel,
     onDisconnectAccount,
     onTabPress,
@@ -82,8 +84,6 @@ export const TiktokPage = memo(() => {
           <AccountConnected
             onClose={onDisconnectAccount}
             selectedChannel={selectedChannel}
-            channels={localChannels}
-            onSelectChannel={onSelectChannel}
           />
         )}
       </Animated.View>

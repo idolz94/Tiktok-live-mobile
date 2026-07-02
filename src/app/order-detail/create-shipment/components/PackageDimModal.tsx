@@ -50,7 +50,6 @@ export function PackageDimModal({
 
   return (
     <View style={[shipmentStyles.sheetPanel, { backgroundColor: colors.surface }]}>
-      <View style={shipmentStyles.sheetHandle} />
       <Text style={[shipmentStyles.sheetTitle, { color: colors.neutral900 }, textPresets.fs16_600 ?? textPresets.fs16_500]}>
         Kích thước kiện hàng
       </Text>

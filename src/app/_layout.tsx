@@ -77,16 +77,17 @@ function RootContent() {
           <ToastProvider>
             <BottomSheetProvider>
               <StatusBar style="dark" />
-              <View style={{ flex: 1 }}>
+              <View style={styles.root}>
                 {showStack && (
-                  <View style={{ flex: 1 }} onLayout={handleRootLayout}>
-                    <Stack screenOptions={{ headerShown: false }}>
+                  <View style={styles.root} onLayout={handleRootLayout}>
+                    <Stack screenOptions={{ headerShown: false, contentStyle: styles.root }}>
                       <Stack.Screen name="index" />
                       <Stack.Screen name="(auth)" />
                       <Stack.Screen name="onboarding" />
                       <Stack.Screen name="(tabs)" />
                       <Stack.Screen name="printer-settings" />
                       <Stack.Screen name="shipping-settings" />
+                      <Stack.Screen name="product-info-setup" />
                       <Stack.Screen name="(sheets)" />
                       <Stack.Screen name="manage-tiktok-channel" />
                       <Stack.Screen name="order-detail" />
@@ -107,3 +108,10 @@ function RootContent() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+});

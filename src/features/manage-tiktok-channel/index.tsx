@@ -62,6 +62,8 @@ const ChannelCard = memo(
   (prev, next) =>
     prev.channel.id === next.channel.id &&
     prev.channel.tiktokUsername === next.channel.tiktokUsername &&
+    prev.channel.displayName === next.channel.displayName &&
+    prev.channel.avatarUrl === next.channel.avatarUrl &&
     prev.channel.isDefault === next.channel.isDefault,
 );
 

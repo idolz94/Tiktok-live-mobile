@@ -207,9 +207,7 @@ export function removeAt(username: string) {
 }
 
 export function normalizeTikTokUsername(value: string) {
-  const cleanValue = String(value || "").trim();
-  if (!cleanValue) return "";
-  return cleanValue.startsWith("@") ? cleanValue : `${cleanValue}`;
+  return String(value || "").trim().replace(/^@+/, "");
 }
 
 export function isPriorityComment(comment: LiveComment) {

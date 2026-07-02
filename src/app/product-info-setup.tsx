@@ -42,7 +42,6 @@ export default function ProductInfoSetupScreen() {
 
   const buildFormContent = () => (
     <SafeAreaView style={styles.sheet} edges={["bottom"]}>
-      <View style={styles.sheetHandle} />
       <View style={styles.sheetTitleRow}>
         <Text style={styles.sheetTitle}>{formMode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}</Text>
         <TouchableOpacity onPress={handleCloseForm} style={styles.sheetCloseButton} activeOpacity={0.75}>
