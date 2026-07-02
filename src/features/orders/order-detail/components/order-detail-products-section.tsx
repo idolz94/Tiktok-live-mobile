@@ -3,7 +3,7 @@ import { Icon } from "@components/icon";
 import { OrderProduct } from "@app-types/index";
 import { formatMoney } from "@features/orders/utils/order";
 import { createStyles } from "@utils/createStyles";
-import { MoneyRow, Section, SectionHeader } from "./OrderDetailPrimitives";
+import { MoneyRow, Section, SectionHeader } from "./order-detail-primitives";
 
 type OrderDetailProductsSectionProps = {
   products: OrderProduct[];

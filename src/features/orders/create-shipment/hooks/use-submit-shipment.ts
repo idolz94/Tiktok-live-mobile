@@ -7,9 +7,9 @@ import {
   ShopAddress,
   submitManualShippingApi,
   submitSpxApi,
-} from "../lib/create-shipment-api";
-import { PaymentSide, PickupOption, Transport, ServiceType, CollectType } from "../lib/types";
-import { parseLocaleNumber } from "../lib/utils";
+} from "../service/create-shipment-api";
+import { PaymentSide, PickupOption, Transport, ServiceType, CollectType } from "../types/shipment";
+import { parseLocaleNumber } from "../utils/shipment";
 
 type Deps = {
   order: OrderWithTikTok | null;

@@ -11,7 +11,7 @@ import {
   ShopAddressPayload,
   updateShopAddressApi,
 } from "@features/settings/service/shop-addresses-api";
-import type { PaymentSide, ServiceType, CollectType, SpxTimeslot } from "./types";
+import type { PaymentSide, ServiceType, CollectType, SpxTimeslot } from "../types/shipment";
 
 export {
   createShopAddressApi,

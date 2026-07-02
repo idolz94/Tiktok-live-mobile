@@ -5,9 +5,9 @@ import { CustomerDetailSheet } from "@components/customer-detail-sheet";
 import { Icon } from "@components/icon";
 import { OrderWithTikTok } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
-import { Section } from "./OrderDetailPrimitives";
+import { Section } from "./order-detail-primitives";
 import { useCallback } from "react";
-import type { CustomerAddress } from "@features/orders/create-shipment/lib/create-shipment-api";
+import type { CustomerAddress } from "@features/orders/create-shipment/service/create-shipment-api";
 
 type OrderDetailCustomerSectionProps = {
   order: OrderWithTikTok;

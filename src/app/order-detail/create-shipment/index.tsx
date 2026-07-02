@@ -1,17 +1,33 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, ShippingOptions, SpxOptions, SummaryRow, shipmentStyles } from "@features/orders/create-shipment/components/ShipmentComponents";
-import { PackageDimModal } from "@features/orders/create-shipment/components/PackageDimModal";
-import { useAddressPageStore } from "@features/orders/create-shipment/lib/address-page-store";
-import { VoucherSelectSheet } from "@features/orders/create-shipment/components/VoucherSelectSheet";
-import { formInitialValues } from "@features/orders/create-shipment/lib/utils";
-import type { AddrFormValues } from "@features/orders/create-shipment/lib/types";
-import { useCreateShipment } from "@features/orders/create-shipment/lib/use-create-shipment";
+import {
+  SectionBlock,
+  FigmaAddressCard,
+  OptionChip,
+  MoneyField,
+  ShipmentInput,
+  ShippingOptions,
+  SpxOptions,
+  SummaryRow,
+  shipmentStyles,
+} from "@features/orders/create-shipment/components";
+import { PackageDimModal } from "@features/orders/create-shipment/components/package-dim-modal";
+import { useAddressPageStore } from "@features/orders/create-shipment/stores/address-page-store";
+import { VoucherSelectSheet } from "@features/orders/create-shipment/components/voucher-select-sheet";
+import { formInitialValues } from "@features/orders/create-shipment/utils/shipment";
+import type { AddrFormValues } from "@features/orders/create-shipment/types/shipment";
+import { useCreateShipment } from "@features/orders/create-shipment/hooks/use-create-shipment";
 
 export default function CreateShipmentScreen() {
   const { colors, textPresets } = useThemes();
@@ -94,21 +110,42 @@ export default function CreateShipmentScreen() {
 
   const { setPicker, setForm } = useAddressPageStore();
 
-  const openAddressForm = (target: "sender" | "recipient", addr?: typeof editingAddr) => {
+  const openAddressForm = (
+    target: "sender" | "recipient",
+    addr?: typeof editingAddr,
+  ) => {
     const title = addr
-      ? target === "sender" ? "Sửa địa chỉ người gửi" : "Sửa địa chỉ người nhận"
-      : target === "sender" ? "Thêm địa chỉ người gửi" : "Thêm địa chỉ người nhận";
+      ? target === "sender"
+        ? "Sửa địa chỉ người gửi"
+        : "Sửa địa chỉ người nhận"
+      : target === "sender"
+        ? "Thêm địa chỉ người gửi"
+        : "Thêm địa chỉ người nhận";
     setAddrFormTarget(target);
     if (addr) setEditingAddr(addr);
     const defaultValues: Partial<AddrFormValues> = addr
       ? (formInitialValues(addr) ?? {})
-      : { isDefault: target === "sender" ? shopAddresses.length === 0 : customerAddresses.length === 0 };
+      : {
+          isDefault:
+            target === "sender"
+              ? shopAddresses.length === 0
+              : customerAddresses.length === 0,
+        };
     setForm({
       title,
       initialValues: defaultValues,
-      disableDefaultToggle: !addr && (target === "sender" ? shopAddresses.length === 0 : customerAddresses.length === 0),
-      onSave: async (vals: AddrFormValues) => { await handleSaveAddress(vals, target, addr ?? null); },
-      onClose: () => { setAddrFormTarget(null); setEditingAddr(null); },
+      disableDefaultToggle:
+        !addr &&
+        (target === "sender"
+          ? shopAddresses.length === 0
+          : customerAddresses.length === 0),
+      onSave: async (vals: AddrFormValues) => {
+        await handleSaveAddress(vals, target, addr ?? null);
+      },
+      onClose: () => {
+        setAddrFormTarget(null);
+        setEditingAddr(null);
+      },
     });
     router.push("/order-detail/create-shipment/address-form");
   };
@@ -119,9 +156,20 @@ export default function CreateShipmentScreen() {
       addresses: shopAddresses,
       selectedId: selectedSender?.id,
       loading: isLoadingSender,
-      onSelect: (addr) => { setSelectedSender(addr as typeof shopAddresses[0]); },
-      onAddPress: () => { router.back(); setTimeout(() => openAddressForm("sender"), 100); },
-      onEditPress: (addr) => { router.back(); setTimeout(() => openAddressForm("sender", addr as typeof shopAddresses[0]), 100); },
+      onSelect: (addr) => {
+        setSelectedSender(addr as (typeof shopAddresses)[0]);
+      },
+      onAddPress: () => {
+        router.back();
+        setTimeout(() => openAddressForm("sender"), 100);
+      },
+      onEditPress: (addr) => {
+        router.back();
+        setTimeout(
+          () => openAddressForm("sender", addr as (typeof shopAddresses)[0]),
+          100,
+        );
+      },
     });
     router.push("/order-detail/create-shipment/address-picker");
   };
@@ -132,9 +180,21 @@ export default function CreateShipmentScreen() {
       addresses: customerAddresses,
       selectedId: selectedRecipient?.id,
       loading: isLoadingRecipient,
-      onSelect: (addr) => { handleSelectRecipient(addr as typeof customerAddresses[0]); },
-      onAddPress: () => { router.back(); setTimeout(() => openAddressForm("recipient"), 100); },
-      onEditPress: (addr) => { router.back(); setTimeout(() => openAddressForm("recipient", addr as typeof customerAddresses[0]), 100); },
+      onSelect: (addr) => {
+        handleSelectRecipient(addr as (typeof customerAddresses)[0]);
+      },
+      onAddPress: () => {
+        router.back();
+        setTimeout(() => openAddressForm("recipient"), 100);
+      },
+      onEditPress: (addr) => {
+        router.back();
+        setTimeout(
+          () =>
+            openAddressForm("recipient", addr as (typeof customerAddresses)[0]),
+          100,
+        );
+      },
     });
     router.push("/order-detail/create-shipment/address-picker");
   };
@@ -179,77 +239,226 @@ export default function CreateShipmentScreen() {
 
   if (!order) {
     return (
-      <SafeAreaView style={[screenStyles.safeArea, { backgroundColor: colors.neutral100 }]}>
+      <SafeAreaView
+        style={[screenStyles.safeArea, { backgroundColor: colors.neutral100 }]}
+      >
         <View style={screenStyles.centerBox}>
-          <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>Không tìm thấy đơn hàng</Text>
+          <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>
+            Không tìm thấy đơn hàng
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[screenStyles.safeArea, { backgroundColor: colors.neutral100 }]}>
+    <SafeAreaView
+      style={[screenStyles.safeArea, { backgroundColor: colors.neutral100 }]}
+    >
       <View style={screenStyles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={[screenStyles.headerButton, { backgroundColor: colors.neutral50 }]}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={[
+            screenStyles.headerButton,
+            { backgroundColor: colors.neutral50 },
+          ]}
+        >
           <View style={screenStyles.backIcon}>
             <Icon name="arrow_down" size={22} tintColor="neutral900" />
           </View>
         </Pressable>
-        <Pressable hitSlop={12} style={[screenStyles.headerButton, { backgroundColor: colors.neutral50 }]}>
+        <Pressable
+          hitSlop={12}
+          style={[
+            screenStyles.headerButton,
+            { backgroundColor: colors.neutral50 },
+          ]}
+        >
           <Icon name="settings" size={22} tintColor="neutral900" />
         </Pressable>
       </View>
-      <Text style={[screenStyles.screenTitle, { color: colors.neutral900 }]}>Tạo đơn hàng</Text>
+      <Text style={[screenStyles.screenTitle, { color: colors.neutral900 }]}>
+        Tạo đơn hàng
+      </Text>
 
-      <ScrollView style={screenStyles.scroll} contentContainerStyle={screenStyles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={screenStyles.scroll}
+        contentContainerStyle={screenStyles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         <SectionBlock title="Thông tin người gửi">
-          <FigmaAddressCard address={selectedSender} loading={isLoadingSender} onChangePress={openSenderSheet} onAddPress={() => openAddressForm("sender")} />
+          <FigmaAddressCard
+            address={selectedSender}
+            loading={isLoadingSender}
+            onChangePress={openSenderSheet}
+            onAddPress={() => openAddressForm("sender")}
+          />
         </SectionBlock>
-        <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
+        <View
+          style={[
+            shipmentStyles.divider,
+            { backgroundColor: colors.neutral50 },
+          ]}
+        />
 
         <SectionBlock title="Thông tin người nhận">
-          <FigmaAddressCard address={selectedRecipient} loading={isLoadingRecipient} onChangePress={openRecipientSheet} onAddPress={() => openAddressForm("recipient")} />
+          <FigmaAddressCard
+            address={selectedRecipient}
+            loading={isLoadingRecipient}
+            onChangePress={openRecipientSheet}
+            onAddPress={() => openAddressForm("recipient")}
+          />
         </SectionBlock>
-        <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
+        <View
+          style={[
+            shipmentStyles.divider,
+            { backgroundColor: colors.neutral50 },
+          ]}
+        />
 
         {!isManualProvider ? (
-          <SectionBlock title="Thông tin đơn hàng" actionLabel="Kích thước" onActionPress={openDimensions}>
-            <View style={[shipmentStyles.orderCard, { backgroundColor: colors.neutral50 }]}>
-            <View style={shipmentStyles.orderMetaRow}>
-              <View style={shipmentStyles.productTitle}>
-                <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]} numberOfLines={2}>{primaryProduct?.name ?? order.productName ?? "—"}</Text>
-                {primaryProduct?.variantName ? <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>{primaryProduct.variantName}</Text> : null}
-              </View>
-            </View>
-            <View style={shipmentStyles.detailGrid}>
-              {[
-                { label: "Dài", value: dimLength ? `${dimLength} cm` : "—" },
-                { label: "Rộng", value: dimWidth ? `${dimWidth} cm` : "—" },
-                { label: "Cao", value: dimHeight ? `${dimHeight} cm` : "—" },
-                { label: "Khối lượng", value: `${((parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })} kg` },
-              ].map((cell) => (
-                <View key={cell.label} style={[shipmentStyles.detailCell, { backgroundColor: colors.surface }]}>
-                  <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>{cell.label}</Text>
-                  <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>{cell.value}</Text>
+          <SectionBlock
+            title="Thông tin đơn hàng"
+            actionLabel="Kích thước"
+            onActionPress={openDimensions}
+          >
+            <View
+              style={[
+                shipmentStyles.orderCard,
+                { backgroundColor: colors.neutral50 },
+              ]}
+            >
+              <View style={shipmentStyles.orderMetaRow}>
+                <View style={shipmentStyles.productTitle}>
+                  <Text
+                    style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
+                    numberOfLines={2}
+                  >
+                    {primaryProduct?.name ?? order.productName ?? "—"}
+                  </Text>
+                  {primaryProduct?.variantName ? (
+                    <Text
+                      style={[
+                        { color: colors.neutral400 },
+                        textPresets.fs12_400,
+                      ]}
+                    >
+                      {primaryProduct.variantName}
+                    </Text>
+                  ) : null}
                 </View>
-              ))}
-            </View>
-            <View style={shipmentStyles.quantityRow}>
-              <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>Số lượng</Text>
-              <View style={[shipmentStyles.stepper, { backgroundColor: colors.surface, borderColor: colors.border10, borderWidth: 1 }]}>
-                <Pressable hitSlop={8} style={shipmentStyles.stepperBtn} onPress={() => { const w = parseInt(weightInput.replace(/\D/g, ""), 10) || 0; if (w > 100) setWeightInput(String(w - 100)); }}>
-                  <Text style={[{ color: colors.neutral900 }, textPresets.fs18_700]}>−</Text>
-                </Pressable>
-                <Text style={[shipmentStyles.stepperValue, { color: colors.neutral900 }, textPresets.fs14_500]}>{displayQuantity}</Text>
-                <Pressable hitSlop={8} style={shipmentStyles.stepperBtn} onPress={() => { const w = parseInt(weightInput.replace(/\D/g, ""), 10) || 0; setWeightInput(String(w + 100)); }}>
-                  <Text style={[{ color: colors.neutral900 }, textPresets.fs18_700]}>+</Text>
-                </Pressable>
               </View>
-            </View>
+              <View style={shipmentStyles.detailGrid}>
+                {[
+                  { label: "Dài", value: dimLength ? `${dimLength} cm` : "—" },
+                  { label: "Rộng", value: dimWidth ? `${dimWidth} cm` : "—" },
+                  { label: "Cao", value: dimHeight ? `${dimHeight} cm` : "—" },
+                  {
+                    label: "Khối lượng",
+                    value: `${((parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })} kg`,
+                  },
+                ].map((cell) => (
+                  <View
+                    key={cell.label}
+                    style={[
+                      shipmentStyles.detailCell,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        { color: colors.neutral400 },
+                        textPresets.fs12_400,
+                      ]}
+                    >
+                      {cell.label}
+                    </Text>
+                    <Text
+                      style={[
+                        { color: colors.neutral900 },
+                        textPresets.fs14_500,
+                      ]}
+                    >
+                      {cell.value}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <View style={shipmentStyles.quantityRow}>
+                <Text
+                  style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
+                >
+                  Số lượng
+                </Text>
+                <View
+                  style={[
+                    shipmentStyles.stepper,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border10,
+                      borderWidth: 1,
+                    },
+                  ]}
+                >
+                  <Pressable
+                    hitSlop={8}
+                    style={shipmentStyles.stepperBtn}
+                    onPress={() => {
+                      const w =
+                        parseInt(weightInput.replace(/\D/g, ""), 10) || 0;
+                      if (w > 100) setWeightInput(String(w - 100));
+                    }}
+                  >
+                    <Text
+                      style={[
+                        { color: colors.neutral900 },
+                        textPresets.fs18_700,
+                      ]}
+                    >
+                      −
+                    </Text>
+                  </Pressable>
+                  <Text
+                    style={[
+                      shipmentStyles.stepperValue,
+                      { color: colors.neutral900 },
+                      textPresets.fs14_500,
+                    ]}
+                  >
+                    {displayQuantity}
+                  </Text>
+                  <Pressable
+                    hitSlop={8}
+                    style={shipmentStyles.stepperBtn}
+                    onPress={() => {
+                      const w =
+                        parseInt(weightInput.replace(/\D/g, ""), 10) || 0;
+                      setWeightInput(String(w + 100));
+                    }}
+                  >
+                    <Text
+                      style={[
+                        { color: colors.neutral900 },
+                        textPresets.fs18_700,
+                      ]}
+                    >
+                      +
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
             </View>
           </SectionBlock>
         ) : null}
-        {!isManualProvider ? <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} /> : null}
+        {!isManualProvider ? (
+          <View
+            style={[
+              shipmentStyles.divider,
+              { backgroundColor: colors.neutral50 },
+            ]}
+          />
+        ) : null}
 
         <SectionBlock title="Thông tin thanh toán">
           <MoneyField
@@ -259,17 +468,43 @@ export default function CreateShipmentScreen() {
             editable={isManualProvider}
           />
           <View style={shipmentStyles.optionGrid}>
-            <OptionChip label="Bên nhận trả phí" selected={paymentSide === 0} onPress={() => setPaymentSide(0)} />
-            <OptionChip label="Bên gửi trả phí" selected={paymentSide === 1} onPress={() => setPaymentSide(1)} />
+            <OptionChip
+              label="Bên nhận trả phí"
+              selected={paymentSide === 0}
+              onPress={() => setPaymentSide(0)}
+            />
+            <OptionChip
+              label="Bên gửi trả phí"
+              selected={paymentSide === 1}
+              onPress={() => setPaymentSide(1)}
+            />
           </View>
         </SectionBlock>
-        <View style={[shipmentStyles.divider, { backgroundColor: colors.neutral50 }]} />
+        <View
+          style={[
+            shipmentStyles.divider,
+            { backgroundColor: colors.neutral50 },
+          ]}
+        />
 
         <SectionBlock title="Thông tin vận chuyển">
           {isManualProvider ? (
             <>
-              <ShipmentInput label="Phí vận chuyển" value={manualShippingFee} onChangeText={setManualShippingFee} placeholder="0" keyboardType="numeric" money />
-              <ShipmentInput label="Ghi chú" value={manualNote} onChangeText={setManualNote} placeholder="Nhập ghi chú" multiline />
+              <ShipmentInput
+                label="Phí vận chuyển"
+                value={manualShippingFee}
+                onChangeText={setManualShippingFee}
+                placeholder="0"
+                keyboardType="numeric"
+                money
+              />
+              <ShipmentInput
+                label="Ghi chú"
+                value={manualNote}
+                onChangeText={setManualNote}
+                placeholder="Nhập ghi chú"
+                multiline
+              />
             </>
           ) : isSpxProvider ? (
             <SpxOptions
@@ -295,8 +530,24 @@ export default function CreateShipmentScreen() {
             />
           ) : (
             <>
-              <ShippingOptions viewCondition={viewCondition} setViewCondition={setViewCondition} deliveryPolicy={deliveryPolicy} setDeliveryPolicy={setDeliveryPolicy} refusalFee={refusalFee} setRefusalFee={setRefusalFee} pickupOption={pickupOption} setPickupOption={setPickupOption} />
-              <ShipmentInput label="Ghi chú" value={note} onChangeText={setNote} placeholder="Nhập ghi chú" multiline topSpacing />
+              <ShippingOptions
+                viewCondition={viewCondition}
+                setViewCondition={setViewCondition}
+                deliveryPolicy={deliveryPolicy}
+                setDeliveryPolicy={setDeliveryPolicy}
+                refusalFee={refusalFee}
+                setRefusalFee={setRefusalFee}
+                pickupOption={pickupOption}
+                setPickupOption={setPickupOption}
+              />
+              <ShipmentInput
+                label="Ghi chú"
+                value={note}
+                onChangeText={setNote}
+                placeholder="Nhập ghi chú"
+                multiline
+                topSpacing
+              />
             </>
           )}
         </SectionBlock>
@@ -304,32 +555,64 @@ export default function CreateShipmentScreen() {
       </ScrollView>
 
       {submitState === "outcome_unknown" && (
-        <View style={[screenStyles.outcomeUnknownBanner, { backgroundColor: "#FFF7E6", borderColor: "#FBBF24" }]}>
+        <View
+          style={[
+            screenStyles.outcomeUnknownBanner,
+            { backgroundColor: "#FFF7E6", borderColor: "#FBBF24" },
+          ]}
+        >
           <Text style={[textPresets.fs12_400, { color: "#92400E", flex: 1 }]}>
-            Không xác nhận được trạng thái. Đơn có thể đã được tạo. Kiểm tra lại hoặc thử lại.
+            Không xác nhận được trạng thái. Đơn có thể đã được tạo. Kiểm tra lại
+            hoặc thử lại.
           </Text>
           <Pressable onPress={handleRetryOutcomeUnknown} hitSlop={8}>
-            <Text style={[textPresets.fs14_500, { color: "#D97706" }]}>Thử lại</Text>
+            <Text style={[textPresets.fs14_500, { color: "#D97706" }]}>
+              Thử lại
+            </Text>
           </Pressable>
         </View>
       )}
 
-      <View style={[screenStyles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border10 }]}>
+      <View
+        style={[
+          screenStyles.footer,
+          { backgroundColor: colors.surface, borderTopColor: colors.border10 },
+        ]}
+      >
         <View style={screenStyles.footerSummary}>
-          <SummaryRow label="Tiền hàng" value={`${orderTotal.toLocaleString("vi-VN")}đ`} />
+          <SummaryRow
+            label="Tiền hàng"
+            value={`${orderTotal.toLocaleString("vi-VN")}đ`}
+          />
           <View style={screenStyles.summaryRow}>
-            <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>Phí vận chuyển</Text>
+            <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>
+              Phí vận chuyển
+            </Text>
             {feeLoading ? (
-              <Text style={[textPresets.fs14_500, { color: colors.neutral400 }]}>Đang tính...</Text>
+              <Text
+                style={[textPresets.fs14_500, { color: colors.neutral400 }]}
+              >
+                Đang tính...
+              </Text>
             ) : feeError ? (
-              <Text style={[textPresets.fs12_400, { color: colors.error }]}>{feeError}</Text>
+              <Text style={[textPresets.fs12_400, { color: colors.error }]}>
+                {feeError}
+              </Text>
             ) : (
-              <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>{shippingFee.toLocaleString("vi-VN")}đ</Text>
+              <Text
+                style={[textPresets.fs14_500, { color: colors.neutral900 }]}
+              >
+                {shippingFee.toLocaleString("vi-VN")}đ
+              </Text>
             )}
           </View>
           <View style={[screenStyles.summaryRow, screenStyles.summaryRowTotal]}>
-            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>Shipper thu</Text>
-            <Text style={[textPresets.fs14_500, { color: colors.primary }]}>{totalCollected.toLocaleString("vi-VN")}đ</Text>
+            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
+              Shipper thu
+            </Text>
+            <Text style={[textPresets.fs14_500, { color: colors.primary }]}>
+              {totalCollected.toLocaleString("vi-VN")}đ
+            </Text>
           </View>
         </View>
         <Pressable
@@ -359,15 +642,20 @@ export default function CreateShipmentScreen() {
             },
           ]}
         >
-          {isSubmitting ? <ActivityIndicator color="#fff" /> : (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
               <Icon name="truck" size={18} tintColor="white" />
-              <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>Tạo vận đơn</Text>
+              <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>
+                Tạo vận đơn
+              </Text>
             </View>
           )}
         </Pressable>
       </View>
-
     </SafeAreaView>
   );
 }

@@ -4,7 +4,7 @@ import { OrderWithTikTok } from "@app-types/index";
 import { formatMoney } from "@features/orders/utils/order";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { CurrencyInputRow, MoneyRow, Section, SectionHeader } from "./OrderDetailPrimitives";
+import { CurrencyInputRow, MoneyRow, Section, SectionHeader } from "./order-detail-primitives";
 import { type ShippingProvider } from "@features/orders/components/shipping-provider-sheet";
 
 type OrderDetailShippingSectionProps = {

@@ -11,9 +11,9 @@ import {
   patchOrderApi,
   updateCustomerAddressApi,
   updateShopAddressApi,
-} from "../lib/create-shipment-api";
-import { AddrFormValues } from "../lib/types";
-import { addressPayload } from "../lib/utils";
+} from "../service/create-shipment-api";
+import { AddrFormValues } from "../types/shipment";
+import { addressPayload } from "../utils/shipment";
 
 type Deps = {
   order: OrderWithTikTok | null;
