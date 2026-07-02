@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import { OrderStatus } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
-import { Section, StatusTag } from "./OrderDetailPrimitives";
+import { Section, StatusTag } from "./order-detail-primitives";
 
 type OrderDetailMetaSectionProps = {
   orderCode: string;

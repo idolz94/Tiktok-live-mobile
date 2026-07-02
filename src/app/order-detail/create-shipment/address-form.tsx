@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { useAddressPageStore } from "@features/orders/create-shipment/lib/address-page-store";
-import { AddressFormModal } from "@features/orders/create-shipment/components/AddressFormModal";
+import { useAddressPageStore } from "@features/orders/create-shipment/stores/address-page-store";
+import { AddressFormModal } from "@features/orders/create-shipment/components/address-form-modal";
 
 export default function AddressFormPage() {
   const session = useAddressPageStore((state) => state.form);

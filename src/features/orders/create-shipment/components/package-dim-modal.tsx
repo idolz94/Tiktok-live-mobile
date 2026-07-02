@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import { shipmentStyles } from "./ShipmentComponents";
+import { shipmentStyles } from "./shipment-styles";
 
 type PackageDimModalProps = {
   dimLength: string;

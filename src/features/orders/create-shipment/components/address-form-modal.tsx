@@ -19,8 +19,11 @@ import {
   getWards,
   VnGeoItem,
 } from "@features/settings/service/vn-geo";
-import { addrSchema, AddrFormValues } from "../lib/types";
-import { absoluteFill } from "../lib/utils";
+import { addrSchema, AddrFormValues } from "../types/shipment";
+import { absoluteFill } from "../utils/shipment";
+import { Screen } from "@components/screen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 type AddressFormModalProps = {
   title: string;
@@ -37,7 +40,8 @@ export function AddressFormModal({
   onClose,
   onSave,
 }: AddressFormModalProps) {
-  const [isSaving, setIsSaving] = useState(false);
+  const insets = useSafeAreaInsets();
+
   const {
     control,
     handleSubmit,
@@ -63,6 +67,7 @@ export function AddressFormModal({
   const [provinceItems, setProvinceItems] = useState<VnGeoItem[]>([]);
   const [wardItems, setWardItems] = useState<VnGeoItem[]>([]);
   const [geoPicker, setGeoPicker] = useState<"province" | "ward" | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const province = watch("province");
   const ward = watch("ward");
@@ -79,10 +84,12 @@ export function AddressFormModal({
       isDefault: false,
       ...initialValues,
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    fetchProvinces().then(setProvinceItems).catch(() => setProvinceItems([]));
+    fetchProvinces()
+      .then(setProvinceItems)
+      .catch(() => setProvinceItems([]));
   }, []);
 
   const openProvincePicker = () => setGeoPicker("province");
@@ -95,7 +102,10 @@ export function AddressFormModal({
 
   const handleSelectGeoItem = (item: VnGeoItem) => {
     if (geoPicker === "province") {
-      setValue("province", item.name, { shouldDirty: true, shouldValidate: true });
+      setValue("province", item.name, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
       setValue("ward", "", { shouldDirty: true, shouldValidate: true });
       setWardItems([]);
     } else if (geoPicker === "ward") {
@@ -105,16 +115,20 @@ export function AddressFormModal({
   };
 
   return (
-    <>
+    <Screen>
       <View style={formModalStyles.sheet}>
-        <View style={formModalStyles.sheetHeader}>
+        <View style={[formModalStyles.sheetHeader, { paddingTop: insets.top }]}>
           <Text style={formModalStyles.sheetTitle}>{title}</Text>
-          <Pressable onPress={onClose} style={formModalStyles.closeBtn} hitSlop={8}>
+          <Pressable
+            onPress={onClose}
+            style={formModalStyles.closeBtn}
+            hitSlop={8}
+          >
             <Text style={formModalStyles.closeBtnText}>×</Text>
           </Pressable>
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           style={formModalStyles.scrollView}
           contentContainerStyle={formModalStyles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -124,9 +138,17 @@ export function AddressFormModal({
             control={control}
             name="name"
             render={({ field, fieldState }) => (
-              <FormField label="Họ và tên" error={fieldState.isDirty ? errors.name?.message : undefined}>
+              <FormField
+                label="Họ và tên"
+                error={fieldState.isDirty ? errors.name?.message : undefined}
+              >
                 <TextInput
-                  style={[formModalStyles.input, fieldState.isDirty && errors.name ? formModalStyles.inputError : null]}
+                  style={[
+                    formModalStyles.input,
+                    fieldState.isDirty && errors.name
+                      ? formModalStyles.inputError
+                      : null,
+                  ]}
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -141,9 +163,17 @@ export function AddressFormModal({
             control={control}
             name="phone"
             render={({ field, fieldState }) => (
-              <FormField label="Số điện thoại" error={fieldState.isDirty ? errors.phone?.message : undefined}>
+              <FormField
+                label="Số điện thoại"
+                error={fieldState.isDirty ? errors.phone?.message : undefined}
+              >
                 <TextInput
-                  style={[formModalStyles.input, fieldState.isDirty && errors.phone ? formModalStyles.inputError : null]}
+                  style={[
+                    formModalStyles.input,
+                    fieldState.isDirty && errors.phone
+                      ? formModalStyles.inputError
+                      : null,
+                  ]}
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -155,28 +185,51 @@ export function AddressFormModal({
             )}
           />
 
-          <FormField label="Tỉnh/Thành phố" error={dirtyFields.province ? errors.province?.message : undefined}>
+          <FormField
+            label="Tỉnh/Thành phố"
+            error={dirtyFields.province ? errors.province?.message : undefined}
+          >
             <Pressable
               onPress={openProvincePicker}
-              style={[formModalStyles.pickerField, dirtyFields.province && errors.province ? formModalStyles.inputError : null]}
+              style={[
+                formModalStyles.pickerField,
+                dirtyFields.province && errors.province
+                  ? formModalStyles.inputError
+                  : null,
+              ]}
             >
-              <Text style={[formModalStyles.pickerText, !province && formModalStyles.pickerPlaceholder]}>
+              <Text
+                style={[
+                  formModalStyles.pickerText,
+                  !province && formModalStyles.pickerPlaceholder,
+                ]}
+              >
                 {province || "Chọn tỉnh/thành phố"}
               </Text>
               <Icon name="arrow_down" size={16} tintColor="neutral400" />
             </Pressable>
           </FormField>
 
-          <FormField label="Phường/Xã" error={dirtyFields.ward ? errors.ward?.message : undefined}>
+          <FormField
+            label="Phường/Xã"
+            error={dirtyFields.ward ? errors.ward?.message : undefined}
+          >
             <Pressable
               onPress={openWardPicker}
               style={[
                 formModalStyles.pickerField,
-                dirtyFields.ward && errors.ward ? formModalStyles.inputError : null,
+                dirtyFields.ward && errors.ward
+                  ? formModalStyles.inputError
+                  : null,
                 !province && formModalStyles.pickerDisabled,
               ]}
             >
-              <Text style={[formModalStyles.pickerText, !ward && formModalStyles.pickerPlaceholder]}>
+              <Text
+                style={[
+                  formModalStyles.pickerText,
+                  !ward && formModalStyles.pickerPlaceholder,
+                ]}
+              >
                 {ward || "Chọn phường/xã"}
               </Text>
               <Icon name="arrow_down" size={16} tintColor="neutral400" />
@@ -187,7 +240,10 @@ export function AddressFormModal({
             control={control}
             name="address"
             render={({ field, fieldState }) => (
-              <FormField label="Địa chỉ chi tiết" error={fieldState.isDirty ? errors.address?.message : undefined}>
+              <FormField
+                label="Địa chỉ chi tiết"
+                error={fieldState.isDirty ? errors.address?.message : undefined}
+              >
                 <TextInput
                   style={formModalStyles.input}
                   value={field.value}
@@ -205,12 +261,33 @@ export function AddressFormModal({
             name="isDefault"
             render={({ field }) => (
               <Pressable
-                onPress={() => { if (!disableDefaultToggle) field.onChange(!field.value); }}
-                style={[formModalStyles.switchRow, disableDefaultToggle ? { opacity: 0.5 } : null]}
+                onPress={() => {
+                  if (!disableDefaultToggle) field.onChange(!field.value);
+                }}
+                style={[
+                  formModalStyles.switchRow,
+                  disableDefaultToggle ? { opacity: 0.5 } : null,
+                ]}
               >
-                <Text style={formModalStyles.switchLabel}>Đặt làm địa chỉ mặc định</Text>
-                <View style={[formModalStyles.switchTrack, isDefault ? formModalStyles.switchTrackOn : formModalStyles.switchTrackOff]}>
-                  <View style={[formModalStyles.switchThumb, isDefault ? formModalStyles.switchThumbOn : formModalStyles.switchThumbOff]} />
+                <Text style={formModalStyles.switchLabel}>
+                  Đặt làm địa chỉ mặc định
+                </Text>
+                <View
+                  style={[
+                    formModalStyles.switchTrack,
+                    isDefault
+                      ? formModalStyles.switchTrackOn
+                      : formModalStyles.switchTrackOff,
+                  ]}
+                >
+                  <View
+                    style={[
+                      formModalStyles.switchThumb,
+                      isDefault
+                        ? formModalStyles.switchThumbOn
+                        : formModalStyles.switchThumbOff,
+                    ]}
+                  />
                 </View>
               </Pressable>
             )}
@@ -219,33 +296,59 @@ export function AddressFormModal({
           <Pressable
             onPress={handleSubmit(async (vals) => {
               setIsSaving(true);
-              try { await onSave(vals); } finally { setIsSaving(false); }
+              try {
+                await onSave(vals);
+              } finally {
+                setIsSaving(false);
+              }
             })}
             disabled={isSaving || !isValid}
-            style={[formModalStyles.saveBtn, (isSaving || !isValid) && formModalStyles.saveBtnDisabled]}
+            style={[
+              formModalStyles.saveBtn,
+              (isSaving || !isValid) && formModalStyles.saveBtnDisabled,
+            ]}
           >
-            {isSaving && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />}
+            {isSaving && (
+              <ActivityIndicator
+                size="small"
+                color="#fff"
+                style={{ marginRight: 8 }}
+              />
+            )}
             <Text style={formModalStyles.saveBtnText}>
-              {title.toLowerCase().includes("sửa") ? "CẬP NHẬT ĐỊA CHỈ" : "+ THÊM ĐỊA CHỈ"}
+              {title.toLowerCase().includes("sửa")
+                ? "CẬP NHẬT ĐỊA CHỈ"
+                : "+ THÊM ĐỊA CHỈ"}
             </Text>
           </Pressable>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
 
       {geoPicker !== null && (
         <View style={formModalStyles.geoModalWrapper}>
-          <Pressable style={formModalStyles.backdrop} onPress={() => setGeoPicker(null)} />
+          <Pressable
+            style={formModalStyles.backdrop}
+            onPress={() => setGeoPicker(null)}
+          />
           <GeoPickerSheet
-            title={geoPicker === "province" ? "Chọn Tỉnh / Thành phố" : "Chọn Phường / Xã"}
+            title={
+              geoPicker === "province"
+                ? "Chọn Tỉnh / Thành phố"
+                : "Chọn Phường / Xã"
+            }
             items={geoPicker === "province" ? provinceItems : wardItems}
             selectedName={geoPicker === "province" ? province : ward}
-            placeholder={geoPicker === "province" ? "Tìm tỉnh/thành phố..." : "Tìm phường/xã..."}
+            placeholder={
+              geoPicker === "province"
+                ? "Tìm tỉnh/thành phố..."
+                : "Tìm phường/xã..."
+            }
             onSelect={handleSelectGeoItem}
             onClose={() => setGeoPicker(null)}
           />
         </View>
       )}
-    </>
+    </Screen>
   );
 }
 
@@ -261,7 +364,13 @@ function FormField({
   const { colors, textPresets } = useThemes();
   return (
     <View style={formFieldStyles.container}>
-      <Text style={[formFieldStyles.label, { color: colors.neutral900 }, textPresets.fs12_500]}>
+      <Text
+        style={[
+          formFieldStyles.label,
+          { color: colors.neutral900 },
+          textPresets.fs12_500,
+        ]}
+      >
         {label}
       </Text>
       {children}

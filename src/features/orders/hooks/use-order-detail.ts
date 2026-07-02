@@ -16,7 +16,7 @@ import {
   updateOrderItemApi,
   updateOrderStatusApi,
 } from "../service/api";
-import { listCustomerAddressesApi, type CustomerAddress } from "@features/orders/create-shipment/lib/create-shipment-api";
+import { listCustomerAddressesApi, type CustomerAddress } from "@features/orders/create-shipment/service/create-shipment-api";
 
 // START: Stable fallback để tránh tạo array/object mới mỗi render khi order null
 const EMPTY_PRODUCTS: OrderProduct[] = [];

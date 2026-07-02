@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { CustomerAddress, ShopAddress } from "./create-shipment-api";
-import type { AddrFormValues } from "./types";
+import type { CustomerAddress, ShopAddress } from "../service/create-shipment-api";
+import type { AddrFormValues } from "../types/shipment";
 
 type Address = ShopAddress | CustomerAddress;
 

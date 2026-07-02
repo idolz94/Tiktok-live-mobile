@@ -1,5 +1,5 @@
-import { ShopAddress, CustomerAddress, AddressPayload } from "./create-shipment-api";
-import { AddrFormValues } from "./types";
+import { ShopAddress, CustomerAddress, AddressPayload } from "../service/create-shipment-api";
+import { AddrFormValues } from "../types/shipment";
 
 export function parseLocaleNumber(text: string): number {
   return parseInt(text.replace(/\D/g, ""), 10) || 0;
