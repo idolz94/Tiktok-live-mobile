@@ -1,3 +1,3 @@
-import { OrderDetail } from "@features/orders/components/order-detail";
+import { OrderDetail } from "@features/orders/screens/order-detail";
 
 export default OrderDetail;

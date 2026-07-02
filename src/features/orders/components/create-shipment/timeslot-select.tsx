@@ -1,8 +1,8 @@
 import { memo, useCallback, useMemo, useState } from "react";
 import { FlatList, Modal, Pressable, Text } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import type { SpxTimeslot } from "../types/shipment";
-import { shipmentStyles } from "./shipment-styles";
+import type { SpxTimeslot } from "../../types/shipment";
+import { createStyles } from "@utils/createStyles";
 
 type TimeslotSelectProps = {
   timeslots: SpxTimeslot[];
@@ -51,7 +51,7 @@ export const TimeslotSelect = memo(function TimeslotSelect({
           setOpen(false);
         }}
         style={[
-          shipmentStyles.selectItem,
+          styles.selectItem,
           item.key === selectedKey && {
             backgroundColor: colors.primaryLight,
           },
@@ -77,7 +77,7 @@ export const TimeslotSelect = memo(function TimeslotSelect({
       <Pressable
         onPress={() => setOpen(true)}
         style={[
-          shipmentStyles.selectTrigger,
+          styles.selectTrigger,
           { borderColor: colors.border10, backgroundColor: colors.neutral50 },
         ]}
       >
@@ -98,12 +98,12 @@ export const TimeslotSelect = memo(function TimeslotSelect({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable
-          style={shipmentStyles.sheetOverlay}
+          style={styles.sheetOverlay}
           onPress={() => setOpen(false)}
         >
           <Pressable
             style={[
-              shipmentStyles.selectDropdown,
+              styles.selectDropdown,
               { backgroundColor: colors.surface, borderColor: colors.border10 },
             ]}
             onPress={() => {}}
@@ -111,7 +111,7 @@ export const TimeslotSelect = memo(function TimeslotSelect({
             <Pressable
               onPress={() => setOpen(false)}
               style={[
-                shipmentStyles.selectCloseRow,
+                styles.selectCloseRow,
                 { borderBottomColor: colors.border10 },
               ]}
             >
@@ -130,3 +130,38 @@ export const TimeslotSelect = memo(function TimeslotSelect({
     </>
   );
 });
+
+const styles = createStyles(() => ({
+  selectTrigger: {
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+    marginTop: 8,
+  },
+  selectDropdown: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    maxHeight: 400,
+  },
+  selectCloseRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  selectItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  sheetOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
+}));

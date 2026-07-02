@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import type React from "react";
 import { useThemes } from "@hooks/use-theme";
-import { shipmentStyles } from "./shipment-styles";
+import { createStyles } from "@utils/createStyles";
 
 export type SectionBlockProps = {
   title: string;
@@ -18,8 +18,8 @@ export function SectionBlock({
 }: SectionBlockProps) {
   const { colors, textPresets } = useThemes();
   return (
-    <View style={shipmentStyles.sectionBlock}>
-      <View style={shipmentStyles.sectionHeader}>
+    <View style={styles.sectionBlock}>
+      <View style={styles.sectionHeader}>
         <Text style={[{ color: colors.neutral900 }, textPresets.fs18_700]}>
           {title}
         </Text>
@@ -36,3 +36,11 @@ export function SectionBlock({
   );
 }
 
+const styles = createStyles(() => ({
+  sectionBlock: { paddingHorizontal: 16, paddingVertical: 18, gap: 14 },
+  sectionHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+  },
+}));

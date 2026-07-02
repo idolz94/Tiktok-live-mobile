@@ -1,13 +1,13 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import type { CollectType, SpxTimeslot } from "../types/shipment";
-import type { SpxVoucher } from "../service/create-shipment-api";
+import type { CollectType, SpxTimeslot } from "../../types/shipment";
+import type { SpxVoucher } from "../../service/create-shipment-api";
 import { MoneyField } from "./money-field";
 import { ShipmentInput } from "./shipment-input";
 import { SummaryRow } from "./summary-row";
 import { TimeslotSelect } from "./timeslot-select";
 import { OptionChip } from "./option-chip";
-import { shipmentStyles } from "./shipment-styles";
+import { createStyles } from "@utils/createStyles";
 
 type SpxOptionsProps = {
   collectType: CollectType;
@@ -66,7 +66,7 @@ export function SpxOptions({
       <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>
         Hình thức lấy hàng
       </Text>
-      <View style={shipmentStyles.optionGrid}>
+      <View style={styles.optionGrid}>
         <OptionChip
           label="Lấy tại nhà"
           selected={collectType === 1}
@@ -93,7 +93,7 @@ export function SpxOptions({
           {timeslotsLoading ? (
             <View
               style={[
-                shipmentStyles.feeBox,
+                styles.feeBox,
                 {
                   backgroundColor: colors.neutral50,
                   borderColor: colors.border10,
@@ -133,7 +133,7 @@ export function SpxOptions({
         onPress={onOpenVoucherSheet}
         disabled={vouchersLoading || !!vouchersError || vouchers.length === 0}
         style={[
-          shipmentStyles.voucherCard,
+          styles.voucherCard,
           { backgroundColor: colors.neutral50, borderColor: colors.border10 },
         ]}
       >
@@ -156,7 +156,7 @@ export function SpxOptions({
           </Text>
         ) : (
           <>
-            <View style={shipmentStyles.voucherCardInfo}>
+            <View style={styles.voucherCardInfo}>
               {(() => {
                 const selectedVoucher = vouchers.find(
                   (voucher) => voucher.voucherCode === selectedVoucherCode,
@@ -249,3 +249,27 @@ export function SpxOptions({
   );
 }
 
+const styles = createStyles(() => ({
+  optionGrid: { gap: 10 },
+  feeBox: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  voucherCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 44,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+    marginTop: 8,
+  },
+  voucherCardInfo: { flex: 1, gap: 2 },
+}));

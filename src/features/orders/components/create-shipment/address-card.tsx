@@ -1,8 +1,8 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import type { ShopAddress, CustomerAddress } from "../service/create-shipment-api";
-import { addressLine } from "../utils/shipment";
-import { shipmentStyles } from "./shipment-styles";
+import type { ShopAddress, CustomerAddress } from "../../service/create-shipment-api";
+import { addressLine } from "../../utils/shipment";
+import { createStyles } from "@utils/createStyles";
 
 type FigmaAddressCardProps = {
   address: ShopAddress | CustomerAddress | null;
@@ -22,7 +22,7 @@ export function FigmaAddressCard({
     return (
       <View
         style={[
-          shipmentStyles.addressCard,
+          styles.addressCard,
           { borderColor: colors.border10, backgroundColor: colors.surface },
         ]}
       >
@@ -36,12 +36,12 @@ export function FigmaAddressCard({
       <Pressable
         onPress={onAddPress}
         style={[
-          shipmentStyles.addAddressCard,
+          styles.addAddressCard,
           { borderColor: colors.border20 },
         ]}
       >
         <View
-          style={[shipmentStyles.addCircle, { borderColor: colors.primary }]}
+          style={[styles.addCircle, { borderColor: colors.primary }]}
         >
           <Text style={[{ color: colors.primary }, textPresets.fs18_700]}>
             +
@@ -58,14 +58,14 @@ export function FigmaAddressCard({
   return (
     <View
       style={[
-        shipmentStyles.addressCard,
+        styles.addressCard,
         { borderColor: colors.border10, backgroundColor: colors.surface },
       ]}
     >
-      <View style={shipmentStyles.addressTopRow}>
+      <View style={styles.addressTopRow}>
         <View
           style={[
-            shipmentStyles.avatar,
+            styles.avatar,
             { backgroundColor: colors.primaryLight },
           ]}
         >
@@ -73,11 +73,11 @@ export function FigmaAddressCard({
             {initial}
           </Text>
         </View>
-        <View style={shipmentStyles.addressInfo}>
-          <View style={shipmentStyles.addressNameRow}>
+        <View style={styles.addressInfo}>
+          <View style={styles.addressNameRow}>
             <Text
               style={[
-                shipmentStyles.addressName,
+                styles.addressName,
                 { color: colors.neutral900 },
                 textPresets.fs16_500,
               ]}
@@ -88,7 +88,7 @@ export function FigmaAddressCard({
             {address.isDefault && (
               <View
                 style={[
-                  shipmentStyles.defaultBadge,
+                  styles.defaultBadge,
                   { backgroundColor: colors.primaryLight },
                 ]}
               >
@@ -105,7 +105,7 @@ export function FigmaAddressCard({
         <Pressable
           onPress={onChangePress}
           hitSlop={8}
-          style={[shipmentStyles.changePill, { borderColor: colors.border10 }]}
+          style={[styles.changePill, { borderColor: colors.border10 }]}
         >
           <Text style={[{ color: colors.primary }, textPresets.fs12_500]}>
             Thay đổi
@@ -114,7 +114,7 @@ export function FigmaAddressCard({
       </View>
       <Text
         style={[
-          shipmentStyles.addressLine,
+          styles.addressLine,
           { color: colors.neutral400 },
           textPresets.fs14_400,
         ]}
@@ -126,3 +126,60 @@ export function FigmaAddressCard({
   );
 }
 
+const styles = createStyles(() => ({
+  addressCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    gap: 12,
+    minHeight: 108,
+    justifyContent: "center" as const,
+  },
+  addAddressCard: {
+    height: 76,
+    borderWidth: 1,
+    borderStyle: "dashed" as const,
+    borderRadius: 16,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 10,
+  },
+  addCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  addressTopRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  addressInfo: { flex: 1, gap: 4 },
+  addressNameRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+  },
+  addressName: { flexShrink: 1 },
+  changePill: {
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  defaultBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  addressLine: { lineHeight: 22 },
+}));

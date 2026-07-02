@@ -2,8 +2,8 @@ import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
-import { ShopAddress, CustomerAddress } from "../service/create-shipment-api";
-import { addressLine } from "../utils/shipment";
+import { ShopAddress, CustomerAddress } from "../../service/create-shipment-api";
+import { addressLine } from "../../utils/shipment";
 
 export type AddressPickerSheetProps<T extends ShopAddress | CustomerAddress> = {
   title: string;

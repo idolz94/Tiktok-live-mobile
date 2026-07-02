@@ -19,8 +19,9 @@ import {
   getWards,
   VnGeoItem,
 } from "@features/settings/service/vn-geo";
-import { addrSchema, AddrFormValues } from "../types/shipment";
-import { absoluteFill } from "../utils/shipment";
+import { addrSchema } from "../../schemas/shipment-schema";
+import type { AddrFormValues } from "../../types/shipment";
+import { absoluteFill } from "../../utils/shipment";
 import { Screen } from "@components/screen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
