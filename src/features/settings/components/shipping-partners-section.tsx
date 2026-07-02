@@ -4,32 +4,41 @@ import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 
 const connectedPartners = [
   {
-    key: "viettel-post",
-    name: "Viettel Post",
-    description: "Dịch vụ bưu chính của Viettel với mạng lưới rộng khắp.",
-    isDefault: true,
-    color: "#ffffff",
-  },
-  {
     key: "spx",
     name: "SPX - SPX EXPRESS",
     description: "Dịch vụ giao hàng toàn quốc, nhanh, rẻ và an toàn.",
+    isDefault: true,
     color: "#ff3911",
+  },
+  {
+    key: "manual",
+    name: "Thủ công",
+    description: "Tự tạo và quản lý vận đơn ngoài hệ thống.",
+    color: "#ffffff",
   },
 ] as const;
 
 const unconnectedPartners = [
   {
+    key: "viettel-post",
+    name: "Viettel Post",
+    description: "Dịch vụ bưu chính của Viettel với mạng lưới rộng khắp.",
+    color: "#ffffff",
+    comingSoon: true,
+  },
+  {
     key: "jt",
     name: "JT - J&T Express",
     description: "Dịch vụ chuyển phát nhanh J&T Express với mạng lưới toàn quốc.",
     color: "#e31b23",
+    comingSoon: true,
   },
   {
     key: "ghn",
     name: "GHN - Giao Hàng Nhanh",
     description: "Dịch vụ giao hàng nhanh với mạng lưới rộng khắp cả nước.",
     color: "#f58220",
+    comingSoon: true,
   },
 ] as const;
 
@@ -38,6 +47,7 @@ type Partner = {
   name: string;
   description: string;
   isDefault?: boolean;
+  comingSoon?: boolean;
   color: string;
 };
 
@@ -75,6 +85,11 @@ function PartnerCard({ partner }: { partner: Partner }) {
             {partner.isDefault ? (
               <View style={styles.defaultTag}>
                 <Text style={styles.defaultText}>Mặc định</Text>
+              </View>
+            ) : null}
+            {partner.comingSoon ? (
+              <View style={styles.comingSoonTag}>
+                <Text style={styles.comingSoonText}>Coming soon</Text>
               </View>
             ) : null}
           </View>

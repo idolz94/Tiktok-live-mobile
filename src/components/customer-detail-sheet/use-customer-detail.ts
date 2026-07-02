@@ -2,18 +2,36 @@ import type { Order, OrderProduct } from "@app-types/index";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { updateCustomerApi } from "@features/customers/service/api";
 import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
-import { cancelShipmentApi, refreshShippingStatusApi } from "../order-detail/create-shipment/create-shipment-api";
+import { cancelShipmentApi, refreshShippingStatusApi, listCustomerAddressesApi, type CustomerAddress } from "@app/order-detail/create-shipment/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
 import { usePhoneField } from "@hooks/use-phone-field";
-import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 export type DetailTab = "info" | "orders";
 
-function getSingleParam(value?: string | string[]) {
-  if (Array.isArray(value)) return value[0] ?? "";
-  return value ?? "";
+// ponytail: per-customerId cache map, cleared on explicit reload
+const customerAddressCache = new Map<string, CustomerAddress[]>();
+const customerAddressFetch = new Map<string, Promise<CustomerAddress[]>>();
+
+function getCustomerAddresses(customerId: string): Promise<CustomerAddress[]> {
+  const cached = customerAddressCache.get(customerId);
+  if (cached) return Promise.resolve(cached);
+  const inflight = customerAddressFetch.get(customerId);
+  if (inflight) return inflight;
+  const p = listCustomerAddressesApi(customerId)
+    .then((list) => { customerAddressCache.set(customerId, list); customerAddressFetch.delete(customerId); return list; })
+    .catch((err) => { customerAddressFetch.delete(customerId); throw err; });
+  customerAddressFetch.set(customerId, p);
+  return p;
 }
+
+function pickAddress(list: CustomerAddress[], cur: CustomerAddress | null): CustomerAddress | null {
+  return cur
+    ? (list.find((a) => a.id === cur.id) ?? list.find((a) => a.isDefault) ?? list[0] ?? null)
+    : (list.find((a) => a.isDefault) ?? list[0] ?? null);
+}
+
+export { type CustomerAddress };
 
 function getCustomerKey(customer: CustomerSummaryWithTikTok) {
   return customer.customerTikTokUsername || customer.username;
@@ -52,16 +70,17 @@ export function groupOrdersByDate(orders: Order[]) {
   }, []);
 }
 
-export function useCustomerDetail() {
-  const params = useLocalSearchParams<{ customerKey?: string; tab?: string }>();
-  const customerKey = getSingleParam(params.customerKey);
-  const initialTab = getSingleParam(params.tab) === "orders" ? "orders" : "info";
-
+export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "info") {
+  const mountedRef = useRef(true);
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
   const [customerType, setCustomerType] = useState("Lẻ");
   const { phone, setPhone, phoneError, validate: validatePhone, reset: resetPhone } = usePhoneField();
   const [referenceInfo, setReferenceInfo] = useState("");
   const [address, setAddress] = useState("");
+
+  const [customerAddresses, setCustomerAddresses] = useState<CustomerAddress[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
+  const [addressesLoading, setAddressesLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
@@ -103,6 +122,60 @@ export function useCustomerDetail() {
     setReferenceInfo(latestOrder.note || customer?.latestComment || "");
   }, [customerKey, latestOrder?.id]);
 
+  // sync phone ↔ selectedAddress: address → phone if phone empty; phone → prefer matching address
+  useEffect(() => {
+    if (!selectedAddress) return;
+    if (!phone && selectedAddress.phone) resetPhone(selectedAddress.phone);
+  }, [selectedAddress?.id]);
+
+  useEffect(() => {
+    if (!phone || !customerAddresses.length) return;
+    const match = customerAddresses.find((a) => a.phone === phone);
+    if (match) setSelectedAddress(match);
+  }, [phone]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const reloadCustomerAddresses = useCallback(async (customerId: string) => {
+    customerAddressCache.delete(customerId);
+    customerAddressFetch.delete(customerId);
+    setAddressesLoading(true);
+    try {
+      const list = await listCustomerAddressesApi(customerId);
+      if (!mountedRef.current) return;
+      customerAddressCache.set(customerId, list);
+      setCustomerAddresses(list);
+      setSelectedAddress((cur) => pickAddress(list, cur));
+    } finally {
+      if (mountedRef.current) setAddressesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const customerId = customer?.customerId;
+    if (!customerId) return;
+    const cached = customerAddressCache.get(customerId);
+    if (cached) {
+      setCustomerAddresses(cached);
+      setSelectedAddress((cur) => pickAddress(cached, cur));
+      return;
+    }
+    let cancelled = false;
+    setAddressesLoading(true);
+    getCustomerAddresses(customerId)
+      .then((list) => {
+        if (cancelled || !mountedRef.current) return;
+        setCustomerAddresses(list);
+        setSelectedAddress((cur) => pickAddress(list, cur));
+        setAddressesLoading(false);
+      })
+      .catch(() => { if (!cancelled && mountedRef.current) setAddressesLoading(false); });
+    return () => { cancelled = true; };
+  }, [customer?.customerId]);
+
   const loading = orderManager.orderLoading && !customer && customerOrders.length === 0;
   const notFound = !loading && !customer && customerOrders.length === 0;
 
@@ -139,6 +212,7 @@ export function useCustomerDetail() {
     phoneError, validatePhone,
     referenceInfo, setReferenceInfo,
     address, setAddress,
+    customerAddresses, selectedAddress, setSelectedAddress, addressesLoading, reloadCustomerAddresses,
     isSaving,
     displayName, avatar, tiktokUsername,
     customer, customerOrders, groupedOrders,

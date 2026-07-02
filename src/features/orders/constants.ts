@@ -1,9 +1,11 @@
 import { CustomerButton, FilterButton } from "./types/order";
 
 export const CUSTOMER_BUTTONS: CustomerButton[] = [
-  { key: "vip", label: "VIP", icon: "king" },
   { key: "retail", label: "Lẻ", icon: "group_user" },
   { key: "wholesale", label: "Sỉ", icon: "group_user" },
+  { key: "vip", label: "VIP", icon: "king" },
+  { key: "chot_dao", label: "Chốt Dạo", icon: "group_user" },
+  { key: "bomb", label: "Bomb", icon: "group_user" },
 ];
 
 export const STATUS_BUTTONS: FilterButton[] = [

@@ -125,6 +125,15 @@ export const shippingSettingsStyles = StyleSheet.create({
     justifyContent: "center",
   },
   defaultText: { color: "#2b2b2b", fontSize: 12, lineHeight: 18, fontWeight: "500" },
+  comingSoonTag: {
+    height: 24,
+    borderRadius: 16,
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  comingSoonText: { color: "#6B7280", fontSize: 12, lineHeight: 18, fontWeight: "500" },
   partnerDescription: { color: "#484848", fontSize: 12, lineHeight: 18 },
   chevron: { color: "#000", fontSize: 24, lineHeight: 24, transform: [{ rotate: "180deg" }] },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.35)" },
@@ -138,6 +147,7 @@ export const shippingSettingsStyles = StyleSheet.create({
     paddingBottom: 24,
     overflow: "hidden",
   },
+  modalPageCard: { flex: 1, maxHeight: "100%", borderTopLeftRadius: 0, borderTopRightRadius: 0 },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
   modalTitle: { color: "#000", fontSize: 18, lineHeight: 26, fontWeight: "600" },
   modalCloseButton: {

@@ -22,7 +22,7 @@ export type FilterButton = {
 };
 
 export type CustomerButton = {
-  key: "vip" | "retail" | "wholesale";
+  key: "vip" | "retail" | "wholesale" | "chot_dao" | "bomb";
   label: string;
   icon?: "king" | "group_user";
 };

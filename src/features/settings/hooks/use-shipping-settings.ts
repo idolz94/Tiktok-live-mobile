@@ -16,7 +16,7 @@ import {
 } from "./shipping-address-form.schema";
 import { useShippingGeoPicker } from "./use-shipping-geo-picker";
 
-export function useShippingSettings() {
+export function useShippingSettings(opts?: { afterSave?: () => void }) {
   const [addresses, setAddresses] = useState<ShopAddress[]>([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -121,6 +121,7 @@ export function useShippingSettings() {
 
       setAddresses((current) => syncSavedAddress(current, savedAddress, editingAddress));
       setAddressModalVisible(false);
+      opts?.afterSave?.();
     } catch {
       Alert.alert("Không lưu được địa chỉ kho", "Vui lòng kiểm tra thông tin và thử lại.");
     } finally {
@@ -129,6 +130,7 @@ export function useShippingSettings() {
   });
 
   return {
+    addresses,
     addressForm,
     closeAddressModal,
     forceCloseAddressModal,

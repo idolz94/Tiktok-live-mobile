@@ -14,7 +14,6 @@ export type AddressPickerSheetProps<T extends ShopAddress | CustomerAddress> = {
   onSelect: (addr: T) => void;
   onAddPress: () => void;
   onEditPress: (addr: T) => void;
-  onDeletePress: (addr: T) => void;
 };
 
 export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
@@ -26,13 +25,11 @@ export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
   onSelect,
   onAddPress,
   onEditPress,
-  onDeletePress,
 }: AddressPickerSheetProps<T>) {
   const { colors, textPresets } = useThemes();
 
   return (
     <View style={[pickerStyles.sheet, { backgroundColor: colors.surface }]}>
-      <View style={[pickerStyles.handle, { backgroundColor: colors.neutral300 }]} />
       <View style={pickerStyles.header}>
         <Text style={[{ color: colors.neutral900 }, textPresets.fs18_500]}>{title}</Text>
         <Pressable onPress={onClose} hitSlop={12}>
@@ -84,11 +81,8 @@ export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
                   </Text>
                 </View>
                 <View style={pickerStyles.actions}>
-                  <Pressable onPress={(event) => { event.stopPropagation(); onClose(); setTimeout(() => onEditPress(item), 350); }} hitSlop={8}>
+                  <Pressable onPress={(event) => { event.stopPropagation(); onEditPress(item); }} hitSlop={8}>
                     <Text style={[{ color: colors.primary }, textPresets.fs12_500]}>Sửa</Text>
-                  </Pressable>
-                  <Pressable onPress={(event) => { event.stopPropagation(); onDeletePress(item); }} hitSlop={8}>
-                    <Text style={[{ color: colors.error }, textPresets.fs12_500]}>Xoá</Text>
                   </Pressable>
                 </View>
               </Pressable>
@@ -98,7 +92,7 @@ export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
       )}
 
       <Pressable
-        onPress={() => { onClose(); setTimeout(onAddPress, 350); }}
+        onPress={onAddPress}
         style={[pickerStyles.addButton, { borderColor: colors.primary }]}
       >
         <Icon name="plus_circle" size={18} tintColor="primary" />
@@ -115,14 +109,6 @@ const pickerStyles = createStyles(() => ({
     paddingBottom: 32,
     maxHeight: 520,
     overflow: "hidden" as const,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: "center" as const,
-    marginTop: 12,
-    marginBottom: 12,
   },
   header: {
     flexDirection: "row" as const,

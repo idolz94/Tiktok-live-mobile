@@ -6,9 +6,8 @@ import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { SectionBlock, FigmaAddressCard, OptionChip, MoneyField, ShipmentInput, ShippingOptions, SpxOptions, SummaryRow, shipmentStyles } from "./components/ShipmentComponents";
-import { AddressPickerSheet } from "./components/AddressPickerSheet";
-import { AddressFormModal } from "./components/AddressFormModal";
 import { PackageDimModal } from "./components/PackageDimModal";
+import { useAddressPageStore } from "./address-page-store";
 import { VoucherSelectSheet } from "./components/VoucherSelectSheet";
 import { formInitialValues } from "./utils";
 import type { AddrFormValues } from "./types";
@@ -66,7 +65,6 @@ export default function CreateShipmentScreen() {
     note,
     setNote,
     isSubmitting,
-    handleDeleteAddress,
     handleSelectRecipient,
     handleSaveAddress,
     handleSubmitShipment,
@@ -94,6 +92,8 @@ export default function CreateShipmentScreen() {
     feeError,
   } = useCreateShipment();
 
+  const { setPicker, setForm } = useAddressPageStore();
+
   const openAddressForm = (target: "sender" | "recipient", addr?: typeof editingAddr) => {
     const title = addr
       ? target === "sender" ? "Sửa địa chỉ người gửi" : "Sửa địa chỉ người nhận"
@@ -103,53 +103,40 @@ export default function CreateShipmentScreen() {
     const defaultValues: Partial<AddrFormValues> = addr
       ? (formInitialValues(addr) ?? {})
       : { isDefault: target === "sender" ? shopAddresses.length === 0 : customerAddresses.length === 0 };
-    show({
-      content: (
-        <AddressFormModal
-          title={title}
-          initialValues={defaultValues}
-          disableDefaultToggle={!addr && (target === "sender" ? shopAddresses.length === 0 : customerAddresses.length === 0)}
-          onClose={() => { hide(); setAddrFormTarget(null); setEditingAddr(null); }}
-          onSave={async (vals) => { await handleSaveAddress(vals, target, addr ?? null); hide(); }}
-        />
-      ),
+    setForm({
+      title,
+      initialValues: defaultValues,
+      disableDefaultToggle: !addr && (target === "sender" ? shopAddresses.length === 0 : customerAddresses.length === 0),
+      onSave: async (vals: AddrFormValues) => { await handleSaveAddress(vals, target, addr ?? null); },
+      onClose: () => { setAddrFormTarget(null); setEditingAddr(null); },
     });
+    router.push("/order-detail/create-shipment/address-form");
   };
 
   const openSenderSheet = () => {
-    show({
-      content: (
-        <AddressPickerSheet
-          title="Chọn người gửi"
-          addresses={shopAddresses}
-          selectedId={selectedSender?.id}
-          loading={isLoadingSender}
-          onClose={hide}
-          onSelect={(addr) => { setSelectedSender(addr); hide(); }}
-          onAddPress={() => { hide(); setTimeout(() => openAddressForm("sender"), 350); }}
-          onEditPress={(addr) => { hide(); setTimeout(() => openAddressForm("sender", addr), 350); }}
-          onDeletePress={(addr) => handleDeleteAddress("sender", addr)}
-        />
-      ),
+    setPicker({
+      title: "Chọn người gửi",
+      addresses: shopAddresses,
+      selectedId: selectedSender?.id,
+      loading: isLoadingSender,
+      onSelect: (addr) => { setSelectedSender(addr as typeof shopAddresses[0]); },
+      onAddPress: () => { router.back(); setTimeout(() => openAddressForm("sender"), 100); },
+      onEditPress: (addr) => { router.back(); setTimeout(() => openAddressForm("sender", addr as typeof shopAddresses[0]), 100); },
     });
+    router.push("/order-detail/create-shipment/address-picker");
   };
 
   const openRecipientSheet = () => {
-    show({
-      content: (
-        <AddressPickerSheet
-          title="Chọn người nhận"
-          addresses={customerAddresses}
-          selectedId={selectedRecipient?.id}
-          loading={isLoadingRecipient}
-          onClose={hide}
-          onSelect={(addr) => { handleSelectRecipient(addr); hide(); }}
-          onAddPress={() => { hide(); setTimeout(() => openAddressForm("recipient"), 350); }}
-          onEditPress={(addr) => { hide(); setTimeout(() => openAddressForm("recipient", addr), 350); }}
-          onDeletePress={(addr) => handleDeleteAddress("recipient", addr)}
-        />
-      ),
+    setPicker({
+      title: "Chọn người nhận",
+      addresses: customerAddresses,
+      selectedId: selectedRecipient?.id,
+      loading: isLoadingRecipient,
+      onSelect: (addr) => { handleSelectRecipient(addr as typeof customerAddresses[0]); },
+      onAddPress: () => { router.back(); setTimeout(() => openAddressForm("recipient"), 100); },
+      onEditPress: (addr) => { router.back(); setTimeout(() => openAddressForm("recipient", addr as typeof customerAddresses[0]), 100); },
     });
+    router.push("/order-detail/create-shipment/address-picker");
   };
 
   const openDimensions = () => {
@@ -372,7 +359,12 @@ export default function CreateShipmentScreen() {
             },
           ]}
         >
-          {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>Tạo vận đơn</Text>}
+          {isSubmitting ? <ActivityIndicator color="#fff" /> : (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon name="truck" size={18} tintColor="white" />
+              <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>Tạo vận đơn</Text>
+            </View>
+          )}
         </Pressable>
       </View>
 

@@ -30,6 +30,7 @@ type ShippingAddressModalProps = {
   setFormError: (error: string | null) => void;
   setGeoPicker: (picker: GeoPickerState) => void;
   setUseOldAddressFormat: (updater: (current: boolean) => boolean) => void;
+  variant?: "sheet" | "page";
 };
 
 export function ShippingAddressModal({
@@ -48,11 +49,12 @@ export function ShippingAddressModal({
   setFormError,
   setGeoPicker,
   setUseOldAddressFormat,
+  variant = "sheet",
 }: ShippingAddressModalProps) {
   const { control, formState: { errors, isValid, dirtyFields } } = form;
 
   return (
-    <View style={styles.modalCard}>
+    <View style={[styles.modalCard, variant === "page" && styles.modalPageCard]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{editingAddress ? "Sửa địa chỉ kho" : "Thêm địa chỉ kho"}</Text>
             <Pressable onPress={onClose} style={styles.modalCloseButton}>

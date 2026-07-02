@@ -1,4 +1,5 @@
 import { LinearGradient } from "@components/linear-gradient";
+import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { icons } from "@assets/icons";
 import { images } from "@assets/images";
 import { useAuth } from "@features/auth/hooks/use-auth";
@@ -9,6 +10,7 @@ import {
   ImageSourcePropType,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -72,6 +74,10 @@ export default function SettingsTab() {
             style={styles.heroImage}
           />
           <View style={styles.heroOverlay} />
+          <ExpoLinearGradient
+            colors={["rgba(255,255,255,0)", "#fff"]}
+            style={styles.heroFade}
+          />
 
           <View style={styles.topBar}>
             <Text style={styles.title}>Hồ sơ</Text>
@@ -121,36 +127,32 @@ export default function SettingsTab() {
 
           <View style={styles.settingsContainer}>
             {settingGroups.map((group, groupIndex) => (
-              <View key={groupIndex} style={styles.settingsGroupWrap}>
-                <View style={styles.settingsGroup}>
-                  {group.map((item) => (
+              <View key={groupIndex} style={styles.settingsGroup}>
+                {group.map((item, itemIndex) => (
+                  <View key={item.label}>
+                    {itemIndex > 0 && <View style={styles.itemDivider} />}
                     <SettingItem
-                      key={item.label}
                       icon={item.icon}
                       label={item.label}
                       onPress={item.onPress}
                     />
-                  ))}
-                </View>
-                <View style={styles.divider} />
+                  </View>
+                ))}
               </View>
             ))}
-            <Pressable
-              style={styles.settingItem}
-              onPress={logout}
-            >
-              <View style={styles.settingLeft}>
-                <View style={styles.settingIconBox}>
+            <View style={styles.settingsGroup}>
+              <Pressable style={styles.settingItem} onPress={logout}>
+                <View style={styles.settingLeft}>
                   <Image
                     source={icons.disconnect}
                     style={styles.settingIcon}
                     resizeMode="contain"
                   />
+                  <Text style={styles.settingText}>Đăng xuất</Text>
                 </View>
-                <Text style={styles.settingText}>Đăng xuất</Text>
-              </View>
-              <Text style={styles.chevron}>›</Text>
-            </Pressable>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -175,27 +177,23 @@ function SettingItem({
   label: string;
   onPress?: () => void;
 }) {
+  const inner = (
+    <View style={styles.settingLeft}>
+      <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
+      <Text style={styles.settingText}>{label}</Text>
+    </View>
+  );
   if (!onPress) {
     return (
       <View style={styles.settingItem}>
-        <View style={styles.settingLeft}>
-          <View style={styles.settingIconBox}>
-            <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
-          </View>
-          <Text style={styles.settingText}>{label}</Text>
-        </View>
+        {inner}
         <Text style={styles.chevron}>›</Text>
       </View>
     );
   }
   return (
     <Pressable style={styles.settingItem} onPress={onPress}>
-      <View style={styles.settingLeft}>
-        <View style={styles.settingIconBox}>
-          <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
-        </View>
-        <Text style={styles.settingText}>{label}</Text>
-      </View>
+      {inner}
       <Text style={styles.chevron}>›</Text>
     </Pressable>
   );
@@ -210,7 +208,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     paddingBottom: 40,
   },
   hero: {
-    minHeight: 360,
+    minHeight: 400,
     overflow: "hidden",
   },
   heroImage: {
@@ -227,7 +225,14 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     left: 0,
     right: 0,
     height: 400,
-    backgroundColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  heroFade: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 96,
   },
   topBar: {
     paddingHorizontal: 16,
@@ -263,13 +268,13 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 8,
+    gap: 16,
   },
   avatarWrap: {
     width: 98,
     height: 98,
     borderRadius: 49,
     overflow: "hidden",
-    marginBottom: 16,
     backgroundColor: colors.neutral50,
   },
   avatar: {
@@ -358,13 +363,13 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   upgradeButton: {
     minWidth: 120,
-    height: 44,
+    height: 40,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
   },
   upgradeText: {
-    color: colors.neutral100,
+    color: colors.neutral900,
     ...textPresets.fs14_500,
   },
   tiktokCard: {
@@ -441,23 +446,19 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     ...textPresets.fs11_400,
   },
   settingsContainer: {
-    marginTop: 16,
-    gap: 12,
-  },
-  settingsGroupWrap: {
     gap: 12,
   },
   settingsGroup: {
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: "hidden",
     backgroundColor: colors.neutral100,
   },
-  divider: {
-    height: 1,
+  itemDivider: {
+    height: StyleSheet.hairlineWidth,
     backgroundColor: colors.border10,
+    marginLeft: 16 + 24 + 16,
   },
   settingItem: {
-    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -468,23 +469,15 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   settingLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-  },
-  settingIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.neutral50,
+    gap: 16,
   },
   settingIcon: {
-    width: 18,
-    height: 18,
+    width: 24,
+    height: 24,
   },
   settingText: {
     color: colors.neutral900,
-    ...textPresets.fs14_500,
+    ...textPresets.fs14_400,
   },
   chevron: {
     color: colors.neutral400,

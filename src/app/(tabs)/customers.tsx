@@ -1,4 +1,6 @@
 import { Avatar } from "@components/avatar";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { CustomerDetailSheet } from "@components/customer-detail-sheet";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
 import { Screen } from "@components/screen";
@@ -9,7 +11,6 @@ import {
 } from "@features/orders/hooks/use-order-manager";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { createStyles } from "@utils/createStyles";
-import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -40,6 +41,7 @@ function TikTokMark() {
 export default function CustomersTab() {
   const [activeTab, setActiveTab] = useState<CustomerTab>("all");
   const { top } = useSafeAreaInsets();
+  const { show } = useBottomSheet();
   const { comments, currentLiveSessionId } = useTikTokLiveSocketContext();
   const { user } = useAuth();
 
@@ -147,12 +149,7 @@ export default function CustomersTab() {
               return (
                 <View key={customerKey}>
                   <Pressable
-                    onPress={() =>
-                      router.push({
-                        pathname: "/customer-detail",
-                        params: { customerKey },
-                      })
-                    }
+                    onPress={() => show({ content: <CustomerDetailSheet customerKey={customerKey} />, showDragIndicator: true, snapPoints: ["96%"] })}
                     style={styles.row}
                   >
                     <Avatar

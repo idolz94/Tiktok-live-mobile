@@ -1,11 +1,12 @@
 import { Linking, Pressable, Text, View } from "react-native";
 import { Avatar } from "@components/avatar";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { CustomerDetailSheet } from "@components/customer-detail-sheet";
 import { Icon } from "@components/icon";
 import { OrderWithTikTok } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
 import { Section } from "./OrderDetailPrimitives";
 import { useCallback } from "react";
-import { router } from "expo-router";
 import type { CustomerAddress } from "@app/order-detail/create-shipment/create-shipment-api";
 
 type OrderDetailCustomerSectionProps = {
@@ -22,6 +23,8 @@ function formatCustomerAddress(addr: CustomerAddress): string {
 }
 
 export function OrderDetailCustomerSection({ order, displayName, customerDefaultAddress, onTikTok }: OrderDetailCustomerSectionProps) {
+  const { show } = useBottomSheet();
+
   const handlePhone = useCallback(() => {
     if (!order.customerPhone) return;
     Linking.openURL(`tel:${order.customerPhone}`);
@@ -29,8 +32,8 @@ export function OrderDetailCustomerSection({ order, displayName, customerDefault
 
   const handlePressAvatar = useCallback(() => {
     const customerKey = order.customerTikTokUsername || order.username;
-    if (customerKey) router.push({ pathname: "/customer-detail", params: { customerKey } });
-  }, [order.customerTikTokUsername, order.username]);
+    if (customerKey) show({ content: <CustomerDetailSheet customerKey={customerKey} />, showDragIndicator: true, snapPoints: ["92%"] });
+  }, [order.customerTikTokUsername, order.username, show]);
 
   const handleZalo = useCallback(() => {
     if (!order.customerPhone) return;

@@ -17,6 +17,7 @@ export const icons = {
   more: require("./sources/more-icon.png"),
   king: require("./sources/king.png"),
   print: require("./sources/print-icon.png"),
+  receipt: require("./sources/receipt.png"),
 };
 
 export type IconsTypes = keyof typeof icons;

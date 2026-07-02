@@ -244,6 +244,9 @@ export const OrderDetail = memo(() => {
               <OrderDetailFooterActions
                 onPrint={() => {}}
                 onShare={() => {}}
+                onConfirm={() => { void detail.handleToggleConfirm(); }}
+                isConfirmed={detail.order.status === "confirmed"}
+                confirmLoading={detail.confirmLoading}
               />
             </ScrollView>
             <OrderDetailShipBar

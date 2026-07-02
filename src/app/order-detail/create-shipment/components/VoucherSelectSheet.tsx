@@ -39,7 +39,6 @@ export function VoucherSelectSheet({ vouchers, loading, error, selectedCode, onS
 
   return (
     <View style={[vStyles.sheet, { backgroundColor: colors.surface }]}>
-      <View style={[vStyles.handle, { backgroundColor: colors.neutral300 }]} />
       <View style={vStyles.header}>
         <Text style={[{ color: colors.neutral900 }, textPresets.fs18_500]}>Chọn Voucher SPX</Text>
         <Pressable onPress={onClose} hitSlop={12}>
@@ -142,14 +141,6 @@ const vStyles = createStyles(() => ({
     paddingBottom: 32,
     maxHeight: 560,
     overflow: "hidden" as const,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: "center" as const,
-    marginTop: 12,
-    marginBottom: 12,
   },
   header: {
     flexDirection: "row" as const,

@@ -6,8 +6,8 @@ export function usePhoneField(initial = "") {
   const [phoneError, setPhoneError] = useState("");
 
   const setPhone = (v: string) => {
-    setPhoneError("");
     setPhoneRaw(v);
+    setPhoneError(validatePhoneVN(v));
   };
 
   const validate = () => {

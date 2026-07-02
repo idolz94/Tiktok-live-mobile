@@ -66,7 +66,8 @@ export function OrderDetailShipBar({
 const styles = createStyles(({ colors, textPresets }) => ({
   bottomBar: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 28,
     backgroundColor: colors.neutral100,
     borderTopWidth: 1,
     flexDirection: "row",

@@ -14,7 +14,6 @@ import { createStyles } from "@utils/createStyles";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { GeoPickerSheet } from "@components/geo-picker";
 import { Icon } from "@components/icon";
-import { useBottomSheet } from "@components/bottom-sheet/hook";
 import {
   fetchProvinces,
   getWards,
@@ -68,11 +67,6 @@ export function AddressFormModal({
   const province = watch("province");
   const ward = watch("ward");
   const isDefault = watch("isDefault");
-
-  const { isVisible } = useBottomSheet();
-  useEffect(() => {
-    if (!isVisible) setGeoPicker(null);
-  }, [isVisible]);
 
   useEffect(() => {
     reset({
@@ -283,14 +277,11 @@ const formFieldStyles = createStyles(() => ({
 
 const formModalStyles = createStyles(() => ({
   sheet: {
-    maxHeight: "88%",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
-    overflow: "hidden" as const,
   },
   sheetHeader: {
     flexDirection: "row" as const,
@@ -317,7 +308,7 @@ const formModalStyles = createStyles(() => ({
     fontSize: 24,
     lineHeight: 28,
   },
-  scrollView: { flexGrow: 0 },
+  scrollView: { flex: 1 },
   scrollContent: {
     paddingTop: 20,
     paddingBottom: 16,

@@ -1,16 +1,18 @@
 import { Order } from "@app-types/index";
 import { images } from "@assets/images";
 import { Avatar } from "@components/avatar";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Button } from "@components/button";
+import { CustomerDetailSheet } from "@components/customer-detail-sheet";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { router } from "expo-router";
 import { memo, useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
-import { router } from "expo-router";
 
 interface OrderItemProps {
   item: Order;
@@ -26,6 +28,7 @@ function createDisplayCode(orderCode: string) {
 export const OrderItem = memo(
   ({ item, depositLoading = false, onToggleDeposit }: OrderItemProps) => {
     const { colors } = useThemes();
+    const { show } = useBottomSheet();
 
   const products = item.products?.length ? item.products : [];
   const total = item.subtotalAmount || getOrderTotal(products);
@@ -38,8 +41,8 @@ export const OrderItem = memo(
     }, [item.id, onToggleDeposit]);
   const onPressAvatar = useCallback(() => {
     const customerKey = item.customerTikTokUsername || item.username;
-    if (customerKey) router.push({ pathname: "/customer-detail", params: { customerKey } });
-  }, [item.customerTikTokUsername, item.username]);
+    if (customerKey) show({ content: <CustomerDetailSheet customerKey={customerKey} />, showDragIndicator: true, snapPoints: ["92%"] });
+  }, [item.customerTikTokUsername, item.username, show]);
   const onOpenOrderOverview = useCallback(() => {
     router.push({
       pathname: "/order-detail",

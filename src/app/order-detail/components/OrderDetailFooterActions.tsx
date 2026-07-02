@@ -1,53 +1,82 @@
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Icon } from "@components/icon";
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { Section } from "./OrderDetailPrimitives";
 
 type OrderDetailFooterActionsProps = {
   onPrint: () => void;
   onShare: () => void;
+  onConfirm: () => void;
+  isConfirmed: boolean;
+  confirmLoading?: boolean;
 };
 
 export function OrderDetailFooterActions({
   onPrint,
   onShare,
+  onConfirm,
+  isConfirmed,
+  confirmLoading,
 }: OrderDetailFooterActionsProps) {
+  const { colors, textPresets } = useThemes();
+
+  const buttons = [
+    { label: "In đơn", icon: "print" as const, onPress: onPrint },
+    {
+      label: isConfirmed ? "Bỏ chốt" : "Chốt đơn",
+      icon: "clipboard_check" as const,
+      onPress: onConfirm,
+      loading: confirmLoading,
+      active: isConfirmed,
+    },
+    { label: "Chia sẻ hóa đơn", icon: "receipt" as const, onPress: onShare },
+  ];
+
   return (
-    <Section>
-      <View style={styles.footerActions}>
-        <Pressable style={styles.printBtn} onPress={onPrint}>
-          <Icon name="print" size={20} tintColor="neutral100" />
-          <Text style={styles.printBtnText}>IN ĐƠN</Text>
+    <View style={styles.row}>
+      {buttons.map((btn) => (
+        <Pressable key={btn.label} style={styles.item} onPress={btn.onPress} disabled={btn.loading}>
+          <View
+            style={[
+              styles.iconCircle,
+              { backgroundColor: btn.active ? colors.primaryLight : colors.neutral50 },
+            ]}
+          >
+            {btn.loading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Icon name={btn.icon} size={24} tintColor={btn.active ? "primary" : "neutral700"} />
+            )}
+          </View>
+          <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+            {btn.label}
+          </Text>
         </Pressable>
-        <Pressable style={styles.shareBtn} onPress={onShare}>
-          <Icon name="more" size={20} tintColor="neutral100" />
-          <Text style={styles.shareBtnText}>CHIA SẺ HOÁ ĐƠN</Text>
-        </Pressable>
-      </View>
-    </Section>
+      ))}
+    </View>
   );
 }
 
 const styles = createStyles(() => ({
-  footerActions: { rowGap: 12 },
-  printBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    columnGap: 8,
-    paddingVertical: 14,
-    borderRadius: 40,
-    backgroundColor: "#22c55e",
+  row: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
-  printBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" as const },
-  shareBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    columnGap: 8,
-    paddingVertical: 14,
-    borderRadius: 40,
-    backgroundColor: "#3b82f6",
+  item: {
+    flex: 1,
+    alignItems: "center" as const,
+    gap: 8,
   },
-  shareBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" as const },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 999,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  label: {
+    textAlign: "center" as const,
+  },
 }));
