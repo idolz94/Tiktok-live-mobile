@@ -7,7 +7,7 @@ import { OrderWithTikTok } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
 import { Section } from "./OrderDetailPrimitives";
 import { useCallback } from "react";
-import type { CustomerAddress } from "@app/order-detail/create-shipment/create-shipment-api";
+import type { CustomerAddress } from "@features/orders/create-shipment/lib/create-shipment-api";
 
 type OrderDetailCustomerSectionProps = {
   order: OrderWithTikTok;
