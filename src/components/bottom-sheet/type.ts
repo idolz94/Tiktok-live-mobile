@@ -1,5 +1,8 @@
-import { ReactNode } from "react";
+import { ReactNode, RefObject } from "react";
 import { StyleProp, ViewStyle } from "react-native";
+import { type BottomSheetMethods } from "@expo/ui/community/bottom-sheet";
+
+export type BottomSheetId = string;
 
 export type BottomSheetOptions = {
   content: ReactNode;
@@ -16,12 +19,36 @@ export type BottomSheetOptions = {
   onDismiss?: () => void;
 };
 
+export type BottomSheetEntry = BottomSheetOptions & {
+  id: BottomSheetId;
+  sheetRef: RefObject<BottomSheetMethods | null>;
+};
+
+export type BottomSheetDisplayEntry = BottomSheetEntry & { open: boolean };
+
+export type BottomSheetUpdate = {
+  (options: Partial<BottomSheetOptions>): void;
+  (id: BottomSheetId, options: Partial<BottomSheetOptions>): void;
+};
+
 export type BottomSheetContextType = {
-  show: (options: BottomSheetOptions) => void;
+  push: (options: BottomSheetOptions) => BottomSheetId;
 
-  hide: () => void;
+  pop: (id?: BottomSheetId) => void;
 
-  update: (options: Partial<BottomSheetOptions>) => void;
+  replace: (options: BottomSheetOptions, id?: BottomSheetId) => BottomSheetId;
+
+  dismissAll: () => void;
+
+  update: BottomSheetUpdate;
+
+  peek: () => BottomSheetEntry | undefined;
+
+  show: (options: BottomSheetOptions) => BottomSheetId;
+
+  hide: (id?: BottomSheetId) => void;
+
+  hideAll: () => void;
 
   isVisible: boolean;
 };
