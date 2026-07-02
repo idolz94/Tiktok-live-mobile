@@ -27,12 +27,30 @@ type DisabledProviderConfig = {
 };
 
 const CONNECTED: ProviderConfig[] = [
-  { id: "manual", label: "Vận chuyển thủ công", initial: "M", color: "#2ca87b", connected: true },
-  { id: "spx", label: "Shopee Express", initial: "S", color: "#ffb000", connected: true },
+  {
+    id: "manual",
+    label: "Vận chuyển thủ công",
+    initial: "M",
+    color: "#2ca87b",
+    connected: true,
+  },
+  {
+    id: "spx",
+    label: "Shopee Express",
+    initial: "S",
+    color: "#ffb000",
+    connected: true,
+  },
 ];
 
 const COMING: DisabledProviderConfig[] = [
-  { id: "viettelpost", label: "Viettel Post", initial: "V", color: "#cc0000", connected: false },
+  {
+    id: "viettelpost",
+    label: "Viettel Post",
+    initial: "V",
+    color: "#cc0000",
+    connected: false,
+  },
 ];
 
 export function ShippingProviderSheet({ selected, onClose, onSelect }: Props) {
@@ -40,56 +58,79 @@ export function ShippingProviderSheet({ selected, onClose, onSelect }: Props) {
 
   return (
     <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
-        <View style={styles.dragHandle} />
-        <Text style={[styles.title, { color: colors.neutral900 }]}>Phương thức vận chuyển</Text>
+      <Text style={[styles.title, { color: colors.neutral900 }]}>
+        Phương thức vận chuyển
+      </Text>
 
-        <Text style={[styles.sectionLabel, { color: colors.neutral400 }]}>Đã kết nối</Text>
-        {CONNECTED.map((p) => {
-          const isSelected = p.id === selected;
-          return (
-            <Pressable
-              key={p.id}
-              style={[styles.row, { borderColor: colors.border10 }]}
-              onPress={() => {
-                onSelect(p.id);
-                onClose();
-              }}
-            >
-              <View style={[styles.avatar, { backgroundColor: p.color }]}>
-                <Text style={styles.avatarText}>{p.initial}</Text>
-              </View>
-              <Text style={[styles.rowLabel, { color: colors.neutral900 }]}>{p.label}</Text>
-              {isSelected && (
-                <View style={[styles.checkCircle, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.checkMark}>✓</Text>
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
-
-        <Text style={[styles.sectionLabel, { color: colors.neutral400, marginTop: 8 }]}>
-          Chưa kết nối
-        </Text>
-        {COMING.map((p) => (
-          <View
+      <Text style={[styles.sectionLabel, { color: colors.neutral400 }]}>
+        Đã kết nối
+      </Text>
+      {CONNECTED.map((p) => {
+        const isSelected = p.id === selected;
+        return (
+          <Pressable
             key={p.id}
-            style={[styles.row, styles.rowDisabled, { borderColor: colors.border10 }]}
+            style={[styles.row, { borderColor: colors.border10 }]}
+            onPress={() => {
+              onSelect(p.id);
+              onClose();
+            }}
           >
             <View style={[styles.avatar, { backgroundColor: p.color }]}>
               <Text style={styles.avatarText}>{p.initial}</Text>
             </View>
-            <Text style={[styles.rowLabel, { color: colors.neutral400 }]}>{p.label}</Text>
-          </View>
-        ))}
+            <Text style={[styles.rowLabel, { color: colors.neutral900 }]}>
+              {p.label}
+            </Text>
+            {isSelected && (
+              <View
+                style={[
+                  styles.checkCircle,
+                  { backgroundColor: colors.primary },
+                ]}
+              >
+                <Text style={styles.checkMark}>✓</Text>
+              </View>
+            )}
+          </Pressable>
+        );
+      })}
 
-        <Pressable
-          style={[styles.cancelBtn, { borderColor: colors.border10 }]}
-          onPress={onClose}
+      <Text
+        style={[
+          styles.sectionLabel,
+          { color: colors.neutral400, marginTop: 8 },
+        ]}
+      >
+        Chưa kết nối
+      </Text>
+      {COMING.map((p) => (
+        <View
+          key={p.id}
+          style={[
+            styles.row,
+            styles.rowDisabled,
+            { borderColor: colors.border10 },
+          ]}
         >
-          <Text style={[styles.cancelText, { color: colors.neutral500 }]}>Huỷ</Text>
-        </Pressable>
-      </View>
+          <View style={[styles.avatar, { backgroundColor: p.color }]}>
+            <Text style={styles.avatarText}>{p.initial}</Text>
+          </View>
+          <Text style={[styles.rowLabel, { color: colors.neutral400 }]}>
+            {p.label}
+          </Text>
+        </View>
+      ))}
+
+      <Pressable
+        style={[styles.cancelBtn, { borderColor: colors.border10 }]}
+        onPress={onClose}
+      >
+        <Text style={[styles.cancelText, { color: colors.neutral500 }]}>
+          Huỷ
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -101,14 +142,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     paddingBottom: 36,
     paddingTop: 12,
     rowGap: 8,
-  },
-  dragHandle: {
-    alignSelf: "center",
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.neutral300,
-    marginBottom: 8,
   },
   title: { ...textPresets.fs16_600, marginBottom: 4 },
   sectionLabel: { ...textPresets.fs12_500, marginBottom: 2 },
