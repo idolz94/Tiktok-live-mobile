@@ -1,5 +1,5 @@
 import { ShopAddress } from "@features/settings/service/shop-addresses-api";
-import { formatShopAddress } from "@features/settings/hooks/shipping-address-form.schema";
+import { formatShopAddress } from "@features/settings/schemas/shipping-address-form-schema";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 

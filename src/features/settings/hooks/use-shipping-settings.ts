@@ -13,7 +13,7 @@ import {
   addressFormSchema,
   buildAddressPayload,
   emptyAddressForm,
-} from "./shipping-address-form.schema";
+} from "../schemas/shipping-address-form-schema";
 import { useShippingGeoPicker } from "./use-shipping-geo-picker";
 
 export function useShippingSettings(opts?: { afterSave?: () => void }) {

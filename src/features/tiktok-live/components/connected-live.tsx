@@ -5,7 +5,7 @@ import { memo, useCallback } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { ConnectedLiveProps } from "../types/types";
 import { CommentCardItem } from "./comment-card-item";
-import { useConnectedLive } from "./use-connected-live";
+import { useConnectedLive } from "../hooks/use-connected-live";
 
 export const ConnectedLive = memo(
   (props: ConnectedLiveProps) => {

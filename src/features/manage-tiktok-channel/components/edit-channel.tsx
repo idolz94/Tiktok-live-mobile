@@ -4,7 +4,7 @@ import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { useEditChannel } from "./use-edit-channel";
+import { useEditChannel } from "../use-edit-channel";
 
 type Props = {
   title: string;

@@ -1,6 +1,6 @@
 import { getProvinces, getWards, VnGeoItem } from "@features/settings/service/vn-geo";
 import { useState } from "react";
-import { GeoPickerState } from "./shipping-address-form.schema";
+import { GeoPickerState } from "../schemas/shipping-address-form-schema";
 
 type UseShippingGeoPickerParams = {
   province: string;

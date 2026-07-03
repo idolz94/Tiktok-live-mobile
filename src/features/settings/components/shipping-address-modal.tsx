@@ -1,7 +1,7 @@
 import { GeoPickerSheet } from "@components/geo-picker";
 import { ShopAddress } from "@features/settings/service/shop-addresses-api";
 import { VnGeoItem } from "@features/settings/service/vn-geo";
-import { AddressForm, GeoPickerState } from "@features/settings/hooks/shipping-address-form.schema";
+import { AddressForm, GeoPickerState } from "@features/settings/schemas/shipping-address-form-schema";
 import { Controller, UseFormReturn } from "react-hook-form";
 import {
   ActivityIndicator,
