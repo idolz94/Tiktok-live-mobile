@@ -80,32 +80,41 @@ Do not create alternative ownership models without explicit approval.
 
 ## 4. Repository structure
 
+Kiến trúc: **route mỏng + feature module dày** (chi tiết đầy đủ trong `PROJECT_GUIDE.md`).
+
+```text
+src/app → src/features → src/components, src/utils, src/types, src/themes
+```
+
 Important directories:
 
-- `src/app/` — Expo Router routes and layouts
-- `src/modules/` — domain modules
-- `src/features/` — feature-oriented code when already used
-- `src/components/` — reusable UI components
-- `src/stores/` — Zustand stores and store utilities
-- `src/hooks/` — shared hooks
+- `src/app/` — Expo Router routes and layouts (chỉ routing, không business logic)
+- `src/features/` — feature-oriented code theo từng nghiệp vụ (source of truth cho business logic, UI, hook, service, store, type)
+- `src/components/` — reusable UI components dùng ở nhiều feature
+- `src/stores/` — barrel export cho Zustand stores (store thực tế sống trong feature)
+- `src/hooks/` — shared hooks dùng ở nhiều feature
 - `src/utils/` — HTTP, storage, formatting, mapping, and helper utilities
 - `src/themes/` — colors, typography, shadows, theme types
 - `src/constants/` — configuration and static constants
-- `src/assets/` — images and icons
-- `src/schemas/` — Zod validation schemas
+- `src/assets/` — images, icons, lotties
 - `src/types/` — shared TypeScript types
 - `declare/` — global declarations
 
-Current domain modules include:
+Feature hiện có (dưới `src/features/`):
 
-- `src/modules/auth/`
-- `src/modules/tiktok-live/`
-- `src/modules/orders/`
-- `src/modules/customers/`
+- `src/features/auth/`
+- `src/features/orders/`
+- `src/features/tiktok-live/`
+- `src/features/settings/`
+- `src/features/customers/`
+- `src/features/manage-tiktok-channel/`
+- `src/features/product-info/`
 
-If a feature already exists under `src/modules/`, keep it there unless there is an explicit migration plan.
+Mỗi feature tổ chức dọc: `screens/`, `components/`, `hooks/`, `service/`, `stores/`, `types/`, `schemas/`, `utils/`, `contexts/`, `constants.ts` — chỉ tạo folder khi thực sự cần. Feature nhỏ có thể đặt file phẳng ngay trong folder feature.
 
-Do not mix `modules` and `features` within the same domain without a clear reason.
+Zod validation schemas nằm trong `src/features/<feature>/schemas/`, không có `src/schemas/` chung.
+
+Không dùng `src/modules/`; toàn bộ domain code nằm trong `src/features/`. Không tạo kiến trúc song song.
 
 ## 5. General coding rules
 
@@ -157,14 +166,18 @@ Rules:
 
 Routing is controlled by Expo Router under `src/app/`.
 
-Main route groups:
+Main route groups (bản đồ route đầy đủ trong `PROJECT_GUIDE.md` mục 17):
 
 - `src/app/_layout.tsx` — root providers and global app behavior
 - `src/app/index.tsx` — initial redirect gate
 - `src/app/(auth)/` — public auth routes
-- `src/app/(tabs)/` — authenticated app routes
+- `src/app/(tabs)/` — authenticated app routes (index, customers, reports, settings, shipping)
 - `src/app/(sheets)/` — sheet/modal routes
-- `src/app/onboarding/` — onboarding flow
+- `src/app/order-detail/` — order detail + create-shipment flow
+- `src/app/manage-tiktok-channel/`, `src/app/license-expired/`, `src/app/onboarding/`, `src/app/splash/`
+- Route lẻ cấp cao: `printer-settings.tsx`, `product-info-setup.tsx`, `shipping-address-form.tsx`, `shipping-settings.tsx`
+
+Route file chỉ khai báo path + đọc params + guard, rồi render screen import từ `src/features/<feature>/screens/`.
 
 Rules:
 
@@ -207,8 +220,8 @@ Rules:
 Relevant areas:
 
 ```text
-src/modules/auth/
-src/stores/auth/
+src/features/auth/
+src/features/auth/stores/
 src/utils/http/
 src/utils/storage/secure-store.ts
 ```
@@ -239,9 +252,10 @@ Any stale Supabase-related variables should be removed from project guidance onc
 TikTok live code lives mainly under:
 
 ```text
-src/modules/tiktok-live/
-src/contexts/tiktok-live-socket.tsx
-src/utils/comment.ts
+src/features/tiktok-live/
+src/features/tiktok-live/contexts/tiktok-live-socket.tsx
+src/features/tiktok-live/utils/comment.ts
+src/utils/http/request-sse.ts
 ```
 
 High-level flow:
@@ -516,10 +530,12 @@ src/utils/createStyles.ts
 
 Rules:
 
-- Reuse design tokens and theme helpers.
-- Avoid one-off colors and spacing when an existing token exists.
+- Reuse design tokens (`colors`, `textPresets`) and theme helpers.
+- Avoid one-off colors and spacing when an existing token exists; không hardcode hex khi có token.
 - Avoid CSS modules and Tailwind-style web assumptions.
-- Prefer screen-specific style files or existing style factories for larger styles.
+- Dùng `createStyles(({ colors, textPresets }) => ...)` khai báo ở cuối cùng file `.tsx`; không tách ra file `*-styles.ts` riêng để import.
+- Không import `StyleSheet` từ `react-native` (trừ `StyleSheet.absoluteFill`); thay `StyleSheet.hairlineWidth` bằng `0.5`.
+- Ngoại lệ: style dùng chung bởi nhiều component có thể để một module `createStyles` riêng thay vì lặp lại trong từng file.
 - Keep dark/light appearance behavior consistent with the existing theme system.
 
 ## 20. Performance rules
@@ -638,7 +654,7 @@ Preserve these decisions unless the task explicitly changes them:
 When modifying this repository:
 
 1. Read the nearest relevant files before editing.
-2. Preserve established module boundaries.
+2. Preserve established feature boundaries.
 3. Keep changes scoped to the requested task.
 4. Do not introduce parallel architectures.
 5. Do not bypass existing services, hooks, stores, or mappers without a clear reason.
@@ -658,11 +674,11 @@ Follow these rules when modifying this project:
 2. Respect Expo Router conventions under `src/app/`; do not introduce manual navigation architecture unless explicitly requested.
 3. Use project aliases instead of deep relative imports.
 4. Keep `babel.config.js` and `tsconfig.json` aliases synchronized.
-5. Route auth changes through `use-auth.ts`, `auth-store.ts`, `auth-utils.ts`, and `modules/auth/services/api.ts` as appropriate.
+5. Route auth changes through `use-auth.ts`, `auth-store.ts`, `auth-utils.ts`, and `src/features/auth/services/api.ts` as appropriate.
 6. Do not hardcode access tokens, refresh tokens, API URLs, app keys, or user secrets.
 7. Preserve SecureStore for tokens and MMKV/Zustand for user/session UI state.
 8. When changing session-expired behavior, keep the root-level alert pattern and avoid duplicate feature-level alerts.
-9. When changing live/SSE behavior, reuse existing services and hooks in `src/modules/tiktok-live/` and `src/utils/http/request-sse.ts`.
+9. When changing live/SSE behavior, reuse existing services and hooks in `src/features/tiktok-live/` and `src/utils/http/request-sse.ts`.
 10. When changing route guards, verify `src/app/_layout.tsx`, `src/app/index.tsx`, `src/app/(auth)/_layout.tsx`, and `src/app/(tabs)/_layout.tsx` together.
 11. When changing persisted state shapes, review migrations and old storage keys before removing compatibility logic.
 12. Run `npm run typecheck` after TypeScript changes when practical.

@@ -1,3 +1,18 @@
+# AGENTS — Lumi Mobile
+
+React Native / Expo frontend. Trước khi sửa code, đọc:
+
+- `CLAUDE.md` — architectural constraints, business rules, high-risk areas.
+- `PROJECT_GUIDE.md` — source structure, naming conventions, feature layout.
+
+Tóm tắt cấu trúc (chi tiết trong `PROJECT_GUIDE.md`):
+
+- Kiến trúc route mỏng + feature dày: `src/app/` (Expo Router) chỉ routing; business code trong `src/features/<feature>/` (`screens/`, `components/`, `hooks/`, `service/`, `stores/`, `types/`, `schemas/`, `utils/`, `contexts/`).
+- Không dùng `src/modules/`. File/folder kebab-case; component PascalCase; hook `use-*`.
+- Route file `export default`; ngoài `src/app/` dùng named export.
+- Import xuyên feature dùng alias (`@features/*`, `@components/*`, `@utils/*`...); nội bộ feature dùng relative.
+- Style bằng `createStyles(({ colors, textPresets }) => ...)` ở cuối file `.tsx`; không tách file style riêng; không hardcode hex khi có token.
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 

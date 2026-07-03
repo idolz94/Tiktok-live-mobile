@@ -458,3 +458,169 @@ features/orders/
 | Hook trong components/ | Sai vị trí | Chuyển về `features/<feature>/hooks/` |
 | Type trong components/ | Sai vị trí | Chuyển về `features/<feature>/types/` |
 | Style file riêng | Không tuân thủ | Viết `createStyles` trong cùng file `.tsx` |
+
+---
+
+## 16. Danh sách feature hiện có
+
+Workspace `src/features/` hiện có 7 feature. `orders` (mục 14) là feature chuẩn nhất; các feature còn lại tổ chức theo cùng nguyên tắc nhưng chỉ tạo folder khi thực sự cần.
+
+| Feature | Vai trò | Folder chính hiện có |
+|---------|---------|----------------------|
+| `auth` | Đăng nhập, đăng ký, quên mật khẩu, license, bootstrap user | `components/`, `hooks/`, `schemas/`, `services/`, `stores/` |
+| `orders` | Danh sách đơn, chi tiết đơn, tạo vận đơn, SPX | `screens/`, `components/`, `hooks/`, `service/`, `stores/`, `types/`, `schemas/`, `utils/`, `constants.ts` |
+| `tiktok-live` | SSE live, comment realtime, live session | `components/`, `contexts/`, `hooks/`, `service/`, `types/`, `utils/`, `live-session-mapper.ts` |
+| `settings` | Cấu hình shop, địa chỉ, đối tác ship, máy in | `components/` (có `printer/`), `hooks/`, `service/`, `stores/`, `types/`, `constants.ts` |
+| `customers` | Mapping và API khách hàng | `service/`, `customer-mapper.ts` |
+| `manage-tiktok-channel` | Kết nối và chỉnh sửa kênh TikTok | `components/`, `index.tsx`, `type.ts`, `use-manage-tiktok-channel.ts` |
+| `product-info` | Cấu hình sản phẩm trước live | `use-product-info-setup.ts` |
+
+### Lưu ý về mức độ tuân thủ cấu trúc
+
+- `auth` dùng `services/` (số nhiều), các feature khác dùng `service/` (số ít). Mục 4 mô tả chuẩn là `service/`; giữ nguyên `auth/services/` cho tới khi có kế hoạch đổi tên đồng bộ.
+- `customers`, `product-info`, `manage-tiktok-channel` là feature nhỏ nên đặt file phẳng (mapper, hook, type) ngay trong folder feature thay vì tạo đủ các sub-folder. Chỉ nâng lên cấu trúc dọc đầy đủ khi feature lớn dần.
+- Feature nhỏ có thể để hook/type cạnh nhau (ví dụ `manage-tiktok-channel/type.ts`, `use-manage-tiktok-channel.ts`) — đây là ngoại lệ chấp nhận được cho feature một-vài file.
+
+---
+
+## 17. Bản đồ route thực tế (`src/app/`)
+
+Mục 3 mô tả quy tắc prefix; phần này liệt kê route đang có để tham chiếu.
+
+```text
+src/app/
+  _layout.tsx                 ← root providers, auth/live provider, global behavior
+  index.tsx                   ← redirect gate ban đầu
+  (auth)/                     ← route công khai
+    _layout.tsx
+    index.tsx
+  (tabs)/                     ← route sau khi đăng nhập (bottom tabs)
+    _layout.tsx
+    index.tsx                 ← tab live/trang chủ
+    customers.tsx
+    reports.tsx
+    settings.tsx
+    shipping.tsx
+  (sheets)/                   ← route dạng sheet/modal
+    _layout.tsx
+  order-detail/               ← luồng chi tiết đơn + tạo vận đơn
+    _layout.tsx
+    index.tsx
+    create-shipment/
+      index.tsx
+      address-form.tsx
+      address-picker.tsx
+  manage-tiktok-channel/
+    index.tsx
+  license-expired/
+    index.tsx
+  onboarding/
+    index.tsx
+  splash/
+    index.tsx
+  printer-settings.tsx        ← route lẻ cấp cao
+  product-info-setup.tsx
+  shipping-address-form.tsx
+  shipping-settings.tsx
+```
+
+Quy tắc bổ sung:
+- Route file chỉ khai báo path + đọc params + guard, rồi render screen import từ `features/`. Ví dụ `order-detail/index.tsx` render `OrderDetailScreen` từ `@features/orders/screens/order-detail`.
+- Khi sửa guard, review cùng lúc: `_layout.tsx`, `index.tsx`, `(auth)/_layout.tsx`, `(tabs)/_layout.tsx`.
+- Route lẻ cấp cao (`printer-settings.tsx`, `shipping-settings.tsx`, ...) là push screen ngoài tab, không thuộc group nào.
+
+---
+
+## 18. Nội dung thực tế các folder shared
+
+Bổ sung chi tiết cho mục 10. Đây là inventory hiện tại, không phải danh sách cố định — thêm file mới theo đúng nguyên tắc của từng folder.
+
+### `src/components/` — Shared UI
+
+Component dùng ở nhiều feature, mỗi component một folder. Cấu trúc nội bộ linh hoạt theo độ phức tạp: đơn giản chỉ cần `index.tsx`; phức tạp có thêm `type.ts`, `hooks/`, hoặc file phụ.
+
+```text
+components/
+  animated-error-text/  avatar/       bottom-sheet/   bottom-tab/
+  button/               customer-detail-sheet/          empty-state/
+  error-state/          geo-picker/   header/          home/
+  icon/                 image/        input/           linear-gradient/
+  money-display/        pulsing-dot/  screen/          separator/
+  skeleton/             status-chip/  toast/
+```
+
+- `bottom-sheet/` là hạ tầng sheet toàn app (`provider.tsx`, `hook.ts`, `context.ts`, `renderer.tsx`, `sheet.tsx`, `type.ts`) — dùng qua `useBottomSheet` (mục 12).
+- Component có props → tách `type.ts`; có logic riêng → tách `hooks/`.
+
+### `src/hooks/` — Shared hooks
+
+Hook dùng ở 2+ feature:
+
+```text
+hooks/
+  use-theme.ts            ← theme tokens
+  use-confirm-dialog.ts   ← dialog xác nhận dùng chung
+  use-phone-field.ts      ← xử lý field số điện thoại
+```
+
+### `src/utils/` — Shared utilities
+
+Hàm thuần và hạ tầng kỹ thuật, không biết domain:
+
+```text
+utils/
+  http/         ← axios.ts, api-error.ts, auth-session.ts, fetch-sse.ts, request-sse.ts, session-event.ts
+  storage/      ← secure-store.ts, mmkv.ts, helper.ts, constants.ts, index.ts
+  platform/     ← index.ts (platform helpers)
+  string/       ← index.ts (string helpers)
+  createStyles.ts   date.ts   emoji.ts   id.ts   tiktok.ts   validate-phone.ts
+```
+
+- Token/secret: chỉ qua `storage/secure-store.ts`.
+- UI/session state bền: `storage/mmkv.ts`.
+- SSE: qua `http/request-sse.ts` / `http/fetch-sse.ts`, không tạo kết nối SSE rời trong screen.
+
+### `src/stores/` — Barrel export
+
+`src/stores/index.ts` chỉ re-export store từ các feature (`@features/auth/stores`, `@features/settings/stores/printer-store`). Store thực tế sống trong feature, không định nghĩa store mới trực tiếp ở đây.
+
+### `src/types/` — Shared types
+
+Type dùng ở 2+ feature:
+
+```text
+types/
+  index.ts       ← AiStatus, CommentIntent, CommentPriorityLevel, Order... (union và view type dùng chung)
+  database.ts    ← shape dữ liệu từ backend (ShopTikTokChannel...)
+  payload.ts     ← payload SSE / API
+```
+
+### `src/themes/` & `src/constants/`
+
+```text
+themes/     ← colors.ts, typography.ts, shadow.ts, type.ts, index.ts
+constants/  ← config.ts (API URL, env config)
+```
+
+---
+
+## 19. Điểm lệch convention — đã dọn
+
+Các điểm lệch convention (mục 4, 6, 7) trước đây đã được xử lý:
+
+| File cũ | Vi phạm | Đã dọn |
+|---------|---------|--------|
+| `orders/create-shipment/components/PackageDimModal.tsx` | Tên PascalCase + folder lặp với `components/create-shipment/` | Xóa folder chết (file rỗng, không import); bản chuẩn `components/create-shipment/package-dim-modal.tsx` đang được dùng |
+| `settings/hooks/shipping-address-form.schema.ts` | Zod schema nằm trong `hooks/` | Chuyển sang `settings/schemas/shipping-address-form-schema.ts`, cập nhật 4 import |
+| `manage-tiktok-channel/components/use-edit-channel.ts` | Hook nằm trong `components/` | Chuyển ra root feature `manage-tiktok-channel/use-edit-channel.ts` (feature phẳng, cạnh `use-manage-tiktok-channel.ts`) |
+| `tiktok-live/components/use-connected-live.ts` | Hook nằm trong `components/` | Chuyển vào `tiktok-live/hooks/use-connected-live.ts` |
+
+### `settings/components/shipping-settings.styles.ts` — ngoại lệ style dùng chung
+
+File này **được 4 component dùng chung** (`shipping-address-section`, `shipping-partners-section`, `shipping-address-modal`, `shipping-address-form-fields`) nên giữ dạng một module thay vì inline vào từng `.tsx` (inline sẽ lặp ~254 dòng × 4). Đã dọn để đúng tinh thần mục 6:
+
+- Đổi `StyleSheet.create` → `createStyles(({ colors }) => ...)`.
+- Thay `StyleSheet.hairlineWidth` → `0.5` (giữ `StyleSheet.absoluteFill`).
+- Map các màu **khớp token tuyệt đối** sang `colors.*` (`neutral900/100/50/500/400`, `border10/20`).
+
+Các hex còn lại (`#ebb140` gold accent, `#ef4444`, `#d1d5db`...) **chưa có token khớp** nên giữ nguyên — không map ép để tránh lệch giao diện. Bổ sung token cho các màu này là một quyết định design-system riêng.
