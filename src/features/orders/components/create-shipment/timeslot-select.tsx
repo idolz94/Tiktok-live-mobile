@@ -45,13 +45,16 @@ export const TimeslotSelect = memo(
     }, [items, selectedKey]);
 
     const openSheet = useCallback(() => {
-      show({
+      // ponytail: sheetId assigned synchronously before close() can ever be called
+      let sheetId!: string;
+      const close = () => hide(sheetId);
+      sheetId = show({
         content: (
           <TimeslotSheetContent
             items={orderedItems}
             selectedKey={selectedKey}
             onSelect={onSelect}
-            onClose={hide}
+            onClose={close}
           />
         ),
         showDragIndicator: true,

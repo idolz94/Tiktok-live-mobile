@@ -246,14 +246,16 @@ export const OrderDetail = memo(() => {
                 remain={detail.remain}
                 isEditable={detail.order.status === "draft"}
                 onOpenProvider={() => {
-                  show({
+                  let id: string;
+                  const close = () => hide(id);
+                  id = show({
                     content: (
                       <ShippingProviderSheet
                         selected={selectedProvider}
-                        onClose={hide}
+                        onClose={close}
                         onSelect={(provider) => {
                           setSelectedProvider(provider);
-                          hide();
+                          close();
                         }}
                       />
                     ),

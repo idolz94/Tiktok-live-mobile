@@ -6,6 +6,7 @@ import type {
   PaymentSide,
   PickupOption,
   RefusalFee,
+  ServiceType,
   Transport,
   ViewCondition,
 } from "../types/shipment";
@@ -52,7 +53,7 @@ export function useShipmentForm({
     formatLocaleInput(String(order?.codAmount ?? orderTotal)),
   );
 
-  const serviceType = 1 as const;
+  const [serviceType, setServiceType] = useState<ServiceType>(1);
   const [collectType, setCollectType] = useState<CollectType>(1);
   const [pickupTimeRangeId, setPickupTimeRangeId] = useState<number | null>(null);
   const [pickupTimeKey, setPickupTimeKey] = useState<string | null>(null);
@@ -110,6 +111,7 @@ export function useShipmentForm({
     manualCodAmount,
     setManualCodAmount,
     serviceType,
+    setServiceType,
     collectType,
     setCollectType,
     pickupTimeRangeId,

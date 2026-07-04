@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -7,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
@@ -14,7 +16,6 @@ import { useBottomSheet } from "@components/bottom-sheet/hook";
 import {
   SectionBlock,
   FigmaAddressCard,
-  OptionChip,
   MoneyField,
   ShipmentInput,
   ShippingOptions,
@@ -22,11 +23,19 @@ import {
   SummaryRow,
 } from "@features/orders/components/create-shipment";
 import { PackageDimModal } from "@features/orders/components/create-shipment/package-dim-modal";
+import { ParcelInfoSheet } from "@features/orders/components/create-shipment/parcel-info-sheet";
 import { useAddressPageStore } from "@features/orders/stores/address-page-store";
 import { VoucherSelectSheet } from "@features/orders/components/create-shipment/voucher-select-sheet";
 import { formInitialValues } from "@features/orders/utils/shipment";
-import type { AddrFormValues } from "@features/orders/types/shipment";
+import type { AddrFormValues, PaymentSide } from "@features/orders/types/shipment";
 import { useCreateShipment } from "@features/orders/hooks/use-create-shipment";
+
+const dimIcons = {
+  length: require("../../../assets/images/dim-icons/length.png"),
+  width: require("../../../assets/images/dim-icons/width.png"),
+  height: require("../../../assets/images/dim-icons/height.png"),
+  weight: require("../../../assets/images/dim-icons/weight.png"),
+};
 
 export default function CreateShipmentScreen() {
   const { colors, textPresets } = useThemes();
@@ -35,7 +44,7 @@ export default function CreateShipmentScreen() {
     order,
     isManualProvider,
     isSpxProvider,
-    primaryProduct,
+    primaryProduct: _primaryProduct,
     displayQuantity,
     orderTotal,
     shopAddresses,
@@ -86,6 +95,8 @@ export default function CreateShipmentScreen() {
     submitState,
     handleRetryOutcomeUnknown,
     // SPX
+    serviceType,
+    setServiceType,
     collectType,
     setCollectType,
     pickupTimeRangeId,
@@ -205,7 +216,9 @@ export default function CreateShipmentScreen() {
   };
 
   const openDimensions = () => {
-    show({
+    let id: string;
+    const close = () => hide(id);
+    id = show({
       content: (
         <PackageDimModal
           dimLength={dimLength}
@@ -218,15 +231,51 @@ export default function CreateShipmentScreen() {
           onChangeDimHeight={setDimHeight}
           onChangeWeightInput={setWeightInput}
           onToggleAutoScale={() => setAutoScale((v) => !v)}
-          onClose={hide}
+          onClose={close}
         />
       ),
       showDragIndicator: false,
     });
   };
 
+  const openParcelSheet = () => {
+    let id: string;
+    const close = () => hide(id);
+    id = show({
+      content: (
+        <ParcelInfoSheet
+          weightInput={weightInput}
+          onChangeWeightInput={setWeightInput}
+          dimLength={dimLength}
+          dimWidth={dimWidth}
+          dimHeight={dimHeight}
+          onChangeDimLength={setDimLength}
+          onChangeDimWidth={setDimWidth}
+          onChangeDimHeight={setDimHeight}
+          declaredValue={declaredValue}
+          setDeclaredValue={setDeclaredValue}
+          parcelItemName={parcelItemName}
+          setParcelItemName={setParcelItemName}
+          note={note}
+          setNote={setNote}
+          allowTryOn={allowTryOn}
+          setAllowTryOn={setAllowTryOn}
+          allowPartialDelivery={allowPartialDelivery}
+          setAllowPartialDelivery={setAllowPartialDelivery}
+          allowMutualCheck={allowMutualCheck}
+          setAllowMutualCheck={setAllowMutualCheck}
+          onClose={close}
+        />
+      ),
+      showDragIndicator: false,
+      snapPoints: ["90%"],
+    });
+  };
+
   const openVoucherSheet = () => {
-    show({
+    let id: string;
+    const close = () => hide(id);
+    id = show({
       content: (
         <VoucherSelectSheet
           vouchers={vouchers}
@@ -235,10 +284,55 @@ export default function CreateShipmentScreen() {
           selectedCode={selectedVoucherCode}
           onSelect={(code) => {
             setSelectedVoucherCode(code);
-            hide();
+            close();
           }}
-          onClose={hide}
+          onClose={close}
         />
+      ),
+    });
+  };
+
+  const openServicePoint = () => {
+    void WebBrowser.openBrowserAsync(
+      "https://spx.vn/service-point?service_type=support_sending_non_shopee_parcel&hide_header=true",
+    );
+  };
+
+  const openPaymentSheet = () => {
+    let id: string;
+    const close = () => hide(id);
+    id = show({
+      content: (
+        <>
+          <View style={[styles.sheetHeader, { borderBottomColor: colors.border10 }]}>
+            <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>Người thanh toán</Text>
+            <Pressable onPress={close} hitSlop={12}>
+              <Text style={{ color: colors.neutral500, fontSize: 20 }}>×</Text>
+            </Pressable>
+          </View>
+          {([
+            { label: "Người gửi thanh toán phí", value: 1 as PaymentSide },
+            { label: "Người nhận thanh toán phí", value: 0 as PaymentSide },
+          ]).map((opt) => (
+            <Pressable
+              key={opt.value}
+              onPress={() => { setPaymentSide(opt.value); close(); }}
+              style={[
+                styles.selectItem,
+                paymentSide === opt.value && { backgroundColor: colors.primaryLight },
+              ]}
+            >
+              <Text
+                style={[
+                  paymentSide === opt.value ? { color: colors.primary } : { color: colors.neutral900 },
+                  textPresets.fs14_400,
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </>
       ),
     });
   };
@@ -267,9 +361,7 @@ export default function CreateShipmentScreen() {
           hitSlop={12}
           style={[styles.headerButton, { backgroundColor: colors.neutral50 }]}
         >
-          <View style={styles.backIcon}>
-            <Icon name="arrow_down" size={22} tintColor="neutral900" />
-          </View>
+          <Icon name="close" size={20} tintColor="neutral900" />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.neutral900 }]}>
           Tạo đơn hàng
@@ -309,166 +401,69 @@ export default function CreateShipmentScreen() {
         </SectionBlock>
         <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
 
-        {!isManualProvider ? (
-          <SectionBlock
-            title="Thông tin đơn hàng"
-            actionLabel="Kích thước"
-            onActionPress={openDimensions}
-          >
-            <View
-              style={[styles.orderCard, { backgroundColor: colors.neutral50 }]}
+        {!isManualProvider && !isSpxProvider ? (
+          <SectionBlock title="Thông tin đơn hàng">
+            <Pressable
+              onPress={openDimensions}
+              style={[styles.dimCard, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
             >
-              <View style={styles.orderMetaRow}>
-                <View style={styles.productTitle}>
-                  <Text
-                    style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
-                    numberOfLines={2}
-                  >
-                    {primaryProduct?.name || primaryProduct?.code || order.productName || "—"}
-                  </Text>
-                  {primaryProduct?.variantName ? (
-                    <Text
-                      style={[
-                        { color: colors.neutral400 },
-                        textPresets.fs12_400,
-                      ]}
-                    >
-                      {primaryProduct.variantName}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-              <View style={styles.detailGrid}>
-                {[
-                  { label: "Dài", value: dimLength ? `${dimLength} cm` : "—" },
-                  { label: "Rộng", value: dimWidth ? `${dimWidth} cm` : "—" },
-                  { label: "Cao", value: dimHeight ? `${dimHeight} cm` : "—" },
-                  {
-                    label: "Khối lượng",
-                    value: `${((parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 3 })} kg`,
-                  },
-                ].map((cell) => (
-                  <View
-                    key={cell.label}
-                    style={[
-                      styles.detailCell,
-                      { backgroundColor: colors.surface },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        { color: colors.neutral400 },
-                        textPresets.fs12_400,
-                      ]}
-                    >
-                      {cell.label}
-                    </Text>
-                    <Text
-                      style={[
-                        { color: colors.neutral900 },
-                        textPresets.fs14_500,
-                      ]}
-                    >
-                      {cell.value}
-                    </Text>
+              {[
+                { label: "Dài", value: dimLength, unit: "cm", icon: dimIcons.length },
+                { label: "Rộng", value: dimWidth, unit: "cm", icon: dimIcons.width },
+                { label: "Cao", value: dimHeight, unit: "cm", icon: dimIcons.height },
+                {
+                  label: "Khối lượng",
+                  value: String(parseInt(weightInput.replace(/\D/g, ""), 10) || 0),
+                  unit: "gram",
+                  icon: dimIcons.weight,
+                },
+              ].map((row) => (
+                <View key={row.label} style={styles.dimRow}>
+                  <View style={styles.dimRowLeft}>
+                    <Image source={row.icon} style={styles.dimRowIcon} />
+                    <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>{row.label}</Text>
                   </View>
-                ))}
-              </View>
-              <View style={styles.quantityRow}>
-                <Text
-                  style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
-                >
-                  Số lượng
-                </Text>
-                <View
-                  style={[
-                    styles.stepper,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border10,
-                      borderWidth: 1,
-                    },
-                  ]}
-                >
-                  <Pressable
-                    hitSlop={8}
-                    style={styles.stepperBtn}
-                    onPress={() => {
-                      const w =
-                        parseInt(weightInput.replace(/\D/g, ""), 10) || 0;
-                      if (w > 100) setWeightInput(String(w - 100));
-                    }}
-                  >
-                    <Text
-                      style={[
-                        { color: colors.neutral900 },
-                        textPresets.fs18_700,
-                      ]}
-                    >
-                      −
-                    </Text>
-                  </Pressable>
-                  <Text
-                    style={[
-                      styles.stepperValue,
-                      { color: colors.neutral900 },
-                      textPresets.fs14_500,
-                    ]}
-                  >
-                    {displayQuantity}
+                  <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
+                    {row.value} {row.unit}
                   </Text>
-                  <Pressable
-                    hitSlop={8}
-                    style={styles.stepperBtn}
-                    onPress={() => {
-                      const w =
-                        parseInt(weightInput.replace(/\D/g, ""), 10) || 0;
-                      setWeightInput(String(w + 100));
-                    }}
-                  >
-                    <Text
-                      style={[
-                        { color: colors.neutral900 },
-                        textPresets.fs18_700,
-                      ]}
-                    >
-                      +
-                    </Text>
-                  </Pressable>
                 </View>
-              </View>
-            </View>
+              ))}
+            </Pressable>
           </SectionBlock>
         ) : null}
-        {!isManualProvider ? (
-          <View
-            style={[styles.divider, { backgroundColor: colors.neutral50 }]}
-          />
+        {!isManualProvider && !isSpxProvider ? (
+          <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
         ) : null}
 
-        <SectionBlock title="Thông tin thanh toán">
+        <SectionBlock title="Thông tin vận chuyển">
           <MoneyField
             label="Tiền thu hộ (COD)"
             value={codAmountDisplay}
             onChangeText={setManualCodAmount}
             editable={isManualProvider}
           />
-          <View style={styles.optionGrid}>
-            <OptionChip
-              label="Bên nhận trả phí"
-              selected={paymentSide === 0}
-              onPress={() => setPaymentSide(0)}
-            />
-            <OptionChip
-              label="Bên gửi trả phí"
-              selected={paymentSide === 1}
-              onPress={() => setPaymentSide(1)}
-            />
-          </View>
-        </SectionBlock>
-        <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
-
-        <SectionBlock title="Thông tin vận chuyển">
+          {!isSpxProvider && (
+            <>
+              <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>Tùy chọn thanh toán</Text>
+              <View style={styles.radioGroup}>
+                {([
+                  { label: "Bên gửi trả phí", value: 1 },
+                  { label: "Bên nhận trả phí", value: 0 },
+                ] as const).map((opt) => (
+                  <Pressable
+                    key={opt.label}
+                    onPress={() => setPaymentSide(opt.value)}
+                    style={[styles.radioCard, { borderColor: paymentSide === opt.value ? colors.primary : colors.border10 }]}
+                  >
+                    <View style={[styles.radioOuter, { borderColor: paymentSide === opt.value ? colors.primary : colors.neutral300 }]}>
+                      {paymentSide === opt.value && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}
+                    </View>
+                    <Text style={[{ color: colors.neutral900 }, textPresets.fs14_400]}>{opt.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          )}
           {isManualProvider ? (
             <>
               <ShipmentInput
@@ -489,6 +484,8 @@ export default function CreateShipmentScreen() {
             </>
           ) : isSpxProvider ? (
             <SpxOptions
+              serviceType={serviceType}
+              setServiceType={setServiceType}
               collectType={collectType}
               setCollectType={setCollectType}
               pickupTimeRangeId={pickupTimeRangeId}
@@ -501,19 +498,26 @@ export default function CreateShipmentScreen() {
               vouchersLoading={vouchersLoading}
               vouchersError={vouchersError}
               selectedVoucherCode={selectedVoucherCode}
+              paymentSide={paymentSide}
+              onOpenPaymentSheet={openPaymentSheet}
+              onOpenServicePoint={openServicePoint}
               onOpenVoucherSheet={openVoucherSheet}
-              parcelItemName={parcelItemName}
-              setParcelItemName={setParcelItemName}
-              declaredValue={declaredValue}
-              setDeclaredValue={setDeclaredValue}
-              note={note}
-              setNote={setNote}
-              allowMutualCheck={allowMutualCheck}
-              setAllowMutualCheck={setAllowMutualCheck}
-              allowTryOn={allowTryOn}
-              setAllowTryOn={setAllowTryOn}
-              allowPartialDelivery={allowPartialDelivery}
-              setAllowPartialDelivery={setAllowPartialDelivery}
+              parcelInfoSlot={
+                <Pressable
+                  onPress={openParcelSheet}
+                  style={[styles.parcelRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+                >
+                  <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
+                    Thông tin bưu gửi{" "}
+                    <Text style={{ color: colors.error }}>*</Text>
+                  </Text>
+                  <View style={{ flex: 1 }} />
+                  <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>
+                    {displayQuantity} Sản phẩm, {((parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000).toFixed(1)} KG
+                  </Text>
+                  <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
+                </Pressable>
+              }
             />
           ) : (
             <>
@@ -667,9 +671,6 @@ const styles = createStyles(({ textPresets }) => ({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
-  backIcon: {
-    transform: [{ rotate: "-90deg" }],
-  },
   headerTitle: {
     flex: 1,
     textAlign: "center" as const,
@@ -724,37 +725,16 @@ const styles = createStyles(({ textPresets }) => ({
     borderTopColor: "#E5E7EB",
   },
   divider: { height: 8 },
-  orderCard: { borderRadius: 16, padding: 14, gap: 12 },
-  orderMetaRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    gap: 12,
-  },
-  productTitle: { flex: 1 },
-  detailGrid: {
-    flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
-    gap: 8,
-  },
-  detailCell: { width: "48%" as const, borderRadius: 12, padding: 12, gap: 4 },
-  quantityRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-  },
-  stepper: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    borderRadius: 18,
-    overflow: "hidden" as const,
-  },
-  stepperBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  stepperValue: { minWidth: 42, textAlign: "center" as const },
+  dimCard: { borderRadius: 16, borderWidth: 0.5, padding: 16, gap: 8 },
+  dimRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: 40 },
+  dimRowLeft: { flex: 1, flexDirection: "row" as const, alignItems: "center" as const, gap: 8 },
+  dimRowIcon: { width: 18, height: 18 },
+  parcelRow: { borderRadius: 12, borderWidth: 0.5, padding: 16, flexDirection: "row" as const, alignItems: "center" as const, gap: 10 },
   optionGrid: { gap: 10 },
+  radioGroup: { gap: 12 },
+  sheetHeader: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5 },
+  selectItem: { marginHorizontal: 8, marginVertical: 4, paddingHorizontal: 12, paddingVertical: 14, borderRadius: 10 },
+  radioCard: { flexDirection: "row" as const, alignItems: "center" as const, gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderRadius: 8 },
+  radioOuter: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, alignItems: "center" as const, justifyContent: "center" as const },
+  radioInner: { width: 12, height: 12, borderRadius: 6 },
 }));

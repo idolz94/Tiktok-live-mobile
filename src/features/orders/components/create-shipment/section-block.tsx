@@ -7,6 +7,7 @@ export type SectionBlockProps = {
   title: string;
   actionLabel?: string;
   onActionPress?: () => void;
+  actionNode?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -14,6 +15,7 @@ export function SectionBlock({
   title,
   actionLabel,
   onActionPress,
+  actionNode,
   children,
 }: SectionBlockProps) {
   const { colors, textPresets } = useThemes();
@@ -23,13 +25,13 @@ export function SectionBlock({
         <Text style={[{ color: colors.neutral900 }, textPresets.fs18_700]}>
           {title}
         </Text>
-        {!!actionLabel && !!onActionPress && (
+        {actionNode ?? (!!actionLabel && !!onActionPress && (
           <Pressable onPress={onActionPress} hitSlop={8}>
             <Text style={[{ color: colors.primary }, textPresets.fs14_500]}>
               {actionLabel}
             </Text>
           </Pressable>
-        )}
+        ))}
       </View>
       {children}
     </View>
@@ -37,7 +39,7 @@ export function SectionBlock({
 }
 
 const styles = createStyles(() => ({
-  sectionBlock: { paddingHorizontal: 16, paddingVertical: 18, gap: 14 },
+  sectionBlock: { paddingHorizontal: 16, paddingVertical: 20, gap: 16 },
   sectionHeader: {
     flexDirection: "row" as const,
     alignItems: "center" as const,

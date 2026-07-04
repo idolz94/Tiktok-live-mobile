@@ -132,20 +132,20 @@ export const BottomSheetProvider = ({ children }: Props) => {
     [],
   );
 
-  const handleClose = useCallback((id: BottomSheetId) => {
-    if (closingByCodeIdsRef.current.has(id)) return;
+  const handleClose = useCallback(
+    (id: BottomSheetId) => {
+      if (closingByCodeIdsRef.current.has(id)) return;
 
-    const targetIndex = stackRef.current.findIndex((entry) => entry.id === id);
-    if (targetIndex === -1) return;
+      const targetIndex = stackRef.current.findIndex((entry) => entry.id === id);
+      if (targetIndex === -1) return;
 
-    const targets = stackRef.current.slice(targetIndex);
-    targets[0]?.onDismiss?.();
-    stackRef.current = stackRef.current.slice(0, targetIndex);
-    setDisplayEntries((prev) => {
-      const displayTargetIndex = prev.findIndex((entry) => entry.id === id);
-      return displayTargetIndex === -1 ? prev : prev.slice(0, displayTargetIndex);
-    });
-  }, []);
+      const targets = stackRef.current.slice(targetIndex);
+      targets[0]?.onDismiss?.();
+      stackRef.current = stackRef.current.slice(0, targetIndex);
+      closeEntries(targets);
+    },
+    [closeEntries],
+  );
 
   const value = useMemo<BottomSheetContextType>(
     () => ({

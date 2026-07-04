@@ -1,13 +1,18 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, LayoutAnimation, Platform, Pressable, Text, UIManager, View } from "react-native";
+
+if (Platform.OS === "android") {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
+import type { ReactNode } from "react";
 import { useThemes } from "@hooks/use-theme";
-import type { CollectType, SpxTimeslot } from "../../types/shipment";
+import type { CollectType, PaymentSide, ServiceType, SpxTimeslot } from "../../types/shipment";
 import type { SpxVoucher } from "../../service/create-shipment-api";
-import { ShipmentInput } from "./shipment-input";
 import { TimeslotSelect } from "./timeslot-select";
-import { OptionChip } from "./option-chip";
 import { createStyles } from "@utils/createStyles";
 
 type SpxOptionsProps = {
+  serviceType: ServiceType;
+  setServiceType: (value: ServiceType) => void;
   collectType: CollectType;
   setCollectType: (value: CollectType) => void;
   pickupTimeRangeId: number | null;
@@ -21,18 +26,10 @@ type SpxOptionsProps = {
   vouchersError?: string | null;
   selectedVoucherCode: string | null;
   onOpenVoucherSheet: () => void;
-  parcelItemName: string;
-  setParcelItemName: (value: string) => void;
-  declaredValue: number;
-  setDeclaredValue: (value: number) => void;
-  note: string;
-  setNote: (value: string) => void;
-  allowMutualCheck: 0 | 1;
-  setAllowMutualCheck: (value: 0 | 1) => void;
-  allowTryOn: 0 | 1;
-  setAllowTryOn: (value: 0 | 1) => void;
-  allowPartialDelivery: 0 | 1;
-  setAllowPartialDelivery: (value: 0 | 1) => void;
+  paymentSide: number;
+  onOpenPaymentSheet: () => void;
+  onOpenServicePoint: () => void;
+  parcelInfoSlot?: ReactNode;
 };
 
 function formatVoucherAmount(voucher: SpxVoucher) {
@@ -43,7 +40,14 @@ function formatVoucherAmount(voucher: SpxVoucher) {
     : `${amount.toLocaleString("vi-VN")}đ`;
 }
 
+const SERVICE_TYPES = [
+  { label: "Giao hàng Tiêu Chuẩn", value: 1 as ServiceType },
+  { label: "Giao hàng Hỏa Tốc", value: 2 as ServiceType },
+] as const;
+
 export function SpxOptions({
+  serviceType,
+  setServiceType,
   collectType,
   setCollectType,
   pickupTimeKey,
@@ -53,62 +57,88 @@ export function SpxOptions({
   timeslotsError,
   vouchers,
   vouchersLoading,
-  vouchersError,
-  selectedVoucherCode,
+  vouchersError: _vouchersError,
+  selectedVoucherCode: _selectedVoucherCode,
   onOpenVoucherSheet,
-  parcelItemName,
-  setParcelItemName,
-  declaredValue,
-  setDeclaredValue,
-  note,
-  setNote,
-  allowMutualCheck,
-  setAllowMutualCheck,
-  allowTryOn,
-  setAllowTryOn,
-  allowPartialDelivery,
-  setAllowPartialDelivery,
+  paymentSide,
+  onOpenPaymentSheet,
+  onOpenServicePoint,
+  parcelInfoSlot,
 }: SpxOptionsProps) {
   const { colors, textPresets } = useThemes();
 
   return (
     <>
       <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>
-        Hình thức lấy hàng
+        Thông tin cơ bản
       </Text>
-      <View style={styles.optionGrid}>
-        <OptionChip
-          label="Lấy tại nhà"
-          selected={collectType === 1}
-          onPress={() => setCollectType(1)}
-        />
-        <OptionChip
-          label="Lấy tại bưu cục"
-          selected={collectType === 2}
-          onPress={() => setCollectType(2)}
-        />
+      <View style={styles.collectTypeTabs}>
+        {([
+          { label: "Lấy Hàng Tại Shop", value: 1 as CollectType },
+          { label: "Gửi Tại Điểm Dịch Vụ", value: 2 as CollectType },
+        ]).map((tab) => {
+          const active = collectType === tab.value;
+          return (
+            <Pressable
+              key={tab.value}
+              onPress={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setCollectType(tab.value);
+              }}
+              style={[
+                styles.collectTypeTab,
+                active
+                  ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                  : { backgroundColor: colors.surface, borderColor: colors.border10 },
+              ]}
+            >
+              {active && (
+                <Text style={styles.tabCheck}>✓</Text>
+              )}
+              <Text
+                style={[
+                  active ? { color: "#fff" } : { color: colors.neutral500 },
+                  textPresets.fs14_500 ?? textPresets.fs14_400,
+                ]}
+                numberOfLines={1}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>
-        Chính sách nhận hàng
-      </Text>
-      <View style={styles.optionGrid}>
-        <OptionChip
-          label="Cho xem hàng"
-          selected={allowMutualCheck === 1}
-          onPress={() => setAllowMutualCheck(allowMutualCheck === 1 ? 0 : 1)}
-        />
-        <OptionChip
-          label="Cho thử hàng"
-          selected={allowTryOn === 1}
-          onPress={() => setAllowTryOn(allowTryOn === 1 ? 0 : 1)}
-        />
-        <OptionChip
-          label="Giao một phần"
-          selected={allowPartialDelivery === 1}
-          onPress={() => setAllowPartialDelivery(allowPartialDelivery === 1 ? 0 : 1)}
-        />
-      </View>
+      {collectType === 2 && (
+        <Pressable
+          onPress={onOpenServicePoint}
+          style={[styles.voucherRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+        >
+          <Text style={[{ color: colors.neutral900, flex: 1 }, textPresets.fs14_500]}>
+            Tìm Điểm dịch vụ
+          </Text>
+          <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
+        </Pressable>
+      )}
+
+      {parcelInfoSlot}
+
+      {parcelInfoSlot && (
+        <Pressable
+          onPress={onOpenPaymentSheet}
+          style={[styles.voucherRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+        >
+          <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
+            Người thanh toán{" "}
+            <Text style={{ color: colors.error }}>*</Text>
+          </Text>
+          <View style={{ flex: 1 }} />
+          <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>
+            {paymentSide === 1 ? "Người gửi thanh toán phí" : "Người nhận thanh toán phí"}
+          </Text>
+          <Text style={[{ color: colors.neutral400 }, textPresets.fs14_500]}>⌄</Text>
+        </Pressable>
+      )}
 
       {collectType === 1 && (
         <>
@@ -125,10 +155,7 @@ export function SpxOptions({
             <View
               style={[
                 styles.feeBox,
-                {
-                  backgroundColor: colors.neutral50,
-                  borderColor: colors.border10,
-                },
+                { backgroundColor: colors.neutral50, borderColor: colors.border10 },
               ]}
             >
               <ActivityIndicator size="small" color={colors.primary} />
@@ -151,6 +178,53 @@ export function SpxOptions({
         </>
       )}
 
+      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>
+        Loại dịch vụ
+      </Text>
+      <View style={styles.serviceTypeRow}>
+        {SERVICE_TYPES.map((svc) => {
+          const active = serviceType === svc.value;
+          return (
+            <Pressable
+              key={svc.value}
+              onPress={() => setServiceType(svc.value)}
+              style={[
+                styles.serviceTypeCard,
+                active
+                  ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                  : { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+              ]}
+            >
+              <Text
+                style={[
+                  active ? { color: "#fff" } : { color: colors.neutral900 },
+                  textPresets.fs14_500,
+                ]}
+                numberOfLines={1}
+              >
+                {svc.label}
+              </Text>
+              <Text
+                style={[
+                  active ? { color: "rgba(255,255,255,0.7)" } : { color: colors.neutral400 },
+                  textPresets.fs12_400,
+                ]}
+              >
+                Dự kiến giao hàng
+              </Text>
+              <Text
+                style={[
+                  active ? { color: "rgba(255,255,255,0.85)" } : { color: colors.neutral500 },
+                  textPresets.fs12_400,
+                ]}
+              >
+                -
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
       <Text
         style={[
           { color: colors.neutral400 },
@@ -158,130 +232,53 @@ export function SpxOptions({
           { marginTop: 10 },
         ]}
       >
-        Voucher SPX
+        Mã giảm phí vận chuyển
       </Text>
       <Pressable
         onPress={onOpenVoucherSheet}
-        disabled={vouchersLoading || !!vouchersError || vouchers.length === 0}
+        disabled={vouchersLoading}
         style={[
-          styles.voucherCard,
+          styles.voucherRow,
           { backgroundColor: colors.neutral50, borderColor: colors.border10 },
         ]}
       >
-        {vouchersLoading ? (
-          <ActivityIndicator size="small" color={colors.primary} />
-        ) : vouchersError ? (
-          <Text
-            style={[{ color: colors.error, flex: 1 }, textPresets.fs12_400]}
-          >
-            {vouchersError}
-          </Text>
-        ) : vouchers.length === 0 ? (
-          <Text
-            style={[
-              { color: colors.neutral400, flex: 1 },
-              textPresets.fs14_400,
-            ]}
-          >
-            Không có voucher khả dụng
-          </Text>
-        ) : (
-          <>
-            <View style={styles.voucherCardInfo}>
-              {(() => {
-                const selectedVoucher = vouchers.find(
-                  (voucher) => voucher.voucherCode === selectedVoucherCode,
-                );
-                const amount = selectedVoucher
-                  ? formatVoucherAmount(selectedVoucher)
-                  : null;
-
-                return selectedVoucher ? (
-                  <>
-                    <Text
-                      style={[
-                        { color: colors.neutral900 },
-                        textPresets.fs14_500,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {selectedVoucher.voucherName ||
-                        selectedVoucher.voucherCode}
-                    </Text>
-                    <Text
-                      style={[
-                        { color: colors.neutral500 },
-                        textPresets.fs12_400,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {amount
-                        ? `Đang chọn · Giảm ${amount}`
-                        : "Đang chọn voucher"}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text
-                      style={[
-                        { color: colors.neutral900 },
-                        textPresets.fs14_500,
-                      ]}
-                    >
-                      Chọn voucher
-                    </Text>
-                    <Text
-                      style={[
-                        { color: colors.neutral500 },
-                        textPresets.fs12_400,
-                      ]}
-                    >
-                      {vouchers.length} voucher khả dụng
-                    </Text>
-                  </>
-                );
-              })()}
-            </View>
-            <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>
-              ›
-            </Text>
-          </>
-        )}
+        <Text style={[{ color: colors.neutral900, flex: 1 }, textPresets.fs14_500]}>
+          Mã giảm phí vận chuyển
+        </Text>
+        <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
       </Pressable>
-
-      <ShipmentInput
-        label="Tên hàng hóa"
-        value={parcelItemName}
-        onChangeText={setParcelItemName}
-        placeholder="VD: Áo thun, Giày, ..."
-        topSpacing
-      />
-      <ShipmentInput
-        label="Giá trị bưu gửi"
-        required
-        value={declaredValue > 0 ? declaredValue.toLocaleString("vi-VN") : ""}
-        onChangeText={(text) =>
-          setDeclaredValue(parseInt(text.replace(/\D/g, ""), 10) || 0)
-        }
-        placeholder="0"
-        keyboardType="numeric"
-        topSpacing
-        money
-      />
-      <ShipmentInput
-        label="Ghi chú"
-        value={note}
-        onChangeText={setNote}
-        placeholder="Nhập ghi chú"
-        multiline
-        topSpacing
-      />
     </>
   );
 }
 
 const styles = createStyles(() => ({
-  optionGrid: { gap: 10 },
+  serviceTypeRow: {
+    flexDirection: "row" as const,
+    gap: 8,
+  },
+  serviceTypeCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    gap: 4,
+  },
+  collectTypeTabs: {
+    flexDirection: "row" as const,
+    gap: 8,
+  },
+  collectTypeTab: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+  },
+  tabCheck: { color: "#fff", fontSize: 14, lineHeight: 18 },
   feeBox: {
     borderWidth: 1,
     borderRadius: 12,
@@ -291,7 +288,7 @@ const styles = createStyles(() => ({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
-  voucherCard: {
+  voucherRow: {
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,
@@ -300,7 +297,5 @@ const styles = createStyles(() => ({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 10,
-    marginTop: 8,
   },
-  voucherCardInfo: { flex: 1, gap: 2 },
 }));
