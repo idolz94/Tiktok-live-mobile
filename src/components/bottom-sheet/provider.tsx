@@ -22,6 +22,7 @@ export const BottomSheetProvider = ({ children }: Props) => {
   const closingByCodeIdsRef = useRef(new Set<BottomSheetId>());
   const idCounterRef = useRef(0);
   const [displayEntries, setDisplayEntries] = useState<BottomSheetDisplayEntry[]>([]);
+  const [isVisible, setIsVisible] = useState(false);
 
   const createEntry = useCallback((config: BottomSheetOptions): BottomSheetEntry => {
     const id = `bottom-sheet-${(idCounterRef.current += 1)}`;
@@ -32,17 +33,22 @@ export const BottomSheetProvider = ({ children }: Props) => {
   const removeDisplayEntries = useCallback((ids: BottomSheetId[]) => {
     setTimeout(() => {
       ids.forEach((id) => closingByCodeIdsRef.current.delete(id));
-      setDisplayEntries((prev) => prev.filter((entry) => !ids.includes(entry.id)));
+      setDisplayEntries((prev) => {
+        const next = prev.filter((entry) => !ids.includes(entry.id));
+        setIsVisible(next.length > 0);
+        return next;
+      });
     }, DISMISS_ANIMATION_MS);
   }, []);
 
   const closeEntries = useCallback(
     (entries: BottomSheetEntry[]) => {
-      entries.forEach((entry) => {
-        closingByCodeIdsRef.current.add(entry.id);
-        entry.sheetRef.current?.close();
-      });
-      removeDisplayEntries(entries.map((entry) => entry.id));
+      const ids = entries.map((entry) => entry.id);
+      ids.forEach((id) => closingByCodeIdsRef.current.add(id));
+      setDisplayEntries((prev) =>
+        prev.map((entry) => (ids.includes(entry.id) ? { ...entry, open: false } : entry)),
+      );
+      removeDisplayEntries(ids);
     },
     [removeDisplayEntries],
   );
@@ -52,6 +58,7 @@ export const BottomSheetProvider = ({ children }: Props) => {
       const entry = createEntry(config);
       stackRef.current = [...stackRef.current, entry];
       setDisplayEntries((prev) => [...prev, { ...entry, open: true }]);
+      setIsVisible(true);
       return entry.id;
     },
     [createEntry],
@@ -151,9 +158,9 @@ export const BottomSheetProvider = ({ children }: Props) => {
       show: push,
       hide: pop,
       hideAll: dismissAll,
-      isVisible: displayEntries.length > 0,
+      isVisible,
     }),
-    [push, pop, replace, dismissAll, update, peek, displayEntries.length],
+    [push, pop, replace, dismissAll, update, peek, isVisible],
   );
 
   return (

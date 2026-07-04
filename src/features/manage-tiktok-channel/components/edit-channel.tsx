@@ -12,7 +12,6 @@ type Props = {
   usedUsernames: Set<string>;
   onClose: () => void;
   onSave: (nextUsername: string) => Promise<void>;
-  onDelete?: () => Promise<void>;
 };
 
 export const EditChannel = ({
@@ -21,17 +20,16 @@ export const EditChannel = ({
   usedUsernames,
   onClose,
   onSave,
-  onDelete,
 }: Props) => {
   const { colors } = useThemes();
-  const { name, setName, setError, saving, deleting, error, onSubmit, onConfirmDelete } =
-    useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave, onDelete });
+  const { name, setName, setError, saving, error, onSubmit, hasChanged } =
+    useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave });
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{title}</Text>
-        <Pressable style={styles.btnClose} onPress={onClose}>
+        <Pressable style={styles.btnClose} onPress={() => onClose()}>
           <Icon name="close" size={16} tintColor={colors.neutral900} />
         </Pressable>
       </View>
@@ -62,21 +60,11 @@ export const EditChannel = ({
       </View>
 
       <View style={styles.actions}>
-        {onDelete ? (
-          <Button
-            title={deleting ? "Đang xoá..." : "Xoá kênh"}
-            loading={deleting}
-            onPress={onConfirmDelete}
-            disabled={saving || deleting}
-            containerStyle={styles.btnDelete}
-            txtBtnStyle={styles.btnDeleteText}
-          />
-        ) : null}
         <Button
           title="Lưu thay đổi"
           loading={saving}
           onPress={onSubmit}
-          disabled={!name || saving || deleting}
+          disabled={!name || !hasChanged || saving}
           gradientType="gra_primary"
           containerStyle={styles.btnSave}
         />
@@ -146,17 +134,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flexDirection: "row",
     columnGap: 12,
     marginTop: 16,
-  },
-  btnDelete: {
-    flex: 1,
-    borderRadius: 40,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.border10,
-  },
-  btnDeleteText: {
-    color: colors.neutral900,
-    ...textPresets.fs14_500,
   },
   btnSave: {
     flex: 1,

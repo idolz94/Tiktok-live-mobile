@@ -55,7 +55,7 @@ export function OrderDetailProductsSection({
             <View style={styles.productInfo}>
               <View style={styles.productNameRow}>
                 <Text style={styles.productName} numberOfLines={2}>
-                  {product.name}
+                  {product.name || product.code || "Sản phẩm"}
                 </Text>
                 {isEditable ? (
                   <View style={styles.productRowActions}>

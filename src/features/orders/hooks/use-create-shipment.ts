@@ -27,7 +27,7 @@ export function useCreateShipment() {
   const form = useShipmentForm({
     order,
     orderTotal,
-    primaryProductName: primaryProduct?.name,
+    primaryProductName: primaryProduct?.name ?? undefined,
     initialShippingFee: params.shippingFee,
   });
 

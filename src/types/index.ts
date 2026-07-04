@@ -97,7 +97,7 @@ export interface RawSsePayload {
 export type OrderProduct = {
   id: string;
   code: string;
-  name: string;
+  name: string | null;
   price: number; // đơn vị: nghìn đồng. VD: 20 = 20.000đ
   quantity: number;
   variantName?: string;

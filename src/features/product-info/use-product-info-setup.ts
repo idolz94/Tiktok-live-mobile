@@ -5,6 +5,7 @@ import {
   ProductPreset,
   updateProductPresetApi,
 } from "@features/settings/service/product-presets-api";
+import { useToast } from "@components/toast";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
@@ -21,19 +22,21 @@ export function parsePrice(value: string) {
 }
 
 export function useProductInfoSetup() {
+  const toast = useToast();
   const [presets, setPresets] = useState<ProductPreset[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<ProductPreset | null>(null);
   const [draftCode, setDraftCode] = useState("");
+  const [draftName, setDraftName] = useState("");
   const [draftColor, setDraftColor] = useState("");
   const [draftPrice, setDraftPrice] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
 
   const canSubmit = useMemo(
-    () => draftCode.trim().length > 0 && parsePrice(draftPrice) > 0 && !saving,
-    [draftCode, draftPrice, saving],
+    () => draftName.trim().length > 0 && parsePrice(draftPrice) > 0 && !saving,
+    [draftName, draftPrice, saving],
   );
 
   const loadPresets = useCallback(async () => {
@@ -41,7 +44,7 @@ export function useProductInfoSetup() {
       const data = await listProductPresetsApi();
       setPresets(data);
     } catch {
-      Alert.alert("Lỗi", "Không thể tải danh sách sản phẩm.");
+      toast("Không thể tải danh sách sản phẩm.", "error");
     } finally {
       setLoading(false);
     }
@@ -54,6 +57,7 @@ export function useProductInfoSetup() {
   const resetForm = useCallback(() => {
     setSelectedPreset(null);
     setDraftCode("");
+    setDraftName("");
     setDraftColor("");
     setDraftPrice("");
     setErrors({});
@@ -73,6 +77,7 @@ export function useProductInfoSetup() {
     (preset: ProductPreset) => {
       setSelectedPreset(preset);
       setDraftCode(preset.code);
+      setDraftName(preset.name ?? "");
       setDraftColor(preset.color ?? "");
       setDraftPrice(preset.price > 0 ? formatPrice(preset.price) : "");
       setErrors({});
@@ -92,11 +97,27 @@ export function useProductInfoSetup() {
     [errors.price],
   );
 
+  const savePreset = useCallback(
+    async (
+      payload: { code: string; name?: string | null; color: string | null; price: number },
+      mode: "add" | "edit",
+      presetId?: string,
+    ) => {
+      if (mode === "add") {
+        await createProductPresetApi(payload);
+      } else if (mode === "edit" && presetId != null) {
+        await updateProductPresetApi(presetId, payload);
+      }
+      await loadPresets();
+    },
+    [loadPresets],
+  );
+
   const submitForm = useCallback(async () => {
     const nextErrors: FormErrors = {};
     const price = parsePrice(draftPrice);
 
-    if (!draftCode.trim()) nextErrors.code = "Tên sản phẩm không được trống";
+    if (!draftName.trim()) nextErrors.code = "Tên sản phẩm không được trống";
     if (!draftPrice.trim() || price <= 0) nextErrors.price = "Giá phải lớn hơn 0";
 
     if (Object.keys(nextErrors).length > 0) {
@@ -106,7 +127,7 @@ export function useProductInfoSetup() {
 
     setSaving(true);
     try {
-      const payload = { code: draftCode.trim(), color: draftColor.trim() || null, price };
+      const payload = { code: draftCode.trim(), name: draftName.trim() || null, color: draftColor.trim() || null, price };
       if (formMode === "add") {
         await createProductPresetApi(payload);
       } else if (formMode === "edit" && selectedPreset) {
@@ -115,15 +136,15 @@ export function useProductInfoSetup() {
       closeForm();
       await loadPresets();
     } catch {
-      Alert.alert("Lỗi", "Thao tác thất bại. Vui lòng thử lại.");
+      toast("Thao tác thất bại. Vui lòng thử lại.", "error");
     } finally {
       setSaving(false);
     }
-  }, [draftCode, draftColor, draftPrice, formMode, selectedPreset, closeForm, loadPresets]);
+  }, [draftCode, draftName, draftColor, draftPrice, formMode, selectedPreset, closeForm, loadPresets, toast]);
 
   const confirmDelete = useCallback(
     (preset: ProductPreset) => {
-      Alert.alert("Xoá sản phẩm?", `Bạn có chắc muốn xoá sản phẩm ${preset.code}?`, [
+      Alert.alert("Xoá sản phẩm?", `Bạn có chắc muốn xoá sản phẩm ${preset.name ?? preset.code}?`, [
         { text: "Huỷ", style: "cancel" },
         {
           text: "Xoá",
@@ -134,7 +155,7 @@ export function useProductInfoSetup() {
               await deleteProductPresetApi(preset.id);
               await loadPresets();
             } catch {
-              Alert.alert("Lỗi", "Không thể xoá sản phẩm.");
+              toast("Không thể xoá sản phẩm.", "error");
             } finally {
               setSaving(false);
             }
@@ -142,7 +163,7 @@ export function useProductInfoSetup() {
         },
       ]);
     },
-    [loadPresets],
+    [loadPresets, toast],
   );
 
   return {
@@ -151,11 +172,13 @@ export function useProductInfoSetup() {
     saving,
     formMode,
     draftCode,
+    draftName,
     draftColor,
     draftPrice,
     errors,
     canSubmit,
     setDraftCode,
+    setDraftName,
     setDraftColor,
     setErrors,
     openAdd,
@@ -163,6 +186,7 @@ export function useProductInfoSetup() {
     closeForm,
     handlePriceChange,
     submitForm,
+    savePreset,
     confirmDelete,
   };
 }

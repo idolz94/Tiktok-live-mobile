@@ -7,13 +7,11 @@ type Props = {
   usedUsernames: Set<string>;
   onClose: () => void;
   onSave: (nextUsername: string) => Promise<void>;
-  onDelete?: () => Promise<void>;
 };
 
-export function useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave, onDelete }: Props) {
+export function useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave }: Props) {
   const [name, setName] = useState(tiktokUsername);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   const currentNormalized = useMemo(
@@ -50,28 +48,7 @@ export function useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave,
     }
   }, [currentNormalized, name, onClose, onSave, usedUsernames]);
 
-  const onConfirmDelete = useCallback(() => {
-    if (!onDelete || deleting || saving) return;
+  const hasChanged = normalizeTikTokUsername(name) !== currentNormalized;
 
-    Alert.alert("Xoá kênh", `Xoá kênh ${currentNormalized}?`, [
-      { text: "Huỷ", style: "cancel" },
-      {
-        text: "Xoá",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setDeleting(true);
-            await onDelete();
-            onClose();
-          } catch (err) {
-            Alert.alert("Xoá thất bại", err instanceof Error ? err.message : "Không thể xoá kênh");
-          } finally {
-            setDeleting(false);
-          }
-        },
-      },
-    ]);
-  }, [currentNormalized, deleting, onClose, onDelete, saving]);
-
-  return { name, setName, setError, saving, deleting, error, onSubmit, onConfirmDelete };
+  return { name, setName, setError, saving, error, onSubmit, hasChanged };
 }

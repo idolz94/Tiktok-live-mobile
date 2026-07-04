@@ -265,16 +265,18 @@ export default function CreateShipmentScreen() {
             <Icon name="arrow_down" size={22} tintColor="neutral900" />
           </View>
         </Pressable>
-        <Pressable
-          hitSlop={12}
-          style={[styles.headerButton, { backgroundColor: colors.neutral50 }]}
-        >
-          <Icon name="settings" size={22} tintColor="neutral900" />
-        </Pressable>
+        <Text style={[styles.headerTitle, { color: colors.neutral900 }]}>
+          Tạo đơn hàng
+        </Text>
+        <View style={styles.headerActions}>
+          <Pressable
+            hitSlop={12}
+            style={[styles.headerButton, { backgroundColor: colors.neutral50 }]}
+          >
+            <Icon name="settings" size={22} tintColor="neutral900" />
+          </Pressable>
+        </View>
       </View>
-      <Text style={[styles.screenTitle, { color: colors.neutral900 }]}>
-        Tạo đơn hàng
-      </Text>
 
       <ScrollView
         style={styles.scroll}
@@ -316,7 +318,7 @@ export default function CreateShipmentScreen() {
                     style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
                     numberOfLines={2}
                   >
-                    {primaryProduct?.name ?? order.productName ?? "—"}
+                    {primaryProduct?.name || primaryProduct?.code || order.productName || "—"}
                   </Text>
                   {primaryProduct?.variantName ? (
                     <Text
@@ -615,25 +617,25 @@ export default function CreateShipmentScreen() {
             },
           ]}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
+          <View
+            style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
               <Icon name="truck" size={18} tintColor="white" />
-              <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>
-                Tạo vận đơn
-              </Text>
-            </View>
-          )}
+            )}
+            <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>
+              Tạo vận đơn
+            </Text>
+          </View>
         </Pressable>
       </View>
     </SafeAreaView>
   );
 }
 
-const styles = createStyles(() => ({
+const styles = createStyles(({ textPresets }) => ({
   safeArea: { flex: 1 },
   centerBox: {
     flex: 1,
@@ -643,10 +645,8 @@ const styles = createStyles(() => ({
   header: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    justifyContent: "space-between" as const,
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingVertical: 10,
   },
   headerButton: {
     width: 44,
@@ -658,12 +658,15 @@ const styles = createStyles(() => ({
   backIcon: {
     transform: [{ rotate: "-90deg" }],
   },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: "600" as const,
-    lineHeight: 28,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+  headerTitle: {
+    flex: 1,
+    textAlign: "center" as const,
+    ...textPresets.fs20_600,
+  },
+  headerActions: {
+    width: 44,
+    flexDirection: "row" as const,
+    justifyContent: "flex-end" as const,
   },
   scroll: { flex: 1 },
   scrollContent: {

@@ -96,9 +96,13 @@ export const OrderItem = memo(
         {products.length > 0 ? (
           products.map((p) => (
             <View key={p.id} style={styles.productRow}>
-              <Text numberOfLines={2} style={[styles.txtProduct, styles.productName]}>
-                {p.name || "Sản phẩm"}
-              </Text>
+              <View style={[styles.productName, styles.productInfo]}>
+                <Text numberOfLines={2} style={styles.txtProduct}>
+                  {p.code
+                    ? `Mã: ${p.code}${p.color ? ` - ${p.color}` : ""}${p.name ? ` (${p.name})` : ""}`
+                    : p.name || "Sản phẩm"}
+                </Text>
+              </View>
               <Text style={styles.txtProductPrice}>
                 {formatMoney(Number(p.price || 0) * Number(p.quantity || 1))}
               </Text>
@@ -206,6 +210,9 @@ const styles = createStyles(({ colors, textPresets }) => ({
   productName: {
     flex: 1,
   },
+  productInfo: {
+    rowGap: 2,
+  },
   separator: {
     marginVertical: 12,
   },
@@ -240,6 +247,10 @@ const styles = createStyles(({ colors, textPresets }) => ({
   txtProductPrice: {
     color: colors.neutral900,
     ...textPresets.fs14_500,
+  },
+  txtVariant: {
+    color: colors.neutral400,
+    ...textPresets.fs12_400,
   },
   txtNotPaid: {
     color: colors.primary,

@@ -188,6 +188,7 @@ export const CommentCardItem = memo(
     const content = (
       <CommentCardContent
         item={item}
+        isOwner={isOwner}
         isCreatedOrder={isCreatedOrder}
         isCreatingOrder={isCreatingOrder}
         onCreateOrder={createOrderFromItem}

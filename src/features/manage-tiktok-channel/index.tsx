@@ -70,13 +70,14 @@ const ChannelCard = memo(
 export const ManageTiktokChannel = () => {
   const { show, hide } = useBottomSheet();
   const { colors } = useThemes();
-  const { channels, loading, refreshing, errorText, usedUsernames, onRefresh, saveChannel, deleteChannel } =
+  const { channels, loading, refreshing, errorText, usedUsernames, onRefresh, saveChannel } =
     useManageTiktokChannel();
 
   const openEditDrawer = useCallback(
     (channel: ShopTikTokChannel) => {
       show({
         showDragIndicator: false,
+        enablePanDownToClose: false,
         content: (
           <EditChannel
             title="Sửa kênh TikTok"
@@ -84,12 +85,11 @@ export const ManageTiktokChannel = () => {
             usedUsernames={usedUsernames}
             onClose={hide}
             onSave={(nextUsername) => saveChannel(channel, nextUsername)}
-            onDelete={() => deleteChannel(channel)}
           />
         ),
       });
     },
-    [hide, saveChannel, deleteChannel, show, usedUsernames],
+    [hide, saveChannel, show, usedUsernames],
   );
 
   const hasChannels = channels.length > 0;

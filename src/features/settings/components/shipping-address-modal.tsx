@@ -167,11 +167,10 @@ export function ShippingAddressModal({
               onPress={onSave}
               disabled={isSavingAddress || !isValid}
             >
-              {isSavingAddress ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                {isSavingAddress ? <ActivityIndicator color="#fff" size="small" /> : null}
                 <Text style={styles.saveButtonText}>{editingAddress ? "CẬP NHẬT ĐỊA CHỈ" : "+ THÊM ĐỊA CHỈ"}</Text>
-              )}
+              </View>
             </Pressable>
           </ScrollView>
 

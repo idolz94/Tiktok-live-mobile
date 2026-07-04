@@ -220,7 +220,7 @@ export const OrderDetail = memo(() => {
                     content: (
                       <ProductSheet
                         mode="edit"
-                        initialName={product.name}
+                        initialName={product.name ?? ""}
                         initialPrice={product.price}
                         initialQty={product.quantity}
                         loading={detail.updatingProduct}

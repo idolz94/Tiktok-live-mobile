@@ -52,19 +52,25 @@ export const Button = memo(
           <LinearGradient type={gradientType} style={StyleSheet.absoluteFill} />
         )}
 
-        <Animated.Text style={[styles.text, txtBtnStyle, textStyle]}>
-          {title}
-        </Animated.Text>
-
-        <Animated.View
-          style={[
-            styles.spinnerBase,
-            loadingType === "side" ? styles.spinnerSide : styles.spinnerCenter,
-            spinnerStyle,
-          ]}
-        >
-          <Spinner size={spinnerSize} color={spinnerColor as Colors} />
-        </Animated.View>
+        {loadingType === "side" ? (
+          <Animated.View style={styles.row}>
+            <Animated.View style={[styles.spinnerSlot, spinnerStyle]}>
+              <Spinner size={spinnerSize} color={spinnerColor as Colors} />
+            </Animated.View>
+            <Animated.Text style={[styles.text, txtBtnStyle, textStyle]}>
+              {title}
+            </Animated.Text>
+          </Animated.View>
+        ) : (
+          <>
+            <Animated.Text style={[styles.text, txtBtnStyle, textStyle]}>
+              {title}
+            </Animated.Text>
+            <Animated.View style={[styles.spinnerBase, styles.spinnerCenter, spinnerStyle]}>
+              <Spinner size={spinnerSize} color={spinnerColor as Colors} />
+            </Animated.View>
+          </>
+        )}
       </Pressable>
     );
   },
@@ -82,12 +88,23 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.neutral900,
     ...textPresets.fs16_500,
   },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  spinnerSlot: {
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   spinnerBase: {
     position: "absolute",
     top: 0,
     bottom: 0,
     justifyContent: "center",
   },
-  spinnerSide: { right: 14 },
+  spinnerSide: { left: 14 },
   spinnerCenter: { left: 0, right: 0, alignItems: "center" },
 }));

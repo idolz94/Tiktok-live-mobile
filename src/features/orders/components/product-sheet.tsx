@@ -269,13 +269,14 @@ export function ProductSheet({
           onPress={onSubmit}
           disabled={!isValid || loading}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color={colors.neutral100} />
-          ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.neutral100} />
+            ) : null}
             <Text style={[styles.saveText, { color: colors.neutral100 }]}>
               Lưu
             </Text>
-          )}
+          </View>
         </Pressable>
       </View>
     </View>

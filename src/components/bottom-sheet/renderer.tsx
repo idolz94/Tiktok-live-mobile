@@ -24,7 +24,7 @@ export const BottomSheetRenderer = ({ entries, onClose }: Props) => {
         snapPoints={entry.snapPoints}
         showDragIndicator={entry.showDragIndicator}
         backgroundStyle={entry.backgroundStyle}
-        enablePanDownToClose={entry.enablePanDownToClose ?? true}
+        enablePanDownToClose={entry.enablePanDownToClose ?? false}
         hasNestedChild={hasNestedChild}
       >
         <View style={{ flex: 1 }}>

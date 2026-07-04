@@ -8,6 +8,7 @@ import { renderTikTokEmojiTokens } from "./tiktok-emoji-text";
 
 type CommentCardContentProps = {
   item: LiveComment;
+  isOwner: boolean;
   isCreatedOrder: boolean;
   isCreatingOrder: boolean;
   onCreateOrder: () => void;
@@ -17,6 +18,7 @@ type CommentCardContentProps = {
 export const CommentCardContent = memo(
   ({
     item,
+    isOwner,
     isCreatedOrder,
     isCreatingOrder,
     onCreateOrder,
@@ -47,15 +49,17 @@ export const CommentCardContent = memo(
             </Text>
           </View>
         </View>
-        <Button
-          title={isCreatedOrder ? "In lại" : "Tạo đơn"}
-          disabled={isCreatedOrder ? !onPrintOrder : isCreatingOrder}
-          onPress={isCreatedOrder ? onPrintOrder : onCreateOrder}
-          loading={isCreatingOrder}
-          loadingType="center"
-          containerStyle={styles.btnCreateOrder}
-          txtBtnStyle={styles.txtCreateOrder}
-        />
+        {!isOwner && (
+          <Button
+            title={isCreatedOrder ? "In lại" : "Tạo đơn"}
+            disabled={isCreatedOrder ? !onPrintOrder : isCreatingOrder}
+            onPress={isCreatedOrder ? onPrintOrder : onCreateOrder}
+            loading={isCreatingOrder}
+            loadingType="center"
+            containerStyle={styles.btnCreateOrder}
+            txtBtnStyle={styles.txtCreateOrder}
+          />
+        )}
       </>
     );
   },

@@ -21,7 +21,7 @@ export const ProductTable = ({
       {(products || []).map((product) => (
         <View key={product.id} style={styles.row}>
           <Text style={[styles.cell, styles.nameCell]} numberOfLines={2}>
-            {product.name}
+            {product.name || product.code || "Sản phẩm"}
           </Text>
           <Text style={styles.cell}>{product.quantity}</Text>
           <Text style={styles.cell}>{formatMoneyFromK(product.price)}</Text>

@@ -1,77 +1,117 @@
 import { AnimatedErrorText } from "@components/animated-error-text";
+import { Button } from "@components/button";
+import { Header } from "@components/header";
+import { Screen } from "@components/screen";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { router } from "expo-router";
+import { useToast } from "@components/toast";
 import {
   ActivityIndicator,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { formatPrice, useProductInfoSetup } from "@features/product-info/use-product-info-setup";
-import { useEffect } from "react";
+import { formatPrice, parsePrice, useProductInfoSetup } from "@features/product-info/use-product-info-setup";
+import { useCallback, useState } from "react";
+import { createStyles } from "@utils/createStyles";
+import { ProductPreset } from "@features/settings/service/product-presets-api";
 
-export default function ProductInfoSetupScreen() {
-  const {
-    presets,
-    loading,
-    saving,
-    formMode,
-    draftCode,
-    draftColor,
-    draftPrice,
-    errors,
-    canSubmit,
-    setDraftCode,
-    setDraftColor,
-    setErrors,
-    openAdd,
-    openEdit,
-    closeForm,
-    handlePriceChange,
-    submitForm,
-    confirmDelete,
-  } = useProductInfoSetup();
+type FormErrors = { code?: string; price?: string };
 
-  const { show, hide, update, isVisible } = useBottomSheet();
+type ProductFormProps = {
+  mode: "add" | "edit";
+  presetId?: string;
+  initialCode: string;
+  initialName: string;
+  initialColor: string;
+  initialPrice: string;
+  onClose: () => void;
+  onSave: (payload: { code: string; name?: string | null; color: string | null; price: number }, mode: "add" | "edit", presetId?: string) => Promise<void>;
+};
 
-  const handleCloseForm = () => { closeForm(); hide(); };
+function ProductForm({ mode, presetId, initialCode, initialName, initialColor, initialPrice, onClose, onSave }: ProductFormProps) {
+  const toast = useToast();
+  const [code, setCode] = useState(initialCode);
+  const [name, setName] = useState(initialName);
+  const [color, setColor] = useState(initialColor);
+  const [price, setPrice] = useState(initialPrice);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [saving, setSaving] = useState(false);
+  // ponytail: local form state — stable mount prevents IME composing state loss on Vietnamese input
 
-  const buildFormContent = () => (
-    <SafeAreaView style={styles.sheet} edges={["bottom"]}>
+  const parsedPrice = parsePrice(price);
+  const hasChanged = mode === "add" || (
+    code.trim() !== initialCode.trim() ||
+    name.trim() !== initialName.trim() ||
+    color.trim() !== initialColor.trim() ||
+    parsedPrice !== parsePrice(initialPrice)
+  );
+  const canSubmit = code.trim().length > 0 && parsedPrice > 0 && hasChanged && !saving;
+
+  const handlePriceChange = (value: string) => {
+    const p = parsePrice(value);
+    setPrice(p > 0 ? formatPrice(p) : "");
+    if (errors.price) setErrors((e) => ({ ...e, price: undefined }));
+  };
+
+  const handleSubmit = async () => {
+    const next: FormErrors = {};
+    if (!code.trim()) next.code = "Mã SP không được trống";
+    if (!price.trim() || parsedPrice <= 0) next.price = "Giá phải lớn hơn 0";
+    if (Object.keys(next).length > 0) { setErrors(next); return; }
+
+    setSaving(true);
+    try {
+      await onSave({ code: code.trim(), name: name.trim() || null, color: color.trim() || null, price: parsedPrice }, mode, presetId);
+      setSaving(false);
+      onClose();
+      toast(mode === "add" ? "Đã thêm sản phẩm" : "Đã cập nhật sản phẩm", "success");
+    } catch {
+      setSaving(false);
+      toast("Thao tác thất bại. Vui lòng thử lại.", "error");
+    }
+  };
+
+  return (
+    <View style={styles.sheet}>
       <View style={styles.sheetTitleRow}>
-        <Text style={styles.sheetTitle}>{formMode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}</Text>
-        <TouchableOpacity onPress={handleCloseForm} style={styles.sheetCloseButton} activeOpacity={0.75}>
+        <Text style={styles.sheetTitle}>{mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}</Text>
+        <TouchableOpacity onPress={onClose} style={styles.sheetCloseButton} activeOpacity={0.75}>
           <Text style={styles.sheetCloseText}>×</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.form}>
         <View style={styles.field}>
-          <Text style={styles.label}>Tên sản phẩm <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.label}>Mã SP <Text style={styles.required}>*</Text></Text>
           <TextInput
-            value={draftCode}
-            onChangeText={(value) => {
-              setDraftCode(value);
-              if (errors.code) {
-                setErrors((current) => ({ ...current, code: undefined }));
-              }
-            }}
-            placeholder="VD: Áo thun trắng"
+            value={code}
+            onChangeText={(v) => { setCode(v); if (errors.code) setErrors((e) => ({ ...e, code: undefined })); }}
+            placeholder="VD: SP001"
             placeholderTextColor="#BDBDBD"
             style={[styles.input, errors.code && styles.inputError]}
+            autoCapitalize="characters"
           />
           <AnimatedErrorText message={errors.code} />
         </View>
 
         <View style={styles.field}>
+          <Text style={styles.label}>Tên sản phẩm</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="VD: Áo thun trắng"
+            placeholderTextColor="#BDBDBD"
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.field}>
           <Text style={styles.label}>Màu sắc</Text>
           <TextInput
-            value={draftColor}
-            onChangeText={setDraftColor}
+            value={color}
+            onChangeText={setColor}
             placeholder="VD: Đỏ, Xanh..."
             placeholderTextColor="#BDBDBD"
             style={styles.input}
@@ -82,7 +122,7 @@ export default function ProductInfoSetupScreen() {
           <Text style={styles.label}>Giá <Text style={styles.required}>*</Text></Text>
           <View style={[styles.priceInputWrap, errors.price && styles.inputError]}>
             <TextInput
-              value={draftPrice}
+              value={price}
               onChangeText={handlePriceChange}
               placeholder="0"
               placeholderTextColor="#BDBDBD"
@@ -95,45 +135,70 @@ export default function ProductInfoSetupScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        onPress={submitForm}
-        disabled={!canSubmit}
-        style={[styles.saveButton, !canSubmit && styles.saveButtonDisabled]}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.saveText}>
-          {saving ? "Đang lưu..." : formMode === "add" ? "Thêm sản phẩm" : "Cập nhật"}
-        </Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+      <View style={styles.actions}>
+        <Button
+          title={saving ? "Đang lưu..." : mode === "add" ? "Thêm sản phẩm" : "Cập nhật"}
+          loading={saving}
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+          gradientType="gra_primary"
+          containerStyle={styles.btnSave}
+        />
+      </View>
+    </View>
+  );
+}
+
+export default function ProductInfoSetupScreen() {
+  const { show, hide } = useBottomSheet();
+  const {
+    presets,
+    loading,
+    saving,
+    openAdd: hookOpenAdd,
+    openEdit: hookOpenEdit,
+    closeForm,
+    savePreset,
+    confirmDelete,
+  } = useProductInfoSetup();
+
+  const showForm = useCallback(
+    (mode: "add" | "edit", preset?: ProductPreset) => {
+      const draftCode = preset?.code ?? "";
+      const draftName = preset?.name ?? "";
+      const draftColor = preset?.color ?? "";
+      const draftPrice = preset && preset.price > 0 ? formatPrice(preset.price) : "";
+
+      if (mode === "add") hookOpenAdd();
+      else if (preset) hookOpenEdit(preset);
+
+      show({
+        showDragIndicator: false,
+        enablePanDownToClose: false,
+        content: (
+          <ProductForm
+            mode={mode}
+            presetId={preset?.id}
+            initialCode={draftCode}
+            initialName={draftName}
+            initialColor={draftColor}
+            initialPrice={draftPrice}
+            onClose={() => { hide(); closeForm(); }}
+            onSave={savePreset}
+          />
+        ),
+      });
+    },
+    [show, hide, hookOpenAdd, hookOpenEdit, closeForm, savePreset],
   );
 
-  useEffect(() => {
-    if (formMode !== null && !isVisible) {
-      show({ content: buildFormContent(), enablePanDownToClose: false });
-    } else if (formMode !== null && isVisible) {
-      update({ content: buildFormContent(), enablePanDownToClose: false });
-    } else if (formMode === null && isVisible) {
-      hide();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formMode, draftCode, draftColor, draftPrice, errors, canSubmit, saving]);
-
-  const handleBack = () => {
-    if (router.canGoBack()) router.back();
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.8}>
-          <Text style={styles.backIcon}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Thông tin sản phẩm</Text>
-        <TouchableOpacity onPress={openAdd} style={styles.addButton} activeOpacity={0.85}>
-          <Text style={styles.addIcon}>＋</Text>
-        </TouchableOpacity>
-      </View>
+    <Screen>
+      <Header
+        title="Thông tin sản phẩm"
+        rightIcon="add-outline"
+        onRightPress={() => showForm("add")}
+      />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {loading ? (
@@ -147,7 +212,7 @@ export default function ProductInfoSetupScreen() {
             <Text style={styles.emptyDescription}>
               Thêm sản phẩm để tự động nhận diện từ comment LIVE
             </Text>
-            <TouchableOpacity onPress={openAdd} style={styles.emptyButton} activeOpacity={0.85}>
+            <TouchableOpacity onPress={() => showForm("add")} style={styles.emptyButton} activeOpacity={0.85}>
               <Text style={styles.emptyButtonText}>Thêm sản phẩm</Text>
             </TouchableOpacity>
           </View>
@@ -158,19 +223,16 @@ export default function ProductInfoSetupScreen() {
                 <View style={styles.indexBadge}>
                   <Text style={styles.indexText}>{index + 1}</Text>
                 </View>
-
                 <View style={styles.presetInfo}>
                   <Text style={styles.presetCode} numberOfLines={1}>
-                    {preset.code}
+                    Mã: {preset.code}{preset.color ? ` - ${preset.color}` : ""}
                   </Text>
                   <Text style={styles.presetMeta} numberOfLines={1}>
-                    {preset.color ? `${preset.color} · ` : ""}
                     {formatPrice(preset.price)} VNĐ
                   </Text>
                 </View>
-
                 <TouchableOpacity
-                  onPress={() => openEdit(preset)}
+                  onPress={() => showForm("edit", preset)}
                   style={styles.iconButton}
                   activeOpacity={0.75}
                 >
@@ -180,6 +242,7 @@ export default function ProductInfoSetupScreen() {
                   onPress={() => confirmDelete(preset)}
                   style={[styles.iconButton, styles.deleteButton]}
                   activeOpacity={0.75}
+                  disabled={saving}
                 >
                   <Text style={styles.deleteIcon}>×</Text>
                 </TouchableOpacity>
@@ -188,269 +251,67 @@ export default function ProductInfoSetupScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#f2f2f2",
+const styles = createStyles(({ colors, textPresets }) => ({
+  // --- ProductForm ---
+  sheet: { padding: 16, backgroundColor: colors.neutral100 },
+  sheetTitleRow: { flexDirection: "row" as const, alignItems: "center" as const, paddingBottom: 20 },
+  sheetTitle: { flex: 1, textAlign: "center" as const, paddingLeft: 32, color: colors.neutral900, ...textPresets.fs18_500 },
+  sheetCloseButton: {
+    width: 32, height: 32, borderRadius: 99, backgroundColor: colors.neutral50,
+    alignItems: "center" as const, justifyContent: "center" as const,
   },
-  header: {
-    minHeight: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#fff",
+  sheetCloseText: { fontSize: 20, lineHeight: 26, color: colors.neutral900 },
+  form: { rowGap: 16 },
+  field: { rowGap: 8 },
+  label: { color: colors.neutral400, ...textPresets.fs14_400 },
+  required: { color: colors.primary },
+  input: {
+    borderWidth: 1, borderColor: colors.border10, borderRadius: 8,
+    paddingHorizontal: 16, paddingVertical: 13, color: colors.neutral900, ...textPresets.fs14_400,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#f2f2f2",
-    alignItems: "center",
-    justifyContent: "center",
+  inputError: { borderColor: colors.error },
+  priceInputWrap: {
+    flexDirection: "row" as const, alignItems: "center" as const,
+    borderWidth: 1, borderColor: colors.border10, borderRadius: 8, paddingHorizontal: 16,
   },
-  backIcon: {
-    color: "#111",
-    fontSize: 34,
-    lineHeight: 34,
-    marginTop: -4,
-  },
-  title: {
-    flex: 1,
-    textAlign: "center",
-    color: "#111",
-    fontSize: 18,
-    fontWeight: "500",
-    marginHorizontal: 12,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#ff6b8a",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addIcon: {
-    color: "#fff",
-    fontSize: 24,
-    lineHeight: 28,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  centerState: {
-    minHeight: 160,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  stateText: {
-    color: "#787878",
-    fontSize: 14,
-  },
-  emptyCard: {
-    alignItems: "center",
-    gap: 12,
-    borderRadius: 16,
-    backgroundColor: "#fff",
-    paddingHorizontal: 18,
-    paddingVertical: 32,
-  },
-  emptyTitle: {
-    color: "#111827",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  emptyDescription: {
-    color: "#787878",
-    fontSize: 13,
-    lineHeight: 20,
-    textAlign: "center",
-  },
+  priceInput: { flex: 1, paddingVertical: 13, color: colors.neutral900, ...textPresets.fs14_400 },
+  currencyText: { color: colors.neutral400, ...textPresets.fs14_400 },
+  actions: { flexDirection: "row" as const, marginTop: 16 },
+  btnSave: { flex: 1, borderRadius: 40, overflow: "hidden" as const },
+  // --- Main screen ---
+  content: { padding: 16, gap: 12 },
+  centerState: { alignItems: "center" as const, paddingVertical: 40, gap: 12 },
+  stateText: { color: colors.neutral400, ...textPresets.fs14_400 },
+  emptyCard: { alignItems: "center" as const, paddingVertical: 48, gap: 12 },
+  emptyTitle: { color: colors.neutral900, ...textPresets.fs18_500 },
+  emptyDescription: { color: colors.neutral400, textAlign: "center" as const, ...textPresets.fs14_400 },
   emptyButton: {
-    marginTop: 4,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#ff6b8a",
-    paddingHorizontal: 24,
-    alignItems: "center",
-    justifyContent: "center",
+    marginTop: 8, backgroundColor: colors.primary, borderRadius: 40,
+    paddingHorizontal: 24, paddingVertical: 12,
   },
-  emptyButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  list: {
-    gap: 12,
-  },
+  emptyButtonText: { color: colors.neutral100, ...textPresets.fs14_500 },
+  list: { gap: 10 },
   presetCard: {
-    minHeight: 72,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderRadius: 16,
-    backgroundColor: "#fff",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    flexDirection: "row" as const, alignItems: "center" as const, gap: 12,
+    padding: 14, borderRadius: 12, backgroundColor: colors.neutral100,
   },
   indexBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#ffe8ef",
+    width: 28, height: 28, borderRadius: 14, backgroundColor: colors.primary,
+    alignItems: "center" as const, justifyContent: "center" as const,
   },
-  indexText: {
-    color: "#ff6b8a",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  presetInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-  presetCode: {
-    color: "#111827",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  presetMeta: {
-    marginTop: 4,
-    color: "#787878",
-    fontSize: 12,
-  },
+  indexText: { color: colors.neutral100, ...textPresets.fs14_500 },
+  presetInfo: { flex: 1, gap: 2 },
+  presetCode: { color: colors.neutral900, ...textPresets.fs14_500 },
+  presetMeta: { color: colors.neutral400, ...textPresets.fs12_400 },
   iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f2f2f2",
+    width: 36, height: 36, borderRadius: 8,
+    alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: colors.neutral50,
   },
-  deleteButton: {
-    backgroundColor: "#fff1f1",
-  },
-  editIcon: {
-    color: "#484848",
-    fontSize: 18,
-  },
-  deleteIcon: {
-    color: "#ef4444",
-    fontSize: 24,
-    lineHeight: 26,
-  },
-  sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 16,
-  },
-  sheetHandle: {
-    alignSelf: "center",
-    width: 44,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#d1d5db",
-    marginBottom: 16,
-  },
-  sheetTitle: {
-    color: "#111827",
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  sheetTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-  sheetCloseButton: {
-    position: "absolute",
-    right: 0,
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sheetCloseText: {
-    color: "#6b7280",
-    fontSize: 24,
-    lineHeight: 26,
-  },
-  form: {
-    gap: 16,
-    marginTop: 20,
-  },
-  field: {
-    gap: 6,
-  },
-  label: {
-    color: "#111827",
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  required: {
-    color: "#ef4444",
-  },
-  input: {
-    height: 44,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    paddingHorizontal: 12,
-    color: "#111",
-    fontSize: 14,
-    backgroundColor: "#fff",
-  },
-  inputError: {
-    borderColor: "#ef4444",
-  },
-  priceInputWrap: {
-    height: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    paddingHorizontal: 12,
-    backgroundColor: "#fff",
-  },
-  priceInput: {
-    flex: 1,
-    padding: 0,
-    color: "#111",
-    fontSize: 14,
-  },
-  currencyText: {
-    color: "#9ca3af",
-    fontSize: 13,
-  },
-  saveButton: {
-    minHeight: 54,
-    marginTop: 24,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#ffb56c",
-  },
-  saveButtonDisabled: {
-    opacity: 0.45,
-  },
-  saveText: {
-    color: "#111",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-});
+  editIcon: { fontSize: 16, color: colors.neutral400 },
+  deleteButton: { backgroundColor: colors.primaryLight },
+  deleteIcon: { fontSize: 20, color: colors.primary },
+}));

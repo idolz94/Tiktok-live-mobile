@@ -368,6 +368,20 @@ show({
 });
 ```
 
+### Chặn đóng khi tap ra ngoài / swipe
+
+Mặc định sheet đóng được bằng tap-backdrop và swipe-down. Với form hoặc luồng cần chủ động (không được đóng nhầm), set `enablePanDownToClose: false` và bắt buộc content có nút X gọi `hide()`.
+
+```tsx
+show({
+  content: <EditChannel onClose={hide} ... />,
+  showDragIndicator: false,
+  enablePanDownToClose: false, // chỉ đóng qua nút X
+});
+```
+
+Lưu ý nền tảng: trên iOS/Android, `enablePanDownToClose` gộp cả swipe-down lẫn tap-backdrop (không tách riêng được). Nên khi set `false`, phải luôn có nút X — nếu không sheet sẽ không đóng được.
+
 ---
 
 ## 13. Checklist trước khi viết code
