@@ -110,8 +110,9 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     const requestId = ++fetchRequestIdRef.current;
     try {
       const data = await getTikTokChannelsApi();
+      if (__DEV__) console.log("[tiktok] fetchChannels raw data:", JSON.stringify(data));
       if (requestId !== fetchRequestIdRef.current) return [];
-    const options: TikTokLiveChannel[] = data.map((c) => ({
+      const options: TikTokLiveChannel[] = data.map((c) => ({
         id: c.id,
         username: normalizeTikTokUsername(c.tiktokUsername),
         isDefault: c.isDefault,
@@ -119,6 +120,9 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
         avatarUrl: c.avatarUrl ?? null,
         followerCount: c.followerCount ?? null,
       }));
+      if (__DEV__) {
+        console.log("[tiktok] fetchChannels mapped:", options.map((c) => `${c.username}→avatarUrl:${c.avatarUrl ?? "null"}`));
+      }
       if (options.length > 0) setLocalChannels(options);
       return options;
     } catch (error) {
@@ -126,6 +130,10 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
       return [];
     }
   }, []);
+
+  useEffect(() => {
+    if (isConnected) void fetchChannels();
+  }, [isConnected, fetchChannels]);
 
   useEffect(() => {
     if (!user?.tiktokChannels?.length) return;
@@ -151,13 +159,15 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     }
   }, [activeIndex, visible, opacity, translateY]);
 
-  const selectedChannel = useMemo(
-    () =>
-      localChannels.find(
-        (c) => normalizeTikTokUsername(c.username) === normalizeTikTokUsername(tiktokUsername),
-      ),
-    [localChannels, tiktokUsername],
-  );
+  const selectedChannel = useMemo(() => {
+    const found = localChannels.find(
+      (c) => normalizeTikTokUsername(c.username) === normalizeTikTokUsername(tiktokUsername),
+    );
+    if (__DEV__) {
+      console.log("[tiktok] selectedChannel:", found?.username, "avatarUrl:", found?.avatarUrl ?? "(null)");
+    }
+    return found;
+  }, [localChannels, tiktokUsername]);
 
   const connectSelectedChannel = useCallback(
     async (item?: TikTokLiveChannel): Promise<boolean> => {
@@ -260,12 +270,14 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
       );
       const nextUsername = normalizeTikTokUsername(selectedItem.username);
       if (nextUsername) {
-        changeTikTokUsername(nextUsername).catch((err) => {
-          if (__DEV__) console.error("Change channel error:", err);
-        });
+        changeTikTokUsername(nextUsername)
+          .then(() => fetchChannels())
+          .catch((err) => {
+            if (__DEV__) console.error("Change channel error:", err);
+          });
       }
     },
-    [changeTikTokUsername],
+    [changeTikTokUsername, fetchChannels],
   );
 
   const addChannel = useCallback(

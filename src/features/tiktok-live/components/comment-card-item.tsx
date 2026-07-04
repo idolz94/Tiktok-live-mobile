@@ -218,6 +218,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "center",
     columnGap: 10,
     paddingTop: 4,
+    paddingBottom: 16,
   },
   dividerFlex: {
     flex: 1,

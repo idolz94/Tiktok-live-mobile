@@ -49,7 +49,7 @@ export const CommentCardContent = memo(
             </Text>
           </View>
         </View>
-        {!isOwner && (
+        {!isOwner && item.intent !== "normal" && item.intent !== "spam" && (
           <Button
             title={isCreatedOrder ? "In lại" : "Tạo đơn"}
             disabled={isCreatedOrder ? !onPrintOrder : isCreatingOrder}

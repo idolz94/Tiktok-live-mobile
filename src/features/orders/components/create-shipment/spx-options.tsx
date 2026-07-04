@@ -2,9 +2,7 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import type { CollectType, SpxTimeslot } from "../../types/shipment";
 import type { SpxVoucher } from "../../service/create-shipment-api";
-import { MoneyField } from "./money-field";
 import { ShipmentInput } from "./shipment-input";
-import { SummaryRow } from "./summary-row";
 import { TimeslotSelect } from "./timeslot-select";
 import { OptionChip } from "./option-chip";
 import { createStyles } from "@utils/createStyles";
@@ -29,6 +27,12 @@ type SpxOptionsProps = {
   setDeclaredValue: (value: number) => void;
   note: string;
   setNote: (value: string) => void;
+  allowMutualCheck: 0 | 1;
+  setAllowMutualCheck: (value: 0 | 1) => void;
+  allowTryOn: 0 | 1;
+  setAllowTryOn: (value: 0 | 1) => void;
+  allowPartialDelivery: 0 | 1;
+  setAllowPartialDelivery: (value: 0 | 1) => void;
 };
 
 function formatVoucherAmount(voucher: SpxVoucher) {
@@ -58,6 +62,12 @@ export function SpxOptions({
   setDeclaredValue,
   note,
   setNote,
+  allowMutualCheck,
+  setAllowMutualCheck,
+  allowTryOn,
+  setAllowTryOn,
+  allowPartialDelivery,
+  setAllowPartialDelivery,
 }: SpxOptionsProps) {
   const { colors, textPresets } = useThemes();
 
@@ -76,6 +86,27 @@ export function SpxOptions({
           label="Lấy tại bưu cục"
           selected={collectType === 2}
           onPress={() => setCollectType(2)}
+        />
+      </View>
+
+      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>
+        Chính sách nhận hàng
+      </Text>
+      <View style={styles.optionGrid}>
+        <OptionChip
+          label="Cho xem hàng"
+          selected={allowMutualCheck === 1}
+          onPress={() => setAllowMutualCheck(allowMutualCheck === 1 ? 0 : 1)}
+        />
+        <OptionChip
+          label="Cho thử hàng"
+          selected={allowTryOn === 1}
+          onPress={() => setAllowTryOn(allowTryOn === 1 ? 0 : 1)}
+        />
+        <OptionChip
+          label="Giao một phần"
+          selected={allowPartialDelivery === 1}
+          onPress={() => setAllowPartialDelivery(allowPartialDelivery === 1 ? 0 : 1)}
         />
       </View>
 

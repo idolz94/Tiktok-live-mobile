@@ -1,7 +1,8 @@
 import { images } from "@assets/images";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
-import { Separator } from "@components/separator";
+
+import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { memo } from "react";
@@ -15,11 +16,16 @@ type Props = {
 
 export const AccountConnected = memo(
   ({ onClose, selectedChannel }: Props) => {
+    const { viewersCount } = useTikTokLiveSocketContext();
     return (
       <View style={styles.container}>
         <View style={styles.left}>
           <Image
-            source={selectedChannel?.avatarUrl ? { uri: selectedChannel.avatarUrl } : images.logo_app}
+            source={
+              selectedChannel?.avatarUrl
+                ? { uri: selectedChannel.avatarUrl, headers: { Referer: "https://www.tiktok.com/" } }
+                : images.logo_app
+            }
             style={styles.avatar}
           />
           <View style={{ rowGap: 2 }}>
@@ -32,23 +38,10 @@ export const AccountConnected = memo(
                   columnGap: 4,
                 }}
               >
-                <Icon name="followers" size={16} tintColor="neutral300" />
+                <Icon name="group_user" size={16} tintColor="neutral300" />
                 <Text style={styles.textCount}>
-                  {selectedChannel?.followerCount
-                    ? (selectedChannel.followerCount / 1000).toFixed(3).replace(/\.?0+$/, "")
-                    : "—"}
+                  {viewersCount > 0 ? viewersCount.toLocaleString("vi-VN") : "—"}
                 </Text>
-              </View>
-              <Separator type="vertical" size={1} />
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  columnGap: 4,
-                }}
-              >
-                <Icon name="heart" size={16} tintColor="neutral300" />
-                <Text style={styles.textCount}>1.000</Text>
               </View>
             </View>
           </View>

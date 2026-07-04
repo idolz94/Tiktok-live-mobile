@@ -152,6 +152,10 @@ type SubmitSpxPayload = {
   declaredValue?: number;
   note?: string;
   idempotencyKey: string;
+  paymentRole?: 1 | 2;
+  allowMutualCheck?: 0 | 1;
+  allowTryOn?: 0 | 1;
+  allowPartialDelivery?: 0 | 1;
   voucherCode?: string;
   customerAddressId?: string;
 };

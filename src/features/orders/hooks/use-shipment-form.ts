@@ -65,6 +65,9 @@ export function useShipmentForm({
   const [parcelItemName, setParcelItemName] = useState(() => primaryProductName ?? "");
   const [declaredValue, setDeclaredValue] = useState(() => orderTotal);
   const [selectedVoucherCode, setSelectedVoucherCode] = useState<string | null>(null);
+  const [allowMutualCheck, setAllowMutualCheck] = useState<0 | 1>(0);
+  const [allowTryOn, setAllowTryOn] = useState<0 | 1>(0);
+  const [allowPartialDelivery, setAllowPartialDelivery] = useState<0 | 1>(0);
   const [idempotencyKey] = useState(() => generateUuid());
 
   const setManualShippingFee = useCallback((text: string) => {
@@ -119,6 +122,12 @@ export function useShipmentForm({
     setDeclaredValue,
     selectedVoucherCode,
     setSelectedVoucherCode,
+    allowMutualCheck,
+    setAllowMutualCheck,
+    allowTryOn,
+    setAllowTryOn,
+    allowPartialDelivery,
+    setAllowPartialDelivery,
     idempotencyKey,
   };
 }

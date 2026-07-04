@@ -40,6 +40,10 @@ type Deps = {
   idempotencyKey: string;
   voucherCode?: string;
   customerAddressId?: string;
+  paymentRole?: 1 | 2;
+  allowMutualCheck?: 0 | 1;
+  allowTryOn?: 0 | 1;
+  allowPartialDelivery?: 0 | 1;
 };
 
 type SubmitState = "idle" | "submitting" | "success" | "outcome_unknown" | "error";
@@ -75,6 +79,10 @@ export function useSubmitShipment(deps: Deps) {
       idempotencyKey,
       voucherCode,
       customerAddressId,
+      paymentRole,
+      allowMutualCheck,
+      allowTryOn,
+      allowPartialDelivery,
     } = deps;
 
     if (!order || !selectedSender || !selectedRecipient) {
@@ -122,6 +130,10 @@ export function useSubmitShipment(deps: Deps) {
           idempotencyKey,
           voucherCode,
           customerAddressId,
+          paymentRole,
+          allowMutualCheck,
+          allowTryOn,
+          allowPartialDelivery,
         });
         setSubmitState("success");
       } else {

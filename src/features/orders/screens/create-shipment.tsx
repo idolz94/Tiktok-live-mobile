@@ -103,6 +103,12 @@ export default function CreateShipmentScreen() {
     vouchersError,
     selectedVoucherCode,
     setSelectedVoucherCode,
+    allowMutualCheck,
+    setAllowMutualCheck,
+    allowTryOn,
+    setAllowTryOn,
+    allowPartialDelivery,
+    setAllowPartialDelivery,
     feeLoading,
     feeError,
   } = useCreateShipment();
@@ -502,6 +508,12 @@ export default function CreateShipmentScreen() {
               setDeclaredValue={setDeclaredValue}
               note={note}
               setNote={setNote}
+              allowMutualCheck={allowMutualCheck}
+              setAllowMutualCheck={setAllowMutualCheck}
+              allowTryOn={allowTryOn}
+              setAllowTryOn={setAllowTryOn}
+              allowPartialDelivery={allowPartialDelivery}
+              setAllowPartialDelivery={setAllowPartialDelivery}
             />
           ) : (
             <>

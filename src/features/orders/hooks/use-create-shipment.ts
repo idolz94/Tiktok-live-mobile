@@ -87,6 +87,10 @@ export function useCreateShipment() {
     idempotencyKey: form.idempotencyKey,
     voucherCode: form.selectedVoucherCode ?? undefined,
     customerAddressId: selectedRecipient?.id,
+    paymentRole: isSpxProvider ? (form.paymentSide === 0 ? 2 : 1) : undefined,
+    allowMutualCheck: isSpxProvider ? form.allowMutualCheck : undefined,
+    allowTryOn: isSpxProvider ? form.allowTryOn : undefined,
+    allowPartialDelivery: isSpxProvider ? form.allowPartialDelivery : undefined,
   });
 
   return {
