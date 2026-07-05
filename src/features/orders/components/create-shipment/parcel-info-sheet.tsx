@@ -177,7 +177,7 @@ export function ParcelInfoSheet({
           <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>Giá trị bưu gửi</Text>
           <View style={[styles.moneyRow, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}>
             <TextInput
-              value={localDeclared ? Number(localDeclared).toLocaleString("en-US") : ""}
+              value={localDeclared ? Number(localDeclared).toLocaleString("vi-VN") : ""}
               onChangeText={(t) => setLocalDeclared(t.replace(/\D/g, ""))}
               keyboardType="numeric"
               placeholder="0"

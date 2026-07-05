@@ -158,6 +158,7 @@ type SubmitSpxPayload = {
   allowPartialDelivery?: 0 | 1;
   voucherCode?: string;
   customerAddressId?: string;
+  codCollection?: 0 | 1;
 };
 
 export async function submitSpxApi(
@@ -190,7 +191,7 @@ type ShippingFeePayload = {
 };
 
 export async function getShippingFeeApi(orderId: string, payload: ShippingFeePayload) {
-  return postRequest<{ fee: { providerCode: string; fee: number } }>(
+  return postRequest<{ fee: { providerCode: string; fee: number; edtMin: number | null; edtMax: number | null } }>(
     `/orders/${orderId}/shipping/fee`,
     payload,
   );

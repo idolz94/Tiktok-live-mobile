@@ -46,7 +46,7 @@ export default function CreateShipmentScreen() {
     isSpxProvider,
     primaryProduct: _primaryProduct,
     displayQuantity,
-    orderTotal,
+    orderTotal: _orderTotal,
     shopAddresses,
     customerAddresses,
     selectedSender,
@@ -122,6 +122,7 @@ export default function CreateShipmentScreen() {
     setAllowPartialDelivery,
     feeLoading,
     feeError,
+    estimatedDelivery,
   } = useCreateShipment();
 
   const { setPicker, setForm } = useAddressPageStore();
@@ -502,6 +503,8 @@ export default function CreateShipmentScreen() {
               onOpenPaymentSheet={openPaymentSheet}
               onOpenServicePoint={openServicePoint}
               onOpenVoucherSheet={openVoucherSheet}
+              estimatedDelivery={estimatedDelivery}
+              feeLoading={feeLoading}
               parcelInfoSlot={
                 <Pressable
                   onPress={openParcelSheet}
@@ -573,7 +576,7 @@ export default function CreateShipmentScreen() {
         <View style={styles.footerSummary}>
           <SummaryRow
             label="Tiền hàng"
-            value={`${orderTotal.toLocaleString("vi-VN")}đ`}
+            value={`${declaredValue.toLocaleString("vi-VN")}đ`}
           />
           <View style={styles.summaryRow}>
             <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>

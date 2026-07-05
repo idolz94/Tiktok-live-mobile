@@ -179,8 +179,8 @@ export function useOrderDetail(orderId: string) {
     const totalQuantity = p.reduce((sum, item) => sum + item.quantity, 0);
     const shippingFee = Number(order.shippingFee ?? 0);
     const codAmount = Number(order.codAmount ?? 0);
-    const remain =
-      order.totalAmount ?? Math.max(0, productTotal + shippingFee - codAmount);
+    const orderTotal = order.totalAmount ?? (productTotal + shippingFee);
+    const remain = Math.max(0, orderTotal - codAmount);
 
     return { productTotal, totalQuantity, shippingFee, codAmount, remain };
   }, [

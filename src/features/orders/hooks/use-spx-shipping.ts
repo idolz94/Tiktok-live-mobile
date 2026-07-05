@@ -43,6 +43,7 @@ export function useSpxShipping({
   const [vouchersLoading, setVouchersLoading] = useState(false);
   const [vouchersError, setVouchersError] = useState<string | null>(null);
   const [estimatedFee, setEstimatedFee] = useState<number | null>(null);
+  const [estimatedDelivery, setEstimatedDelivery] = useState<{ edtMin: number | null; edtMax: number | null } | null>(null);
   const [feeLoading, setFeeLoading] = useState(false);
   const [feeError, setFeeError] = useState<string | null>(null);
 
@@ -105,6 +106,7 @@ export function useSpxShipping({
     if (!enabled || !orderId) return;
     if (collectType === 1 && !pickupTimeRangeId) {
       setEstimatedFee(null);
+      setEstimatedDelivery(null);
       setFeeError("Vui lòng chọn khung giờ lấy hàng");
       return;
     }
@@ -115,6 +117,7 @@ export function useSpxShipping({
     const receiverWard = selectedRecipient?.ward;
     if (!senderProvince || !senderWard || !receiverProvince || !receiverWard) {
       setEstimatedFee(null);
+      setEstimatedDelivery(null);
       if (!senderWard) {
         setFeeError("Địa chỉ lấy hàng chưa đủ Phường/Xã");
       } else if (!receiverWard) {
@@ -143,6 +146,7 @@ export function useSpxShipping({
         .then((res) => {
           if (cancelled) return;
           setEstimatedFee(res.fee?.fee ?? null);
+          setEstimatedDelivery(res.fee ? { edtMin: res.fee.edtMin, edtMax: res.fee.edtMax } : null);
           setFeeLoading(false);
         })
         .catch(() => {
@@ -176,6 +180,7 @@ export function useSpxShipping({
     vouchersError,
     selectedVoucherCode,
     estimatedFee,
+    estimatedDelivery,
     feeLoading,
     feeError,
   };

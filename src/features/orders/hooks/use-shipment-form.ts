@@ -25,6 +25,7 @@ type UseShipmentFormParams = {
   orderTotal: number;
   primaryProductName?: string;
   initialShippingFee?: string | string[];
+  initialPrepaid?: number;
 };
 
 export function useShipmentForm({
@@ -32,6 +33,7 @@ export function useShipmentForm({
   orderTotal,
   primaryProductName,
   initialShippingFee,
+  initialPrepaid,
 }: UseShipmentFormParams) {
   const [transport, setTransport] = useState<Transport>("road");
   const [paymentSide, setPaymentSide] = useState<PaymentSide>(0);
@@ -53,7 +55,13 @@ export function useShipmentForm({
     formatLocaleInput(String(order?.codAmount ?? orderTotal)),
   );
 
-  const [serviceType, setServiceType] = useState<ServiceType>(1);
+  const [serviceType, _setServiceType] = useState<ServiceType>(1);
+  const setServiceType = useCallback((value: ServiceType) => {
+    _setServiceType(value);
+    setPickupTimeRangeId(null);
+    setPickupTimeKey(null);
+    setPickupTimestamp(null);
+  }, []);
   const [collectType, setCollectType] = useState<CollectType>(1);
   const [pickupTimeRangeId, setPickupTimeRangeId] = useState<number | null>(null);
   const [pickupTimeKey, setPickupTimeKey] = useState<string | null>(null);
@@ -64,7 +72,9 @@ export function useShipmentForm({
     setPickupTimestamp(pickupTime);
   }, []);
   const [parcelItemName, setParcelItemName] = useState(() => primaryProductName ?? "");
-  const [declaredValue, setDeclaredValue] = useState(() => orderTotal);
+  const [declaredValue, setDeclaredValue] = useState(() =>
+    initialPrepaid != null ? Math.max(0, orderTotal - initialPrepaid) : orderTotal
+  );
   const [selectedVoucherCode, setSelectedVoucherCode] = useState<string | null>(null);
   const [allowMutualCheck, setAllowMutualCheck] = useState<0 | 1>(0);
   const [allowTryOn, setAllowTryOn] = useState<0 | 1>(0);

@@ -10,7 +10,7 @@ import { useSpxShipping } from "./use-spx-shipping";
 import { parseLocaleNumber, formatLocaleInput } from "../utils/shipment";
 
 export function useCreateShipment() {
-  const params = useLocalSearchParams<{ order?: string; shippingFee?: string; provider?: string }>();
+  const params = useLocalSearchParams<{ order?: string; shippingFee?: string; provider?: string; prepaid?: string }>();
 
   const [order, setOrder] = useState<OrderWithTikTok | null>(() => {
     if (!params.order) return null;
@@ -29,6 +29,7 @@ export function useCreateShipment() {
     orderTotal,
     primaryProductName: primaryProduct?.name ?? undefined,
     initialShippingFee: params.shippingFee,
+    initialPrepaid: params.prepaid != null ? Number(params.prepaid) : undefined,
   });
 
   const addresses = useShipmentAddresses(order);
@@ -62,7 +63,8 @@ export function useCreateShipment() {
   const manualFee = useMemo(() => parseLocaleNumber(form.manualShippingFee), [form.manualShippingFee]);
   const shippingFee = isManualProvider ? manualFee : isSpxProvider ? (spx.estimatedFee ?? 0) : parseLocaleNumber(String(params.shippingFee ?? ""));
   const orderCodAmount = Math.max(0, Number(order?.totalAmount ?? orderTotal) - Number(order?.depositAmount ?? 0));
-  const codAmount = isManualProvider ? parseLocaleNumber(form.manualCodAmount) : orderCodAmount;
+  const spxCodAmount = Math.max(0, form.declaredValue - Number(order?.depositAmount ?? 0));
+  const codAmount = isManualProvider ? parseLocaleNumber(form.manualCodAmount) : isSpxProvider ? spxCodAmount : orderCodAmount;
   const codAmountDisplay = useMemo(() => isManualProvider ? form.manualCodAmount : formatLocaleInput(String(codAmount)), [codAmount, isManualProvider, form.manualCodAmount]);
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
   const totalCollected = isSpxProvider
@@ -91,6 +93,7 @@ export function useCreateShipment() {
     allowMutualCheck: isSpxProvider ? form.allowMutualCheck : undefined,
     allowTryOn: isSpxProvider ? form.allowTryOn : undefined,
     allowPartialDelivery: isSpxProvider ? form.allowPartialDelivery : undefined,
+    codCollection: isSpxProvider ? (spxCodAmount > 0 ? 1 : 0) : undefined,
   });
 
   return {

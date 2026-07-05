@@ -30,6 +30,8 @@ type SpxOptionsProps = {
   onOpenPaymentSheet: () => void;
   onOpenServicePoint: () => void;
   parcelInfoSlot?: ReactNode;
+  estimatedDelivery?: { edtMin: number | null; edtMax: number | null } | null;
+  feeLoading?: boolean;
 };
 
 function formatVoucherAmount(voucher: SpxVoucher) {
@@ -64,6 +66,8 @@ export function SpxOptions({
   onOpenPaymentSheet,
   onOpenServicePoint,
   parcelInfoSlot,
+  estimatedDelivery,
+  feeLoading,
 }: SpxOptionsProps) {
   const { colors, textPresets } = useThemes();
 
@@ -184,42 +188,52 @@ export function SpxOptions({
       <View style={styles.serviceTypeRow}>
         {SERVICE_TYPES.map((svc) => {
           const active = serviceType === svc.value;
+          const deliveryText =
+            active && feeLoading && !estimatedDelivery
+              ? "..."
+              : active && estimatedDelivery && (estimatedDelivery.edtMin != null || estimatedDelivery.edtMax != null)
+              ? estimatedDelivery.edtMin === estimatedDelivery.edtMax
+                ? `${estimatedDelivery.edtMin} ngày`
+                : `${estimatedDelivery.edtMin ?? "?"}–${estimatedDelivery.edtMax ?? "?"} ngày`
+              : "-";
           return (
             <Pressable
               key={svc.value}
               onPress={() => setServiceType(svc.value)}
               style={[
                 styles.serviceTypeCard,
-                active
-                  ? { backgroundColor: colors.primary, borderColor: colors.primary }
-                  : { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+                active ? { borderColor: colors.primary } : { borderColor: colors.border10 },
               ]}
             >
-              <Text
+              {/* Header */}
+              <View
                 style={[
-                  active ? { color: "#fff" } : { color: colors.neutral900 },
-                  textPresets.fs14_500,
-                ]}
-                numberOfLines={1}
-              >
-                {svc.label}
-              </Text>
-              <Text
-                style={[
-                  active ? { color: "rgba(255,255,255,0.7)" } : { color: colors.neutral400 },
-                  textPresets.fs12_400,
+                  styles.serviceTypeHeader,
+                  { backgroundColor: active ? colors.primary : colors.neutral300 },
                 ]}
               >
-                Dự kiến giao hàng
-              </Text>
-              <Text
-                style={[
-                  active ? { color: "rgba(255,255,255,0.85)" } : { color: colors.neutral500 },
-                  textPresets.fs12_400,
-                ]}
-              >
-                -
-              </Text>
+                <Text
+                  style={[textPresets.fs14_500, { color: "#fff" }]}
+                  numberOfLines={1}
+                >
+                  {svc.label}
+                </Text>
+              </View>
+
+              {/* Body */}
+              <View style={[styles.serviceTypeBody, { backgroundColor: colors.surface }]}>
+                <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>
+                  Dự kiến giao hàng
+                </Text>
+                <Text
+                  style={[
+                    textPresets.fs12_400,
+                    { color: active ? colors.primary : colors.neutral400 },
+                  ]}
+                >
+                  {deliveryText}
+                </Text>
+              </View>
             </Pressable>
           );
         })}
@@ -260,8 +274,17 @@ const styles = createStyles(() => ({
     flex: 1,
     borderWidth: 1,
     borderRadius: 12,
-    padding: 14,
+    overflow: "hidden" as const,
+  },
+  serviceTypeHeader: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  serviceTypeBody: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     gap: 4,
+    alignItems: "center" as const,
   },
   collectTypeTabs: {
     flexDirection: "row" as const,
@@ -283,8 +306,8 @@ const styles = createStyles(() => ({
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 44,
+    height: 48,
+    marginTop: 8,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },

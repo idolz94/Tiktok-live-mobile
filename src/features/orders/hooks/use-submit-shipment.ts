@@ -44,6 +44,7 @@ type Deps = {
   allowMutualCheck?: 0 | 1;
   allowTryOn?: 0 | 1;
   allowPartialDelivery?: 0 | 1;
+  codCollection?: 0 | 1;
 };
 
 type SubmitState = "idle" | "submitting" | "success" | "outcome_unknown" | "error";
@@ -83,6 +84,7 @@ export function useSubmitShipment(deps: Deps) {
       allowMutualCheck,
       allowTryOn,
       allowPartialDelivery,
+      codCollection,
     } = deps;
 
     if (!order || !selectedSender || !selectedRecipient) {
@@ -134,6 +136,7 @@ export function useSubmitShipment(deps: Deps) {
           allowMutualCheck,
           allowTryOn,
           allowPartialDelivery,
+          codCollection,
         });
         setSubmitState("success");
       } else {

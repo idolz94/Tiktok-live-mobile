@@ -74,6 +74,11 @@ export function OrderDetailProductsSection({
                   </View>
                 ) : null}
               </View>
+              {(product.variantName || product.color || product.size) ? (
+                <Text style={styles.productVariant} numberOfLines={1}>
+                  {product.variantName || [product.color, product.size].filter(Boolean).join(" / ")}
+                </Text>
+              ) : null}
               <Text style={styles.productQty}>
                 Số lượng: {product.quantity}
               </Text>
@@ -131,6 +136,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     columnGap: 8,
   },
   productName: { flex: 1, color: colors.neutral500, ...textPresets.fs14_500 },
+  productVariant: { color: colors.neutral400, ...textPresets.fs12_400 },
   productQty: { color: colors.neutral300, ...textPresets.fs12_400 },
   productPrice: { color: colors.neutral900, ...textPresets.fs14_500 },
   expandBtn: { alignSelf: "center", paddingVertical: 4 },

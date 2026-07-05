@@ -42,6 +42,7 @@ export const OrderDetail = memo(() => {
     useState<ShippingProvider>("spx");
   const [shippingFeeDisplay, setShippingFeeDisplay] = useState("");
   const [prepaidDisplay, setPrepaidDisplay] = useState("");
+  const [prepaidAmount, setPrepaidAmount] = useState<number | null>(null);
 
   const displayName = useMemo(() => {
     const order = detail.order;
@@ -66,10 +67,16 @@ export const OrderDetail = memo(() => {
   );
 
   const handleChangePrepaid = useCallback(
-    (_amount: number, display: string) => {
+    (amount: number, display: string) => {
+      setPrepaidAmount(amount);
       setPrepaidDisplay(display);
     },
     [],
+  );
+
+  const localRemain = Math.max(
+    0,
+    (detail.order?.totalAmount ?? (detail.productTotal + detail.shippingFee)) - (prepaidAmount ?? 0),
   );
 
   const handleShip = useCallback(() => {
@@ -85,9 +92,10 @@ export const OrderDetail = memo(() => {
             : detail.shippingFee,
         ),
         provider: selectedProvider,
+        prepaid: String(prepaidAmount ?? 0),
       },
     });
-  }, [detail.order, detail.shippingFee, selectedProvider, shippingFeeDisplay]);
+  }, [detail.order, detail.shippingFee, selectedProvider, shippingFeeDisplay, prepaidAmount]);
 
   const handleCancelShipment = useCallback(() => {
     const order = detail.order;
@@ -243,7 +251,7 @@ export const OrderDetail = memo(() => {
                   shippingFeeDisplay || formatMoney(detail.shippingFee)
                 }
                 prepaidDisplay={prepaidDisplay || formatMoney(0)}
-                remain={detail.remain}
+                remain={localRemain}
                 isEditable={detail.order.status === "draft"}
                 onOpenProvider={() => {
                   let id: string;
