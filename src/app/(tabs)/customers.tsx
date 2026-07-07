@@ -12,9 +12,11 @@ import {
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { createStyles } from "@utils/createStyles";
 import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
+import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -53,12 +55,20 @@ const CustomerRow = memo(
           {!!tiktokUsername && (
             <View style={styles.tiktokLine}>
               <Text numberOfLines={1} style={styles.tiktokText}>
-                @{tiktokUsername}
+                {tiktokUsername}
               </Text>
             </View>
           )}
           <View style={styles.metaLine}>
-            <Text style={styles.customerTypeBadge}>{customer.customerType || "Lẻ"}</Text>
+            {(() => {
+              const icon = getCustomerTypeIcon(customer.customerType);
+              return icon ? (
+                <View style={styles.customerTypeBadge}>
+                  <Image source={icon} style={styles.customerTypeIcon} />
+                  <Text style={styles.customerTypeText}>{customer.customerType}</Text>
+                </View>
+              ) : null;
+            })()}
             <Text style={styles.metaText}>{customer.totalOrders} đơn</Text>
           </View>
         </View>
@@ -326,11 +336,16 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flexWrap: "wrap",
   },
   customerTypeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 4,
     marginRight: 8,
-    borderRadius: 999,
-    backgroundColor: colors.neutral50,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+  },
+  customerTypeIcon: {
+    width: 20,
+    height: 20,
+  },
+  customerTypeText: {
     color: colors.textDarkGray,
     ...textPresets.fs11_800,
   },

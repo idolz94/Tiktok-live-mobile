@@ -74,20 +74,14 @@ export async function stopTikTokLiveApi(
   );
 }
 
-export async function getLiveSessionStatusApi({
-  clientId,
-  username,
-}: {
+export async function getLiveSessionStatusApi(_params?: {
   clientId?: string;
-  username: string;
+  username?: string;
 }) {
-  return getRequest<{ active?: boolean; status?: string; data?: unknown }>(
-    "/live-stream/status",
-    {
-      clientId,
-      username: removeAt(username),
-    },
+  const result = await getRequest<{ session: unknown | null }>(
+    "/live-stream/running-session",
   );
+  return { active: result?.session != null };
 }
 
 export async function sendStopBeacon({

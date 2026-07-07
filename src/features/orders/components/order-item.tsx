@@ -7,11 +7,12 @@ import { CustomerDetailSheet } from "@components/customer-detail-sheet";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { Separator } from "@components/separator";
+import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
 import { memo, useCallback } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Image as RNImage, Pressable, Text, View } from "react-native";
 import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
@@ -83,12 +84,17 @@ export const OrderItem = memo(
             </Pressable>
           </View>
         </View>
-        <View style={styles.tags}>
+          <View style={styles.tags}>
           <Text style={styles.orderId}>{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
-          <View style={styles.typeCustomer}>
-            <Icon name="king" size={16} />
-            <Text style={styles.txtTag}>VIP</Text>
-          </View>
+          {(() => {
+            const icon = getCustomerTypeIcon(item.customerType);
+            return icon ? (
+              <View style={styles.typeCustomer}>
+                <RNImage source={icon} style={styles.customerTypeIcon} />
+                <Text style={styles.txtTag}>{item.customerType}</Text>
+              </View>
+            ) : null;
+          })()}
           <View
             style={[
               styles.typeCustomer,
@@ -290,5 +296,9 @@ const styles = createStyles(({ colors, textPresets }) => ({
     backgroundColor: colors.pink50,
     flexDirection: "row",
     columnGap: 4,
+  },
+  customerTypeIcon: {
+    width: 18,
+    height: 18,
   },
 }));

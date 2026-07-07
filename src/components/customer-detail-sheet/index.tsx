@@ -22,10 +22,12 @@ import type { AddrFormValues } from "@features/orders/types/shipment";
 import { formInitialValues } from "@features/orders/utils/shipment";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -138,14 +140,20 @@ function SelectField({
                   borderBottomColor: colors.border10,
                 }}
               >
-                <Text
-                  style={[
-                    textPresets.fs15_400,
-                    { color: selected ? colors.primary : colors.neutral900 },
-                  ]}
-                >
-                  {opt}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", columnGap: 8 }}>
+                  {(() => {
+                    const icon = getCustomerTypeIcon(opt);
+                    return icon ? <Image source={icon} style={{ width: 22, height: 22 }} /> : null;
+                  })()}
+                  <Text
+                    style={[
+                      textPresets.fs15_400,
+                      { color: selected ? colors.primary : colors.neutral900 },
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </View>
                 {selected && (
                   <Ionicons name="checkmark" size={18} color={colors.primary} />
                 )}

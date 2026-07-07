@@ -1,4 +1,4 @@
-import { Linking, Pressable, Text, View } from "react-native";
+import { Image, Linking, Pressable, Text, View } from "react-native";
 import { Avatar } from "@components/avatar";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { CustomerDetailSheet } from "@components/customer-detail-sheet";
@@ -8,6 +8,7 @@ import { createStyles } from "@utils/createStyles";
 import { Section } from "./order-detail-primitives";
 import { useCallback } from "react";
 import type { CustomerAddress } from "@features/orders/service/create-shipment-api";
+import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 
 type OrderDetailCustomerSectionProps = {
   order: OrderWithTikTok;
@@ -63,12 +64,15 @@ export function OrderDetailCustomerSection({
         </Pressable>
         <View style={styles.customerInfo}>
           <Text style={styles.customerName}>{displayName}</Text>
-          {!!order.customerType && (
-            <View style={styles.vipRow}>
-              <Text style={styles.vipStar}>★</Text>
-              <Text style={styles.vipLabel}>{order.customerType}</Text>
-            </View>
-          )}
+          {!!order.customerType && (() => {
+            const icon = getCustomerTypeIcon(order.customerType);
+            return icon ? (
+              <View style={styles.customerTypeBadge}>
+                <Image source={icon} style={styles.customerTypeIcon} />
+                <Text style={styles.customerTypeText}>{order.customerType}</Text>
+              </View>
+            ) : null;
+          })()}
         </View>
       </View>
       <View style={styles.contactRows}>
@@ -121,9 +125,9 @@ const styles = createStyles(({ colors, textPresets }) => ({
   customerTopRow: { flexDirection: "row", alignItems: "center", columnGap: 10 },
   customerInfo: { flex: 1, rowGap: 4 },
   customerName: { color: colors.neutral900, ...textPresets.fs16_600 },
-  vipRow: { flexDirection: "row", alignItems: "center", columnGap: 4 },
-  vipStar: { color: "#f5c842", ...textPresets.fs12_500 },
-  vipLabel: { color: colors.neutral400, ...textPresets.fs12_400 },
+  customerTypeBadge: { flexDirection: "row", alignItems: "center", columnGap: 4 },
+  customerTypeIcon: { width: 20, height: 20 },
+  customerTypeText: { color: colors.neutral400, ...textPresets.fs12_400 },
   contactRows: { rowGap: 8 },
   contactRow: { flexDirection: "row", alignItems: "center", columnGap: 8 },
   contactText: { color: colors.neutral400, ...textPresets.fs12_400, flex: 1 },
