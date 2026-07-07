@@ -1,14 +1,31 @@
 import type { ShippingStatus } from "@app-types/index";
 import { Avatar } from "@components/avatar";
-import { useShippingTab, type ShippingFilterKey, type ShippingOrder } from "@features/orders/hooks/use-shipping-tab";
-import { useThemes } from "@hooks/use-theme";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  useShippingTab,
+  type ShippingFilterKey,
+  type ShippingOrder,
+} from "@features/orders/hooks/use-shipping-tab";
+import {
+  cancelShipmentApi,
+  refreshShippingStatusApi,
+} from "@features/orders/service/create-shipment-api";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Linking, Modal, Pressable, RefreshControl, Text, View } from "react-native";
-import { cancelShipmentApi, refreshShippingStatusApi } from "@features/orders/service/create-shipment-api";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Linking,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
   not_shipped: "Chưa giao",
@@ -48,10 +65,31 @@ function formatDate(value?: string) {
   });
 }
 
-function statusColor(status: ShippingStatus, colors: { success: string; error: string; warning: string; info: string; textMuted: string }) {
+function statusColor(
+  status: ShippingStatus,
+  colors: {
+    success: string;
+    error: string;
+    warning: string;
+    info: string;
+    textMuted: string;
+  },
+) {
   if (status === "delivered") return colors.success;
-  if (status === "in_transit" || status === "shipping" || status === "delivering") return colors.info;
-  if (status === "failed" || status === "damaged" || status === "lost" || status === "return_failed" || status === "pickup_failed") return colors.error;
+  if (
+    status === "in_transit" ||
+    status === "shipping" ||
+    status === "delivering"
+  )
+    return colors.info;
+  if (
+    status === "failed" ||
+    status === "damaged" ||
+    status === "lost" ||
+    status === "return_failed" ||
+    status === "pickup_failed"
+  )
+    return colors.error;
   if (status === "cancelled" || status === "returned") return colors.textMuted;
   return colors.warning;
 }
@@ -67,34 +105,102 @@ function getTrackingUrl(item: ShippingOrder) {
   if (trackingLink) return trackingLink;
 
   const trackingCode = item.trackingCode?.trim();
-  return trackingCode ? `https://test.spx.co.th/track?${encodeURIComponent(trackingCode)}` : null;
+  return trackingCode
+    ? `https://test.spx.co.th/track?${encodeURIComponent(trackingCode)}`
+    : null;
 }
 
-function SummaryCard({ value, label, tone }: { value: number; label: string; tone: "success" | "info" | "error" }) {
+function SummaryCard({
+  value,
+  label,
+  tone,
+}: {
+  value: number;
+  label: string;
+  tone: "success" | "info" | "error";
+}) {
   const { colors, textPresets } = useThemes();
-  const toneColor = tone === "success" ? colors.success : tone === "info" ? colors.info : colors.error;
-  const bg = tone === "success" ? colors.successLight : tone === "info" ? colors.infoLight : colors.primaryLight;
+  const toneColor =
+    tone === "success"
+      ? colors.success
+      : tone === "info"
+        ? colors.info
+        : colors.error;
+  const bg =
+    tone === "success"
+      ? colors.successLight
+      : tone === "info"
+        ? colors.infoLight
+        : colors.primaryLight;
 
   return (
-    <View style={[styles.summaryCard, { backgroundColor: bg, borderColor: colors.border10 }]}>
+    <View
+      style={[
+        styles.summaryCard,
+        { backgroundColor: bg, borderColor: colors.border10 },
+      ]}
+    >
       <View style={[styles.summaryIcon, { backgroundColor: toneColor }]}>
-        <Text style={styles.summaryIconText}>{tone === "success" ? "✓" : tone === "info" ? "i" : "!"}</Text>
+        <Text style={styles.summaryIconText}>
+          {tone === "success" ? "✓" : tone === "info" ? "i" : "!"}
+        </Text>
       </View>
       <View style={styles.summaryTextWrap}>
-        <Text style={[styles.summaryValue, { color: colors.text, ...textPresets.fs16_600 }]}>{formatMoney(value)}</Text>
-        <Text style={[styles.summaryLabel, { color: colors.textDarkGray, ...textPresets.fs12_400 }]}>{label}</Text>
+        <Text
+          style={[
+            styles.summaryValue,
+            { color: colors.text, ...textPresets.fs16_600 },
+          ]}
+        >
+          {formatMoney(value)}
+        </Text>
+        <Text
+          style={[
+            styles.summaryLabel,
+            { color: colors.textDarkGray, ...textPresets.fs12_400 },
+          ]}
+        >
+          {label}
+        </Text>
       </View>
       <Text style={[styles.chevron, { color: colors.text }]}>›</Text>
     </View>
   );
 }
 
-function InfoRow({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
+function InfoRow({
+  label,
+  value,
+  last = false,
+}: {
+  label: string;
+  value: string;
+  last?: boolean;
+}) {
   const { colors, textPresets } = useThemes();
   return (
-    <View style={[styles.infoRow, !last && { borderBottomColor: colors.neutral50, borderBottomWidth: 1 }]}>
-      <Text style={[styles.infoLabel, { color: colors.neutral500, ...textPresets.fs14_400 }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: colors.text, ...textPresets.fs14_500 }]}>{value}</Text>
+    <View
+      style={[
+        styles.infoRow,
+        !last && { borderBottomColor: colors.neutral50, borderBottomWidth: 1 },
+      ]}
+    >
+      <Text
+        style={[
+          styles.infoLabel,
+          { color: colors.neutral500, ...textPresets.fs14_400 },
+        ]}
+      >
+        {label}
+      </Text>
+      <Text
+        style={[
+          styles.infoValue,
+          { color: colors.text, ...textPresets.fs14_500 },
+        ]}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -106,76 +212,168 @@ function TrackingInfo({ item }: { item: ShippingOrder }) {
   return (
     <View style={[styles.trackingBox, { borderColor: colors.border10 }]}>
       <View style={styles.trackingCodeRow}>
-        <Text style={[styles.muted12, { color: colors.neutral400, ...textPresets.fs12_400 }]}>Mã SPX</Text>
-        <Text style={[styles.trackingCode, { color: colors.text, ...textPresets.fs12_400 }]}>{item.trackingCode}</Text>
+        <Text
+          style={[
+            styles.muted12,
+            { color: colors.neutral400, ...textPresets.fs12_400 },
+          ]}
+        >
+          Mã SPX
+        </Text>
+        <Text
+          style={[
+            styles.trackingCode,
+            { color: colors.text, ...textPresets.fs12_400 },
+          ]}
+        >
+          {item.trackingCode}
+        </Text>
       </View>
-      <View style={[styles.trackingMain, { backgroundColor: colors.neutral50 }]}>
+      <View
+        style={[styles.trackingMain, { backgroundColor: colors.neutral50 }]}
+      >
         <View style={styles.carrierRow}>
           <View style={[styles.logoBox, { backgroundColor: "#ff3911" }]}>
             <Text style={styles.logoText}>SPX</Text>
           </View>
           <View style={styles.carrierText}>
-            <Text style={[styles.carrierName, { color: colors.text, ...textPresets.fs14_500 }]}>{providerName(item.providerName)}</Text>
-            <Text style={[styles.carrierStatus, { color, ...textPresets.fs12_400 }]}>{STATUS_LABEL[item.shippingStatus]}</Text>
+            <Text
+              style={[
+                styles.carrierName,
+                { color: colors.text, ...textPresets.fs14_500 },
+              ]}
+            >
+              {providerName(item.providerName)}
+            </Text>
+            <Text
+              style={[styles.carrierStatus, { color, ...textPresets.fs12_400 }]}
+            >
+              {STATUS_LABEL[item.shippingStatus]}
+            </Text>
           </View>
           <Pressable
             style={styles.followButton}
             onPress={() => {
               if (!trackingUrl) {
-                Alert.alert("Chưa có link theo dõi", `Mã SPX: ${item.trackingCode}`);
+                Alert.alert(
+                  "Chưa có link theo dõi",
+                  `Mã SPX: ${item.trackingCode}`,
+                );
                 return;
               }
               void Linking.openURL(trackingUrl);
             }}
           >
-            <Text style={[styles.followText, { color: colors.text, ...textPresets.fs12_500 }]}>Theo dõi</Text>
+            <Text
+              style={[
+                styles.followText,
+                { color: colors.text, ...textPresets.fs12_500 },
+              ]}
+            >
+              Theo dõi
+            </Text>
             <Text style={[styles.followText, { color: colors.text }]}>›</Text>
           </Pressable>
         </View>
         <View style={styles.trackingMetaRow}>
-          <Text style={[styles.muted12, { color: colors.neutral400, ...textPresets.fs12_400 }]}>{formatDate(item.updatedAt || item.createdAt)}</Text>
-          <Text style={[styles.orderCode, { color: colors.text, ...textPresets.fs12_400 }]}>{item.orderCode || item.id.slice(0, 8)}</Text>
+          <Text
+            style={[
+              styles.muted12,
+              { color: colors.neutral400, ...textPresets.fs12_400 },
+            ]}
+          >
+            {formatDate(item.updatedAt || item.createdAt)}
+          </Text>
+          <Text
+            style={[
+              styles.orderCode,
+              { color: colors.text, ...textPresets.fs12_400 },
+            ]}
+          >
+            {item.orderCode || item.id.slice(0, 8)}
+          </Text>
         </View>
       </View>
     </View>
   );
 }
 
-function OrderCard({ item, onCancelShipment, cancelling }: { item: ShippingOrder; onCancelShipment: () => void; cancelling: boolean }) {
+function OrderCard({
+  item,
+  onCancelShipment,
+  cancelling,
+}: {
+  item: ShippingOrder;
+  onCancelShipment: () => void;
+  cancelling: boolean;
+}) {
   const { colors, textPresets } = useThemes();
   const name = item.customerName || item.username || "Khách live";
-  const count = item.products?.reduce((sum, p) => sum + Number(p.quantity || 0), 0) || item.quantity || 0;
+  const count =
+    item.products?.reduce((sum, p) => sum + Number(p.quantity || 0), 0) ||
+    item.quantity ||
+    0;
   return (
     <View style={styles.orderCard}>
       <View style={styles.userRow}>
         <Avatar uri={item.avatarUrl || item.avatar} username={name} size={40} />
-        <Text style={[styles.userName, { color: colors.text, ...textPresets.fs16_500 }]} numberOfLines={1}>{name}</Text>
+        <Text
+          style={[
+            styles.userName,
+            { color: colors.text, ...textPresets.fs16_500 },
+          ]}
+          numberOfLines={1}
+        >
+          {name}
+        </Text>
       </View>
       <TrackingInfo item={item} />
       <View style={styles.infoBlock}>
         <InfoRow label="Số lượng sản phẩm" value={String(count)} />
-        <InfoRow label="Phí vận chuyển" value={formatMoney(Number(item.shippingFee || 0))} />
-        <InfoRow label="Tiền thu hộ (COD)" value={formatMoney(Number(item.codAmount || 0))} last />
+        <InfoRow
+          label="Phí vận chuyển"
+          value={formatMoney(Number(item.shippingFee || 0))}
+        />
+        <InfoRow
+          label="Tiền thu hộ (COD)"
+          value={formatMoney(Number(item.codAmount || 0))}
+          last
+        />
       </View>
-      <View style={[styles.shipmentActions, { borderTopColor: colors.border10 }]}>
+      <View
+        style={[styles.shipmentActions, { borderTopColor: colors.border10 }]}
+      >
         <Pressable style={styles.printShipmentButton}>
           <Ionicons name="print-outline" size={17} color={colors.text} />
-          <Text style={[styles.shipmentButtonText, { color: colors.text }]}>In Đơn</Text>
+          <Text style={[styles.shipmentButtonText, { color: colors.text }]}>
+            In Đơn
+          </Text>
         </Pressable>
-        {item.shippingStatus !== "cancelled" && item.shippingStatus !== "returned" && item.shippingStatus !== "delivered" && (
-          <Pressable
-            style={[styles.cancelShipmentButton, { borderLeftColor: colors.border10 }]}
-            onPress={onCancelShipment}
-            disabled={cancelling}
-          >
-            {cancelling ? (
-              <ActivityIndicator size="small" color="#EF4444" />
-            ) : (
-              <Ionicons name="close-circle-outline" size={17} color="#EF4444" />
-            )}
-            <Text style={styles.cancelShipmentText}>{cancelling ? "Đang huỷ..." : "Huỷ Vận Đơn"}</Text>
-          </Pressable>
-        )}
+        {item.shippingStatus !== "cancelled" &&
+          item.shippingStatus !== "returned" &&
+          item.shippingStatus !== "delivered" && (
+            <Pressable
+              style={[
+                styles.cancelShipmentButton,
+                { borderLeftColor: colors.border10 },
+              ]}
+              onPress={onCancelShipment}
+              disabled={cancelling}
+            >
+              {cancelling ? (
+                <ActivityIndicator size="small" color="#EF4444" />
+              ) : (
+                <Ionicons
+                  name="close-circle-outline"
+                  size={17}
+                  color="#EF4444"
+                />
+              )}
+              <Text style={styles.cancelShipmentText}>
+                {cancelling ? "Đang huỷ..." : "Huỷ Vận Đơn"}
+              </Text>
+            </Pressable>
+          )}
       </View>
     </View>
   );
@@ -190,40 +388,67 @@ const FILTER_LABELS: Record<ShippingFilterKey, string> = {
   other: "Khác",
 };
 
-const filterKeys: ShippingFilterKey[] = ["all", "waiting", "transit", "delivered", "returning", "other"];
+const filterKeys: ShippingFilterKey[] = [
+  "all",
+  "waiting",
+  "transit",
+  "delivered",
+  "returning",
+  "other",
+];
 
-function FilterSheet({ visible, filter, onClose, onSelect }: { visible: boolean; filter: ShippingFilterKey; onClose: () => void; onSelect: (key: ShippingFilterKey) => void }) {
+function FilterSheet({
+  filter,
+  onClose,
+  onSelect,
+}: {
+  filter: ShippingFilterKey;
+  onClose: () => void;
+  onSelect: (key: ShippingFilterKey) => void;
+}) {
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.sheetOverlay} onPress={onClose}>
-        <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]} onPress={(event) => event.stopPropagation()}>
-          <View style={styles.sheetHeader}>
-            <View style={styles.sheetHeaderSpacer} />
-            <Text style={[styles.sheetTitle, { color: colors.text, ...textPresets.fs18_500 }]}>Trạng thái đơn hàng</Text>
-            <Pressable style={styles.sheetCloseButton} onPress={onClose}>
-              <Text style={[styles.sheetCloseText, { color: colors.text }]}>×</Text>
-            </Pressable>
-          </View>
-          <View style={styles.sheetContent}>
-            {filterKeys.map((key) => (
-              <Pressable
-                key={key}
-                style={styles.sheetRow}
-                onPress={() => {
-                  onSelect(key);
-                  onClose();
-                }}
-              >
-                <Text style={[styles.sheetRowText, { color: colors.text, ...textPresets.fs16_400 }]}>{FILTER_LABELS[key]}</Text>
-                {filter === key ? <Text style={[styles.sheetCheck, { color: colors.text }]}>✓</Text> : null}
-              </Pressable>
-            ))}
-          </View>
+    <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+      <View style={styles.sheetHeader}>
+        <View style={styles.sheetHeaderSpacer} />
+        <Text
+          style={[
+            styles.sheetTitle,
+            { color: colors.text, ...textPresets.fs18_500 },
+          ]}
+        >
+          Trạng thái đơn hàng
+        </Text>
+        <Pressable style={styles.sheetCloseButton} onPress={() => onClose()}>
+          <Text style={[styles.sheetCloseText, { color: colors.text }]}>×</Text>
         </Pressable>
-      </Pressable>
-    </Modal>
+      </View>
+      <View style={styles.sheetContent}>
+        {filterKeys.map((key) => (
+          <Pressable
+            key={key}
+            style={styles.sheetRow}
+            onPress={() => {
+              onSelect(key);
+              onClose();
+            }}
+          >
+            <Text
+              style={[
+                styles.sheetRowText,
+                { color: colors.text, ...textPresets.fs16_400 },
+              ]}
+            >
+              {FILTER_LABELS[key]}
+            </Text>
+            {filter === key ? (
+              <Text style={[styles.sheetCheck, { color: colors.text }]}>✓</Text>
+            ) : null}
+          </Pressable>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -267,37 +492,50 @@ function ShippingSkeleton() {
 }
 
 export default function ShippingTab() {
-  const { orders, loading, refreshing, error, refresh, summary, filter, setFilter } = useShippingTab();
+  const {
+    orders,
+    loading,
+    refreshing,
+    error,
+    refresh,
+    summary,
+    filter,
+    setFilter,
+  } = useShippingTab();
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
-  const [filterOpen, setFilterOpen] = useState(false);
+  const { show, hide } = useBottomSheet();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const scrollRef = useRef<FlatList>(null);
   useTabScrollToTop("shipping", scrollRef, { isFlatList: true });
 
-  const handleCancelShipment = useCallback((item: ShippingOrder) => {
-    if (!item.trackingCode) return;
-    Alert.alert("Huỷ vận đơn", `Huỷ vận đơn ${item.trackingCode}?`, [
-      { text: "Không" },
-      {
-        text: "Huỷ vận đơn",
-        style: "destructive",
-        onPress: () => {
-          setCancellingId(item.id);
-          cancelShipmentApi(item.id, { trackingId: item.trackingCode })
-            .then(() => refreshShippingStatusApi(item.id))
-            .then(() => refresh())
-            .then(() => Alert.alert("Thành công", "Đã huỷ vận đơn."))
-            .catch((err: unknown) => {
-              const msg = err instanceof Error ? err.message : "Vui lòng thử lại.";
-              Alert.alert("Không huỷ được vận đơn", msg);
-            })
-            .finally(() => setCancellingId(null));
+  const handleCancelShipment = useCallback(
+    (item: ShippingOrder) => {
+      if (!item.trackingCode) return;
+      Alert.alert("Huỷ vận đơn", `Huỷ vận đơn ${item.trackingCode}?`, [
+        { text: "Không" },
+        {
+          text: "Huỷ vận đơn",
+          style: "destructive",
+          onPress: () => {
+            setCancellingId(item.id);
+            cancelShipmentApi(item.id, { trackingId: item.trackingCode })
+              .then(() => refreshShippingStatusApi(item.id))
+              .then(() => refresh())
+              .then(() => Alert.alert("Thành công", "Đã huỷ vận đơn."))
+              .catch((err: unknown) => {
+                const msg =
+                  err instanceof Error ? err.message : "Vui lòng thử lại.";
+                Alert.alert("Không huỷ được vận đơn", msg);
+              })
+              .finally(() => setCancellingId(null));
+          },
         },
-      },
-    ]);
-  }, [refresh]);
+      ]);
+    },
+    [refresh],
+  );
 
   if (loading) return <ShippingSkeleton />;
 
@@ -307,42 +545,108 @@ export default function ShippingTab() {
         ref={scrollRef}
         data={orders}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor={colors.primary}
+          />
+        }
         contentContainerStyle={styles.container}
         ListHeaderComponent={
           <View>
             <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-              <Text style={[styles.title, { color: colors.text, ...textPresets.fs24_800 }]}>Quản lý vận đơn</Text>
-              <View style={[styles.searchButton, { backgroundColor: colors.white }]}>
-                <Text style={[styles.searchIcon, { color: colors.text }]}>⌕</Text>
-              </View>
+              <Text
+                style={[
+                  styles.title,
+                  { color: colors.text, ...textPresets.fs24_800 },
+                ]}
+              >
+                Quản lý vận đơn
+              </Text>
             </View>
             <View style={styles.summaryWrap}>
-              <SummaryCard value={summary.codAmount} label="Tổng tiền thu hộ (COD)" tone="success" />
-              <SummaryCard value={summary.revenue} label="Tổng doanh thu" tone="info" />
-              <SummaryCard value={summary.shippingFee} label="Tổng phí vận chuyển" tone="error" />
+              <SummaryCard
+                value={summary.codAmount}
+                label="Tổng tiền thu hộ (COD)"
+                tone="success"
+              />
+              <SummaryCard
+                value={summary.revenue}
+                label="Tổng doanh thu"
+                tone="info"
+              />
+              <SummaryCard
+                value={summary.shippingFee}
+                label="Tổng phí vận chuyển"
+                tone="error"
+              />
             </View>
             <View style={styles.countRow}>
               <View>
-                <Text style={[styles.countTitle, { color: colors.text, ...textPresets.fs20_600 }]}>{summary.orderCount} đơn hàng</Text>
-                <Text style={[styles.countSubtitle, { color: colors.neutral400, ...textPresets.fs14_400 }]}>{FILTER_LABELS[filter]} ›</Text>
+                <Text
+                  style={[
+                    styles.countTitle,
+                    { color: colors.text, ...textPresets.fs20_600 },
+                  ]}
+                >
+                  {summary.orderCount} đơn hàng
+                </Text>
               </View>
-              <Pressable style={[styles.filterTrigger, { borderColor: colors.border10 }]} onPress={() => setFilterOpen(true)}>
-                <Text style={[styles.filterText, { color: colors.text, ...textPresets.fs14_500 }]}>Filter</Text>
+              <Pressable
+                style={[styles.filterTrigger, { borderColor: colors.border10 }]}
+                onPress={() => {
+                  show({
+                    showDragIndicator: true,
+                    backgroundStyle: { backgroundColor: colors.white },
+                    content: (
+                      <FilterSheet
+                        filter={filter}
+                        onClose={() => hide()}
+                        onSelect={setFilter}
+                      />
+                    ),
+                  });
+                }}
+              >
+                <Text
+                  style={[
+                    styles.filterText,
+                    { color: colors.text, ...textPresets.fs14_500 },
+                  ]}
+                >
+                  Filter
+                </Text>
               </Pressable>
             </View>
-            {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
+            {error ? (
+              <Text style={[styles.error, { color: colors.error }]}>
+                {error}
+              </Text>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={[styles.emptyText, { color: colors.textMuted, ...textPresets.fs15_800 }]}>Chưa có vận đơn nào.</Text>
+            <Text
+              style={[
+                styles.emptyText,
+                { color: colors.textMuted, ...textPresets.fs15_800 },
+              ]}
+            >
+              Chưa có vận đơn nào.
+            </Text>
           </View>
         }
-        renderItem={({ item }) => <OrderCard item={item} cancelling={cancellingId === item.id} onCancelShipment={() => handleCancelShipment(item)} />}
+        renderItem={({ item }) => (
+          <OrderCard
+            item={item}
+            cancelling={cancellingId === item.id}
+            onCancelShipment={() => handleCancelShipment(item)}
+          />
+        )}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
       />
-      <FilterSheet visible={filterOpen} filter={filter} onClose={() => setFilterOpen(false)} onSelect={setFilter} />
     </>
   );
 }
@@ -350,32 +654,90 @@ export default function ShippingTab() {
 const styles = createStyles(() => ({
   container: { paddingBottom: 34, backgroundColor: "#FFFFFF" },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  header: { paddingTop: 18, paddingHorizontal: 16, paddingBottom: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  header: {
+    paddingTop: 18,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   title: { lineHeight: 28 },
-  searchButton: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center" },
+  searchButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   searchIcon: { fontSize: 24, lineHeight: 28 },
   summaryWrap: { gap: 8, paddingHorizontal: 16, paddingBottom: 16 },
-  summaryCard: { borderWidth: 0.5, borderRadius: 12, paddingVertical: 12, paddingLeft: 16, paddingRight: 12, flexDirection: "row", alignItems: "center", gap: 12 },
-  summaryIcon: { width: 32, height: 32, borderRadius: 999, alignItems: "center", justifyContent: "center" },
+  summaryCard: {
+    borderWidth: 0.5,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingLeft: 16,
+    paddingRight: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  summaryIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   summaryIconText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
   summaryTextWrap: { flex: 1, gap: 4 },
   summaryValue: { lineHeight: 24 },
   summaryLabel: { lineHeight: 18 },
   chevron: { fontSize: 24, lineHeight: 24 },
-  countRow: { paddingHorizontal: 16, paddingBottom: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  countRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   countTitle: { lineHeight: 24 },
   countSubtitle: { marginTop: 4, lineHeight: 22 },
-  filterTrigger: { borderWidth: 1, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 16 },
+  filterTrigger: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
   filterText: { lineHeight: 22 },
-  sheetOverlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.35)" },
-  sheet: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: "hidden" },
-  sheetHeader: { padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16 },
+  sheetHeader: {
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+  },
   sheetHeaderSpacer: { width: 32, height: 32 },
   sheetTitle: { flex: 1, textAlign: "center", lineHeight: 24 },
-  sheetCloseButton: { width: 32, height: 32, borderRadius: 999, backgroundColor: "#F2F2F2", alignItems: "center", justifyContent: "center" },
+  sheetCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sheetCloseText: { fontSize: 24, lineHeight: 28 },
   sheetContent: { paddingHorizontal: 16, paddingTop: 8, gap: 12 },
-  sheetRow: { height: 48, borderRadius: 8, backgroundColor: "#F2F2F2", paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 16 },
+  sheetRow: {
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: "#F2F2F2",
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
   sheetRowText: { flex: 1, lineHeight: 24 },
   sheetCheck: { fontSize: 18, lineHeight: 22 },
   orderCard: { paddingHorizontal: 16, gap: 16 },
@@ -383,22 +745,52 @@ const styles = createStyles(() => ({
   userRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   userName: { flex: 1, lineHeight: 24 },
   trackingBox: { borderWidth: 1, borderRadius: 12, overflow: "hidden" },
-  trackingCodeRow: { backgroundColor: "#FFFFFF", paddingTop: 8, paddingHorizontal: 16, paddingBottom: 20, marginBottom: -12, flexDirection: "row", justifyContent: "space-between", gap: 16 },
+  trackingCodeRow: {
+    backgroundColor: "#FFFFFF",
+    paddingTop: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    marginBottom: -12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+  },
   muted12: { lineHeight: 18 },
   trackingCode: { flex: 1, textAlign: "right", lineHeight: 18 },
-  trackingMain: { borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, gap: 12 },
+  trackingMain: {
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
   carrierRow: { flexDirection: "row", alignItems: "center", gap: 16 },
-  logoBox: { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  logoBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   logoText: { color: "#FFFFFF", fontSize: 10, fontWeight: "900" },
   carrierText: { flex: 1 },
   carrierName: { lineHeight: 22 },
   carrierStatus: { lineHeight: 18 },
   followButton: { flexDirection: "row", alignItems: "center", gap: 4 },
   followText: { lineHeight: 18 },
-  trackingMetaRow: { flexDirection: "row", justifyContent: "space-between", gap: 16 },
+  trackingMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+  },
   orderCode: { flex: 1, textAlign: "right", lineHeight: 18 },
   infoBlock: {},
-  infoRow: { paddingTop: 12, paddingBottom: 12, flexDirection: "row", justifyContent: "space-between", gap: 16 },
+  infoRow: {
+    paddingTop: 12,
+    paddingBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+  },
   infoLabel: { flex: 1, lineHeight: 22 },
   infoValue: { width: 120, textAlign: "right", lineHeight: 22 },
   divider: { height: 8, backgroundColor: "#F2F2F2", marginVertical: 16 },
@@ -406,8 +798,27 @@ const styles = createStyles(() => ({
   emptyText: {},
   error: { paddingHorizontal: 16, paddingBottom: 12 },
   shipmentActions: { borderTopWidth: 1, flexDirection: "row" },
-  printShipmentButton: { flex: 1, height: 42, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  printShipmentButton: {
+    flex: 1,
+    height: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
   shipmentButtonText: { fontSize: 13, fontWeight: "700" as const },
-  cancelShipmentButton: { flex: 1, height: 42, borderLeftWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
-  cancelShipmentText: { color: "#EF4444", fontSize: 13, fontWeight: "700" as const },
+  cancelShipmentButton: {
+    flex: 1,
+    height: 42,
+    borderLeftWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  cancelShipmentText: {
+    color: "#EF4444",
+    fontSize: 13,
+    fontWeight: "700" as const,
+  },
 }));
