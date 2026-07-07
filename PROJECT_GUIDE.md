@@ -638,3 +638,325 @@ File này **được 4 component dùng chung** (`shipping-address-section`, `shi
 - Map các màu **khớp token tuyệt đối** sang `colors.*` (`neutral900/100/50/500/400`, `border10/20`).
 
 Các hex còn lại (`#ebb140` gold accent, `#ef4444`, `#d1d5db`...) **chưa có token khớp** nên giữ nguyên — không map ép để tránh lệch giao diện. Bổ sung token cho các màu này là một quyết định design-system riêng.
+
+---
+
+# 20. Code Review, Refactor & Performance Optimization Rules
+
+These rules apply whenever modifying existing code.
+
+The primary objective is to improve readability, maintainability and performance **without changing any existing behavior**.
+
+## Core Principles
+
+Always prioritize:
+
+1. Correctness
+2. Existing behavior
+3. Maintainability
+4. Performance
+
+Performance improvements are only valuable if they preserve identical runtime behavior.
+
+Never trade correctness for optimization.
+
+---
+
+## Never Change Business Logic
+
+When refactoring existing code:
+
+* Never change business logic.
+* Never change UI behavior.
+* Never change navigation flow.
+* Never change API request order.
+* Never change async execution order.
+* Never change optimistic update timing.
+* Never change loading/error states.
+* Never change animation timing unless explicitly requested.
+
+If an optimization could alter runtime behavior in any way, do not apply it automatically.
+
+Instead:
+
+* explain the trade-offs
+* explain the potential risks
+* keep the original implementation
+
+---
+
+## Safe Refactoring Only
+
+Allowed refactoring includes:
+
+* rename variables for clarity
+* simplify conditions
+* reduce nesting
+* extract duplicated logic
+* improve readability
+* remove dead code
+* improve typing
+* improve file organization
+
+Only if runtime behavior remains identical.
+
+---
+
+## Performance Optimization Rules
+
+Optimize only when there is a measurable benefit.
+
+Do not optimize based on assumptions.
+
+Focus on:
+
+### Prevent unnecessary re-renders
+
+Review:
+
+* unstable props
+* unstable callbacks
+* unstable object literals
+* unstable arrays
+* inline styles
+* unnecessary state updates
+* unnecessary parent renders
+* context propagation
+
+---
+
+### Hooks
+
+Review:
+
+* useEffect dependencies
+* stale closures
+* unnecessary effects
+* duplicated effects
+* useMemo usefulness
+* useCallback usefulness
+* useRef opportunities
+
+Do not blindly add useMemo or useCallback.
+
+Every hook optimization must have a clear justification.
+
+---
+
+### State
+
+Prefer:
+
+* derived values
+* computed values
+* immutable updates
+* batching
+
+Avoid:
+
+* duplicated state
+* synchronized state
+* unnecessary useState
+
+---
+
+### Lists
+
+For FlatList / FlashList:
+
+Review:
+
+* renderItem stability
+* keyExtractor
+* estimatedItemSize
+* memoized row components
+* extraData usage
+* virtualization configuration
+
+---
+
+### Object Allocation
+
+Avoid unnecessary allocations inside render:
+
+* arrays
+* objects
+* callbacks
+* maps
+* sets
+* regex
+
+Only optimize allocations that meaningfully affect rendering.
+
+---
+
+### React Native Performance
+
+Review:
+
+* unnecessary layout passes
+* expensive calculations during render
+* bridge communication
+* JS thread work
+* UI thread work
+* image rendering
+* Animated/Reanimated usage
+
+---
+
+## Memoization Policy
+
+Never add memoization automatically.
+
+Before using:
+
+* React.memo
+* useMemo
+* useCallback
+
+Verify that:
+
+* the component re-renders frequently
+* the optimization has measurable value
+* dependency tracking remains correct
+
+Avoid memoization that increases complexity without measurable benefit.
+
+---
+
+## React Compiler Readiness
+
+Prefer writing components compatible with future React Compiler optimizations.
+
+Avoid unnecessary manual memoization that may become redundant.
+
+Prefer:
+
+* pure components
+* stable logic
+* predictable rendering
+
+---
+
+## TypeScript Rules
+
+Improve:
+
+* type inference
+* readonly usage
+* generic constraints
+* discriminated unions
+
+Avoid:
+
+* unnecessary any
+* over-engineered generic types
+* excessive abstraction
+
+---
+
+## Code Style
+
+Prefer:
+
+* early returns
+* descriptive naming
+* pure helper functions
+* predictable control flow
+
+Avoid:
+
+* deeply nested conditions
+* duplicated logic
+* unnecessary abstraction
+* premature optimization
+
+---
+
+## Review Output Requirements
+
+Every review must classify findings into:
+
+### Critical
+
+Must fix.
+
+Examples:
+
+* incorrect behavior
+* stale closures
+* race conditions
+* memory leaks
+* invalid dependencies
+
+---
+
+### High
+
+Strongly recommended.
+
+Examples:
+
+* unnecessary renders
+* duplicated state
+* incorrect memoization
+* expensive rendering
+
+---
+
+### Medium
+
+Maintainability improvements.
+
+Examples:
+
+* readability
+* naming
+* duplicated logic
+* organization
+
+---
+
+### Low
+
+Style improvements.
+
+Examples:
+
+* formatting
+* consistency
+* optional cleanup
+
+---
+
+## Before Applying Any Change
+
+Every modification should answer:
+
+1. Does this preserve runtime behavior?
+
+2. Does this preserve business logic?
+
+3. Is there measurable benefit?
+
+4. Does it reduce unnecessary rendering?
+
+5. Does it reduce unnecessary allocations?
+
+6. Is the code easier to maintain?
+
+If any answer is "No" or "Not sure", keep the original implementation.
+
+---
+
+## Default Philosophy
+
+Be conservative.
+
+Prefer a small improvement that is provably safe over a large rewrite with uncertain behavior.
+
+A production codebase values stability more than cleverness.
+
+When in doubt:
+
+Keep the original logic.

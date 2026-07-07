@@ -23,6 +23,7 @@ import { formInitialValues } from "@features/orders/utils/shipment";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
+import { Popover } from "@components/popover";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -102,60 +103,56 @@ function SelectField({
   hint?: string;
 }) {
   const { colors, textPresets } = useThemes();
-  const { push, hide } = useBottomSheet();
 
-  const handlePress = () => {
-    push({
-      content: (
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingBottom: 40,
-          }}
-        >
-          <Text
-            style={{
-              paddingVertical: 16,
-              color: colors.neutral500,
-              ...textPresets.fs15_800,
-            }}
-          >
-            {label}
-          </Text>
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <Popover
+        trigger={
+          <Pressable style={styles.selectInput}>
+            <Text
+              style={[
+                textPresets.fs14_400,
+                { color: value ? colors.neutral900 : colors.neutral300, flex: 1 },
+              ]}
+            >
+              {value || "Chọn loại khách hàng"}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={colors.neutral400} />
+          </Pressable>
+        }
+        placement="bottom"
+        showArrow={false}
+        showBackdrop={false}
+        closeOnOutsidePress={true}
+      >
+        <View style={{ width: 200, padding: 4 }}>
           {CUSTOMER_TYPES.map((opt) => {
             const selected = value === opt;
             return (
               <Pressable
                 key={opt}
-                onPress={() => {
-                  onChange(opt);
-                  hide();
-                }}
+                onPress={() => onChange(opt)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  paddingVertical: 14,
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.border10,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  borderRadius: 6,
+                  backgroundColor: selected ? colors.primaryLight : "transparent",
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    columnGap: 8,
-                  }}
-                >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                   {(() => {
                     const icon = getCustomerTypeIcon(opt);
                     return icon ? (
-                      <Image source={icon} style={{ width: 22, height: 22 }} />
+                      <Image source={icon} style={{ width: 20, height: 20 }} />
                     ) : null;
                   })()}
                   <Text
                     style={[
-                      textPresets.fs15_400,
+                      textPresets.fs14_400,
                       { color: selected ? colors.primary : colors.neutral900 },
                     ]}
                   >
@@ -163,30 +160,13 @@ function SelectField({
                   </Text>
                 </View>
                 {selected && (
-                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                  <Ionicons name="checkmark" size={16} color={colors.primary} />
                 )}
               </Pressable>
             );
           })}
         </View>
-      ),
-    });
-  };
-
-  return (
-    <View style={styles.fieldGroup}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <Pressable onPress={handlePress} style={styles.selectInput}>
-        <Text
-          style={[
-            textPresets.fs14_400,
-            { color: value ? colors.neutral900 : colors.neutral300, flex: 1 },
-          ]}
-        >
-          {value || "Chọn loại khách hàng"}
-        </Text>
-        <Ionicons name="chevron-down" size={16} color={colors.neutral400} />
-      </Pressable>
+      </Popover>
       {!!hint && <Text style={styles.fieldHint}>{hint}</Text>}
     </View>
   );

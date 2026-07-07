@@ -1,6 +1,7 @@
 import "@declare";
 import { BottomSheetProvider } from "@components/bottom-sheet/provider";
 import { ToastProvider } from "@components/toast";
+import { PopoverProvider } from "@components/popover";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { TikTokLiveSocketProvider } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { sessionExpiredEmitter } from "@utils/http/session-event";
@@ -82,34 +83,37 @@ function RootContent() {
         <KeyboardProvider>
           <ToastProvider>
             <BottomSheetProvider>
+              <PopoverProvider>
               <StatusBar style="dark" />
-              <View style={{ flex: 1 }}>
-                {shouldRenderStack && (
-                  <View style={{ flex: 1 }} onLayout={handleRootLayout}>
-                    {/* --- Live provider ở root: không unmount khi navigate order-detail/browser --- */}
-                    <TikTokLiveSocketProvider hasHistory={user?.hasHistory}>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="(auth)" />
-                      <Stack.Screen name="onboarding" />
-                      <Stack.Screen name="(tabs)" />
-                      <Stack.Screen name="printer-settings" />
-                      <Stack.Screen name="shipping-settings" />
-                      <Stack.Screen name="(sheets)" />
-                      <Stack.Screen name="manage-tiktok-channel" />
-                      <Stack.Screen name="order-detail" />
-                      <Stack.Screen name="license-expired" />
-                    </Stack>
-                    </TikTokLiveSocketProvider>
-                    {/* --- end Live provider --- */}
-                  </View>
-                )}
-                {showSplashOverlay && (
-                  <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                    <Splash />
-                  </View>
-                )}
-              </View>
+                <View style={{ flex: 1 }}>
+                  {shouldRenderStack && (
+                    <View style={{ flex: 1 }} onLayout={handleRootLayout}>
+                      {/* --- Live provider ở root: không unmount khi navigate order-detail/browser --- */}
+                      <TikTokLiveSocketProvider hasHistory={user?.hasHistory}>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="(auth)" />
+                        <Stack.Screen name="onboarding" />
+                        <Stack.Screen name="(tabs)" />
+                        <Stack.Screen name="printer-settings" />
+                        <Stack.Screen name="shipping-settings" />
+                        <Stack.Screen name="(sheets)" />
+                        <Stack.Screen name="manage-tiktok-channel" />
+                        <Stack.Screen name="order-detail" />
+                        <Stack.Screen name="license-expired" />
+                        <Stack.Screen name="popover-demo" />
+                      </Stack>
+                      </TikTokLiveSocketProvider>
+                      {/* --- end Live provider --- */}
+                    </View>
+                  )}
+                  {showSplashOverlay && (
+                    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                      <Splash />
+                    </View>
+                  )}
+                </View>
+              </PopoverProvider>
             </BottomSheetProvider>
           </ToastProvider>
         </KeyboardProvider>
