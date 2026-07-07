@@ -57,16 +57,28 @@ export const Button = memo(
             <Animated.View style={[styles.spinnerSlot, spinnerStyle]}>
               <Spinner size={spinnerSize} color={spinnerColor as Colors} />
             </Animated.View>
-            <Animated.Text style={[styles.text, txtBtnStyle, textStyle]}>
+            <Animated.Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={[styles.text, txtBtnStyle, textStyle]}
+            >
               {title}
             </Animated.Text>
           </Animated.View>
         ) : (
           <>
-            <Animated.Text style={[styles.text, txtBtnStyle, textStyle]}>
+            <Animated.Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={[styles.text, txtBtnStyle, textStyle]}
+            >
               {title}
             </Animated.Text>
-            <Animated.View style={[styles.spinnerBase, styles.spinnerCenter, spinnerStyle]}>
+            <Animated.View
+              style={[styles.spinnerBase, styles.spinnerCenter, spinnerStyle]}
+            >
               <Spinner size={spinnerSize} color={spinnerColor as Colors} />
             </Animated.View>
           </>

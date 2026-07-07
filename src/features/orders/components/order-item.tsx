@@ -28,123 +28,143 @@ function createDisplayCode(orderCode: string) {
 }
 
 export const OrderItem = memo(
-  ({ item, depositLoading = false, onToggleDeposit, onRemove }: OrderItemProps) => {
+  ({
+    item,
+    depositLoading = false,
+    onToggleDeposit,
+    onRemove,
+  }: OrderItemProps) => {
     const { colors, shadows } = useThemes();
     const { show } = useBottomSheet();
 
-  const products = item.products?.length ? item.products : [];
-  const total = item.subtotalAmount || getOrderTotal(products);
-  const displayName = item.customerName || item.username || "Khách live";
-  const isPaid =
-    item.depositStatus === "paid" || item.depositStatus === "deposited";
+    const products = item.products?.length ? item.products : [];
+    const total = item.subtotalAmount || getOrderTotal(products);
+    const displayName = item.customerName || item.username || "Khách live";
+    const isPaid =
+      item.depositStatus === "paid" || item.depositStatus === "deposited";
 
     const handleToggleDeposit = useCallback(() => {
       onToggleDeposit(item.id);
     }, [item.id, onToggleDeposit]);
-  const onPressAvatar = useCallback(() => {
-    const customerKey = item.customerTikTokUsername || item.username;
-    if (customerKey) show({ content: <CustomerDetailSheet customerKey={customerKey} />, showDragIndicator: true, snapPoints: ["92%"] });
-  }, [item.customerTikTokUsername, item.username, show]);
-  const onOpenOrderOverview = useCallback(() => {
-    router.push({
-      pathname: "/order-detail",
-      params: { id: item.id },
-    });
-  }, [item.id]);
+    const onPressAvatar = useCallback(() => {
+      const customerKey = item.customerTikTokUsername || item.username;
+      if (customerKey)
+        show({
+          content: <CustomerDetailSheet customerKey={customerKey} />,
+          showDragIndicator: true,
+          snapPoints: ["92%"],
+        });
+    }, [item.customerTikTokUsername, item.username, show]);
+    const onOpenOrderOverview = useCallback(() => {
+      router.push({
+        pathname: "/order-detail",
+        params: { id: item.id },
+      });
+    }, [item.id]);
 
-  const handleRemove = useCallback(() => {
-    Alert.alert("Xoá đơn hàng", "Bạn có chắc muốn xoá đơn này không?", [
-      { text: "Huỷ", style: "cancel" },
-      { text: "Xoá", style: "destructive", onPress: () => onRemove?.(item.id) },
-    ]);
-  }, [item.id, onRemove]);
+    const handleRemove = useCallback(() => {
+      Alert.alert("Xoá đơn hàng", "Bạn có chắc muốn xoá đơn này không?", [
+        { text: "Huỷ", style: "cancel" },
+        {
+          text: "Xoá",
+          style: "destructive",
+          onPress: () => onRemove?.(item.id),
+        },
+      ]);
+    }, [item.id, onRemove]);
 
-  return (
-    <View style={[styles.container, shadows.sd2]}>
-      <View style={styles.top}>
-        <View style={styles.header}>
-          <Pressable onPress={onPressAvatar}>
-            <Avatar
-              uri={item.avatar || item.avatarUrl}
-              username={displayName}
-              size={40}
-            />
-          </Pressable>
-          <View style={styles.info}>
-            <Text style={styles.displayName}>{displayName}</Text>
-          </View>
-          <View style={styles.actions}>
-            <Image
-              source={images.logo_tiktok}
-              style={{ width: 24, height: 24 }}
-            />
-            <Icon name="print" size={24} tintColor="neutral900" />
-            <Pressable onPress={handleRemove} hitSlop={8}>
-              <Icon name="close" size={20} tintColor="neutral900" />
+    return (
+      <View style={[styles.container, shadows.sd2]}>
+        <View style={styles.top}>
+          <View style={styles.header}>
+            <Pressable onPress={onPressAvatar}>
+              <Avatar
+                uri={item.avatar || item.avatarUrl}
+                username={displayName}
+                size={40}
+              />
             </Pressable>
+            <View style={styles.info}>
+              <Text style={styles.displayName}>{displayName}</Text>
+            </View>
+            <View style={styles.actions}>
+              <Image
+                source={images.logo_tiktok}
+                style={{ width: 24, height: 24 }}
+              />
+              <Icon name="print" size={24} tintColor="neutral900" />
+              <Pressable onPress={handleRemove} hitSlop={8}>
+                <Icon name="close" size={20} tintColor="neutral900" />
+              </Pressable>
+            </View>
           </View>
-        </View>
           <View style={styles.tags}>
-          <Text style={styles.orderId}>{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
-          {(() => {
-            const icon = getCustomerTypeIcon(item.customerType);
-            return icon ? (
-              <View style={styles.typeCustomer}>
-                <RNImage source={icon} style={styles.customerTypeIcon} />
-                <Text style={styles.txtTag}>{item.customerType}</Text>
-              </View>
-            ) : null;
-          })()}
-          <View
-            style={[
-              styles.typeCustomer,
-              {
-                backgroundColor: colors.neutral50,
-              },
-            ]}
-          >
-            <Text style={styles.txtTag}>{statusLabel(item.status)}</Text>
+            <Text
+              style={styles.orderId}
+            >{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
+            {(() => {
+              const icon = getCustomerTypeIcon(item.customerType);
+              return icon ? (
+                <View style={styles.typeCustomer}>
+                  <RNImage source={icon} style={styles.customerTypeIcon} />
+                  <Text style={styles.txtTag}>{item.customerType}</Text>
+                </View>
+              ) : null;
+            })()}
+            <View
+              style={[
+                styles.typeCustomer,
+                {
+                  backgroundColor: colors.neutral50,
+                },
+              ]}
+            >
+              <Text style={styles.txtTag}>{statusLabel(item.status)}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.productList}>
-        {products.length > 0 ? (
-          products.map((p) => (
-            <View key={p.id} style={styles.productRow}>
-              <View style={[styles.productName, styles.productInfo]}>
-                <Text numberOfLines={2} style={styles.txtProduct}>
-                  {p.code
-                    ? `Mã: ${p.code}${p.color ? ` - ${p.color}` : ""}${p.name ? ` (${p.name})` : ""}`
-                    : p.name || "Sản phẩm"}
+        <View style={styles.productList}>
+          {products.length > 0 ? (
+            products.map((p) => (
+              <View key={p.id} style={styles.productRow}>
+                <View style={[styles.productName, styles.productInfo]}>
+                  <Text numberOfLines={2} style={styles.txtProduct}>
+                    {p.code
+                      ? `Mã: ${p.code}${p.color ? ` - ${p.color}` : ""}${p.name ? ` (${p.name})` : ""}`
+                      : p.name || "Sản phẩm"}
+                  </Text>
+                </View>
+                <Text style={styles.txtProductPrice}>
+                  {formatMoney(Number(p.price || 0) * Number(p.quantity || 1))}
                 </Text>
               </View>
+            ))
+          ) : (
+            <View style={styles.productRow}>
+              <Text
+                numberOfLines={2}
+                style={[styles.txtProduct, styles.productName]}
+              >
+                {item.productName || item.comment || "Sản phẩm"}
+              </Text>
               <Text style={styles.txtProductPrice}>
-                {formatMoney(Number(p.price || 0) * Number(p.quantity || 1))}
+                {formatMoney(
+                  Number(item.price || 0) * Number(item.quantity || 1),
+                )}
               </Text>
             </View>
-          ))
-        ) : (
-          <View style={styles.productRow}>
-            <Text numberOfLines={2} style={[styles.txtProduct, styles.productName]}>
-              {item.productName || item.comment || "Sản phẩm"}
-            </Text>
-            <Text style={styles.txtProductPrice}>
-              {formatMoney(Number(item.price || 0) * Number(item.quantity || 1))}
-            </Text>
-          </View>
-        )}
-      </View>
+          )}
+        </View>
 
-      <Separator type="horizontal" size={1} style={styles.separator} />
+        <Separator type="horizontal" size={1} style={styles.separator} />
 
-      <View style={styles.subtotalRow}>
-        <Text style={styles.txtProduct}>Tạm tính</Text>
-        <Text style={styles.txtProductPrice}>{formatMoney(total)}</Text>
-      </View>
+        <View style={styles.subtotalRow}>
+          <Text style={styles.txtProduct}>Tạm tính</Text>
+          <Text style={styles.txtProductPrice}>{formatMoney(total)}</Text>
+        </View>
 
-      <View style={styles.footer}>
-        <View style={styles.btnWrap}>
+        <View style={styles.footer}>
           <Button
             title={isPaid ? "Đã cọc" : "Chưa cọc"}
             loading={depositLoading}
@@ -165,8 +185,6 @@ export const OrderItem = memo(
               },
             ]}
           />
-        </View>
-        <View style={styles.btnWrap}>
           <Button
             title="Tổng quan đơn hàng"
             loading={false}
@@ -178,8 +196,7 @@ export const OrderItem = memo(
           />
         </View>
       </View>
-    </View>
-  );
+    );
   },
 );
 
@@ -240,6 +257,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "space-between",
   },
   footer: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -274,15 +292,14 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.primary,
     ...textPresets.fs14_500,
   },
-  btnWrap: {
-    flex: 1,
-  },
   btnStatus: {
+    flex: 1,
     backgroundColor: colors.primaryLight,
     borderRadius: 99,
     overflow: "hidden",
   },
   btnSubmit: {
+    flex: 1,
     borderRadius: 99,
     overflow: "hidden",
   },

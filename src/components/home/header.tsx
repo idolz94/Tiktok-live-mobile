@@ -2,6 +2,7 @@ import { images } from "@assets/images";
 import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { createStyles } from "@utils/createStyles";
+import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,7 +18,10 @@ export const HomeHeader = ({ activeIndex, onTabPress }: Props) => {
 
   return (
     <View style={[styles.container, { paddingTop: top + 12 }]}>
-      <Pressable style={styles.logoButton}>
+      <Pressable
+        style={styles.logoButton}
+        onPress={() => router.push("/settings")}
+      >
         <Image source={images.logo_app} style={styles.logo} />
       </Pressable>
 
@@ -41,10 +45,6 @@ export const HomeHeader = ({ activeIndex, onTabPress }: Props) => {
           </Pressable>
         ))}
       </View>
-
-      <Pressable style={styles.logoButton}>
-        <Icon name="search" size={20} tintColor="#000000" />
-      </Pressable>
     </View>
   );
 };
@@ -54,16 +54,21 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flexDirection: "row",
     paddingBottom: 12,
     paddingHorizontal: 16,
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
+    position: "relative",
   },
   logoButton: {
+    position: "absolute",
+    left: 16,
+    bottom: 8,
     padding: 8,
     borderRadius: 99,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "white",
     overflow: "hidden",
+    zIndex: 1,
   },
   logo: {
     width: 28,
