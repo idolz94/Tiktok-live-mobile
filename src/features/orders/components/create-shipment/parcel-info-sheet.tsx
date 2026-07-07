@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
@@ -72,7 +79,7 @@ export function ParcelInfoSheet({
   const [localHeight, setLocalHeight] = useState(dimHeight);
   const [localWeight, setLocalWeight] = useState(weightInput);
   const [localDeclared, setLocalDeclared] = useState(
-    declaredValue > 0 ? String(declaredValue) : ""
+    declaredValue > 0 ? String(declaredValue) : "",
   );
   const [localItemName, setLocalItemName] = useState(parcelItemName);
   const [localNote, setLocalNote] = useState(note);
@@ -95,54 +102,144 @@ export function ParcelInfoSheet({
   };
 
   const checkboxState: Record<string, { value: 0 | 1; toggle: () => void }> = {
-    allowTryOn: { value: localTryOn, toggle: () => setLocalTryOn((v) => (v === 1 ? 0 : 1)) },
-    allowPartialDelivery: { value: localPartial, toggle: () => setLocalPartial((v) => (v === 1 ? 0 : 1)) },
-    allowMutualCheck: { value: localMutual, toggle: () => setLocalMutual((v) => (v === 1 ? 0 : 1)) },
+    allowTryOn: {
+      value: localTryOn,
+      toggle: () => setLocalTryOn((v) => (v === 1 ? 0 : 1)),
+    },
+    allowPartialDelivery: {
+      value: localPartial,
+      toggle: () => setLocalPartial((v) => (v === 1 ? 0 : 1)),
+    },
+    allowMutualCheck: {
+      value: localMutual,
+      toggle: () => setLocalMutual((v) => (v === 1 ? 0 : 1)),
+    },
   };
 
   const dimRows = [
-    { label: "Dài", icon: dimIcons.length, value: localLength, onChange: setLocalLength, unit: "cm" },
-    { label: "Rộng", icon: dimIcons.width, value: localWidth, onChange: setLocalWidth, unit: "cm" },
-    { label: "Cao", icon: dimIcons.height, value: localHeight, onChange: setLocalHeight, unit: "cm" },
-    { label: "Khối lượng", icon: dimIcons.weight, value: localWeight, onChange: setLocalWeight, unit: "gram" },
+    {
+      label: "Dài",
+      icon: dimIcons.length,
+      value: localLength,
+      onChange: setLocalLength,
+      unit: "cm",
+    },
+    {
+      label: "Rộng",
+      icon: dimIcons.width,
+      value: localWidth,
+      onChange: setLocalWidth,
+      unit: "cm",
+    },
+    {
+      label: "Cao",
+      icon: dimIcons.height,
+      value: localHeight,
+      onChange: setLocalHeight,
+      unit: "cm",
+    },
+    {
+      label: "Khối lượng",
+      icon: dimIcons.weight,
+      value: localWeight,
+      onChange: setLocalWeight,
+      unit: "gram",
+    },
   ];
 
   return (
     <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
       <View style={styles.handle} />
-      <Text style={[styles.title, { color: colors.neutral900 }, textPresets.fs16_600 ?? textPresets.fs16_500]}>
+      <Text
+        style={[
+          styles.title,
+          { color: colors.neutral900 },
+          textPresets.fs16_600 ?? textPresets.fs16_500,
+        ]}
+      >
         Thông tin bưu gửi
       </Text>
 
-      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Checkboxes */}
-        <Text style={[styles.sectionLabel, { color: colors.neutral400 }, textPresets.fs12_400]}>
+        <Text
+          style={[
+            styles.sectionLabel,
+            { color: colors.neutral400 },
+            textPresets.fs12_400,
+          ]}
+        >
           Chính sách nhận hàng
         </Text>
-        <View style={[styles.card, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+          ]}
+        >
           {CHECKBOXES.map((item) => {
             const { value, toggle } = checkboxState[item.key];
             return (
-              <Pressable key={item.key} onPress={toggle} style={styles.checkboxRow}>
-                <View style={[styles.checkbox, { borderColor: value ? colors.primary : colors.border10, backgroundColor: value ? colors.primary : colors.surface }]}>
+              <Pressable
+                key={item.key}
+                onPress={toggle}
+                style={styles.checkboxRow}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    {
+                      borderColor: value ? colors.primary : colors.border10,
+                      backgroundColor: value ? colors.primary : colors.surface,
+                    },
+                  ]}
+                >
                   {value === 1 && <Text style={styles.checkmark}>✓</Text>}
                 </View>
-                <Text style={[{ color: colors.neutral900 }, textPresets.fs14_400]}>{item.label}</Text>
+                <Text
+                  style={[{ color: colors.neutral900 }, textPresets.fs14_400]}
+                >
+                  {item.label}
+                </Text>
               </Pressable>
             );
           })}
         </View>
 
         {/* Dimensions + weight */}
-        <Text style={[styles.sectionLabel, { color: colors.neutral400 }, textPresets.fs12_400]}>
+        <Text
+          style={[
+            styles.sectionLabel,
+            { color: colors.neutral400 },
+            textPresets.fs12_400,
+          ]}
+        >
           Kích thước & Khối lượng
         </Text>
-        <View style={[styles.card, { backgroundColor: colors.neutral50, borderColor: colors.border10, gap: 8 }]}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.neutral50,
+              borderColor: colors.border10,
+              gap: 8,
+            },
+          ]}
+        >
           {dimRows.map((row) => (
             <View key={row.label} style={styles.dimRow}>
               <View style={styles.dimRowLeft}>
                 <Image source={row.icon} style={styles.dimIcon} />
-                <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>{row.label}</Text>
+                <Text
+                  style={[{ color: colors.neutral400 }, textPresets.fs14_400]}
+                >
+                  {row.label}
+                </Text>
               </View>
               <View style={styles.dimValueRow}>
                 <TextInput
@@ -151,10 +248,24 @@ export function ParcelInfoSheet({
                   keyboardType="numeric"
                   placeholder="0"
                   placeholderTextColor={colors.neutral300}
-                  style={[styles.dimInput, { color: colors.neutral900, borderBottomColor: colors.neutral400 }, textPresets.fs14_500]}
+                  style={[
+                    styles.dimInput,
+                    {
+                      color: colors.neutral900,
+                      borderBottomColor: colors.neutral400,
+                    },
+                    textPresets.fs14_500,
+                  ]}
                   textAlign="right"
                 />
-                <Text style={[{ color: colors.neutral900, width: 36 }, textPresets.fs14_500]}>{row.unit}</Text>
+                <Text
+                  style={[
+                    { color: colors.neutral900, width: 36 },
+                    textPresets.fs14_500,
+                  ]}
+                >
+                  {row.unit}
+                </Text>
               </View>
             </View>
           ))}
@@ -162,37 +273,71 @@ export function ParcelInfoSheet({
 
         {/* Parcel name */}
         <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>Tên hàng hóa</Text>
+          <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>
+            Tên hàng hóa
+          </Text>
           <TextInput
             value={localItemName}
             onChangeText={setLocalItemName}
             placeholder="VD: Áo thun, Giày, ..."
             placeholderTextColor={colors.neutral300}
-            style={[styles.textInput, { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 }, textPresets.fs14_400]}
+            style={[
+              styles.textInput,
+              {
+                borderColor: colors.border10,
+                color: colors.neutral900,
+                backgroundColor: colors.neutral50,
+              },
+              textPresets.fs14_400,
+            ]}
           />
         </View>
 
         {/* Declared value */}
         <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>Giá trị bưu gửi</Text>
-          <View style={[styles.moneyRow, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}>
+          <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>
+            Giá trị bưu gửi
+          </Text>
+          <View
+            style={[
+              styles.moneyRow,
+              {
+                borderColor: colors.border10,
+                backgroundColor: colors.neutral50,
+              },
+            ]}
+          >
             <TextInput
-              value={localDeclared ? Number(localDeclared).toLocaleString("vi-VN") : ""}
+              value={
+                localDeclared
+                  ? Number(localDeclared).toLocaleString("vi-VN")
+                  : ""
+              }
               onChangeText={(t) => setLocalDeclared(t.replace(/\D/g, ""))}
               keyboardType="numeric"
               placeholder="0"
               placeholderTextColor={colors.neutral300}
-              style={[styles.moneyInput, { color: colors.neutral900 }, textPresets.fs14_400]}
+              style={[
+                styles.moneyInput,
+                { color: colors.neutral900 },
+                textPresets.fs14_400,
+              ]}
             />
-            <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>VNĐ</Text>
+            <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>
+              VNĐ
+            </Text>
           </View>
         </View>
 
         {/* Note */}
         <View style={[styles.formGroup, { marginBottom: 24 }]}>
           <View style={styles.noteLabelRow}>
-            <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>Ghi chú người bán</Text>
-            <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>{localNote.length}/255</Text>
+            <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>
+              Ghi chú người bán
+            </Text>
+            <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>
+              {localNote.length}/255
+            </Text>
           </View>
           <TextInput
             value={localNote}
@@ -201,17 +346,40 @@ export function ParcelInfoSheet({
             placeholderTextColor={colors.neutral300}
             multiline
             numberOfLines={3}
-            style={[styles.noteInput, { borderColor: colors.border10, color: colors.neutral900, backgroundColor: colors.neutral50 }, textPresets.fs14_400]}
+            style={[
+              styles.noteInput,
+              {
+                borderColor: colors.border10,
+                color: colors.neutral900,
+                backgroundColor: colors.neutral50,
+              },
+              textPresets.fs14_400,
+            ]}
           />
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: colors.border10, backgroundColor: colors.surface, paddingBottom: insets.bottom || 16 }]}>
+      <View
+        style={[
+          styles.footer,
+          {
+            borderTopColor: colors.border10,
+            backgroundColor: colors.surface,
+          },
+        ]}
+      >
         <Pressable
           style={[styles.confirmBtn, { backgroundColor: colors.primary }]}
           onPress={handleConfirm}
         >
-          <Text style={[textPresets.fs15_400 ?? textPresets.fs14_500, { color: "#fff" }]}>Xác nhận</Text>
+          <Text
+            style={[
+              textPresets.fs15_400 ?? textPresets.fs14_500,
+              { color: "#fff" },
+            ]}
+          >
+            Xác nhận
+          </Text>
         </Pressable>
       </View>
     </View>

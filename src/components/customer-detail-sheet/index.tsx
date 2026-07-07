@@ -1,29 +1,31 @@
 import type { Order, OrderProduct } from "@app-types/index";
 import { Avatar } from "@components/avatar";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Popover } from "@components/popover";
 import { Skeleton } from "@components/skeleton";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  formatMoney,
-  getOrderTotal,
-  statusLabel,
-} from "@features/orders/utils/order";
-import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { useThemes } from "@hooks/use-theme";
-import { createStyles } from "@utils/createStyles";
-import { openTikTokProfile } from "@utils/tiktok";
-import { addressLine } from "@features/orders/utils/shipment";
-import { useAddressPageStore } from "@features/orders/stores/address-page-store";
+import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import {
   createCustomerAddressApi,
   updateCustomerAddressApi,
   type CustomerAddress,
 } from "@features/orders/service/create-shipment-api";
+import { useAddressPageStore } from "@features/orders/stores/address-page-store";
 import type { AddrFormValues } from "@features/orders/types/shipment";
-import { formInitialValues } from "@features/orders/utils/shipment";
+import {
+  formatMoney,
+  getOrderTotal,
+  statusLabel,
+} from "@features/orders/utils/order";
+import {
+  addressLine,
+  formInitialValues,
+} from "@features/orders/utils/shipment";
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
+import { openTikTokProfile } from "@utils/tiktok";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
-import { Popover } from "@components/popover";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -37,7 +39,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { type DetailTab, useCustomerDetail } from "./use-customer-detail";
+import { useCustomerDetail, type DetailTab } from "./use-customer-detail";
 
 type StatCardProps = {
   label: string;
@@ -103,17 +105,23 @@ function SelectField({
   hint?: string;
 }) {
   const { colors, textPresets } = useThemes();
+  const [popoverVisible, setPopoverVisible] = useState(false);
 
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <Popover
+        visible={popoverVisible}
+        onVisibleChange={setPopoverVisible}
         trigger={
-          <Pressable style={styles.selectInput}>
+          <Pressable onPress={() => setPopoverVisible(true)} style={styles.selectInput}>
             <Text
               style={[
                 textPresets.fs14_400,
-                { color: value ? colors.neutral900 : colors.neutral300, flex: 1 },
+                {
+                  color: value ? colors.neutral900 : colors.neutral300,
+                  flex: 1,
+                },
               ]}
             >
               {value || "Chọn loại khách hàng"}
@@ -132,7 +140,10 @@ function SelectField({
             return (
               <Pressable
                 key={opt}
-                onPress={() => onChange(opt)}
+                onPress={() => {
+                  onChange(opt);
+                  setPopoverVisible(false);
+                }}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -140,10 +151,14 @@ function SelectField({
                   paddingVertical: 10,
                   paddingHorizontal: 12,
                   borderRadius: 6,
-                  backgroundColor: selected ? colors.primaryLight : "transparent",
+                  backgroundColor: selected
+                    ? colors.primaryLight
+                    : "transparent",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                >
                   {(() => {
                     const icon = getCustomerTypeIcon(opt);
                     return icon ? (
@@ -566,12 +581,12 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   addNewField: {
     height: 48,
     borderWidth: 1,
-    borderStyle: "dashed" as const,
+    borderStyle: "dashed",
     borderColor: "rgba(0,0,0,0.2)",
     borderRadius: 8,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
   },
   addNewFieldText: {
@@ -580,7 +595,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   saveButtonWrapper: {
     borderRadius: 40,
-    overflow: "hidden" as const,
+    overflow: "hidden",
     marginTop: 16,
   },
   saveButtonDisabled: {
@@ -613,8 +628,8 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     borderRadius: 8,
     paddingHorizontal: 16,
     backgroundColor: colors.white,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
   },
   ordersContent: {
     paddingTop: 16,
@@ -980,26 +995,26 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     gap: 10,
   },
   addressTopRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   addressAvatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addressInfo: {
     flex: 1,
     gap: 3,
   },
   addressNameRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
-    flexWrap: "wrap" as const,
+    flexWrap: "wrap",
   },
   addressName: {
     flexShrink: 1,
@@ -1014,8 +1029,8 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     paddingHorizontal: 12,
     borderRadius: 15,
     borderWidth: 1,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addressLineText: {
     lineHeight: 20,
@@ -1023,11 +1038,11 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   addAddressCard: {
     height: 72,
     borderWidth: 1,
-    borderStyle: "dashed" as const,
+    borderStyle: "dashed",
     borderRadius: 16,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
   },
   addAddressCircle: {
@@ -1035,8 +1050,8 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     height: 24,
     borderRadius: 12,
     borderWidth: 1.5,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
 }));
 

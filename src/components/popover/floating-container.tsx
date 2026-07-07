@@ -10,8 +10,8 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
-  interpolate,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemes } from "@hooks/use-theme";
@@ -106,7 +106,7 @@ export function FloatingContainer({ entry, contentOverride, onClose, onExitCompl
 
   // Reanimated values for animations
   const animOpacity = useSharedValue(0);
-  const animScale = useSharedValue(0.95);
+  const animScale = useSharedValue(0.85);
 
   const duration = entry.animationDuration ?? 150;
 
@@ -114,14 +114,18 @@ export function FloatingContainer({ entry, contentOverride, onClose, onExitCompl
   useEffect(() => {
     if (position && entry.open) {
       animOpacity.value = withTiming(1, { duration });
-      animScale.value = withTiming(1, { duration });
+      animScale.value = withSpring(1, {
+        damping: 18,
+        stiffness: 350,
+        mass: 0.8,
+      });
     } else if (!entry.open) {
-      animOpacity.value = withTiming(0, { duration }, (finished) => {
+      animOpacity.value = withTiming(0, { duration: duration * 0.8 }, (finished) => {
         if (finished) {
           runOnJS(onExitComplete)();
         }
       });
-      animScale.value = withTiming(0.95, { duration });
+      animScale.value = withTiming(0.85, { duration: duration * 0.8 });
     }
   }, [position, entry.open, duration]);
 
@@ -138,33 +142,17 @@ export function FloatingContainer({ entry, contentOverride, onClose, onExitCompl
     }
 
     const transform: any[] = [{ scale: animScale.value }];
-    const slideOffset = 8;
 
-    // Apply translation slide animation depending on resolved placement direction
+    // Transform origin based on placement — scale from the anchor side
+    let transformOrigin: string = "center center";
     if (position.placement === "top") {
-      transform.push({
-        translateY: entry.open
-          ? interpolate(animOpacity.value, [0, 1], [slideOffset, 0])
-          : interpolate(animOpacity.value, [1, 0], [0, slideOffset]),
-      });
+      transformOrigin = "center bottom";
     } else if (position.placement === "bottom") {
-      transform.push({
-        translateY: entry.open
-          ? interpolate(animOpacity.value, [0, 1], [-slideOffset, 0])
-          : interpolate(animOpacity.value, [1, 0], [0, -slideOffset]),
-      });
+      transformOrigin = "center top";
     } else if (position.placement === "left") {
-      transform.push({
-        translateX: entry.open
-          ? interpolate(animOpacity.value, [0, 1], [slideOffset, 0])
-          : interpolate(animOpacity.value, [1, 0], [0, slideOffset]),
-      });
+      transformOrigin = "right center";
     } else if (position.placement === "right") {
-      transform.push({
-        translateX: entry.open
-          ? interpolate(animOpacity.value, [0, 1], [-slideOffset, 0])
-          : interpolate(animOpacity.value, [1, 0], [0, -slideOffset]),
-      });
+      transformOrigin = "left center";
     }
 
     return {
@@ -175,6 +163,7 @@ export function FloatingContainer({ entry, contentOverride, onClose, onExitCompl
       height: contentSize.height,
       opacity: animOpacity.value,
       transform,
+      transformOrigin,
     };
   });
 
@@ -281,6 +270,6 @@ const styles = createStyles(({ colors, shadows }) => ({
     borderColor: colors.borderLight,
     padding: 4,
     minWidth: 40,
-    ...shadows.sd3,
+    ...shadows.sd4,
   },
 }));

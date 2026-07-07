@@ -3,8 +3,9 @@ import { ActivityIndicator, LayoutAnimation, Platform, Pressable, Text, UIManage
 if (Platform.OS === "android") {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useThemes } from "@hooks/use-theme";
+import { Popover } from "@components/popover";
 import type { CollectType, PaymentSide, ServiceType, SpxTimeslot } from "../../types/shipment";
 import type { SpxVoucher } from "../../service/create-shipment-api";
 import { TimeslotSelect } from "./timeslot-select";
@@ -26,8 +27,8 @@ type SpxOptionsProps = {
   vouchersError?: string | null;
   selectedVoucherCode: string | null;
   onOpenVoucherSheet: () => void;
-  paymentSide: number;
-  onOpenPaymentSheet: () => void;
+  paymentSide: PaymentSide;
+  setPaymentSide: (value: PaymentSide) => void;
   onOpenServicePoint: () => void;
   parcelInfoSlot?: ReactNode;
   estimatedDelivery?: { edtMin: number | null; edtMax: number | null } | null;
@@ -63,13 +64,14 @@ export function SpxOptions({
   selectedVoucherCode: _selectedVoucherCode,
   onOpenVoucherSheet,
   paymentSide,
-  onOpenPaymentSheet,
+  setPaymentSide,
   onOpenServicePoint,
   parcelInfoSlot,
   estimatedDelivery,
   feeLoading,
 }: SpxOptionsProps) {
   const { colors, textPresets } = useThemes();
+  const [paymentPopoverVisible, setPaymentPopoverVisible] = useState(false);
 
   return (
     <>
@@ -128,20 +130,61 @@ export function SpxOptions({
       {parcelInfoSlot}
 
       {parcelInfoSlot && (
-        <Pressable
-          onPress={onOpenPaymentSheet}
-          style={[styles.voucherRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+        <Popover
+          visible={paymentPopoverVisible}
+          onVisibleChange={setPaymentPopoverVisible}
+          placement="bottom"
+          showBackdrop={false}
+          closeOnOutsidePress={true}
+          trigger={
+            <Pressable
+              onPress={() => setPaymentPopoverVisible(true)}
+              style={[styles.voucherRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+            >
+              <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
+                Người thanh toán{" "}
+                <Text style={{ color: colors.error }}>*</Text>
+              </Text>
+              <View style={{ flex: 1 }} />
+              <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>
+                {paymentSide === 1 ? "Người gửi thanh toán phí" : "Người nhận thanh toán phí"}
+              </Text>
+              <Text style={[{ color: colors.neutral400 }, textPresets.fs14_500]}>⌄</Text>
+            </Pressable>
+          }
         >
-          <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
-            Người thanh toán{" "}
-            <Text style={{ color: colors.error }}>*</Text>
-          </Text>
-          <View style={{ flex: 1 }} />
-          <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>
-            {paymentSide === 1 ? "Người gửi thanh toán phí" : "Người nhận thanh toán phí"}
-          </Text>
-          <Text style={[{ color: colors.neutral400 }, textPresets.fs14_500]}>⌄</Text>
-        </Pressable>
+          <View style={{ minWidth: 220 }}>
+            {[
+              { label: "Người gửi thanh toán phí", value: 1 as PaymentSide },
+              { label: "Người nhận thanh toán phí", value: 0 as PaymentSide },
+            ].map((opt) => (
+              <Pressable
+                key={opt.value}
+                onPress={() => {
+                  setPaymentSide(opt.value);
+                  setPaymentPopoverVisible(false);
+                }}
+                style={[
+                  styles.popoverItem,
+                  paymentSide === opt.value && {
+                    backgroundColor: colors.primaryLight,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    paymentSide === opt.value
+                      ? { color: colors.primary }
+                      : { color: colors.neutral900 },
+                    textPresets.fs14_400,
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </Popover>
       )}
 
       {collectType === 1 && (
@@ -320,5 +363,10 @@ const styles = createStyles(() => ({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 10,
+  },
+  popoverItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
 }));
