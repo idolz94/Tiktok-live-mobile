@@ -29,7 +29,6 @@ import { VoucherSelectSheet } from "@features/orders/components/create-shipment/
 import { formInitialValues } from "@features/orders/utils/shipment";
 import type {
   AddrFormValues,
-  PaymentSide,
 } from "@features/orders/types/shipment";
 import { useCreateShipment } from "@features/orders/hooks/use-create-shipment";
 
@@ -302,56 +301,6 @@ export default function CreateShipmentScreen() {
     // );
   };
 
-  const openPaymentSheet = () => {
-    let id: string;
-    const close = () => hide(id);
-    id = show({
-      content: (
-        <>
-          <View
-            style={[styles.sheetHeader, { borderBottomColor: colors.border10 }]}
-          >
-            <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>
-              Người thanh toán
-            </Text>
-            <Pressable onPress={close} hitSlop={12}>
-              <Text style={{ color: colors.neutral500, fontSize: 20 }}>×</Text>
-            </Pressable>
-          </View>
-          {[
-            { label: "Người gửi thanh toán phí", value: 1 as PaymentSide },
-            { label: "Người nhận thanh toán phí", value: 0 as PaymentSide },
-          ].map((opt) => (
-            <Pressable
-              key={opt.value}
-              onPress={() => {
-                setPaymentSide(opt.value);
-                close();
-              }}
-              style={[
-                styles.selectItem,
-                paymentSide === opt.value && {
-                  backgroundColor: colors.primaryLight,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  paymentSide === opt.value
-                    ? { color: colors.primary }
-                    : { color: colors.neutral900 },
-                  textPresets.fs14_400,
-                ]}
-              >
-                {opt.label}
-              </Text>
-            </Pressable>
-          ))}
-        </>
-      ),
-    });
-  };
-
   if (!order) {
     return (
       <SafeAreaView
@@ -586,7 +535,7 @@ export default function CreateShipmentScreen() {
               vouchersError={vouchersError}
               selectedVoucherCode={selectedVoucherCode}
               paymentSide={paymentSide}
-              onOpenPaymentSheet={openPaymentSheet}
+              setPaymentSide={setPaymentSide}
               onOpenServicePoint={openServicePoint}
               onOpenVoucherSheet={openVoucherSheet}
               estimatedDelivery={estimatedDelivery}
@@ -853,21 +802,6 @@ const styles = createStyles(({ textPresets }) => ({
   },
   optionGrid: { gap: 10 },
   radioGroup: { gap: 12 },
-  sheetHeader: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 0.5,
-  },
-  selectItem: {
-    marginHorizontal: 8,
-    marginVertical: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderRadius: 10,
-  },
   radioCard: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
