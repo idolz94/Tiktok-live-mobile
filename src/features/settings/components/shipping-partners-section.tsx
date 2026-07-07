@@ -1,5 +1,11 @@
 import { images } from "@assets/images";
-import { Image, ImageSourcePropType, Pressable, Text, View } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 
 const connectedPartners = [
@@ -29,7 +35,8 @@ const unconnectedPartners = [
   {
     key: "jt",
     name: "JT - J&T Express",
-    description: "Dịch vụ chuyển phát nhanh J&T Express với mạng lưới toàn quốc.",
+    description:
+      "Dịch vụ chuyển phát nhanh J&T Express với mạng lưới toàn quốc.",
     color: "#e31b23",
     comingSoon: true,
   },
@@ -61,7 +68,13 @@ export function ShippingPartnersSection() {
   );
 }
 
-function PartnerGroup({ title, partners }: { title: string; partners: readonly Partner[] }) {
+function PartnerGroup({
+  title,
+  partners,
+}: {
+  title: string;
+  partners: readonly Partner[];
+}) {
   return (
     <View style={styles.partnerGroup}>
       <Text style={styles.partnerGroupTitle}>{title}</Text>
@@ -81,7 +94,9 @@ function PartnerCard({ partner }: { partner: Partner }) {
         <DeliveryLogo color={partner.color} image={images.ship} />
         <View style={styles.partnerTextWrap}>
           <View style={styles.partnerTitleRow}>
-            <Text style={styles.partnerName} numberOfLines={1}>{partner.name}</Text>
+            <Text style={styles.partnerName} numberOfLines={1}>
+              {partner.name}
+            </Text>
             {partner.isDefault ? (
               <View style={styles.defaultTag}>
                 <Text style={styles.defaultText}>Mặc định</Text>
@@ -96,15 +111,24 @@ function PartnerCard({ partner }: { partner: Partner }) {
           <Text style={styles.partnerDescription}>{partner.description}</Text>
         </View>
       </View>
-      <Text style={styles.chevron}>›</Text>
     </Pressable>
   );
 }
 
-function DeliveryLogo({ color, image }: { color: string; image: ImageSourcePropType }) {
+function DeliveryLogo({
+  color,
+  image,
+}: {
+  color: string;
+  image: ImageSourcePropType;
+}) {
   return (
     <View style={[styles.deliveryLogo, { backgroundColor: color }]}>
-      <Image source={image} style={styles.deliveryLogoImage} resizeMode="contain" />
+      <Image
+        source={image}
+        style={styles.deliveryLogoImage}
+        resizeMode="contain"
+      />
     </View>
   );
 }

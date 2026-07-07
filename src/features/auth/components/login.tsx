@@ -189,7 +189,8 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
             </View>
             <AnimatedErrorText
               message={
-                formMethod.formState.dirtyFields.password && formMethod.formState.errors.password
+                formMethod.formState.dirtyFields.password &&
+                formMethod.formState.errors.password
                   ? formMethod.formState.errors.password.message
                   : undefined
               }

@@ -40,15 +40,8 @@ export function OrderDetailProductsSection({
         title="Danh sách sản phẩm"
         actionLabel={isEditable ? "Thêm mới" : undefined}
         onAction={isEditable ? onAddProduct : undefined}
+        loading={isProductMutating}
       />
-      {isProductMutating ? (
-        <View style={styles.productLoadingRow}>
-          <ActivityIndicator size="small" color="#FF6B8A" />
-          <Text style={styles.productLoadingText}>
-            Đang cập nhật sản phẩm...
-          </Text>
-        </View>
-      ) : null}
       <View style={styles.productList}>
         {displayProducts.map((product, index) => (
           <View key={product.id || index} style={styles.productItem}>
@@ -109,13 +102,7 @@ export function OrderDetailProductsSection({
 
 const styles = createStyles(({ colors, textPresets }) => ({
   productList: { borderTopWidth: 1, borderTopColor: colors.border10 },
-  productLoadingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 8,
-    paddingVertical: 8,
-  },
-  productLoadingText: { color: colors.neutral400, ...textPresets.fs12_400 },
+
   productItem: {
     flexDirection: "row",
     alignItems: "flex-start",

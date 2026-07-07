@@ -49,11 +49,22 @@ const settingGroups: {
       onPress: () => router.push("/shipping-settings"),
     },
   ],
-  [
-    { icon: icons.group_user, label: "Ngôn ngữ" },
-    { icon: icons.plus_circle, label: "Hỗ trợ" },
-  ],
 ];
+
+const socialLogins = [
+  {
+    type: "facebook",
+    icon: images.logo_facebook,
+  },
+  {
+    type: "tiktok",
+    icon: images.logo_tiktok,
+  },
+  {
+    type: "zalo",
+    icon: images.logo_zalo,
+  },
+] as const;
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
@@ -81,14 +92,6 @@ export default function SettingsTab() {
 
           <View style={styles.topBar}>
             <Text style={styles.title}>Hồ sơ</Text>
-            <View style={styles.headerActions}>
-              <Pressable style={styles.roundButton}>
-                <Text style={styles.roundButtonIcon}>⌕</Text>
-              </Pressable>
-              <Pressable style={styles.roundButton}>
-                <Text style={styles.roundButtonIcon}>⚙</Text>
-              </Pressable>
-            </View>
           </View>
 
           <View style={styles.profileSection}>
@@ -96,12 +99,17 @@ export default function SettingsTab() {
               <Image source={{ uri: AVATAR_URL }} style={styles.avatar} />
             </View>
             <Text style={styles.name}>{username}</Text>
-            <Text style={styles.nickname}>{accountName}</Text>
 
-            <View style={styles.socialRow}>
-              <SocialButton label="f" />
-              <SocialButton label="♪" />
-              <SocialButton label="▶" />
+            <View style={styles.socialLoginContainer}>
+              {socialLogins.map((item) => (
+                <Pressable
+                  key={item.type}
+                  style={styles.socialItemContainer}
+                  onPress={() => {}}
+                >
+                  <Image source={item.icon} style={styles.socialImg} />
+                </Pressable>
+              ))}
             </View>
           </View>
         </View>
@@ -482,5 +490,27 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   chevron: {
     color: colors.neutral400,
     ...textPresets.fs18_500,
+  },
+  socialLoginContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 4,
+    columnGap: 16,
+  },
+  socialItemContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border10,
+    backgroundColor: colors.white,
+  },
+  socialImg: {
+    width: 24,
+    height: 24,
   },
 }));

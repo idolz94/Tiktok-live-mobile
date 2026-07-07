@@ -21,34 +21,54 @@ export function OrderDetailFooterActions({
   const { colors, textPresets } = useThemes();
 
   const buttons = [
-    { label: "In đơn", icon: "print" as const, onPress: onPrint },
+    { label: "In đơn", icon: "print", onPress: onPrint },
     {
       label: isConfirmed ? "Bỏ chốt" : "Chốt đơn",
-      icon: "clipboard_check" as const,
+      icon: "clipboard_check",
       onPress: onConfirm,
       loading: confirmLoading,
       active: isConfirmed,
     },
-    { label: "Chia sẻ hóa đơn", icon: "receipt" as const, onPress: onShare },
+    { label: "Chia sẻ hóa đơn", icon: "receipt", onPress: onShare },
   ];
 
   return (
     <View style={styles.row}>
       {buttons.map((btn) => (
-        <Pressable key={btn.label} style={styles.item} onPress={btn.onPress} disabled={btn.loading}>
+        <Pressable
+          key={btn.label}
+          style={styles.item}
+          onPress={btn.onPress}
+          disabled={btn.loading}
+        >
           <View
             style={[
               styles.iconCircle,
-              { backgroundColor: btn.active ? colors.primaryLight : colors.neutral50 },
+              {
+                backgroundColor: btn.active
+                  ? colors.primaryLight
+                  : colors.neutral50,
+              },
             ]}
           >
             {btn.loading ? (
               <ActivityIndicator size="small" color={colors.primary} />
             ) : (
-              <Icon name={btn.icon} size={24} tintColor={btn.active ? "primary" : "neutral700"} />
+              <Icon
+                //@ts-ignore
+                name={btn.icon}
+                size={24}
+                tintColor={btn.active ? "primary" : "neutral900"}
+              />
             )}
           </View>
-          <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+          <Text
+            style={[
+              styles.label,
+              { color: colors.neutral400 },
+              textPresets.fs14_400,
+            ]}
+          >
             {btn.label}
           </Text>
         </Pressable>
@@ -57,26 +77,27 @@ export function OrderDetailFooterActions({
   );
 }
 
-const styles = createStyles(() => ({
+const styles = createStyles(({ colors }) => ({
   row: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 16,
+    backgroundColor: colors.white,
   },
   item: {
     flex: 1,
-    alignItems: "center" as const,
+    alignItems: "center",
     gap: 8,
   },
   iconCircle: {
     width: 48,
     height: 48,
     borderRadius: 999,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
-    textAlign: "center" as const,
+    textAlign: "center",
   },
 }));

@@ -128,11 +128,15 @@ export const UnConnectedLive = memo(
         <View style={styles.itemContainer}>
           <View style={styles.leftItem}>
             <Image
-              source={item.avatarUrl ? { uri: item.avatarUrl } : images.logo_app}
+              source={
+                item.avatarUrl ? { uri: item.avatarUrl } : images.logo_app
+              }
               style={styles.avatar}
             />
             <View style={{ rowGap: 2 }}>
-              <Text style={styles.name}>{item.displayName || item.username}</Text>
+              <Text style={styles.name}>
+                {item.displayName || item.username}
+              </Text>
               <Text style={styles.txtId}>{`ID: @${item.username}`}</Text>
             </View>
           </View>
@@ -181,7 +185,7 @@ export const UnConnectedLive = memo(
             ListFooterComponentStyle={{ paddingTop: 16 }}
           />
         )}
-        <View style={{ rowGap: 8 }}>
+        {/* <View style={{ rowGap: 8 }}>
           <DashedButton
             title="Thêm mới"
             icon="plus_circle"
@@ -204,7 +208,7 @@ export const UnConnectedLive = memo(
               dấu chấm.
             </Text>
           </View>
-        </View>
+        </View> */}
       </ScrollView>
     );
   },
