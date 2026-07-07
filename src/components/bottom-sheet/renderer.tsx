@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { View } from "react-native";
 import { AppBottomSheet } from "./sheet";
+import { PopoverProvider } from "@components/popover";
 import { BottomSheetDisplayEntry, BottomSheetId } from "./type";
 
 type Props = {
@@ -27,10 +28,12 @@ export const BottomSheetRenderer = ({ entries, onClose }: Props) => {
         enablePanDownToClose={entry.enablePanDownToClose ?? true}
         hasNestedChild={hasNestedChild}
       >
-        <View style={{ flex: 1 }}>
-          {entry.content}
-          {renderEntry(index + 1)}
-        </View>
+        <PopoverProvider>
+          <View style={{ flex: 1 }}>
+            {entry.content}
+            {renderEntry(index + 1)}
+          </View>
+        </PopoverProvider>
       </AppBottomSheet>
     );
   };
