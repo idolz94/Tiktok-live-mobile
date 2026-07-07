@@ -6,6 +6,7 @@ import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { Pressable, Text, View } from "react-native";
 import {
   OrdersProps,
@@ -37,6 +38,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
   const { show, hide } = useBottomSheet();
 
   const listRef = useRef<FlashListRef<OrderWithTikTok>>(null);
+  useTabScrollToTop("index", listRef, { isFlatList: true });
 
   const unpaidOrders = useMemo(
     () =>

@@ -5,6 +5,7 @@ import { images } from "@assets/images";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
+import { useRef } from "react";
 import {
   Image,
   ImageSourcePropType,
@@ -14,6 +15,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 
 const AVATAR_URL =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
@@ -68,6 +70,8 @@ const socialLogins = [
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
+  const scrollRef = useRef<ScrollView>(null);
+  useTabScrollToTop("settings", scrollRef);
 
   const username = user?.fullName || user?.username || "User";
   const accountName = user?.username || user?.phone || "Lumi Live";
@@ -75,6 +79,7 @@ export default function SettingsTab() {
   return (
     <View style={styles.screen}>
       <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.container}
       >
