@@ -13,7 +13,7 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { createStyles } from "@utils/createStyles";
 import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -34,6 +34,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 
 type CustomerTab = "all" | "new" | "tiktok";
 
@@ -120,6 +121,9 @@ const CustomerListCard = memo(
 
 export default function CustomersTab() {
   const [activeTab, setActiveTab] = useState<CustomerTab>("all");
+  const scrollRef = useRef<any>(null);
+  useTabScrollToTop("customers", scrollRef);
+
   const { top } = useSafeAreaInsets();
   const { show } = useBottomSheet();
   const { comments, currentLiveSessionId } = useTikTokLiveSocketContext();
@@ -286,6 +290,7 @@ export default function CustomersTab() {
         </View>
       ) : (
         <Animated.ScrollView
+          ref={scrollRef}
           contentContainerStyle={[
             styles.listContent,
             { paddingTop: HEADER_MAX_HEIGHT },

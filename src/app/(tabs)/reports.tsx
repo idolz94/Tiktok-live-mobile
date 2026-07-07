@@ -1,6 +1,8 @@
 import { createStyles } from "@utils/createStyles";
 import { formatMoneyFromK } from "@features/orders/utils/order";
+import { useRef } from "react";
 import { ScrollView, Text, View } from "react-native";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 
 export default function ReportsTab({
   commentsCount,
@@ -13,6 +15,9 @@ export default function ReportsTab({
   ordersCount: number;
   totalRevenue: number;
 }) {
+  const scrollRef = useRef<ScrollView>(null);
+  useTabScrollToTop("reports", scrollRef);
+
   const items = [
     { label: "Comment", value: commentsCount },
     { label: "Có thể chốt", value: buyingCount },
@@ -21,7 +26,7 @@ export default function ReportsTab({
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.container}>
       <Text style={styles.title}>Báo cáo</Text>
       <Text style={styles.subtitle}>Tổng hợp nhanh theo dữ liệu hiện tại.</Text>
       <View style={styles.grid}>

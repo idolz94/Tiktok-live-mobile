@@ -6,6 +6,7 @@ import { Icon } from "@components/icon";
 import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useRef, useState } from "react";
 import {
@@ -73,6 +74,9 @@ export const UnConnectedLive = memo(
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const isCancelledRef = useRef(false);
+
+    const scrollRef = useRef<ScrollView>(null);
+    useTabScrollToTop("index", scrollRef);
 
     const handleRefresh = useCallback(async () => {
       setRefreshing(true);
@@ -153,6 +157,7 @@ export const UnConnectedLive = memo(
 
     return (
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.container}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />

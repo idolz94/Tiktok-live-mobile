@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useScrollToTopStore } from "@hooks/use-tab-scroll-to-top";
 
 export function CustomTabBar({
   state,
@@ -66,8 +67,12 @@ export function CustomTabBar({
               canPreventDefault: true,
             });
 
-            if (!focused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+            if (!event.defaultPrevented) {
+              useScrollToTopStore.getState().triggerScrollToTop(route.name);
+
+              if (!focused) {
+                navigation.navigate(route.name);
+              }
             }
           };
 

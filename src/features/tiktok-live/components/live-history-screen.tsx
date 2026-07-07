@@ -7,7 +7,8 @@ import { formatDuration, removeAt } from "@features/tiktok-live/utils/comment";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import {
   FlatList,
   Pressable,
@@ -310,6 +311,9 @@ export const LiveHistoryScreen = memo(() => {
   const { liveHistory, reloadLiveHistory } = useTikTokLiveSocketContext();
   const { show, hide } = useBottomSheet();
 
+  const scrollRef = useRef<FlatList>(null);
+  useTabScrollToTop("history", scrollRef, { isFlatList: true });
+
   const [refreshing, setRefreshing] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
@@ -433,6 +437,7 @@ export const LiveHistoryScreen = memo(() => {
         </View>
       ) : (
         <FlatList
+          ref={scrollRef}
           data={groups}
           renderItem={renderDayCard}
           keyExtractor={keyExtractor}

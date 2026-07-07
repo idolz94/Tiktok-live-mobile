@@ -4,10 +4,11 @@ import { useShippingTab, type ShippingFilterKey, type ShippingOrder } from "@fea
 import { useThemes } from "@hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
 import { createStyles } from "@utils/createStyles";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Linking, Modal, Pressable, RefreshControl, Text, View } from "react-native";
 import { cancelShipmentApi, refreshShippingStatusApi } from "@features/orders/service/create-shipment-api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
   not_shipped: "Chưa giao",
@@ -272,6 +273,9 @@ export default function ShippingTab() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
+  const scrollRef = useRef<FlatList>(null);
+  useTabScrollToTop("shipping", scrollRef, { isFlatList: true });
+
   const handleCancelShipment = useCallback((item: ShippingOrder) => {
     if (!item.trackingCode) return;
     Alert.alert("Huỷ vận đơn", `Huỷ vận đơn ${item.trackingCode}?`, [
@@ -300,6 +304,7 @@ export default function ShippingTab() {
   return (
     <>
       <FlatList
+        ref={scrollRef}
         data={orders}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
