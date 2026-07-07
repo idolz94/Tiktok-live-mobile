@@ -1,10 +1,12 @@
 import type { Order, OrderProduct } from "@app-types/index";
 import { useAuth } from "@features/auth/hooks/use-auth";
-import { updateCustomerApi } from "@features/customers/service/api";
+import { getCustomerApi, updateCustomerApi } from "@features/customers/service/api";
+import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
 import { cancelShipmentApi, refreshShippingStatusApi, listCustomerAddressesApi, type CustomerAddress } from "@features/orders/service/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
 import { usePhoneField } from "@hooks/use-phone-field";
+import { Alert } from "react-native";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 export type DetailTab = "info" | "orders";
@@ -122,6 +124,20 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
     setReferenceInfo(latestOrder.note || customer?.latestComment || "");
   }, [customerKey, latestOrder?.id]);
 
+  useEffect(() => {
+    const customerId = customer?.customerId;
+    if (!customerId) return;
+    getCustomerApi(customerId)
+      .then((res) => {
+        const c = res.customer;
+        if (!c || !mountedRef.current) return;
+        setCustomerType(c.customerType || "Lẻ");
+        if (c.phone) resetPhone(c.phone);
+        if (c.referenceInfo !== undefined && c.referenceInfo !== null) setReferenceInfo(c.referenceInfo);
+      })
+      .catch(() => {});
+  }, [customer?.customerId]);
+
   // sync phone ↔ selectedAddress: address → phone if phone empty; phone → prefer matching address
   useEffect(() => {
     if (!selectedAddress) return;
@@ -179,14 +195,30 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
   const loading = orderManager.orderLoading && !customer && customerOrders.length === 0;
   const notFound = !loading && !customer && customerOrders.length === 0;
 
+  const invalidateCustomers = useCustomerRefreshStore((s) => s.invalidate);
+
   const handleSave = async () => {
     if (!validatePhone()) return;
     if (!customer?.customerId || isSaving) return;
     setIsSaving(true);
     try {
       await updateCustomerApi(customer.customerId, { customerType, phone, referenceInfo });
+      const res = await getCustomerApi(customer.customerId);
+      const c = res.customer;
+      if (mountedRef.current && c) {
+        setCustomerType(c.customerType || "Lẻ");
+        if (c.phone) resetPhone(c.phone);
+        if (c.referenceInfo !== undefined && c.referenceInfo !== null) setReferenceInfo(c.referenceInfo);
+      }
+      invalidateCustomers();
+      Alert.alert("Thành công", "Đã lưu thông tin khách hàng.");
+    } catch (err) {
+      Alert.alert(
+        "Lưu thất bại",
+        err instanceof Error ? err.message : "Vui lòng thử lại.",
+      );
     } finally {
-      setIsSaving(false);
+      if (mountedRef.current) setIsSaving(false);
     }
   };
 

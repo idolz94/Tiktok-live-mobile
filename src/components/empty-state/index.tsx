@@ -1,23 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
+import { images, ImageTypes } from "@assets/images";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 
 type Props = {
   title: string;
   subtitle?: string;
+  image?: ImageTypes;
   icon?: keyof typeof Ionicons.glyphMap;
   action?: { label: string; onPress: () => void };
 };
 
-export function EmptyState({ title, subtitle, icon, action }: Props) {
+export function EmptyState({ title, subtitle, image, icon, action }: Props) {
   const { colors } = useThemes();
 
   return (
     <View style={styles.container}>
-      {icon && (
+      {image ? (
+        <Image source={images[image]} style={styles.image} resizeMode="contain" />
+      ) : icon ? (
         <Ionicons name={icon} size={48} color={colors.neutral300} style={styles.icon} />
-      )}
+      ) : null}
       <Text style={styles.title}>{title}</Text>
       {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       {action && (
@@ -38,6 +42,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "center",
     justifyContent: "center",
     padding: 40,
+  },
+  image: {
+    width: 120,
+    height: 120,
+    marginBottom: 12,
   },
   icon: {
     marginBottom: 16,

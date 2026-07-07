@@ -2,7 +2,7 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { Screen } from "@components/screen";
 import { LinearGradient } from "@components/linear-gradient";
 import PagerView from "react-native-pager-view";
@@ -35,7 +35,7 @@ export default function HomeTab() {
     <Screen>
       <LinearGradient
         type="gra_background"
-        style={{ height: 290, ...StyleSheet.absoluteFill }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />

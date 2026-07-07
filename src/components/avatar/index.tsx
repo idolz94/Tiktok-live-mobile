@@ -1,51 +1,27 @@
-import React from "react";
-import { Text, View } from "react-native";
 import { Image } from "expo-image";
-import { useThemes } from "@hooks/use-theme";
+import { images } from "@assets/images";
 
 type AvatarProps = {
   uri?: string;
-  username: string;
+  username?: string;
   size?: number;
 };
 
-export const Avatar = ({ uri, username, size = 42 }: AvatarProps) => {
-  const { colors } = useThemes();
+export const Avatar = ({ uri, size = 42 }: AvatarProps) => {
+  const circleStyle = {
+    width: size,
+    height: size,
+    borderRadius: size / 2,
+  } as const;
 
-  const firstChar = username?.trim()?.charAt(0)?.toUpperCase() || "?";
+  const source = uri && uri.trim() ? { uri } : images.logo_app;
 
-  return uri ? (
+  return (
     <Image
-      source={uri}
+      source={source}
       contentFit="cover"
       cachePolicy="memory-disk"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: colors.neutral100,
-      }}
+      style={circleStyle}
     />
-  ) : (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: colors.neutral100,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Text
-        style={{
-          color: colors.primary,
-          fontWeight: "900",
-          fontSize: size * 0.45,
-        }}
-      >
-        {firstChar}
-      </Text>
-    </View>
   );
 };

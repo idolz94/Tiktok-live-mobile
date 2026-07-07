@@ -1087,7 +1087,7 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
     if (!cid) return;
     setForm({
       title: addr ? "Sửa địa chỉ" : "Thêm địa chỉ",
-      initialValues: addr ? formInitialValues(addr) : undefined,
+      initialValues: addr ? formInitialValues(addr) : (phone ? { phone } : undefined),
       onSave: async (vals: AddrFormValues) => {
         if (addr) await updateCustomerAddressApi(cid, addr.id, vals);
         else await createCustomerAddressApi(cid, vals);

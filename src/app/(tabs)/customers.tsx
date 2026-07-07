@@ -11,16 +11,17 @@ import {
 } from "@features/orders/hooks/use-order-manager";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { createStyles } from "@utils/createStyles";
-import { useMemo, useState } from "react";
+import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
   View,
-  StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useThemes } from "@hooks/use-theme";
 
 type CustomerTab = "all" | "new" | "tiktok";
 
@@ -30,13 +31,70 @@ const TAB_LABELS: Record<CustomerTab, string> = {
   tiktok: "TikTok",
 };
 
-function TikTokMark() {
-  return (
-    <View style={styles.tiktokMark}>
-      <Text style={styles.tiktokMarkText}>♪</Text>
-    </View>
-  );
-}
+const CustomerRow = memo(
+  ({
+    customer,
+    onPress,
+  }: {
+    customer: CustomerSummaryWithTikTok;
+    onPress: (key: string) => void;
+  }) => {
+    const tiktokUsername = customer.customerTikTokUsername || "";
+    const customerKey = tiktokUsername || customer.username;
+    const handlePress = useCallback(() => onPress(customerKey), [customerKey, onPress]);
+
+    return (
+      <Pressable onPress={handlePress} style={styles.row}>
+        <Avatar uri={customer.avatar} username={customer.username} size={42} />
+        <View style={styles.info}>
+          <Text numberOfLines={1} style={styles.name}>
+            {customer.username}
+          </Text>
+          {!!tiktokUsername && (
+            <View style={styles.tiktokLine}>
+              <Text numberOfLines={1} style={styles.tiktokText}>
+                @{tiktokUsername}
+              </Text>
+            </View>
+          )}
+          <View style={styles.metaLine}>
+            <Text style={styles.customerTypeBadge}>{customer.customerType || "Lẻ"}</Text>
+            <Text style={styles.metaText}>{customer.totalOrders} đơn</Text>
+          </View>
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
+    );
+  },
+);
+
+const CustomerListCard = memo(
+  ({
+    customers,
+    onPress,
+  }: {
+    customers: CustomerSummaryWithTikTok[];
+    onPress: (key: string) => void;
+  }) => {
+    const { shadows } = useThemes();
+    return (
+      <View style={styles.cardList}>
+        {customers.map((customer) => {
+          const tiktokUsername = customer.customerTikTokUsername || "";
+          const key = tiktokUsername || customer.username;
+          return (
+            <View key={key} style={[styles.card, shadows.sd2]}>
+              <CustomerRow
+                customer={customer}
+                onPress={onPress}
+              />
+            </View>
+          );
+        })}
+      </View>
+    );
+  },
+);
 
 export default function CustomersTab() {
   const [activeTab, setActiveTab] = useState<CustomerTab>("all");
@@ -52,28 +110,42 @@ export default function CustomersTab() {
     allStatuses: true,
   });
 
-  const customers: CustomerSummaryWithTikTok[] = orderManager.customers;
+  const refreshTick = useCustomerRefreshStore((s) => s.tick);
+  useEffect(() => {
+    if (refreshTick === 0) return;
+    void orderManager.reloadOrders();
+  }, [refreshTick]);
+
+  const customers: CustomerSummaryWithTikTok[] = orderManager.customers.filter(
+    (c) => c.totalOrders >= 1,
+  );
   const tiktokCustomers = useMemo(
-    () => customers.filter((customer) => !!customer.customerTikTokUsername),
+    () => customers.filter((c) => !!c.customerTikTokUsername),
     [customers],
   );
   const newCustomers = useMemo(
-    () => customers.filter((customer) => !customer.customerTikTokUsername),
+    () => customers.filter((c) => !c.customerTikTokUsername),
     [customers],
   );
 
   const displayedCustomers =
-    activeTab === "tiktok"
-      ? tiktokCustomers
-      : activeTab === "new"
-        ? newCustomers
-        : customers;
+    activeTab === "tiktok" ? tiktokCustomers : activeTab === "new" ? newCustomers : customers;
 
   const counts: Record<CustomerTab, number> = {
     all: customers.length,
     new: newCustomers.length,
     tiktok: tiktokCustomers.length,
   };
+
+  const handlePressCustomer = useCallback(
+    (key: string) =>
+      show({
+        content: <CustomerDetailSheet customerKey={key} />,
+        showDragIndicator: true,
+        snapPoints: ["96%"],
+      }),
+    [show],
+  );
 
   return (
     <Screen>
@@ -141,47 +213,7 @@ export default function CustomersTab() {
               </Text>
             </View>
           ) : (
-            displayedCustomers.map((customer, index) => {
-              const tiktokUsername = customer.customerTikTokUsername || "";
-              const customerKey = tiktokUsername || customer.username;
-              const isLast = index === displayedCustomers.length - 1;
-
-              return (
-                <View key={customerKey}>
-                  <Pressable
-                    onPress={() => show({ content: <CustomerDetailSheet customerKey={customerKey} />, showDragIndicator: true, snapPoints: ["96%"] })}
-                    style={styles.row}
-                  >
-                    <Avatar
-                      uri={customer.avatar}
-                      username={customer.username}
-                      size={42}
-                    />
-                    <View style={styles.info}>
-                      <Text numberOfLines={1} style={styles.name}>
-                        {customer.username}
-                      </Text>
-                      {!!tiktokUsername && (
-                        <View style={styles.tiktokLine}>
-                          <TikTokMark />
-                          <Text numberOfLines={1} style={styles.tiktokText}>
-                            {tiktokUsername}
-                          </Text>
-                        </View>
-                      )}
-                      <View style={styles.metaLine}>
-                        <Text style={styles.customerTypeBadge}>Lẻ</Text>
-                        <Text style={styles.metaText}>
-                          {customer.totalOrders} đơn
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={styles.chevron}>›</Text>
-                  </Pressable>
-                  {!isLast && <View style={styles.divider} />}
-                </View>
-              );
-            })
+            <CustomerListCard customers={displayedCustomers} onPress={handlePressCustomer} />
           )}
         </ScrollView>
       )}
@@ -191,8 +223,11 @@ export default function CustomersTab() {
 
 const styles = createStyles(({ colors, textPresets }) => ({
   headerBackground: {
-    height: 290,
-    ...StyleSheet.absoluteFill,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   header: {
     minHeight: 119,
@@ -249,15 +284,24 @@ const styles = createStyles(({ colors, textPresets }) => ({
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 34,
+    rowGap: 8,
   },
   listContentEmpty: {
     flexGrow: 1,
     justifyContent: "center",
   },
+  cardList: {
+    rowGap: 8,
+  },
+  card: {
+    borderRadius: 16,
+    backgroundColor: colors.white,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   info: { flex: 1, marginLeft: 12, minWidth: 0 },
   name: {
@@ -268,20 +312,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     marginTop: 4,
     flexDirection: "row",
     alignItems: "center",
-  },
-  tiktokMark: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.neutral50,
-  },
-  tiktokMarkText: {
-    color: colors.textDarkGray,
-    fontSize: 10,
-    fontWeight: "900",
-    lineHeight: 12,
   },
   tiktokText: {
     marginLeft: 5,
@@ -308,21 +338,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.textMuted,
     ...textPresets.fs11_400,
   },
-  metaDot: {
-    marginHorizontal: 6,
-    color: colors.textMuted,
-    ...textPresets.fs11_400,
-  },
   chevron: {
     marginLeft: 10,
     color: colors.textLightMuted,
     fontSize: 28,
     fontWeight: "300",
-  },
-  divider: {
-    height: 1,
-    marginLeft: 54,
-    backgroundColor: colors.borderLight,
   },
   statusBox: {
     flex: 1,

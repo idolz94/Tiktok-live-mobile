@@ -30,6 +30,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     orderLoading,
     toggleDepositStatus,
     depositLoadingIds,
+    deleteOrder,
   } = orderManager;
 
   const { colors } = useThemes();
@@ -122,9 +123,10 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
         item={item}
         depositLoading={depositLoadingIds.has(item.id)}
         onToggleDeposit={toggleDepositStatus}
+        onRemove={deleteOrder}
       />
     ),
-    [depositLoadingIds, toggleDepositStatus],
+    [depositLoadingIds, toggleDepositStatus, deleteOrder],
   );
 
   useEffect(() => {
@@ -170,33 +172,38 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
   );
 
   return (
-    // START: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter
-    <FlashList
-      ref={listRef}
-      data={filteredOrders}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      extraData={listExtraData}
-      ListHeaderComponent={listHeader}
-      // START: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
-      refreshing={orderLoading}
-      onRefresh={reloadOrders}
-      // END: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
-      contentContainerStyle={styles.container}
-    />
-    // END: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter
+    <View style={styles.root}>
+      {/* START: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter */}
+      <FlashList
+        ref={listRef}
+        data={filteredOrders}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        extraData={listExtraData}
+        ListHeaderComponent={listHeader}
+        // START: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
+        refreshing={orderLoading}
+        onRefresh={reloadOrders}
+        // END: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
+        contentContainerStyle={styles.container}
+      />
+      {/* END: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter */}
+    </View>
   );
 });
 
 const styles = createStyles(({ colors, textPresets }) => ({
+  root: {
+    flex: 1,
+  },
   container: {
     paddingTop: 16,
     paddingBottom: 8,
+    paddingHorizontal: 16,
   },
   grid: {
     rowGap: 8,
     marginTop: 8,
-    paddingHorizontal: 16,
   },
   columnWrapper: {
     flexDirection: "row",
@@ -205,7 +212,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   txtCurrentLive: {
     color: colors.neutral900,
     ...textPresets.fs20_600,
-    paddingHorizontal: 16,
   },
   infoCard: {
     flex: 1,
@@ -235,7 +241,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     ...textPresets.fs12_400,
   },
   footerRow: {
-    padding: 16,
+    paddingVertical: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

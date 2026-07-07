@@ -11,13 +11,14 @@ import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
 import { memo, useCallback } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
   item: Order;
   depositLoading?: boolean;
   onToggleDeposit: (orderId: string) => void;
+  onRemove?: (orderId: string) => void;
 }
 
 function createDisplayCode(orderCode: string) {
@@ -26,8 +27,8 @@ function createDisplayCode(orderCode: string) {
 }
 
 export const OrderItem = memo(
-  ({ item, depositLoading = false, onToggleDeposit }: OrderItemProps) => {
-    const { colors } = useThemes();
+  ({ item, depositLoading = false, onToggleDeposit, onRemove }: OrderItemProps) => {
+    const { colors, shadows } = useThemes();
     const { show } = useBottomSheet();
 
   const products = item.products?.length ? item.products : [];
@@ -50,8 +51,15 @@ export const OrderItem = memo(
     });
   }, [item.id]);
 
+  const handleRemove = useCallback(() => {
+    Alert.alert("Xoá đơn hàng", "Bạn có chắc muốn xoá đơn này không?", [
+      { text: "Huỷ", style: "cancel" },
+      { text: "Xoá", style: "destructive", onPress: () => onRemove?.(item.id) },
+    ]);
+  }, [item.id, onRemove]);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, shadows.sd2]}>
       <View style={styles.top}>
         <View style={styles.header}>
           <Pressable onPress={onPressAvatar}>
@@ -70,7 +78,9 @@ export const OrderItem = memo(
               style={{ width: 24, height: 24 }}
             />
             <Icon name="print" size={24} tintColor="neutral900" />
-            <Icon name="more" size={24} tintColor="neutral900" />
+            <Pressable onPress={handleRemove} hitSlop={8}>
+              <Icon name="close" size={20} tintColor="neutral900" />
+            </Pressable>
           </View>
         </View>
         <View style={styles.tags}>
@@ -154,6 +164,7 @@ export const OrderItem = memo(
           <Button
             title="Tổng quan đơn hàng"
             loading={false}
+            loadingType="center"
             onPress={onOpenOrderOverview}
             gradientType="gra_primary"
             containerStyle={styles.btnSubmit}
@@ -172,6 +183,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     paddingHorizontal: 16,
     backgroundColor: colors.neutral100,
     marginBottom: 8,
+    borderRadius: 16,
   },
   top: {
     rowGap: 8,

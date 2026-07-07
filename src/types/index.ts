@@ -162,6 +162,7 @@ export type Order = {
   customerAddressData?: OrderAddressData | null;
   customerTikTokUsername?: string;
   customerTikTokName?: string;
+  customerType?: string | null;
   uniqueId?: string;
   avatar?: string;
   avatarUrl?: string;
@@ -198,6 +199,7 @@ export type CustomerSummary = {
   totalComments: number;
   totalOrders: number;
   latestComment: string;
+  customerType?: string | null;
 };
 
 export type OrderWithTikTok = Order;

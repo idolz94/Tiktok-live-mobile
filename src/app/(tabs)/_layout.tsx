@@ -53,6 +53,13 @@ function TabContent() {
           })}
         />
         <Tabs.Screen
+          name="history"
+          options={tabOptions({
+            title: "Lịch Sử",
+            lottie: "time",
+          })}
+        />
+        <Tabs.Screen
           name="shipping"
           options={tabOptions({
             title: "Vận đơn",

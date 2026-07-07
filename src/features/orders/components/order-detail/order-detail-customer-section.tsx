@@ -63,10 +63,12 @@ export function OrderDetailCustomerSection({
         </Pressable>
         <View style={styles.customerInfo}>
           <Text style={styles.customerName}>{displayName}</Text>
-          <View style={styles.vipRow}>
-            <Text style={styles.vipStar}>★</Text>
-            <Text style={styles.vipLabel}>VIP</Text>
-          </View>
+          {!!order.customerType && (
+            <View style={styles.vipRow}>
+              <Text style={styles.vipStar}>★</Text>
+              <Text style={styles.vipLabel}>{order.customerType}</Text>
+            </View>
+          )}
         </View>
       </View>
       <View style={styles.contactRows}>

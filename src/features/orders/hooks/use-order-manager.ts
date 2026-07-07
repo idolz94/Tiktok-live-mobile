@@ -247,6 +247,7 @@ export function useOrderManager({
           avatar: getCommentAvatar(comment),
           customerId: matchingOrder?.customerId ?? null,
           customerTikTokUsername,
+          customerType: matchingOrder?.customerType ?? null,
           totalComments: 1,
           totalOrders: orders.filter(
             (order) =>
@@ -279,6 +280,7 @@ export function useOrderManager({
           avatar: getOrderAvatar(order),
           customerId: order.customerId ?? null,
           customerTikTokUsername,
+          customerType: order.customerType ?? null,
           totalComments: 0,
           totalOrders: 1,
           latestComment: order.comment,
@@ -288,6 +290,10 @@ export function useOrderManager({
 
       if (!current.customerId && order.customerId) {
         current.customerId = order.customerId;
+      }
+
+      if (!current.customerType && order.customerType) {
+        current.customerType = order.customerType;
       }
 
       if (!current.avatar) {

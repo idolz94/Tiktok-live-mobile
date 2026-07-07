@@ -238,6 +238,7 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
     depositAmount,
     totalAmount,
     codAmount,
+    customerType: order?.customerType || order?.customer_type || null,
     note: String(order?.note || ""),
     createdAt,
     updatedAt: String(order?.updatedAt || order?.updated_at || ""),
