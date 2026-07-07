@@ -70,8 +70,15 @@ const ChannelCard = memo(
 export const ManageTiktokChannel = () => {
   const { show, hide } = useBottomSheet();
   const { colors } = useThemes();
-  const { channels, loading, refreshing, errorText, usedUsernames, onRefresh, saveChannel } =
-    useManageTiktokChannel();
+  const {
+    channels,
+    loading,
+    refreshing,
+    errorText,
+    usedUsernames,
+    onRefresh,
+    saveChannel,
+  } = useManageTiktokChannel();
 
   const openEditDrawer = useCallback(
     (channel: ShopTikTokChannel) => {
@@ -137,7 +144,7 @@ export const ManageTiktokChannel = () => {
               ))}
             </View>
 
-            {hasChannels ? (
+            {/* {hasChannels ? (
               <>
                 <Text style={styles.hintText}>
                   Chỉ hỗ trợ sửa và xoá kênh đã liên kết.
@@ -147,7 +154,7 @@ export const ManageTiktokChannel = () => {
                   và dấu chấm.
                 </Text>
               </>
-            ) : null}
+            ) : null} */}
           </>
         )}
       </ScrollView>

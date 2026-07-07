@@ -27,7 +27,10 @@ import { ParcelInfoSheet } from "@features/orders/components/create-shipment/par
 import { useAddressPageStore } from "@features/orders/stores/address-page-store";
 import { VoucherSelectSheet } from "@features/orders/components/create-shipment/voucher-select-sheet";
 import { formInitialValues } from "@features/orders/utils/shipment";
-import type { AddrFormValues, PaymentSide } from "@features/orders/types/shipment";
+import type {
+  AddrFormValues,
+  PaymentSide,
+} from "@features/orders/types/shipment";
 import { useCreateShipment } from "@features/orders/hooks/use-create-shipment";
 
 const dimIcons = {
@@ -294,9 +297,9 @@ export default function CreateShipmentScreen() {
   };
 
   const openServicePoint = () => {
-    void WebBrowser.openBrowserAsync(
-      "https://spx.vn/service-point?service_type=support_sending_non_shopee_parcel&hide_header=true",
-    );
+    // void WebBrowser.openBrowserAsync(
+    //   "https://spx.vn/service-point?service_type=support_sending_non_shopee_parcel&hide_header=true",
+    // );
   };
 
   const openPaymentSheet = () => {
@@ -305,27 +308,38 @@ export default function CreateShipmentScreen() {
     id = show({
       content: (
         <>
-          <View style={[styles.sheetHeader, { borderBottomColor: colors.border10 }]}>
-            <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>Người thanh toán</Text>
+          <View
+            style={[styles.sheetHeader, { borderBottomColor: colors.border10 }]}
+          >
+            <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>
+              Người thanh toán
+            </Text>
             <Pressable onPress={close} hitSlop={12}>
               <Text style={{ color: colors.neutral500, fontSize: 20 }}>×</Text>
             </Pressable>
           </View>
-          {([
+          {[
             { label: "Người gửi thanh toán phí", value: 1 as PaymentSide },
             { label: "Người nhận thanh toán phí", value: 0 as PaymentSide },
-          ]).map((opt) => (
+          ].map((opt) => (
             <Pressable
               key={opt.value}
-              onPress={() => { setPaymentSide(opt.value); close(); }}
+              onPress={() => {
+                setPaymentSide(opt.value);
+                close();
+              }}
               style={[
                 styles.selectItem,
-                paymentSide === opt.value && { backgroundColor: colors.primaryLight },
+                paymentSide === opt.value && {
+                  backgroundColor: colors.primaryLight,
+                },
               ]}
             >
               <Text
                 style={[
-                  paymentSide === opt.value ? { color: colors.primary } : { color: colors.neutral900 },
+                  paymentSide === opt.value
+                    ? { color: colors.primary }
+                    : { color: colors.neutral900 },
                   textPresets.fs14_400,
                 ]}
               >
@@ -406,15 +420,38 @@ export default function CreateShipmentScreen() {
           <SectionBlock title="Thông tin đơn hàng">
             <Pressable
               onPress={openDimensions}
-              style={[styles.dimCard, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+              style={[
+                styles.dimCard,
+                {
+                  backgroundColor: colors.neutral50,
+                  borderColor: colors.border10,
+                },
+              ]}
             >
               {[
-                { label: "Dài", value: dimLength, unit: "cm", icon: dimIcons.length },
-                { label: "Rộng", value: dimWidth, unit: "cm", icon: dimIcons.width },
-                { label: "Cao", value: dimHeight, unit: "cm", icon: dimIcons.height },
+                {
+                  label: "Dài",
+                  value: dimLength,
+                  unit: "cm",
+                  icon: dimIcons.length,
+                },
+                {
+                  label: "Rộng",
+                  value: dimWidth,
+                  unit: "cm",
+                  icon: dimIcons.width,
+                },
+                {
+                  label: "Cao",
+                  value: dimHeight,
+                  unit: "cm",
+                  icon: dimIcons.height,
+                },
                 {
                   label: "Khối lượng",
-                  value: String(parseInt(weightInput.replace(/\D/g, ""), 10) || 0),
+                  value: String(
+                    parseInt(weightInput.replace(/\D/g, ""), 10) || 0,
+                  ),
                   unit: "gram",
                   icon: dimIcons.weight,
                 },
@@ -422,9 +459,18 @@ export default function CreateShipmentScreen() {
                 <View key={row.label} style={styles.dimRow}>
                   <View style={styles.dimRowLeft}>
                     <Image source={row.icon} style={styles.dimRowIcon} />
-                    <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>{row.label}</Text>
+                    <Text
+                      style={[
+                        { color: colors.neutral400 },
+                        textPresets.fs14_400,
+                      ]}
+                    >
+                      {row.label}
+                    </Text>
                   </View>
-                  <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
+                  <Text
+                    style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
+                  >
                     {row.value} {row.unit}
                   </Text>
                 </View>
@@ -433,7 +479,9 @@ export default function CreateShipmentScreen() {
           </SectionBlock>
         ) : null}
         {!isManualProvider && !isSpxProvider ? (
-          <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
+          <View
+            style={[styles.divider, { backgroundColor: colors.neutral50 }]}
+          />
         ) : null}
 
         <SectionBlock title="Thông tin vận chuyển">
@@ -445,21 +493,59 @@ export default function CreateShipmentScreen() {
           />
           {!isSpxProvider && (
             <>
-              <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>Tùy chọn thanh toán</Text>
+              <Text
+                style={[{ color: colors.neutral400 }, textPresets.fs14_400]}
+              >
+                Tùy chọn thanh toán
+              </Text>
               <View style={styles.radioGroup}>
-                {([
-                  { label: "Bên gửi trả phí", value: 1 },
-                  { label: "Bên nhận trả phí", value: 0 },
-                ] as const).map((opt) => (
+                {(
+                  [
+                    { label: "Bên gửi trả phí", value: 1 },
+                    { label: "Bên nhận trả phí", value: 0 },
+                  ] as const
+                ).map((opt) => (
                   <Pressable
                     key={opt.label}
                     onPress={() => setPaymentSide(opt.value)}
-                    style={[styles.radioCard, { borderColor: paymentSide === opt.value ? colors.primary : colors.border10 }]}
+                    style={[
+                      styles.radioCard,
+                      {
+                        borderColor:
+                          paymentSide === opt.value
+                            ? colors.primary
+                            : colors.border10,
+                      },
+                    ]}
                   >
-                    <View style={[styles.radioOuter, { borderColor: paymentSide === opt.value ? colors.primary : colors.neutral300 }]}>
-                      {paymentSide === opt.value && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}
+                    <View
+                      style={[
+                        styles.radioOuter,
+                        {
+                          borderColor:
+                            paymentSide === opt.value
+                              ? colors.primary
+                              : colors.neutral300,
+                        },
+                      ]}
+                    >
+                      {paymentSide === opt.value && (
+                        <View
+                          style={[
+                            styles.radioInner,
+                            { backgroundColor: colors.primary },
+                          ]}
+                        />
+                      )}
                     </View>
-                    <Text style={[{ color: colors.neutral900 }, textPresets.fs14_400]}>{opt.label}</Text>
+                    <Text
+                      style={[
+                        { color: colors.neutral900 },
+                        textPresets.fs14_400,
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
                   </Pressable>
                 ))}
               </View>
@@ -508,17 +594,35 @@ export default function CreateShipmentScreen() {
               parcelInfoSlot={
                 <Pressable
                   onPress={openParcelSheet}
-                  style={[styles.parcelRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+                  style={[
+                    styles.parcelRow,
+                    {
+                      backgroundColor: colors.neutral50,
+                      borderColor: colors.border10,
+                    },
+                  ]}
                 >
-                  <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
+                  <Text
+                    style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
+                  >
                     Thông tin bưu gửi{" "}
                     <Text style={{ color: colors.error }}>*</Text>
                   </Text>
                   <View style={{ flex: 1 }} />
-                  <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>
-                    {displayQuantity} Sản phẩm, {((parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000).toFixed(1)} KG
+                  <Text
+                    style={[{ color: colors.neutral500 }, textPresets.fs12_400]}
+                  >
+                    {displayQuantity} Sản phẩm,{" "}
+                    {(
+                      (parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000
+                    ).toFixed(1)}{" "}
+                    KG
                   </Text>
-                  <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
+                  <Text
+                    style={[{ color: colors.neutral400 }, textPresets.fs18_500]}
+                  >
+                    ›
+                  </Text>
                 </Pressable>
               }
             />
@@ -636,9 +740,7 @@ export default function CreateShipmentScreen() {
             },
           ]}
         >
-          <View
-            style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             {isSubmitting ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
@@ -729,15 +831,59 @@ const styles = createStyles(({ textPresets }) => ({
   },
   divider: { height: 8 },
   dimCard: { borderRadius: 16, borderWidth: 0.5, padding: 16, gap: 8 },
-  dimRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: 40 },
-  dimRowLeft: { flex: 1, flexDirection: "row" as const, alignItems: "center" as const, gap: 8 },
+  dimRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 40,
+  },
+  dimRowLeft: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+  },
   dimRowIcon: { width: 18, height: 18 },
-  parcelRow: { borderRadius: 12, borderWidth: 0.5, padding: 16, flexDirection: "row" as const, alignItems: "center" as const, gap: 10 },
+  parcelRow: {
+    borderRadius: 12,
+    borderWidth: 0.5,
+    padding: 16,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+  },
   optionGrid: { gap: 10 },
   radioGroup: { gap: 12 },
-  sheetHeader: { flexDirection: "row" as const, alignItems: "center" as const, justifyContent: "space-between" as const, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5 },
-  selectItem: { marginHorizontal: 8, marginVertical: 4, paddingHorizontal: 12, paddingVertical: 14, borderRadius: 10 },
-  radioCard: { flexDirection: "row" as const, alignItems: "center" as const, gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderRadius: 8 },
-  radioOuter: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, alignItems: "center" as const, justifyContent: "center" as const },
+  sheetHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 0.5,
+  },
+  selectItem: {
+    marginHorizontal: 8,
+    marginVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderRadius: 10,
+  },
+  radioCard: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  radioOuter: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
 }));

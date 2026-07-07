@@ -16,14 +16,24 @@ import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   Image,
+  LayoutChangeEvent,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemes } from "@hooks/use-theme";
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  interpolate,
+} from "react-native-reanimated";
+import { BlurView } from "expo-blur";
 
 type CustomerTab = "all" | "new" | "tiktok";
 
@@ -43,7 +53,10 @@ const CustomerRow = memo(
   }) => {
     const tiktokUsername = customer.customerTikTokUsername || "";
     const customerKey = tiktokUsername || customer.username;
-    const handlePress = useCallback(() => onPress(customerKey), [customerKey, onPress]);
+    const handlePress = useCallback(
+      () => onPress(customerKey),
+      [customerKey, onPress],
+    );
 
     return (
       <Pressable onPress={handlePress} style={styles.row}>
@@ -65,7 +78,9 @@ const CustomerRow = memo(
               return icon ? (
                 <View style={styles.customerTypeBadge}>
                   <Image source={icon} style={styles.customerTypeIcon} />
-                  <Text style={styles.customerTypeText}>{customer.customerType}</Text>
+                  <Text style={styles.customerTypeText}>
+                    {customer.customerType}
+                  </Text>
                 </View>
               ) : null;
             })()}
@@ -94,10 +109,7 @@ const CustomerListCard = memo(
           const key = tiktokUsername || customer.username;
           return (
             <View key={key} style={[styles.card, shadows.sd2]}>
-              <CustomerRow
-                customer={customer}
-                onPress={onPress}
-              />
+              <CustomerRow customer={customer} onPress={onPress} />
             </View>
           );
         })}
@@ -112,6 +124,77 @@ export default function CustomersTab() {
   const { show } = useBottomSheet();
   const { comments, currentLiveSessionId } = useTikTokLiveSocketContext();
   const { user } = useAuth();
+
+  const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+  const HEADER_MAX_HEIGHT = top + 76;
+  const HEADER_MIN_HEIGHT = top + 50;
+  const SCROLL_DISTANCE = 80;
+
+  const scrollY = useSharedValue(0);
+  const [titleWidth, setTitleWidth] = useState(130);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const onTitleLayout = useCallback((e: LayoutChangeEvent) => {
+    setTitleWidth(e.nativeEvent.layout.width);
+  }, []);
+
+  const centerTranslateX = useMemo(() => {
+    return SCREEN_WIDTH / 2 - 16 - titleWidth / 2;
+  }, [titleWidth, SCREEN_WIDTH]);
+
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    const height = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
+      "clamp",
+    );
+    return {
+      height,
+    };
+  });
+
+  const blurAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [0, 1],
+      "clamp",
+    );
+    return {
+      opacity,
+    };
+  });
+
+  const titleAnimatedStyle = useAnimatedStyle(() => {
+    const transX = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [0, centerTranslateX],
+      "clamp",
+    );
+    const transY = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [0, -25],
+      "clamp",
+    );
+    const scale = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [1, 0.8],
+      "clamp",
+    );
+    return {
+      transform: [{ translateX: transX }, { translateY: transY }, { scale }],
+    };
+  });
 
   const orderManager = useOrderManager({
     comments,
@@ -139,7 +222,11 @@ export default function CustomersTab() {
   );
 
   const displayedCustomers =
-    activeTab === "tiktok" ? tiktokCustomers : activeTab === "new" ? newCustomers : customers;
+    activeTab === "tiktok"
+      ? tiktokCustomers
+      : activeTab === "new"
+        ? newCustomers
+        : customers;
 
   const counts: Record<CustomerTab, number> = {
     all: customers.length,
@@ -166,66 +253,63 @@ export default function CustomersTab() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Text style={styles.title}>Khách hàng</Text>
-        <View style={styles.headerActions}>
-          <Pressable style={styles.headerButton}>
-            <Icon name="filter" size={20} tintColor="#000000" />
-          </Pressable>
-          <Pressable style={styles.headerButton}>
-            <Icon name="search" size={20} tintColor="#000000" />
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={styles.tabs}>
-        {(Object.keys(TAB_LABELS) as CustomerTab[]).map((tab) => {
-          const active = activeTab === tab;
-          return (
-            <Pressable
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              style={[styles.tab, active && styles.tabActive]}
-            >
-              <Text style={[styles.tabText, active && styles.tabTextActive]}>
-                {TAB_LABELS[tab]} ({counts[tab]})
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Animated.View style={[styles.header, headerAnimatedStyle]}>
+        <Animated.View style={[StyleSheet.absoluteFill, blurAnimatedStyle]}>
+          <BlurView
+            intensity={30}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+        <Animated.View
+          onLayout={onTitleLayout}
+          style={[styles.titleContainer, titleAnimatedStyle]}
+        >
+          <Text style={styles.title}>Khách hàng</Text>
+        </Animated.View>
+      </Animated.View>
 
       {orderManager.orderLoading ? (
-        <View style={styles.statusBox}>
+        <View style={[styles.statusBox, { paddingTop: HEADER_MAX_HEIGHT }]}>
           <ActivityIndicator color="#FF6B8A" />
           <Text style={styles.statusText}>Đang tải khách hàng...</Text>
         </View>
       ) : orderManager.orderError ? (
-        <View style={styles.statusBox}>
+        <View style={[styles.statusBox, { paddingTop: HEADER_MAX_HEIGHT }]}>
           <Text style={styles.errorText}>{orderManager.orderError}</Text>
-          <Pressable style={styles.retryButton} onPress={orderManager.reloadOrders}>
+          <Pressable
+            style={styles.retryButton}
+            onPress={orderManager.reloadOrders}
+          >
             <Text style={styles.retryText}>Tải lại</Text>
           </Pressable>
         </View>
       ) : (
-        <ScrollView
+        <Animated.ScrollView
           contentContainerStyle={[
             styles.listContent,
+            { paddingTop: HEADER_MAX_HEIGHT },
             displayedCustomers.length === 0 && styles.listContentEmpty,
           ]}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
           {displayedCustomers.length === 0 ? (
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>Chưa có khách hàng</Text>
               <Text style={styles.emptyText}>
-                Khách sẽ xuất hiện sau khi có comment live hoặc đơn hàng phù hợp.
+                Khách sẽ xuất hiện sau khi có comment live hoặc đơn hàng phù
+                hợp.
               </Text>
             </View>
           ) : (
-            <CustomerListCard customers={displayedCustomers} onPress={handlePressCustomer} />
+            <CustomerListCard
+              customers={displayedCustomers}
+              onPress={handlePressCustomer}
+            />
           )}
-        </ScrollView>
+        </Animated.ScrollView>
       )}
     </Screen>
   );
@@ -240,12 +324,19 @@ const styles = createStyles(({ colors, textPresets }) => ({
     bottom: 0,
   },
   header: {
-    minHeight: 119,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    overflow: "hidden",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(0,0,0,0.05)",
+  },
+  titleContainer: {
+    position: "absolute",
+    left: 16,
+    bottom: 12,
   },
   title: {
     color: colors.text,

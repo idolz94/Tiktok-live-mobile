@@ -140,10 +140,18 @@ function SelectField({
                   borderBottomColor: colors.border10,
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", columnGap: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    columnGap: 8,
+                  }}
+                >
                   {(() => {
                     const icon = getCustomerTypeIcon(opt);
-                    return icon ? <Image source={icon} style={{ width: 22, height: 22 }} /> : null;
+                    return icon ? (
+                      <Image source={icon} style={{ width: 22, height: 22 }} />
+                    ) : null;
                   })()}
                   <Text
                     style={[
@@ -458,7 +466,7 @@ function OrderCard({
   );
 }
 
-const styles = createStyles(({ colors, textPresets }) => ({
+const styles = createStyles(({ colors, textPresets, shadows }) => ({
   container: {
     flex: 1,
     backgroundColor: colors.white,
@@ -702,6 +710,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderRadius: 16,
     backgroundColor: colors.white,
     padding: 14,
+    ...shadows.sd1,
   },
   orderHeader: {
     flexDirection: "row",
@@ -1095,7 +1104,11 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
     if (!cid) return;
     setForm({
       title: addr ? "Sửa địa chỉ" : "Thêm địa chỉ",
-      initialValues: addr ? formInitialValues(addr) : (phone ? { phone } : undefined),
+      initialValues: addr
+        ? formInitialValues(addr)
+        : phone
+          ? { phone }
+          : undefined,
       onSave: async (vals: AddrFormValues) => {
         if (addr) await updateCustomerAddressApi(cid, addr.id, vals);
         else await createCustomerAddressApi(cid, vals);

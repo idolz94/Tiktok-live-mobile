@@ -64,15 +64,18 @@ export function OrderDetailCustomerSection({
         </Pressable>
         <View style={styles.customerInfo}>
           <Text style={styles.customerName}>{displayName}</Text>
-          {!!order.customerType && (() => {
-            const icon = getCustomerTypeIcon(order.customerType);
-            return icon ? (
-              <View style={styles.customerTypeBadge}>
-                <Image source={icon} style={styles.customerTypeIcon} />
-                <Text style={styles.customerTypeText}>{order.customerType}</Text>
-              </View>
-            ) : null;
-          })()}
+          {!!order.customerType &&
+            (() => {
+              const icon = getCustomerTypeIcon(order.customerType);
+              return icon ? (
+                <View style={styles.customerTypeBadge}>
+                  <Image source={icon} style={styles.customerTypeIcon} />
+                  <Text style={styles.customerTypeText}>
+                    {order.customerType}
+                  </Text>
+                </View>
+              ) : null;
+            })()}
         </View>
       </View>
       <View style={styles.contactRows}>
@@ -102,6 +105,14 @@ export function OrderDetailCustomerSection({
               : order.customerAddress || "Chưa có địa chỉ"}
           </Text>
         </View>
+        <Text
+          style={[
+            styles.contactText,
+            !order.orderCode && styles.contactTextMuted,
+          ]}
+        >
+          Order ID: {order.orderCode}
+        </Text>
       </View>
       <View style={styles.customerActions}>
         <Pressable onPress={onTikTok} style={styles.customerActionBtn}>
@@ -125,7 +136,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
   customerTopRow: { flexDirection: "row", alignItems: "center", columnGap: 10 },
   customerInfo: { flex: 1, rowGap: 4 },
   customerName: { color: colors.neutral900, ...textPresets.fs16_600 },
-  customerTypeBadge: { flexDirection: "row", alignItems: "center", columnGap: 4 },
+  customerTypeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 4,
+  },
   customerTypeIcon: { width: 20, height: 20 },
   customerTypeText: { color: colors.neutral400, ...textPresets.fs12_400 },
   contactRows: { rowGap: 8 },
@@ -152,4 +167,5 @@ const styles = createStyles(({ colors, textPresets }) => ({
     backgroundColor: colors.neutral50,
   },
   customerActionLabel: { color: colors.neutral900, ...textPresets.fs12_500 },
+  metaText: { color: colors.neutral400, ...textPresets.fs12_400 },
 }));

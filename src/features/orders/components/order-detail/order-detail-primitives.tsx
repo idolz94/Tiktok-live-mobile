@@ -1,4 +1,4 @@
-import { Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { Icon } from "@components/icon";
 import { OrderWithTikTok } from "@app-types/index";
 import { useThemes } from "@hooks/use-theme";
@@ -21,13 +21,22 @@ type SectionHeaderProps = {
   title: string;
   actionLabel?: string;
   onAction?: () => void;
+  loading?: boolean;
 };
 
-export function SectionHeader({ title, actionLabel, onAction }: SectionHeaderProps) {
+export function SectionHeader({ title, actionLabel, onAction, loading }: SectionHeaderProps) {
+  const { colors } = useThemes();
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      {actionLabel ? (
+      {loading ? (
+        <View style={styles.sectionAction}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={[styles.sectionActionText, { color: colors.neutral400 }]}>
+            Đang cập nhật...
+          </Text>
+        </View>
+      ) : actionLabel ? (
         <Pressable style={styles.sectionAction} onPress={onAction}>
           <Icon name="plus_circle" size={18} tintColor="primary" />
           <Text style={styles.sectionActionText}>{actionLabel}</Text>

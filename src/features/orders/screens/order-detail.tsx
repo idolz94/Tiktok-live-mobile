@@ -66,17 +66,15 @@ export const OrderDetail = memo(() => {
     [],
   );
 
-  const handleChangePrepaid = useCallback(
-    (amount: number, display: string) => {
-      setPrepaidAmount(amount);
-      setPrepaidDisplay(display);
-    },
-    [],
-  );
+  const handleChangePrepaid = useCallback((amount: number, display: string) => {
+    setPrepaidAmount(amount);
+    setPrepaidDisplay(display);
+  }, []);
 
   const localRemain = Math.max(
     0,
-    (detail.order?.totalAmount ?? (detail.productTotal + detail.shippingFee)) - (prepaidAmount ?? 0),
+    (detail.order?.totalAmount ?? detail.productTotal + detail.shippingFee) -
+      (prepaidAmount ?? 0),
   );
 
   const handleShip = useCallback(() => {
@@ -95,7 +93,13 @@ export const OrderDetail = memo(() => {
         prepaid: String(prepaidAmount ?? 0),
       },
     });
-  }, [detail.order, detail.shippingFee, selectedProvider, shippingFeeDisplay, prepaidAmount]);
+  }, [
+    detail.order,
+    detail.shippingFee,
+    selectedProvider,
+    shippingFeeDisplay,
+    prepaidAmount,
+  ]);
 
   const handleCancelShipment = useCallback(() => {
     const order = detail.order;
@@ -184,14 +188,9 @@ export const OrderDetail = memo(() => {
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled"
             >
-              <OrderDetailMetaSection
-                orderCode={detail.order.orderCode || detail.order.id}
-                createdDate={createdDate}
-                status={detail.order.status}
-              />
-              <Divider />
               {detail.order.source !== "manual" ? (
                 <>
+                  <Divider />
                   <OrderDetailCustomerSection
                     order={detail.order}
                     displayName={displayName}
@@ -209,7 +208,9 @@ export const OrderDetail = memo(() => {
                 totalQuantity={detail.totalQuantity}
                 productTotal={detail.productTotal}
                 isEditable={detail.order.status === "draft"}
-                isProductMutating={detail.addingProduct || detail.updatingProduct}
+                isProductMutating={
+                  detail.addingProduct || detail.updatingProduct
+                }
                 onAddProduct={() => {
                   show({
                     content: (

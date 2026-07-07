@@ -4,7 +4,8 @@ import { useCallback } from "react";
 import { ScrollView, Text, TextInput, Pressable, View } from "react-native";
 import { createStyles } from "@utils/createStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { type PrinterSheet } from "../../types/printer";import { usePrinterSettings } from "../../hooks/use-printer-settings";
+import { type PrinterSheet } from "../../types/printer";
+import { usePrinterSettings } from "../../hooks/use-printer-settings";
 import { PrinterConnectionCard } from "./printer-connection-card";
 import { PrinterTemplateList } from "./printer-template-list";
 import {
@@ -31,13 +32,23 @@ function OptionList<T extends string>({
         return (
           <Pressable
             key={opt.value}
-            style={[styles.sheetOption, isSelected && styles.sheetOptionSelected]}
+            style={[
+              styles.sheetOption,
+              isSelected && styles.sheetOptionSelected,
+            ]}
             onPress={() => onSelect(opt.value)}
           >
-            <Text style={[styles.sheetOptionText, isSelected && styles.sheetOptionTextSelected]}>
+            <Text
+              style={[
+                styles.sheetOptionText,
+                isSelected && styles.sheetOptionTextSelected,
+              ]}
+            >
               {opt.label}
             </Text>
-            {isSelected ? <Text style={styles.sheetSelectedMark}>✓</Text> : null}
+            {isSelected ? (
+              <Text style={styles.sheetSelectedMark}>✓</Text>
+            ) : null}
           </Pressable>
         );
       })}
@@ -72,7 +83,10 @@ export function PrinterSettingsScreen() {
               <OptionList
                 options={PRINTER_CONNECTION_OPTIONS}
                 selected={config.connectionType}
-                onSelect={(value) => { setConnectionType(value); hide(); }}
+                onSelect={(value) => {
+                  setConnectionType(value);
+                  hide();
+                }}
               />
             </View>
           ),
@@ -87,7 +101,10 @@ export function PrinterSettingsScreen() {
               <OptionList
                 options={PRINTER_PAPER_OPTIONS}
                 selected={config.paperSize}
-                onSelect={(value) => { setPaperSize(value); hide(); }}
+                onSelect={(value) => {
+                  setPaperSize(value);
+                  hide();
+                }}
               />
             </View>
           ),
@@ -102,14 +119,26 @@ export function PrinterSettingsScreen() {
               <OptionList
                 options={PRINTER_FONT_OPTIONS}
                 selected={config.fontSize}
-                onSelect={(value) => { setFontSize(value); hide(); }}
+                onSelect={(value) => {
+                  setFontSize(value);
+                  hide();
+                }}
               />
             </View>
           ),
         });
       }
     },
-    [show, hide, config.connectionType, config.paperSize, config.fontSize, setConnectionType, setPaperSize, setFontSize],
+    [
+      show,
+      hide,
+      config.connectionType,
+      config.paperSize,
+      config.fontSize,
+      setConnectionType,
+      setPaperSize,
+      setFontSize,
+    ],
   );
 
   const noticeText =
@@ -271,8 +300,6 @@ export function PrinterSettingsScreen() {
             {isTesting ? "Đang in thử..." : "In thử"}
           </Text>
         </Pressable>
-
-        <PrinterTemplateList />
       </ScrollView>
     </SafeAreaView>
   );
@@ -308,7 +335,12 @@ const styles = createStyles(({ colors }) => ({
     lineHeight: 22,
     fontWeight: "600",
   },
-  noticeText: { flex: 1, color: colors.neutral500, fontSize: 12, lineHeight: 18 },
+  noticeText: {
+    flex: 1,
+    color: colors.neutral500,
+    fontSize: 12,
+    lineHeight: 18,
+  },
   testButton: {
     height: 40,
     borderRadius: 20,
@@ -316,7 +348,12 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     justifyContent: "center",
   },
-  testButtonText: { color: colors.neutral900, fontSize: 14, lineHeight: 22, fontWeight: "500" },
+  testButtonText: {
+    color: colors.neutral900,
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: "500",
+  },
   testButtonDisabled: { opacity: 0.5 },
   sectionHeader: { marginTop: 8, paddingHorizontal: 4 },
   sectionTitle: { fontSize: 13, fontWeight: "600", color: colors.neutral500 },
@@ -334,7 +371,12 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     gap: 16,
   },
-  configRowLabel: { width: 120, color: colors.neutral400, fontSize: 12, lineHeight: 18 },
+  configRowLabel: {
+    width: 120,
+    color: colors.neutral400,
+    fontSize: 12,
+    lineHeight: 18,
+  },
   configInputContainer: {
     flex: 1,
     minWidth: 0,
@@ -375,7 +417,17 @@ const styles = createStyles(({ colors }) => ({
     gap: 12,
   },
   sheetOptionSelected: { backgroundColor: colors.warningLight },
-  sheetOptionText: { flex: 1, color: colors.neutral900, fontSize: 14, lineHeight: 22 },
+  sheetOptionText: {
+    flex: 1,
+    color: colors.neutral900,
+    fontSize: 14,
+    lineHeight: 22,
+  },
   sheetOptionTextSelected: { color: colors.warning, fontWeight: "600" },
-  sheetSelectedMark: { color: colors.warning, fontSize: 16, lineHeight: 20, fontWeight: "700" },
+  sheetSelectedMark: {
+    color: colors.warning,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "700",
+  },
 }));
