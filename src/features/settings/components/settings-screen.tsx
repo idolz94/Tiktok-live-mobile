@@ -61,7 +61,10 @@ export function SettingsScreen({
             connectLabel={SETTINGS_COPY.connectButton}
           />
 
-          <SettingsSection logoutLabel={SETTINGS_COPY.logout} onLogout={onLogout} />
+          <SettingsSection
+            logoutLabel={SETTINGS_COPY.logout}
+            onLogout={onLogout}
+          />
         </View>
       </ScrollView>
     </View>

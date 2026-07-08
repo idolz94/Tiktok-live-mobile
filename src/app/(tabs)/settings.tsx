@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
+import { useToast } from "@components/toast";
 
 const AVATAR_URL =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
@@ -70,7 +71,10 @@ const socialLogins = [
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
+  const toast = useToast();
+
   const scrollRef = useRef<ScrollView>(null);
+
   useTabScrollToTop("settings", scrollRef);
 
   const username = user?.fullName || user?.username || "User";
@@ -131,7 +135,11 @@ export default function SettingsTab() {
               </View>
               <Text style={styles.chevron}>›</Text>
             </View>
-            <Pressable>
+            <Pressable
+              onPress={() => {
+                toast.info("Tính năng đang được phát triển!");
+              }}
+            >
               <LinearGradient type="gra_primary" style={styles.upgradeButton}>
                 <Text style={styles.upgradeText}>Nâng cấp</Text>
               </LinearGradient>
@@ -190,13 +198,23 @@ function SettingItem({
   label: string;
   onPress?: () => void;
 }) {
+  const toast = useToast();
+
+  const _onPress = () => {
+    if (typeof onPress === "function") {
+      onPress();
+    } else {
+      toast.info("Tính năng đang được phát triển!");
+    }
+  };
+
   const inner = (
     <View style={styles.settingLeft}>
       <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
       <Text style={styles.settingText}>{label}</Text>
     </View>
   );
-  if (!onPress) {
+  if (!_onPress) {
     return (
       <View style={styles.settingItem}>
         {inner}
@@ -205,7 +223,7 @@ function SettingItem({
     );
   }
   return (
-    <Pressable style={styles.settingItem} onPress={onPress}>
+    <Pressable style={styles.settingItem} onPress={_onPress}>
       {inner}
       <Text style={styles.chevron}>›</Text>
     </Pressable>

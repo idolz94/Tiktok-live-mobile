@@ -2146,6 +2146,28 @@ PODS:
     - Yoga
   - RNFS (2.20.0):
     - React-Core
+  - RNGestureHandler (3.0.2):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNReanimated (4.3.1):
     - hermes-engine
     - RCTRequired
@@ -2494,6 +2516,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - RNFS (from `../node_modules/react-native-fs`)
+  - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -2720,6 +2743,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-masked-view/masked-view"
   RNFS:
     :path: "../node_modules/react-native-fs"
+  RNGestureHandler:
+    :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -2840,6 +2865,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 0f84413588571e74ef9cff6e3b669346e3abf9cb
   RNCMaskedView: 48989935d9665d97d87fa7e44f486b4d22cd5b9f
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
+  RNGestureHandler: 5cbe8c5f54204b2175c5d2b8fe6538b02da3aaf5
   RNReanimated: 59bf185693b7294a0c515e19a6d1be54def61363
   RNScreens: 9b2e552ea56792a85c4efcc279edd61d9014be1c
   RNSVG: d49e9b043822ac92430dd37fa1d7031aa80911b9
