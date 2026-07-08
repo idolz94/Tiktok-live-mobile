@@ -1,9 +1,10 @@
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Icon } from "@components/icon";
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useMemo } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
-import { useThemes } from "@hooks/use-theme";
-import { useBottomSheet } from "@components/bottom-sheet/hook";
 import type { SpxTimeslot } from "../../types/shipment";
-import { createStyles } from "@utils/createStyles";
 
 type TimeslotSelectProps = {
   timeslots: SpxTimeslot[];
@@ -81,9 +82,7 @@ export const TimeslotSelect = memo(
         >
           {selected ? selected.label : "Chọn khung giờ lấy hàng"}
         </Text>
-        <Text style={[{ color: colors.neutral400 }, textPresets.fs14_500]}>
-          ⌄
-        </Text>
+        <Icon name="arrow_down" size={14} tintColor={colors.neutral400} />
       </Pressable>
     );
   },
@@ -144,7 +143,10 @@ const TimeslotSheetContent = memo(
     return (
       <View style={styles.sheetContainer}>
         <View
-          style={[styles.selectCloseRow, { borderBottomColor: colors.border10 }]}
+          style={[
+            styles.selectCloseRow,
+            { borderBottomColor: colors.border10 },
+          ]}
         >
           <Text style={[textPresets.fs14_400, { color: colors.neutral500 }]}>
             Khung giờ lấy hàng
