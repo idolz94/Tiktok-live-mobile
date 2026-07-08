@@ -29,6 +29,7 @@ import { VoucherSelectSheet } from "@features/orders/components/create-shipment/
 import { formInitialValues } from "@features/orders/utils/shipment";
 import type {
   AddrFormValues,
+  PaymentSide,
 } from "@features/orders/types/shipment";
 import { useCreateShipment } from "@features/orders/hooks/use-create-shipment";
 
@@ -270,7 +271,7 @@ export default function CreateShipmentScreen() {
           onClose={close}
         />
       ),
-      showDragIndicator: false,
+      showDragIndicator: true,
       snapPoints: ["90%"],
     });
   };
@@ -448,15 +449,13 @@ export default function CreateShipmentScreen() {
                 Tùy chọn thanh toán
               </Text>
               <View style={styles.radioGroup}>
-                {(
-                  [
-                    { label: "Bên gửi trả phí", value: 1 },
-                    { label: "Bên nhận trả phí", value: 0 },
-                  ] as const
-                ).map((opt) => (
+                {[
+                  { label: "Bên gửi trả phí", value: 1 },
+                  { label: "Bên nhận trả phí", value: 0 },
+                ].map((opt) => (
                   <Pressable
                     key={opt.label}
-                    onPress={() => setPaymentSide(opt.value)}
+                    onPress={() => setPaymentSide(opt.value as PaymentSide)}
                     style={[
                       styles.radioCard,
                       {
@@ -557,21 +556,34 @@ export default function CreateShipmentScreen() {
                     Thông tin bưu gửi{" "}
                     <Text style={{ color: colors.error }}>*</Text>
                   </Text>
-                  <View style={{ flex: 1 }} />
-                  <Text
-                    style={[{ color: colors.neutral500 }, textPresets.fs12_400]}
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      columnGap: 4,
+                    }}
                   >
-                    {displayQuantity} Sản phẩm,{" "}
-                    {(
-                      (parseInt(weightInput.replace(/\D/g, ""), 10) || 0) / 1000
-                    ).toFixed(1)}{" "}
-                    KG
-                  </Text>
-                  <Text
-                    style={[{ color: colors.neutral400 }, textPresets.fs18_500]}
-                  >
-                    ›
-                  </Text>
+                    <Text
+                      style={[
+                        { color: colors.neutral500 },
+                        textPresets.fs12_400,
+                      ]}
+                    >
+                      {displayQuantity} Sản phẩm,{" "}
+                      {(
+                        (parseInt(weightInput.replace(/\D/g, ""), 10) || 0) /
+                        1000
+                      ).toFixed(1)}{" "}
+                      KG
+                    </Text>
+                    <Icon
+                      name="arrow_down"
+                      size={14}
+                      tintColor={colors.neutral400}
+                    />
+                  </View>
                 </Pressable>
               }
             />
@@ -709,12 +721,12 @@ const styles = createStyles(({ textPresets }) => ({
   safeArea: { flex: 1 },
   centerBox: {
     flex: 1,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   header: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
@@ -722,18 +734,18 @@ const styles = createStyles(({ textPresets }) => ({
     width: 44,
     height: 44,
     borderRadius: 999,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerTitle: {
     flex: 1,
-    textAlign: "center" as const,
+    textAlign: "center",
     ...textPresets.fs20_600,
   },
   headerActions: {
     width: 44,
-    flexDirection: "row" as const,
-    justifyContent: "flex-end" as const,
+    flexDirection: "row",
+    justifyContent: "flex-end",
   },
   scroll: { flex: 1 },
   scrollContent: {
@@ -748,8 +760,8 @@ const styles = createStyles(({ textPresets }) => ({
     borderTopWidth: 1,
   },
   outcomeUnknownBanner: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginHorizontal: 16,
     marginBottom: 8,
@@ -760,17 +772,17 @@ const styles = createStyles(({ textPresets }) => ({
   submitButton: {
     height: 50,
     borderRadius: 14,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   footerSummary: {
     gap: 8,
     marginBottom: 12,
   },
   summaryRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   summaryRowTotal: {
     marginTop: 4,
@@ -781,30 +793,30 @@ const styles = createStyles(({ textPresets }) => ({
   divider: { height: 8 },
   dimCard: { borderRadius: 16, borderWidth: 0.5, padding: 16, gap: 8 },
   dimRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 40,
   },
   dimRowLeft: {
     flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   dimRowIcon: { width: 18, height: 18 },
   parcelRow: {
     borderRadius: 12,
     borderWidth: 0.5,
-    padding: 16,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   optionGrid: { gap: 10 },
   radioGroup: { gap: 12 },
   radioCard: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -816,8 +828,8 @@ const styles = createStyles(({ textPresets }) => ({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
 }));

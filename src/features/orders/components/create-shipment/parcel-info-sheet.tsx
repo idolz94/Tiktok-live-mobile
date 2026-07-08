@@ -1,3 +1,5 @@
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
 import { useState } from "react";
 import {
   Image,
@@ -8,8 +10,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useThemes } from "@hooks/use-theme";
-import { createStyles } from "@utils/createStyles";
 
 const dimIcons = {
   length: require("../../../../assets/images/dim-icons/length.png"),
@@ -43,9 +43,9 @@ type ParcelInfoSheetProps = {
 };
 
 const CHECKBOXES = [
-  { key: "allowTryOn" as const, label: "Thử hàng" },
-  { key: "allowPartialDelivery" as const, label: "Giao hàng một phần" },
-  { key: "allowMutualCheck" as const, label: "Cho xem hàng" },
+  { key: "allowTryOn", label: "Thử hàng" },
+  { key: "allowPartialDelivery", label: "Giao hàng một phần" },
+  { key: "allowMutualCheck", label: "Cho xem hàng" },
 ];
 
 export function ParcelInfoSheet({
@@ -149,7 +149,6 @@ export function ParcelInfoSheet({
 
   return (
     <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
-      <View style={styles.handle} />
       <Text
         style={[
           styles.title,
@@ -388,34 +387,24 @@ export function ParcelInfoSheet({
 
 const styles = createStyles(() => ({
   sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
     paddingTop: 12,
     maxHeight: 680,
     flex: 1,
   },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E5E5E5",
-    alignSelf: "center" as const,
-    marginBottom: 8,
-  },
-  title: { textAlign: "center" as const, marginBottom: 16 },
+  title: { textAlign: "center", marginBottom: 16 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 8 },
-  sectionLabel: { marginBottom: 8, marginTop: 16 },
+  sectionLabel: { marginBottom: 8, marginTop: 16, paddingHorizontal: 20 },
   card: {
     borderWidth: 0.5,
     borderRadius: 12,
+    marginHorizontal: 20,
     paddingHorizontal: 16,
     paddingVertical: 4,
   },
   checkboxRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingVertical: 10,
   },
@@ -424,35 +413,35 @@ const styles = createStyles(() => ({
     height: 20,
     borderWidth: 1.5,
     borderRadius: 4,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkmark: { color: "#fff", fontSize: 12, lineHeight: 15 },
   dimRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 6,
   },
   dimRowLeft: {
     flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   dimIcon: { width: 18, height: 18 },
   dimValueRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   dimInput: {
     width: 72,
-    textAlign: "right" as const,
+    textAlign: "right",
     paddingVertical: 2,
     paddingHorizontal: 0,
     borderBottomWidth: 1,
   },
-  formGroup: { gap: 6, marginTop: 16 },
+  formGroup: { gap: 6, marginTop: 16, paddingHorizontal: 20 },
   fieldLabel: { fontSize: 12, lineHeight: 18 },
   textInput: {
     height: 48,
@@ -465,14 +454,14 @@ const styles = createStyles(() => ({
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   moneyInput: { flex: 1 },
   noteLabelRow: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   noteInput: {
     borderWidth: 1,
@@ -481,16 +470,17 @@ const styles = createStyles(() => ({
     paddingTop: 12,
     paddingBottom: 12,
     minHeight: 88,
-    textAlignVertical: "top" as const,
+    textAlignVertical: "top",
   },
   footer: {
     paddingTop: 8,
     borderTopWidth: 0.5,
+    paddingHorizontal: 20,
   },
   confirmBtn: {
     height: 52,
     borderRadius: 16,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
 }));

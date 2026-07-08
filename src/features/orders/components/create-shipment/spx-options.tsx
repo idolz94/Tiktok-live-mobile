@@ -1,4 +1,12 @@
-import { ActivityIndicator, LayoutAnimation, Platform, Pressable, Text, UIManager, View } from "react-native";
+import {
+  ActivityIndicator,
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  Text,
+  UIManager,
+  View,
+} from "react-native";
 
 if (Platform.OS === "android") {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -6,10 +14,16 @@ if (Platform.OS === "android") {
 import { useState, type ReactNode } from "react";
 import { useThemes } from "@hooks/use-theme";
 import { Popover } from "@components/popover";
-import type { CollectType, PaymentSide, ServiceType, SpxTimeslot } from "../../types/shipment";
+import type {
+  CollectType,
+  PaymentSide,
+  ServiceType,
+  SpxTimeslot,
+} from "../../types/shipment";
 import type { SpxVoucher } from "../../service/create-shipment-api";
 import { TimeslotSelect } from "./timeslot-select";
 import { createStyles } from "@utils/createStyles";
+import { Icon } from "@components/icon";
 
 type SpxOptionsProps = {
   serviceType: ServiceType;
@@ -46,7 +60,7 @@ function formatVoucherAmount(voucher: SpxVoucher) {
 const SERVICE_TYPES = [
   { label: "Giao hàng Tiêu Chuẩn", value: 1 as ServiceType },
   { label: "Giao hàng Hỏa Tốc", value: 2 as ServiceType },
-] as const;
+];
 
 export function SpxOptions({
   serviceType,
@@ -79,29 +93,35 @@ export function SpxOptions({
         Thông tin cơ bản
       </Text>
       <View style={styles.collectTypeTabs}>
-        {([
+        {[
           { label: "Lấy Hàng Tại Shop", value: 1 as CollectType },
           { label: "Gửi Tại Điểm Dịch Vụ", value: 2 as CollectType },
-        ]).map((tab) => {
+        ].map((tab) => {
           const active = collectType === tab.value;
           return (
             <Pressable
               key={tab.value}
               onPress={() => {
-                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                LayoutAnimation.configureNext(
+                  LayoutAnimation.Presets.easeInEaseOut,
+                );
                 setCollectType(tab.value);
               }}
               style={[
                 styles.collectTypeTab,
                 active
-                  ? { backgroundColor: colors.primary, borderColor: colors.primary }
-                  : { backgroundColor: colors.surface, borderColor: colors.border10 },
+                  ? {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                    }
+                  : {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border10,
+                    },
               ]}
             >
-              {active && (
-                <Text style={styles.tabCheck}>✓</Text>
-              )}
               <Text
+                adjustsFontSizeToFit
                 style={[
                   active ? { color: "#fff" } : { color: colors.neutral500 },
                   textPresets.fs14_500 ?? textPresets.fs14_400,
@@ -118,12 +138,22 @@ export function SpxOptions({
       {collectType === 2 && (
         <Pressable
           onPress={onOpenServicePoint}
-          style={[styles.voucherRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+          style={[
+            styles.voucherRow,
+            { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+          ]}
         >
-          <Text style={[{ color: colors.neutral900, flex: 1 }, textPresets.fs14_500]}>
+          <Text
+            style={[
+              { color: colors.neutral900, flex: 1 },
+              textPresets.fs14_500,
+            ]}
+          >
             Tìm Điểm dịch vụ
           </Text>
-          <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
+          <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>
+            ›
+          </Text>
         </Pressable>
       )}
 
@@ -135,21 +165,47 @@ export function SpxOptions({
           onVisibleChange={setPaymentPopoverVisible}
           placement="bottom"
           showBackdrop={false}
+          showArrow={false}
           closeOnOutsidePress={true}
           trigger={
             <Pressable
               onPress={() => setPaymentPopoverVisible(true)}
-              style={[styles.voucherRow, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+              style={[
+                styles.voucherRow,
+                {
+                  backgroundColor: colors.neutral50,
+                  borderColor: colors.border10,
+                },
+              ]}
             >
-              <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
-                Người thanh toán{" "}
-                <Text style={{ color: colors.error }}>*</Text>
+              <Text
+                style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
+              >
+                Người thanh toán <Text style={{ color: colors.error }}>*</Text>
               </Text>
-              <View style={{ flex: 1 }} />
-              <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>
-                {paymentSide === 1 ? "Người gửi thanh toán phí" : "Người nhận thanh toán phí"}
-              </Text>
-              <Text style={[{ color: colors.neutral400 }, textPresets.fs14_500]}>⌄</Text>
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  columnGap: 4,
+                }}
+              >
+                <Text
+                  adjustsFontSizeToFit
+                  style={[{ color: colors.neutral500 }, textPresets.fs12_400]}
+                >
+                  {paymentSide === 1
+                    ? "Người gửi thanh toán phí"
+                    : "Người nhận thanh toán phí"}
+                </Text>
+                <Icon
+                  name="arrow_down"
+                  size={14}
+                  tintColor={colors.neutral400}
+                />
+              </View>
             </Pressable>
           }
         >
@@ -202,7 +258,10 @@ export function SpxOptions({
             <View
               style={[
                 styles.feeBox,
-                { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+                {
+                  backgroundColor: colors.neutral50,
+                  borderColor: colors.border10,
+                },
               ]}
             >
               <ActivityIndicator size="small" color={colors.primary} />
@@ -225,7 +284,13 @@ export function SpxOptions({
         </>
       )}
 
-      <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400, { marginTop: 10 }]}>
+      <Text
+        style={[
+          { color: colors.neutral400 },
+          textPresets.fs12_400,
+          { marginTop: 10 },
+        ]}
+      >
         Loại dịch vụ
       </Text>
       <View style={styles.serviceTypeRow}>
@@ -234,28 +299,38 @@ export function SpxOptions({
           const deliveryText =
             active && feeLoading && !estimatedDelivery
               ? "..."
-              : active && estimatedDelivery && (estimatedDelivery.edtMin != null || estimatedDelivery.edtMax != null)
-              ? estimatedDelivery.edtMin === estimatedDelivery.edtMax
-                ? `${estimatedDelivery.edtMin} ngày`
-                : `${estimatedDelivery.edtMin ?? "?"}–${estimatedDelivery.edtMax ?? "?"} ngày`
-              : "-";
+              : active &&
+                  estimatedDelivery &&
+                  (estimatedDelivery.edtMin != null ||
+                    estimatedDelivery.edtMax != null)
+                ? estimatedDelivery.edtMin === estimatedDelivery.edtMax
+                  ? `${estimatedDelivery.edtMin} ngày`
+                  : `${estimatedDelivery.edtMin ?? "?"}–${estimatedDelivery.edtMax ?? "?"} ngày`
+                : "-";
           return (
             <Pressable
               key={svc.value}
               onPress={() => setServiceType(svc.value)}
               style={[
                 styles.serviceTypeCard,
-                active ? { borderColor: colors.primary } : { borderColor: colors.border10 },
+                active
+                  ? { borderColor: colors.primary }
+                  : { borderColor: colors.border10 },
               ]}
             >
               {/* Header */}
               <View
                 style={[
                   styles.serviceTypeHeader,
-                  { backgroundColor: active ? colors.primary : colors.neutral300 },
+                  {
+                    backgroundColor: active
+                      ? colors.primary
+                      : colors.neutral300,
+                  },
                 ]}
               >
                 <Text
+                  adjustsFontSizeToFit
                   style={[textPresets.fs14_500, { color: "#fff" }]}
                   numberOfLines={1}
                 >
@@ -264,8 +339,15 @@ export function SpxOptions({
               </View>
 
               {/* Body */}
-              <View style={[styles.serviceTypeBody, { backgroundColor: colors.surface }]}>
-                <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>
+              <View
+                style={[
+                  styles.serviceTypeBody,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <Text
+                  style={[textPresets.fs12_400, { color: colors.neutral500 }]}
+                >
                   Dự kiến giao hàng
                 </Text>
                 <Text
@@ -299,10 +381,14 @@ export function SpxOptions({
           { backgroundColor: colors.neutral50, borderColor: colors.border10 },
         ]}
       >
-        <Text style={[{ color: colors.neutral900, flex: 1 }, textPresets.fs14_500]}>
+        <Text
+          style={[{ color: colors.neutral900, flex: 1 }, textPresets.fs14_500]}
+        >
           Mã giảm phí vận chuyển
         </Text>
-        <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
+        <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>
+          ›
+        </Text>
       </Pressable>
     </>
   );
@@ -310,14 +396,14 @@ export function SpxOptions({
 
 const styles = createStyles(() => ({
   serviceTypeRow: {
-    flexDirection: "row" as const,
+    flexDirection: "row",
     gap: 8,
   },
   serviceTypeCard: {
     flex: 1,
     borderWidth: 1,
     borderRadius: 12,
-    overflow: "hidden" as const,
+    overflow: "hidden",
   },
   serviceTypeHeader: {
     paddingHorizontal: 12,
@@ -327,22 +413,21 @@ const styles = createStyles(() => ({
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 4,
-    alignItems: "center" as const,
+    alignItems: "center",
   },
   collectTypeTabs: {
-    flexDirection: "row" as const,
+    flexDirection: "row",
     gap: 8,
   },
   collectTypeTab: {
     flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
-    height: 44,
+    padding: 12,
     borderWidth: 1,
     borderRadius: 10,
-    paddingHorizontal: 8,
   },
   tabCheck: { color: "#fff", fontSize: 14, lineHeight: 18 },
   feeBox: {
@@ -351,17 +436,15 @@ const styles = createStyles(() => ({
     paddingHorizontal: 14,
     height: 48,
     marginTop: 8,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    alignItems: "center",
+    justifyContent: "center",
   },
   voucherRow: {
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 44,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   popoverItem: {
