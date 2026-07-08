@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Splash from "./splash";
 
 SplashScreen.preventAutoHideAsync();
@@ -80,43 +81,45 @@ function RootContent() {
   return (
     <>
       <SafeAreaProvider>
-        <KeyboardProvider>
-          <ToastProvider>
-            <BottomSheetProvider>
-              <PopoverProvider>
-              <StatusBar style="dark" />
-                <View style={{ flex: 1 }}>
-                  {shouldRenderStack && (
-                    <View style={{ flex: 1 }} onLayout={handleRootLayout}>
-                      {/* --- Live provider ở root: không unmount khi navigate order-detail/browser --- */}
-                      <TikTokLiveSocketProvider hasHistory={user?.hasHistory}>
-                      <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="index" />
-                        <Stack.Screen name="(auth)" />
-                        <Stack.Screen name="onboarding" />
-                        <Stack.Screen name="(tabs)" />
-                        <Stack.Screen name="printer-settings" />
-                        <Stack.Screen name="shipping-settings" />
-                        <Stack.Screen name="(sheets)" />
-                        <Stack.Screen name="manage-tiktok-channel" />
-                        <Stack.Screen name="order-detail" />
-                        <Stack.Screen name="license-expired" />
-                        <Stack.Screen name="popover-demo" />
-                      </Stack>
-                      </TikTokLiveSocketProvider>
-                      {/* --- end Live provider --- */}
-                    </View>
-                  )}
-                  {showSplashOverlay && (
-                    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                      <Splash />
-                    </View>
-                  )}
-                </View>
-              </PopoverProvider>
-            </BottomSheetProvider>
-          </ToastProvider>
-        </KeyboardProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <KeyboardProvider>
+            <ToastProvider>
+              <BottomSheetProvider>
+                <PopoverProvider>
+                <StatusBar style="dark" />
+                  <View style={{ flex: 1 }}>
+                    {shouldRenderStack && (
+                      <View style={{ flex: 1 }} onLayout={handleRootLayout}>
+                        {/* --- Live provider ở root: không unmount khi navigate order-detail/browser --- */}
+                        <TikTokLiveSocketProvider hasHistory={user?.hasHistory}>
+                        <Stack screenOptions={{ headerShown: false }}>
+                          <Stack.Screen name="index" />
+                          <Stack.Screen name="(auth)" />
+                          <Stack.Screen name="onboarding" />
+                          <Stack.Screen name="(tabs)" />
+                          <Stack.Screen name="printer-settings" />
+                          <Stack.Screen name="shipping-settings" />
+                          <Stack.Screen name="(sheets)" />
+                          <Stack.Screen name="manage-tiktok-channel" />
+                          <Stack.Screen name="order-detail" />
+                          <Stack.Screen name="license-expired" />
+                          <Stack.Screen name="popover-demo" />
+                        </Stack>
+                        </TikTokLiveSocketProvider>
+                        {/* --- end Live provider --- */}
+                      </View>
+                    )}
+                    {showSplashOverlay && (
+                      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                        <Splash />
+                      </View>
+                    )}
+                  </View>
+                </PopoverProvider>
+              </BottomSheetProvider>
+            </ToastProvider>
+          </KeyboardProvider>
+        </GestureHandlerRootView>
       </SafeAreaProvider>
     </>
   );
