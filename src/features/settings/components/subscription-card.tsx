@@ -1,5 +1,6 @@
 import { LinearGradient } from "@components/linear-gradient";
 import { createStyles } from "@utils/createStyles";
+import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
 type SubscriptionCardProps = {
@@ -25,7 +26,7 @@ export function SubscriptionCard({
         </View>
         <Text style={styles.chevron}>›</Text>
       </View>
-      <Pressable>
+      <Pressable onPress={() => router.push("/license-plans")}>
         <LinearGradient type="gra_primary" style={styles.upgradeButton}>
           <Text style={styles.upgradeText}>{upgradeLabel}</Text>
         </LinearGradient>

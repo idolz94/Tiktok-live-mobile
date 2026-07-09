@@ -179,7 +179,7 @@ export const Register = ({ animatedStyle }: Props) => {
           </View>
         </View>
         <View style={{ rowGap: 8 }}>
-          <Text style={styles.label}>Tiktok ID (tùy chọn)</Text>
+          <Text style={styles.label}>Tiktok ID</Text>
           <View style={{ rowGap: 6 }}>
             <Controller
               control={formMethod.control}
@@ -261,7 +261,6 @@ export const Register = ({ animatedStyle }: Props) => {
 };
 
 const styles = createStyles(({ colors, textPresets }) => ({
-  flex: { flex: 1 },
   label: {
     color: colors.neutral900,
     ...textPresets.fs14_400,

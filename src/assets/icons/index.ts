@@ -18,6 +18,17 @@ export const icons = {
   king: require("./sources/king.png"),
   print: require("./sources/print-icon.png"),
   receipt: require("./sources/receipt.png"),
+  circle_x: require("./sources/circle-x.png"),
+  message_circle: require("./sources/message-circle.png"),
+  phone: require("./sources/phone.png"),
+  map_pin: require("./sources/map-pin.png"),
+  check: require("./sources/check.png"),
+  share_2: require("./sources/share-2.png"),
+  chevron_down: require("./sources/chevron-down.png"),
+  shipping_step_pickup: require("./sources/shipping-step-pickup.png"),
+  shipping_step_transit: require("./sources/shipping-step-transit.png"),
+  shipping_step_delivering: require("./sources/shipping-step-delivering.png"),
+  shipping_step_delivered: require("./sources/shipping-step-delivered.png"),
 };
 
 export type IconsTypes = keyof typeof icons;

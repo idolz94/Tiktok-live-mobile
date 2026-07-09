@@ -84,6 +84,17 @@ export function formatMoney(value: number) {
   return `${Number(value || 0).toLocaleString("vi-VN")} VNĐ`;
 }
 
+export function formatMoneyCompact(value: number): string {
+  const n = Math.round(value || 0);
+  if (n >= 1_000_000_000) return `${+(n / 1_000_000_000).toFixed(1)}tỉ`;
+  if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(1)}tr`;
+  return `${n.toLocaleString("vi-VN")}đ`;
+}
+
+export function formatMoneyFull(value: number): string {
+  return `${Math.round(value || 0).toLocaleString("vi-VN")}đ`;
+}
+
 /** @deprecated use formatMoney */
 export const formatMoneyFromK = formatMoney;
 

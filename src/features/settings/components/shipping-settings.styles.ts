@@ -252,4 +252,13 @@ export const shippingSettingsStyles = createStyles(({ colors }) => ({
   geoItemText: { flex: 1, color: "#111827", fontSize: 14, lineHeight: 22 },
   geoItemTextSelected: { color: "#c47f00", fontWeight: "600" },
   geoSelectedIcon: { color: "#ebb140", fontSize: 16, lineHeight: 20, fontWeight: "700" },
+  connectTag: {
+    height: 24,
+    borderRadius: 16,
+    backgroundColor: "#ff3911",
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  connectTagText: { color: "#fff", fontSize: 11, lineHeight: 18, fontWeight: "600" },
 }));

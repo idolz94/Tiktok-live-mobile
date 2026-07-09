@@ -3,6 +3,7 @@ import { Avatar } from "@components/avatar";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Popover } from "@components/popover";
 import { Skeleton } from "@components/skeleton";
+import { images } from "@assets/images";
 import { Ionicons } from "@expo/vector-icons";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import {
@@ -1242,10 +1243,9 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                   );
               }}
               icon={
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={16}
-                  color="#0068FF"
+                <Image
+                  source={images.logo_zalo}
+                  style={{ width: 18, height: 18 }}
                 />
               }
             />
@@ -1254,7 +1254,12 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
               onPress={() => {
                 if (phone) Linking.openURL(`tel:${phone}`);
               }}
-              icon={<Ionicons name="call-outline" size={16} color="#484848" />}
+              icon={
+                <Image
+                  source={images.logo_phone}
+                  style={{ width: 18, height: 18 }}
+                />
+              }
             />
           </View>
 

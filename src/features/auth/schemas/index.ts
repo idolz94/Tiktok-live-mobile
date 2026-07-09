@@ -31,7 +31,8 @@ export const RegisterSchema = z.object({
   tiktokId: z
     .string()
     .trim()
-    .refine((value) => value.length === 0 || tiktokIdPattern.test(value), {
+    .min(1, "Vui lòng nhập TikTok ID")
+    .refine((value) => tiktokIdPattern.test(value), {
       message: "TikTok ID chỉ được gồm chữ cái, số, dấu gạch dưới và dấu chấm",
     }),
   agreePolicy: z.boolean().refine(v => v === true, { message: "Vui lòng đồng ý điều khoản" }),

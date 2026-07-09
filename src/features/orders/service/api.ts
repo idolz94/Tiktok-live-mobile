@@ -167,6 +167,29 @@ export async function updateOrderItemApi(
   );
 }
 
+export type StatChartPoint = { date: string; value: number };
+export type StatSectionData = { total: number; avg: number; max: number; chart: StatChartPoint[] };
+export type OrderStatsData = {
+  revenue: StatSectionData;
+  orders: StatSectionData;
+  products: StatSectionData;
+  customers: StatSectionData;
+  prev: { revenue: number; orders: number; products: number; customers: number };
+};
+
+export async function getOrderStatsApi(params: {
+  dateFrom: string;
+  dateTo: string;
+  depositStatus?: string;
+  status?: string;
+}): Promise<OrderStatsData> {
+  const qs = new URLSearchParams({ dateFrom: params.dateFrom, dateTo: params.dateTo });
+  if (params.depositStatus) qs.set("depositStatus", params.depositStatus);
+  if (params.status) qs.set("status", params.status);
+  const data = await getRequest<{ data: OrderStatsData } | OrderStatsData>(`/orders/stats?${qs.toString()}`);
+  return (data as { data: OrderStatsData }).data ?? (data as OrderStatsData);
+}
+
 export async function deleteOrderApi(orderId: string) {
   return deleteRequest<{ ok: boolean }>(`/orders/${orderId}`);
 }

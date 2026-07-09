@@ -63,7 +63,7 @@ export function PopoverDemoScreen() {
   };
 
   return (
-    <Screen style={styles.screen}>
+    <Screen backgroundColorTheme="neutral100">
       {/* Header bar */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -275,7 +275,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   headerTitle: {
     color: colors.neutral900,
-    ...textPresets.fs18_600,
+    ...textPresets.fs18_500,
   },
   headerRight: {
     width: 50,
@@ -294,7 +294,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     color: colors.textMuted,
     lineHeight: 18,
     marginBottom: 8,
-    ...textPresets.fs13_400,
+    ...textPresets.fs14_400,
   },
   edgeGrid: {
     flexDirection: "row",
@@ -314,7 +314,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   edgeButtonText: {
     color: colors.neutral900,
-    ...textPresets.fs13_500,
+    ...textPresets.fs14_500,
   },
   popoverCard: {
     padding: 12,
@@ -405,7 +405,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   primaryBtnText: {
     color: colors.white,
-    ...textPresets.fs14_600,
+    ...textPresets.fs14_500,
   },
   successBtn: {
     paddingVertical: 12,
@@ -416,7 +416,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   successBtnText: {
     color: colors.white,
-    ...textPresets.fs14_600,
+    ...textPresets.fs14_500,
   },
   infoBtn: {
     paddingVertical: 12,
@@ -427,7 +427,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   infoBtnText: {
     color: colors.white,
-    ...textPresets.fs14_600,
+    ...textPresets.fs14_500,
   },
   menuContainer: {
     padding: 6,
@@ -439,7 +439,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     paddingVertical: 6,
     borderBottomWidth: 0.5,
     borderColor: colors.borderLight,
-    ...textPresets.fs11_500,
+    ...textPresets.fs12_500,
   },
   menuItem: {
     paddingVertical: 10,
@@ -448,7 +448,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   menuItemText: {
     color: colors.neutral900,
-    ...textPresets.fs13_400,
+    ...textPresets.fs14_400,
   },
   dynamicContainer: {
     width: 200,
@@ -465,14 +465,14 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   listItemText: {
     color: colors.neutral900,
-    ...textPresets.fs13_400,
+    ...textPresets.fs14_400,
   },
   deleteBtn: {
     padding: 4,
   },
   deleteBtnText: {
     color: colors.error,
-    ...textPresets.fs12_600,
+    ...textPresets.fs12_500,
   },
   addBtn: {
     marginTop: 8,
@@ -483,7 +483,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   addBtnText: {
     color: colors.success,
-    ...textPresets.fs12_600,
+    ...textPresets.fs12_500,
   },
   textInput: {
     backgroundColor: colors.white,

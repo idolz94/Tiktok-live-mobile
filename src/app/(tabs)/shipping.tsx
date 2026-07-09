@@ -1,24 +1,24 @@
 import type { ShippingStatus } from "@app-types/index";
-import { Avatar } from "@components/avatar";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { LinearGradient } from "@components/linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import {
   useShippingTab,
   type ShippingFilterKey,
   type ShippingOrder,
 } from "@features/orders/hooks/use-shipping-tab";
-import {
-  cancelShipmentApi,
-  refreshShippingStatusApi,
-} from "@features/orders/service/create-shipment-api";
+import { getShipmentLabelApi, cancelShipmentApi } from "@features/orders/service/create-shipment-api";
+import { router } from "expo-router";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { icons } from "@assets/icons";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   Linking,
   Pressable,
   RefreshControl,
@@ -94,12 +94,6 @@ function statusColor(
   return colors.warning;
 }
 
-function providerName(value?: string | null) {
-  const code = String(value || "SPX").toLowerCase();
-  if (code.includes("spx")) return "SPX express";
-  return value || "Đơn vị vận chuyển";
-}
-
 function getTrackingUrl(item: ShippingOrder) {
   const trackingLink = item.trackingLink?.trim();
   if (trackingLink) return trackingLink;
@@ -168,214 +162,298 @@ function SummaryCard({
   );
 }
 
-function InfoRow({
-  label,
-  value,
-  last = false,
-}: {
-  label: string;
-  value: string;
-  last?: boolean;
-}) {
-  const { colors, textPresets } = useThemes();
-  return (
-    <View
-      style={[
-        styles.infoRow,
-        !last && { borderBottomColor: colors.neutral50, borderBottomWidth: 1 },
-      ]}
-    >
-      <Text
-        style={[
-          styles.infoLabel,
-          { color: colors.neutral500, ...textPresets.fs14_400 },
-        ]}
-      >
-        {label}
-      </Text>
-      <Text
-        style={[
-          styles.infoValue,
-          { color: colors.text, ...textPresets.fs14_500 },
-        ]}
-      >
-        {value}
-      </Text>
-    </View>
-  );
+function providerAbbr(name?: string | null): string {
+  if (!name) return "SPX";
+  const n = name.toUpperCase();
+  if (n.includes("GHN")) return "GHN";
+  if (n.includes("GHTK")) return "GHTK";
+  if (n.includes("VTP") || n.includes("VIETTEL")) return "VTP";
+  return "SPX";
 }
 
-function TrackingInfo({ item }: { item: ShippingOrder }) {
+function providerLabel(name?: string | null): string {
+  if (!name) return "Shopee Express";
+  const n = name.toLowerCase();
+  if (n.includes("ghn")) return "Giao Hàng Nhanh";
+  if (n.includes("ghtk")) return "Giao Hàng Tiết Kiệm";
+  if (n.includes("vtp") || n.includes("viettel")) return "Viettel Post";
+  return "Shopee Express";
+}
+
+function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: () => void }) {
   const { colors, textPresets } = useThemes();
-  const color = statusColor(item.shippingStatus, colors);
+  const [printing, setPrinting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const name = item.customerName || item.username || "Khách live";
   const trackingUrl = getTrackingUrl(item);
+  const abbr = providerAbbr(item.providerName);
+  const label = providerLabel(item.providerName);
+  const sColor = statusColor(item.shippingStatus, colors);
+
+  const addressText =
+    [
+      item.customerAddressData?.address,
+      item.customerAddressData?.ward,
+      item.customerAddressData?.district,
+      item.customerAddressData?.province,
+    ]
+      .filter(Boolean)
+      .join(", ") || item.customerAddress?.trim() || "";
+
+  const productCount =
+    item.products?.reduce((s, p) => s + Number(p.quantity || 0), 0) ||
+    item.quantity ||
+    0;
+  const noteText = (item as any).note?.trim() as string | undefined;
+  const productSummary = noteText
+    ? `Đơn hàng ${productCount} sản phẩm, ${noteText}`
+    : `Đơn hàng ${productCount} sản phẩm`;
+
+  const handlePrint = async () => {
+    if (printing) return;
+    setPrinting(true);
+    try {
+      const res = await getShipmentLabelApi(item.id);
+      if (res.labelUrl) await Linking.openURL(res.labelUrl);
+      else Alert.alert("Chưa có nhãn in", "Vận đơn chưa có nhãn để in.");
+    } catch {
+      Alert.alert("Lỗi", "Không thể lấy nhãn in. Vui lòng thử lại.");
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  const handleCancel = () => {
+    Alert.alert("Huỷ đơn", "Bạn có chắc muốn huỷ vận đơn này?", [
+      { text: "Không", style: "cancel" },
+      {
+        text: "Huỷ đơn",
+        style: "destructive",
+        onPress: async () => {
+          if (cancelling) return;
+          setCancelling(true);
+          try {
+            await cancelShipmentApi(item.id, { trackingId: item.trackingCode });
+            onCancelled();
+          } catch {
+            Alert.alert("Lỗi", "Không thể huỷ vận đơn. Vui lòng thử lại.");
+          } finally {
+            setCancelling(false);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
-    <View style={[styles.trackingBox, { borderColor: colors.border10 }]}>
-      <View style={styles.trackingCodeRow}>
+    <Pressable
+      style={[styles.orderCard, { backgroundColor: colors.white }]}
+      onPress={() =>
+        router.push({
+          pathname: "/shipping-detail/[id]" as never,
+          params: { id: item.id, order: JSON.stringify(item) },
+        })
+      }
+    >
+      {/* Top row: date/code + theo dõi */}
+      <View style={styles.cardTopRow}>
         <Text
-          style={[
-            styles.muted12,
-            { color: colors.neutral400, ...textPresets.fs12_400 },
-          ]}
+          style={{ color: "#787878", ...textPresets.fs12_400 }}
+          numberOfLines={1}
         >
-          Mã SPX
+          {formatDate(item.createdAt)}
+          {"  "}
+          {item.orderCode ?? item.id.slice(0, 12)}
         </Text>
-        <Text
-          style={[
-            styles.trackingCode,
-            { color: colors.text, ...textPresets.fs12_400 },
-          ]}
+        <Pressable
+          style={styles.cardTrackingLink}
+          onPress={() => {
+            if (!trackingUrl) {
+              Alert.alert(
+                "Chưa có link theo dõi",
+                `Mã: ${item.trackingCode ?? "—"}`,
+              );
+              return;
+            }
+            void Linking.openURL(trackingUrl);
+          }}
         >
-          {item.trackingCode}
-        </Text>
+          <Text style={{ color: "#c6a84d", fontSize: 12, fontWeight: "600" }}>
+            Theo dõi
+          </Text>
+          <Ionicons name="chevron-forward" size={12} color="#c6a84d" />
+        </Pressable>
       </View>
-      <View
-        style={[styles.trackingMain, { backgroundColor: colors.neutral50 }]}
-      >
-        <View style={styles.carrierRow}>
-          <View style={[styles.logoBox, { backgroundColor: "#ff3911" }]}>
-            <Text style={styles.logoText}>SPX</Text>
-          </View>
-          <View style={styles.carrierText}>
-            <Text
-              style={[
-                styles.carrierName,
-                { color: colors.text, ...textPresets.fs14_500 },
-              ]}
-            >
-              {providerName(item.providerName)}
+
+      {/* Provider row */}
+      <View style={styles.cardProviderRow}>
+        <View style={styles.cardProviderLeft}>
+          <View style={[styles.cardLogoBox, { borderColor: "#e0e0e0" }]}>
+            <Text style={{ color: "#ee4d2d", fontSize: 10, fontWeight: "900" }}>
+              {abbr}
             </Text>
+          </View>
+          <View style={styles.cardProviderInfo}>
             <Text
-              style={[styles.carrierStatus, { color, ...textPresets.fs12_400 }]}
+              style={[{ color: colors.text, ...textPresets.fs14_500 }]}
+              numberOfLines={1}
             >
+              {label}
+            </Text>
+            <Text style={{ color: sColor, fontSize: 13, fontWeight: "600" }}>
               {STATUS_LABEL[item.shippingStatus]}
             </Text>
           </View>
-          <Pressable
-            style={styles.followButton}
-            onPress={() => {
-              if (!trackingUrl) {
-                Alert.alert(
-                  "Chưa có link theo dõi",
-                  `Mã SPX: ${item.trackingCode}`,
-                );
-                return;
-              }
-              void Linking.openURL(trackingUrl);
-            }}
-          >
-            <Text
-              style={[
-                styles.followText,
-                { color: colors.text, ...textPresets.fs12_500 },
-              ]}
-            >
-              Theo dõi
-            </Text>
-            <Text style={[styles.followText, { color: colors.text }]}>›</Text>
-          </Pressable>
         </View>
-        <View style={styles.trackingMetaRow}>
-          <Text
-            style={[
-              styles.muted12,
-              { color: colors.neutral400, ...textPresets.fs12_400 },
-            ]}
-          >
-            {formatDate(item.updatedAt || item.createdAt)}
+        <View style={styles.cardTrackingCodeBlock}>
+          <Text style={[{ color: colors.neutral400, ...textPresets.fs11_400 }]}>
+            MÃ - {abbr}
           </Text>
           <Text
-            style={[
-              styles.orderCode,
-              { color: colors.text, ...textPresets.fs12_400 },
-            ]}
+            style={{ color: "#c6a84d", fontSize: 14, fontWeight: "700" }}
+            numberOfLines={1}
           >
-            {item.orderCode || item.id.slice(0, 8)}
+            {item.trackingCode ?? "—"}
           </Text>
         </View>
       </View>
-    </View>
-  );
-}
 
-function OrderCard({
-  item,
-  onCancelShipment,
-  cancelling,
-}: {
-  item: ShippingOrder;
-  onCancelShipment: () => void;
-  cancelling: boolean;
-}) {
-  const { colors, textPresets } = useThemes();
-  const name = item.customerName || item.username || "Khách live";
-  const count =
-    item.products?.reduce((sum, p) => sum + Number(p.quantity || 0), 0) ||
-    item.quantity ||
-    0;
-  return (
-    <View style={styles.orderCard}>
-      <View style={styles.userRow}>
-        <Avatar uri={item.avatarUrl || item.avatar} username={name} size={40} />
-        <Text
-          style={[
-            styles.userName,
-            { color: colors.text, ...textPresets.fs16_500 },
-          ]}
-          numberOfLines={1}
+      <View style={[styles.cardDivider, { backgroundColor: colors.border10 }]} />
+
+      {/* Info section */}
+      <View style={styles.cardInfoSection}>
+        {/* Customer name + inline actions */}
+        <View style={styles.cardInfoNameRow}>
+          <View style={[styles.cardIconRow, { flex: 1 }]}>
+            <Ionicons name="person-outline" size={16} color={colors.neutral500} />
+            <Text
+              style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+              numberOfLines={1}
+            >
+              {name}
+            </Text>
+          </View>
+          <View style={styles.cardNameActions}>
+            <Pressable
+              style={[styles.cardPrintBtn, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
+              onPress={() => { void handlePrint(); }}
+              disabled={printing}
+            >
+              {printing
+                ? <ActivityIndicator size="small" color={colors.text} />
+                : <Image source={icons.print} style={[styles.cardPrintIcon, { tintColor: colors.text }]} />
+              }
+            </Pressable>
+            <Pressable
+              style={[styles.cardDetailBtn, { borderColor: "#2196f3", backgroundColor: "#f0f7ff" }]}
+              onPress={() =>
+                router.push({
+                  pathname: "/shipping-detail/[id]" as never,
+                  params: { id: item.id, order: JSON.stringify(item) },
+                })
+              }
+            >
+              <Text style={{ color: "#2196f3", ...textPresets.fs12_500 }}>Chi tiết 🛒</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Phone */}
+        {item.customerPhone ? (
+          <View style={styles.cardIconRow}>
+            <Ionicons name="call-outline" size={16} color={colors.neutral500} />
+            <Text
+              style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+            >
+              {item.customerPhone}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Address */}
+        {addressText ? (
+          <View style={styles.cardIconRow}>
+            <Ionicons
+              name="location-outline"
+              size={16}
+              color={colors.neutral500}
+              style={{ marginTop: 1 }}
+            />
+            <View style={styles.cardAddressBlock}>
+              <Text style={{ color: colors.text, ...textPresets.fs12_400 }}>
+                {addressText}
+              </Text>
+              {(item.customerAddressData as any)?.isOld ? (
+                <View style={styles.cardOldBadge}>
+                  <Text
+                    style={{ color: "#ff9800", fontSize: 10, fontWeight: "600" }}
+                  >
+                    Địa chỉ cũ
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
+        {/* Products */}
+        <View style={styles.cardIconRow}>
+          <Ionicons name="cube-outline" size={16} color={colors.neutral500} />
+          <Text
+            style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+            numberOfLines={2}
+          >
+            {productSummary}
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.cardDivider, { backgroundColor: colors.border10 }]} />
+
+      {/* Money rows */}
+      <View style={styles.cardMoneySection}>
+        <View style={styles.cardMoneyRow}>
+          <Text style={{ color: colors.neutral400, ...textPresets.fs12_400 }}>
+            Tiền thu hộ (COD)
+          </Text>
+          <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700" }}>
+            {formatMoney(Number(item.codAmount || 0))}
+          </Text>
+        </View>
+        <View style={styles.cardMoneyRow}>
+          <Text style={{ color: colors.neutral400, ...textPresets.fs12_400 }}>
+            Phí vận chuyển
+          </Text>
+          <Text style={{ color: colors.text, ...textPresets.fs12_400 }}>
+            {formatMoney(Number(item.shippingFee || 0))}
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.cardDivider, { backgroundColor: colors.border10 }]} />
+
+      {/* Action buttons */}
+      <View style={styles.cardActions}>
+        <Pressable
+          style={[styles.cardActionBtn, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}
+          onPress={() =>
+            router.push({ pathname: "/order-detail" as never, params: { orderId: item.id } })
+          }
         >
-          {name}
-        </Text>
-      </View>
-      <TrackingInfo item={item} />
-      <View style={styles.infoBlock}>
-        <InfoRow label="Số lượng sản phẩm" value={String(count)} />
-        <InfoRow
-          label="Phí vận chuyển"
-          value={formatMoney(Number(item.shippingFee || 0))}
-        />
-        <InfoRow
-          label="Tiền thu hộ (COD)"
-          value={formatMoney(Number(item.codAmount || 0))}
-          last
-        />
-      </View>
-      <View
-        style={[styles.shipmentActions, { borderTopColor: colors.border10 }]}
-      >
-        <Pressable style={styles.printShipmentButton}>
-          <Ionicons name="print-outline" size={17} color={colors.text} />
-          <Text style={[styles.shipmentButtonText, { color: colors.text }]}>
-            In Đơn
+          <Text style={[styles.cardActionText, { color: colors.text, ...textPresets.fs12_500 }]}>
+            Tổng quan
           </Text>
         </Pressable>
-        {item.shippingStatus !== "cancelled" &&
-          item.shippingStatus !== "returned" &&
-          item.shippingStatus !== "delivered" && (
-            <Pressable
-              style={[
-                styles.cancelShipmentButton,
-                { borderLeftColor: colors.border10 },
-              ]}
-              onPress={onCancelShipment}
-              disabled={cancelling}
-            >
-              {cancelling ? (
-                <ActivityIndicator size="small" color="#EF4444" />
-              ) : (
-                <Ionicons
-                  name="close-circle-outline"
-                  size={17}
-                  color="#EF4444"
-                />
-              )}
-              <Text style={styles.cancelShipmentText}>
-                {cancelling ? "Đang huỷ..." : "Huỷ Vận Đơn"}
-              </Text>
-            </Pressable>
-          )}
+        <Pressable
+          style={[styles.cardActionBtn, { borderColor: "#ffcdd2", backgroundColor: "#fff5f5" }]}
+          onPress={handleCancel}
+        >
+          <Text style={[styles.cardActionText, { color: colors.error, ...textPresets.fs12_500 }]}>
+            Huỷ đơn
+          </Text>
+        </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -459,8 +537,15 @@ function SkeletonBox({ style }: { style?: object }) {
 function ShippingSkeleton() {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.container, { paddingBottom: 34 }]}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.headerBackground}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+      <View style={[styles.container, { paddingBottom: 34 }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <SkeletonBox style={{ width: 180, height: 28, borderRadius: 6 }} />
         <SkeletonBox style={{ width: 44, height: 44, borderRadius: 999 }} />
       </View>
@@ -487,6 +572,7 @@ function ShippingSkeleton() {
           {i < 1 && <View style={styles.divider} />}
         </View>
       ))}
+      </View>
     </View>
   );
 }
@@ -505,42 +591,20 @@ export default function ShippingTab() {
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const scrollRef = useRef<FlatList>(null);
   useTabScrollToTop("shipping", scrollRef, { isFlatList: true });
 
-  const handleCancelShipment = useCallback(
-    (item: ShippingOrder) => {
-      if (!item.trackingCode) return;
-      Alert.alert("Huỷ vận đơn", `Huỷ vận đơn ${item.trackingCode}?`, [
-        { text: "Không" },
-        {
-          text: "Huỷ vận đơn",
-          style: "destructive",
-          onPress: () => {
-            setCancellingId(item.id);
-            cancelShipmentApi(item.id, { trackingId: item.trackingCode })
-              .then(() => refreshShippingStatusApi(item.id))
-              .then(() => refresh())
-              .then(() => Alert.alert("Thành công", "Đã huỷ vận đơn."))
-              .catch((err: unknown) => {
-                const msg =
-                  err instanceof Error ? err.message : "Vui lòng thử lại.";
-                Alert.alert("Không huỷ được vận đơn", msg);
-              })
-              .finally(() => setCancellingId(null));
-          },
-        },
-      ]);
-    },
-    [refresh],
-  );
-
   if (loading) return <ShippingSkeleton />;
 
   return (
-    <>
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.headerBackground}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <FlatList
         ref={scrollRef}
         data={orders}
@@ -638,24 +702,20 @@ export default function ShippingTab() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <OrderCard
-            item={item}
-            cancelling={cancellingId === item.id}
-            onCancelShipment={() => handleCancelShipment(item)}
-          />
-        )}
+        renderItem={({ item }) => <OrderCard item={item} onCancelled={refresh} />}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
       />
-    </>
+    </View>
   );
 }
 
-const styles = createStyles(() => ({
-  container: { paddingBottom: 34, backgroundColor: "#FFFFFF" },
+const styles = createStyles(({ colors }) => ({
+  root: { flex: 1 },
+  headerBackground: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  container: { paddingBottom: 34 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   header: {
-    paddingTop: 18,
+    minHeight: 119,
     paddingHorizontal: 16,
     paddingBottom: 16,
     flexDirection: "row",
@@ -740,85 +800,42 @@ const styles = createStyles(() => ({
   },
   sheetRowText: { flex: 1, lineHeight: 24 },
   sheetCheck: { fontSize: 18, lineHeight: 22 },
-  orderCard: { paddingHorizontal: 16, gap: 16 },
+  orderCard: { padding: 16, gap: 12, backgroundColor: colors.white, borderRadius: 12, marginHorizontal: 16 },
   skeletonBox: { backgroundColor: "#EBEBEB" },
   userRow: { flexDirection: "row", alignItems: "center", gap: 16 },
-  userName: { flex: 1, lineHeight: 24 },
-  trackingBox: { borderWidth: 1, borderRadius: 12, overflow: "hidden" },
-  trackingCodeRow: {
-    backgroundColor: "#FFFFFF",
-    paddingTop: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-    marginBottom: -12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  muted12: { lineHeight: 18 },
-  trackingCode: { flex: 1, textAlign: "right", lineHeight: 18 },
-  trackingMain: {
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  carrierRow: { flexDirection: "row", alignItems: "center", gap: 16 },
-  logoBox: {
-    width: 32,
-    height: 32,
+  cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardTrackingLink: { flexDirection: "row", alignItems: "center", gap: 2 },
+  cardProviderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardProviderLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  cardLogoBox: { width: 40, height: 40, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#ffffff" },
+  cardProviderInfo: { gap: 4, flex: 1 },
+  cardTrackingCodeBlock: { alignItems: "flex-end", gap: 2 },
+  cardDivider: { height: 0.5 },
+  cardInfoSection: { gap: 8 },
+  cardInfoNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  cardNameActions: { flexDirection: "row", alignItems: "center", gap: 6 },
+  cardPrintBtn: { width: 30, height: 30, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  cardPrintIcon: { width: 16, height: 16 },
+  cardDetailBtn: { borderWidth: 1, borderRadius: 8, height: 30, paddingHorizontal: 10, alignItems: "center", justifyContent: "center" },
+  cardIconRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  cardInfoFlex: { flex: 1 },
+  cardAddressBlock: { flex: 1, gap: 4 },
+  cardActions: { flexDirection: "row", gap: 8 },
+  cardActionBtn: {
+    flex: 1,
+    borderWidth: 1,
     borderRadius: 8,
+    paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 36,
   },
-  logoText: { color: "#FFFFFF", fontSize: 10, fontWeight: "900" },
-  carrierText: { flex: 1 },
-  carrierName: { lineHeight: 22 },
-  carrierStatus: { lineHeight: 18 },
-  followButton: { flexDirection: "row", alignItems: "center", gap: 4 },
-  followText: { lineHeight: 18 },
-  trackingMetaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  orderCode: { flex: 1, textAlign: "right", lineHeight: 18 },
-  infoBlock: {},
-  infoRow: {
-    paddingTop: 12,
-    paddingBottom: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  infoLabel: { flex: 1, lineHeight: 22 },
-  infoValue: { width: 120, textAlign: "right", lineHeight: 22 },
-  divider: { height: 8, backgroundColor: "#F2F2F2", marginVertical: 16 },
+  cardActionText: { textAlign: "center" },
+  cardOldBadge: { backgroundColor: "#fff3e0", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: "flex-start" },
+  cardMoneySection: { gap: 4 },
+  cardMoneyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  divider: { height: 12 },
   empty: { padding: 40, alignItems: "center" },
   emptyText: {},
   error: { paddingHorizontal: 16, paddingBottom: 12 },
-  shipmentActions: { borderTopWidth: 1, flexDirection: "row" },
-  printShipmentButton: {
-    flex: 1,
-    height: 42,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  shipmentButtonText: { fontSize: 13, fontWeight: "700" as const },
-  cancelShipmentButton: {
-    flex: 1,
-    height: 42,
-    borderLeftWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  cancelShipmentText: {
-    color: "#EF4444",
-    fontSize: 13,
-    fontWeight: "700" as const,
-  },
 }));

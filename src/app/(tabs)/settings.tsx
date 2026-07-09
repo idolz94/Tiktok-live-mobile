@@ -15,6 +15,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { useToast } from "@components/toast";
 
@@ -72,6 +73,7 @@ const socialLogins = [
 export default function SettingsTab() {
   const { user, logout } = useAuth();
   const toast = useToast();
+  const { top } = useSafeAreaInsets();
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -99,7 +101,7 @@ export default function SettingsTab() {
             style={styles.heroFade}
           />
 
-          <View style={styles.topBar}>
+          <View style={[styles.topBar, { paddingTop: top + 14 }]}>
             <Text style={styles.title}>Hồ sơ</Text>
           </View>
 
@@ -162,7 +164,7 @@ export default function SettingsTab() {
               </View>
             ))}
             <View style={styles.settingsGroup}>
-              <Pressable style={styles.settingItem} onPress={logout}>
+              <Pressable style={styles.settingItem} onPress={() => { void logout(); }}>
                 <View style={styles.settingLeft}>
                   <Image
                     source={icons.disconnect}
@@ -267,7 +269,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   topBar: {
     paddingHorizontal: 16,
-    paddingTop: 58,
     paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",

@@ -15,12 +15,12 @@ export const shadows = {
   sd2: Platform.select({
     ios: {
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
     },
-    android: { elevation: 4 },
-    default: { boxShadow: "0px 2px 6px 0px rgba(0, 0, 0, 0.15)" },
+    android: { elevation: 6 },
+    default: { boxShadow: "0px 4px 8px 0px rgba(0, 0, 0, 0.2)" },
   }),
 
   // ponytail: dominant layer only on native; both layers on web via boxShadow

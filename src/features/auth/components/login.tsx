@@ -135,6 +135,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
                       placeholder="Nhập tài khoản"
                       placeholderTextColor={colors.neutral300}
                       style={styles.input}
+                      testID="input-username"
                     />
                     {!invalid && value.length > 0 && (
                       <Text style={styles.check}>✓</Text>
@@ -177,6 +178,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
                       placeholder="Nhập mật khẩu"
                       placeholderTextColor={colors.neutral300}
                       style={styles.input}
+                      testID="input-password"
                     />
                     <Pressable onPress={() => setIsPasswordVisible((v) => !v)}>
                       <Text style={styles.eye}>
@@ -220,6 +222,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
           ]}
           onPress={submit}
           disabled={!formMethod.formState.isValid || loading}
+          testID="btn-login"
         >
           <LinearGradient type="gra_primary" style={StyleSheet.absoluteFill} />
           <Text style={styles.submitText}>

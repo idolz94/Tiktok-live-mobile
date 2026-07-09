@@ -1,0 +1,8 @@
+appId: com.idolz94.tiktoklivetools
+---
+# Empty credentials — button stays disabled (isValid = false)
+- launchApp
+- assertVisible: "Đăng nhập"
+- assertNotVisible:
+    id: "btn-login"
+    enabled: true

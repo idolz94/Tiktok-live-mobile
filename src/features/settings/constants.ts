@@ -42,7 +42,7 @@ export const SETTINGS_COPY = {
   title: "Hồ sơ",
   subscriptionTitle: "Gói Lumi Live Mini",
   subscriptionSubtitle: "1172-2700 đơn",
-  upgrade: "Nâng cấp",
+  upgrade: "Xem các gói",
   tiktokLabel: "TikTok username",
   connected: "Đã kết nối",
   disconnected: "Chưa kết nối",

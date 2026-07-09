@@ -12,7 +12,7 @@ import { useAuthStore } from "@features/auth/stores";
 import { mapBootstrapToAuthUser } from "@features/auth/stores/auth-utils";
 import { secureStorage } from "@utils/storage";
 import { AppState } from "react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type BootstrapOptions = {
   background?: boolean;
@@ -253,9 +253,10 @@ export const useAuth = () => {
     [setLoginState, setUserFromBootstrap],
   );
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (beforeLogout?: () => Promise<void> | void) => {
     try {
       setIsBootstrapping(true);
+      await beforeLogout?.();
       await logoutStore();
       setUserFromBootstrap(null);
       resetBootstrapGuard();
@@ -295,10 +296,8 @@ export const useAuth = () => {
     [user, setUserFromBootstrap],
   );
 
-  const mergedUser = useMemo(() => user, [user]);
-
   return {
-    user: mergedUser,
+    user,
     isLoading: !isHydrated || isBootstrapping,
     error,
     login,

@@ -1,21 +1,19 @@
 import { Separator } from "@components/separator";
 import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useEffect, useState, type ReactNode } from "react";
-import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
-import Svg, { Rect } from "react-native-svg";
+import { memo, useEffect, useState, type ReactNode } from "react";
+import { Text, View } from "react-native";
 import { CommentItemProps } from "../types/types";
 import { isPriorityComment } from "../utils/comment";
 import { CommentCardContent } from "./comment-card-content";
 import {
   default as Animated,
   Easing,
-  useAnimatedProps,
+  useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSequence,
   withTiming,
 } from "react-native-reanimated";
-
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 const isOwnComment = (item: CommentItemProps["item"]) => {
   const raw = item?.raw as Record<string, unknown> | undefined;
@@ -30,99 +28,30 @@ const isOwnComment = (item: CommentItemProps["item"]) => {
 };
 
 const BORDER_RADIUS = 16;
-const STROKE_WIDTH = 2;
-const SWEEP_FRACTION = 0.22;
-const SWEEP_DURATION = 2400;
+const PULSE_DURATION = 900; // half-cycle: dim→bright→dim over 1800ms total
 
 const PriorityBorder = memo(({ children }: { children: ReactNode }) => {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const dashOffset = useSharedValue(0);
-
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    setSize({ width, height });
-  }, []);
-
-  // Perimeter of a rounded rect: 2*(w+h) - 8*r + 2*pi*r
-  const perimeter =
-    size.width > 0 && size.height > 0
-      ? 2 * (size.width + size.height) -
-        8 * BORDER_RADIUS +
-        2 * Math.PI * BORDER_RADIUS
-      : 0;
-
-  const sweepLength = perimeter * SWEEP_FRACTION;
+  const opacity = useSharedValue(0.3);
 
   useEffect(() => {
-    if (perimeter <= 0) return;
-    dashOffset.value = 0;
-    dashOffset.value = withRepeat(
-      withTiming(-perimeter, {
-        duration: SWEEP_DURATION,
-        easing: Easing.linear,
-      }),
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.3, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
+      ),
       -1,
       false,
     );
-  }, [perimeter, dashOffset]);
+  }, [opacity]);
 
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: dashOffset.value,
+  const animatedStyle = useAnimatedStyle(() => ({
+    borderColor: `rgba(44, 168, 123, ${opacity.value})`,
   }));
-  // Three overlapping dashes, same dashoffset (same center point) but
-  // different length/opacity, layered wide-dim -> narrow-bright so the
-  // result reads as a round glow with a bright core, fading evenly to
-  // both sides — not a comet tail. Order matters: SVG paints later
-  // siblings on top, so the narrowest/brightest layer must come last.
-  const tail = [
-    {
-      lengthFactor: 1,
-      color: "#2CA87B",
-      opacity: 0.25,
-      width: STROKE_WIDTH + 3,
-    },
-    {
-      lengthFactor: 0.6,
-      color: "#FFA66D",
-      opacity: 0.55,
-      width: STROKE_WIDTH + 1.5,
-    },
-    { lengthFactor: 0.3, color: "#FF6B8A", opacity: 1, width: STROKE_WIDTH },
-  ];
 
   return (
-    <View style={styles.borderWrapper} onLayout={onLayout}>
-      {perimeter > 0 && (
-        <Svg
-          style={StyleSheet.absoluteFill}
-          width={size.width}
-          height={size.height}
-        >
-          {tail.map((seg, i) => (
-            <AnimatedRect
-              key={i}
-              x={STROKE_WIDTH / 2}
-              y={STROKE_WIDTH / 2}
-              width={Math.max(size.width - STROKE_WIDTH, 0)}
-              height={Math.max(size.height - STROKE_WIDTH, 0)}
-              rx={BORDER_RADIUS - STROKE_WIDTH / 2}
-              ry={BORDER_RADIUS - STROKE_WIDTH / 2}
-              fill="none"
-              stroke={seg.color}
-              strokeOpacity={seg.opacity}
-              strokeWidth={seg.width}
-              strokeDasharray={`${sweepLength * seg.lengthFactor} ${Math.max(
-                perimeter - sweepLength * seg.lengthFactor,
-                0,
-              )}`}
-              strokeLinecap="round"
-              animatedProps={animatedProps}
-            />
-          ))}
-        </Svg>
-      )}
-      <View style={styles.innerCardBorderAnimated}>{children}</View>
-    </View>
+    <Animated.View style={[styles.borderWrapper, animatedStyle]}>
+      {children}
+    </Animated.View>
   );
 });
 
@@ -204,6 +133,7 @@ export const CommentCardItem = memo(
   },
   (prev, next) =>
     prev.item.id === next.item.id &&
+    prev.item.intent === next.item.intent &&
     prev.item.aiStatus === next.item.aiStatus &&
     prev.item.finalScore === next.item.finalScore &&
     prev.item.priorityLevel === next.item.priorityLevel &&
@@ -246,13 +176,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
     ...textPresets.fs12_500,
   },
   borderWrapper: {
-    position: "relative",
+    borderWidth: 2,
     borderRadius: BORDER_RADIUS,
-    marginBottom: 8,
-  },
-  innerCardBorderAnimated: {
-    margin: STROKE_WIDTH,
-    borderRadius: BORDER_RADIUS - STROKE_WIDTH,
     backgroundColor: colors.neutral100,
     flexDirection: "row",
     alignItems: "flex-start",
@@ -260,5 +185,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     columnGap: 16,
     padding: 12,
     overflow: "hidden",
+    marginBottom: 8,
   },
 }));

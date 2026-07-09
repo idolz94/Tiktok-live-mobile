@@ -284,10 +284,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.neutral900,
     ...textPresets.fs14_500,
   },
-  txtVariant: {
-    color: colors.neutral400,
-    ...textPresets.fs12_400,
-  },
   txtNotPaid: {
     color: colors.primary,
     ...textPresets.fs14_500,
@@ -308,10 +304,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     ...textPresets.fs14_500,
   },
   typeCustomer: {
-    padding: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
     borderRadius: 99,
-    backgroundColor: colors.pink50,
     flexDirection: "row",
+    alignItems: "center",
     columnGap: 4,
   },
   customerTypeIcon: {

@@ -1,11 +1,13 @@
+import { images } from "@assets/images";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 
 export type ShippingProvider = "manual" | "spx";
 
 type Props = {
   selected: ShippingProvider;
+  spxConnected: boolean;
   onClose: () => void;
   onSelect: (provider: ShippingProvider) => void;
 };
@@ -15,6 +17,7 @@ type ProviderConfig = {
   label: string;
   initial: string;
   color: string;
+  logo?: ReturnType<typeof require>;
   connected: true;
 };
 
@@ -23,38 +26,30 @@ type DisabledProviderConfig = {
   label: string;
   initial: string;
   color: string;
+  logo?: ReturnType<typeof require>;
   connected: false;
 };
 
-const CONNECTED: ProviderConfig[] = [
-  {
-    id: "manual",
-    label: "Vận chuyển thủ công",
-    initial: "M",
-    color: "#2ca87b",
-    connected: true,
-  },
-  {
-    id: "spx",
-    label: "Shopee Express",
-    initial: "S",
-    color: "#ffb000",
-    connected: true,
-  },
-];
+const SPX = {
+  id: "spx" as ShippingProvider,
+  label: "Shopee Express",
+  initial: "S",
+  color: "#ffb000",
+  logo: images.logo_spx,
+};
 
-const COMING: DisabledProviderConfig[] = [
-  {
-    id: "viettelpost",
-    label: "Viettel Post",
-    initial: "V",
-    color: "#cc0000",
-    connected: false,
-  },
-];
-
-export function ShippingProviderSheet({ selected, onClose, onSelect }: Props) {
+export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelect }: Props) {
   const { colors } = useThemes();
+
+  const connected: ProviderConfig[] = [
+    { id: "manual", label: "Vận chuyển thủ công", initial: "M", color: "#2ca87b", connected: true },
+    ...(spxConnected ? [{ ...SPX, connected: true as const }] : []),
+  ];
+
+  const coming: DisabledProviderConfig[] = [
+    ...(!spxConnected ? [{ ...SPX, connected: false as const }] : []),
+    { id: "viettelpost", label: "Viettel Post", initial: "V", color: "#cc0000", connected: false },
+  ];
 
   return (
     <View style={[styles.sheet, { backgroundColor: colors.neutral100 }]}>
@@ -65,7 +60,7 @@ export function ShippingProviderSheet({ selected, onClose, onSelect }: Props) {
       <Text style={[styles.sectionLabel, { color: colors.neutral400 }]}>
         Đã kết nối
       </Text>
-      {CONNECTED.map((p) => {
+      {connected.map((p) => {
         const isSelected = p.id === selected;
         return (
           <Pressable
@@ -76,8 +71,12 @@ export function ShippingProviderSheet({ selected, onClose, onSelect }: Props) {
               onClose();
             }}
           >
-            <View style={[styles.avatar, { backgroundColor: p.color }]}>
-              <Text style={styles.avatarText}>{p.initial}</Text>
+            <View style={[styles.avatar, { backgroundColor: p.logo ? "#fff" : p.color }]}>
+              {p.logo ? (
+                <Image source={p.logo} style={styles.avatarLogo} resizeMode="contain" />
+              ) : (
+                <Text style={styles.avatarText}>{p.initial}</Text>
+              )}
             </View>
             <Text style={[styles.rowLabel, { color: colors.neutral900 }]}>
               {p.label}
@@ -104,7 +103,7 @@ export function ShippingProviderSheet({ selected, onClose, onSelect }: Props) {
       >
         Chưa kết nối
       </Text>
-      {COMING.map((p) => (
+      {coming.map((p) => (
         <View
           key={p.id}
           style={[
@@ -163,6 +162,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
   },
   avatarText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  avatarLogo: { width: 28, height: 28 },
   rowLabel: { flex: 1, ...textPresets.fs14_500 },
   checkCircle: {
     width: 22,

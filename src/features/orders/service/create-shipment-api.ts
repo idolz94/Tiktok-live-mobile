@@ -198,7 +198,7 @@ export async function getShippingFeeApi(orderId: string, payload: ShippingFeePay
 }
 
 export async function getShipmentLabelApi(orderId: string) {
-  return getRequest<{ label_url?: string; format?: string }>(`/orders/${orderId}/shipping/label`);
+  return getRequest<{ labelUrl?: string }>(`/orders/${orderId}/shipping/label`);
 }
 
 export async function refreshShippingStatusApi(orderId: string) {

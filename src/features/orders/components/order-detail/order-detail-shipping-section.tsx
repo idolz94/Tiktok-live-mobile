@@ -2,7 +2,6 @@ import { Pressable, Text, View } from "react-native";
 import { Icon } from "@components/icon";
 import { OrderWithTikTok } from "@app-types/index";
 import { formatMoney } from "@features/orders/utils/order";
-import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { CurrencyInputRow, MoneyRow, Section, SectionHeader } from "./order-detail-primitives";
 import { type ShippingProvider } from "@features/orders/components/shipping-provider-sheet";
@@ -30,13 +29,14 @@ export function OrderDetailShippingSection({
   onChangeShippingFee,
   onChangePrepaid,
 }: OrderDetailShippingSectionProps) {
-  const { colors } = useThemes();
-
   return (
     <Section>
-      <SectionHeader title="Phương thức vận chuyển" />
+      <SectionHeader
+        title="Phương thức vận chuyển"
+        actionLabel={order.status !== "draft" ? "Theo dõi" : undefined}
+      />
       <Pressable
-        style={[styles.providerCard, { backgroundColor: colors.neutral50 }]}
+        style={styles.providerCard}
         onPress={isEditable ? onOpenProvider : undefined}
         disabled={!isEditable}
       >
@@ -44,7 +44,7 @@ export function OrderDetailShippingSection({
           style={[
             styles.providerIcon,
             {
-              backgroundColor: selectedProvider === "spx" ? "#ffb000" : "#2ca87b",
+              backgroundColor: selectedProvider === "spx" ? "#f90" : "#2ca87b",
             },
           ]}
         >
@@ -60,7 +60,7 @@ export function OrderDetailShippingSection({
             <Text style={styles.providerCode}>{order.trackingCode}</Text>
           ) : null}
         </View>
-        <Icon name="arrow_down" size={18} tintColor="neutral400" />
+        <Icon name="chevron_down" size={16} tintColor="neutral400" />
       </Pressable>
 
       <CurrencyInputRow
@@ -89,11 +89,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     columnGap: 12,
     padding: 12,
     borderRadius: 16,
-    backgroundColor: colors.neutral50,
+    backgroundColor: "#f7f8fa",
   },
   providerIcon: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",

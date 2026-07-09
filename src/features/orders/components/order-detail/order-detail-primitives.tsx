@@ -113,20 +113,24 @@ export function CurrencyInputRow({ label, value, onChangeAmount, editable = true
   );
 }
 
-export const styles = createStyles(({ colors, textPresets }) => ({
+export const styles = createStyles(({ colors, textPresets, shadows }) => ({
   section: {
-    backgroundColor: colors.neutral100,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: colors.border10,
     paddingHorizontal: 16,
     paddingVertical: 16,
     rowGap: 16,
+    ...shadows.sd2,
   },
-  divider: { height: 8, backgroundColor: colors.neutral50 },
+  divider: { height: 0 },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  sectionTitle: { color: colors.neutral900, ...textPresets.fs20_600 },
+  sectionTitle: { color: colors.neutral900, ...textPresets.fs16_600 },
   sectionAction: { flexDirection: "row", alignItems: "center", columnGap: 4 },
   sectionActionText: { color: colors.primary, ...textPresets.fs14_500 },
   statusTag: {

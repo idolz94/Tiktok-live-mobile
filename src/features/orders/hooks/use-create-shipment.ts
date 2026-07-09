@@ -71,6 +71,21 @@ export function useCreateShipment() {
     ? codAmount + shippingFee
     : form.paymentSide === 0 ? codAmount + shippingFee : codAmount;
 
+  const pickupTimeLabel = useMemo(() => {
+    if (!isSpxProvider || !form.pickupTimeRangeId || !spx.timeslots.length) return "";
+    for (const day of spx.timeslots) {
+      const slot = day.slots.find(s => s.id === form.pickupTimeRangeId);
+      if (slot) {
+        const [y, m, d] = day.date.split("-");
+        return `${d}/${m}/${y} ${slot.range}`;
+      }
+    }
+    return "";
+  }, [isSpxProvider, form.pickupTimeRangeId, spx.timeslots]);
+
+  const selectedVoucher = spx.vouchers.find(v => v.voucherCode === form.selectedVoucherCode);
+  const voucherAmount = selectedVoucher ? Math.round(parseFloat(selectedVoucher.voucherAmount)) : 0;
+
   const { isSubmitting, submitState, handleSubmitShipment, handleRetryOutcomeUnknown } = useSubmitShipment({
     order, isManualProvider, isSpxProvider, selectedSender, selectedRecipient,
     paymentSide: form.paymentSide, transport: form.transport, pickupOption: form.pickupOption, note: form.note,
@@ -94,6 +109,10 @@ export function useCreateShipment() {
     allowTryOn: isSpxProvider ? form.allowTryOn : undefined,
     allowPartialDelivery: isSpxProvider ? form.allowPartialDelivery : undefined,
     codCollection: isSpxProvider ? (spxCodAmount > 0 ? 1 : 0) : undefined,
+    pickupTimeLabel,
+    shippingFee,
+    codAmount,
+    voucherAmount,
   });
 
   return {

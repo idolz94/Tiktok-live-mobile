@@ -45,6 +45,11 @@ type Deps = {
   allowTryOn?: 0 | 1;
   allowPartialDelivery?: 0 | 1;
   codCollection?: 0 | 1;
+  // success screen data
+  pickupTimeLabel?: string;
+  shippingFee?: number;
+  codAmount?: number;
+  voucherAmount?: number;
 };
 
 type SubmitState = "idle" | "submitting" | "success" | "outcome_unknown" | "error";
@@ -104,6 +109,17 @@ export function useSubmitShipment(deps: Deps) {
           note: manualNote.trim() || undefined,
         });
         setSubmitState("success");
+        router.replace({
+          pathname: "/order-detail/create-shipment/success" as never,
+          params: {
+            orderId: order.id,
+            provider: "manual",
+            codAmount: String(deps.codAmount ?? 0),
+            shippingFee: String(deps.shippingFee ?? 0),
+            voucherAmount: String(deps.voucherAmount ?? 0),
+          },
+        });
+        return;
       } else if (isSpxProvider) {
         if (!senderAddressId || !serviceType || !collectType || !weightGram) {
           setSubmitState("idle");
@@ -139,22 +155,25 @@ export function useSubmitShipment(deps: Deps) {
           codCollection,
         });
         setSubmitState("success");
+        router.replace({
+          pathname: "/order-detail/create-shipment/success" as never,
+          params: {
+            orderId: order.id,
+            provider: "spx",
+            serviceType: String(serviceType ?? ""),
+            collectType: String(collectType ?? ""),
+            pickupTimeLabel: deps.pickupTimeLabel ?? "",
+            codAmount: String(deps.codAmount ?? 0),
+            shippingFee: String(deps.shippingFee ?? 0),
+            voucherAmount: String(deps.voucherAmount ?? 0),
+          },
+        });
+        return;
       } else {
         Alert.alert("Thiếu thông tin", "Vui lòng chọn phương thức vận chuyển.");
         setSubmitState("idle");
         return;
       }
-
-      Alert.alert("Tạo vận đơn thành công", "Đơn hàng đã được gửi sang đơn vị vận chuyển.", [
-        {
-          text: "OK",
-          onPress: () =>
-            router.replace({
-              pathname: "/(tabs)/shipping",
-              params: { refreshShipping: String(Date.now()) },
-            }),
-        },
-      ]);
     } catch (err) {
       const isNetworkTimeout =
         err instanceof Error &&

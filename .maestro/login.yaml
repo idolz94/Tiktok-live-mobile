@@ -1,0 +1,14 @@
+appId: com.idolz94.tiktoklivetools
+---
+# Login happy path
+- launchApp
+- assertVisible: "Đăng nhập"
+- tapOn:
+    id: "input-username"
+- inputText: ${USERNAME}
+- tapOn:
+    id: "input-password"
+- inputText: ${PASSWORD}
+- tapOn:
+    id: "btn-login"
+- assertVisible: "Home"

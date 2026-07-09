@@ -1,4 +1,3 @@
-import { Header } from "@components/header";
 import { Screen } from "@components/screen";
 import { ProductSheet } from "@features/orders/components/product-sheet";
 import {
@@ -7,6 +6,7 @@ import {
 } from "@features/orders/components/shipping-provider-sheet";
 import { useOrderDetail } from "@features/orders/hooks/use-order-detail";
 import { formatMoney } from "@features/orders/utils/order";
+import { useSpxAccount } from "@features/settings/hooks/use-spx-account";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { createStyles } from "@utils/createStyles";
 import {
@@ -14,7 +14,7 @@ import {
   refreshShippingStatusApi,
 } from "@features/orders/service/create-shipment-api";
 import { router, useLocalSearchParams } from "expo-router";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -23,13 +23,12 @@ import {
   Text,
   View,
 } from "react-native";
+import { LinearGradient } from "@components/linear-gradient";
 import { OrderDetailCustomerSection } from "@features/orders/components/order-detail/order-detail-customer-section";
-import { OrderDetailFooterActions } from "@features/orders/components/order-detail/order-detail-footer-actions";
 import {
-  OrderDetailMetaSection,
   OrderDetailNoteSection,
 } from "@features/orders/components/order-detail/order-detail-info-sections";
-import { Divider } from "@features/orders/components/order-detail/order-detail-primitives";
+import { OrderDetailHeader } from "@features/orders/components/order-detail/order-detail-header";
 import { OrderDetailProductsSection } from "@features/orders/components/order-detail/order-detail-products-section";
 import { OrderDetailShipBar } from "@features/orders/components/order-detail/order-detail-ship-bar";
 import { OrderDetailShippingSection } from "@features/orders/components/order-detail/order-detail-shipping-section";
@@ -38,8 +37,13 @@ export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useOrderDetail(id ?? "");
   const { show, hide } = useBottomSheet();
+  const { connected: spxConnected } = useSpxAccount();
   const [selectedProvider, setSelectedProvider] =
-    useState<ShippingProvider>("spx");
+    useState<ShippingProvider>("manual");
+
+  useEffect(() => {
+    if (spxConnected) setSelectedProvider("spx");
+  }, [spxConnected]);
   const [shippingFeeDisplay, setShippingFeeDisplay] = useState("");
   const [prepaidDisplay, setPrepaidDisplay] = useState("");
   const [prepaidAmount, setPrepaidAmount] = useState<number | null>(null);
@@ -48,11 +52,6 @@ export const OrderDetail = memo(() => {
     const order = detail.order;
     return order?.customerName || order?.username || "Khách live";
   }, [detail.order]);
-
-  const createdDate = useMemo(() => {
-    if (!detail.order?.createdAt) return "";
-    return new Date(detail.order.createdAt).toLocaleDateString("vi-VN");
-  }, [detail.order?.createdAt]);
 
   const hiddenCount = Math.max(
     detail.products.length - detail.displayProducts.length,
@@ -165,8 +164,15 @@ export const OrderDetail = memo(() => {
 
   return (
     <Screen>
-      <Header title="Tổng quan đơn hàng" />
       <View style={styles.container}>
+        <LinearGradient
+          type="gra_background"
+          style={styles.gradient}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+        <OrderDetailHeader onBack={() => router.back()} />
+
         {detail.loading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color="#FF6B8A" />
@@ -189,16 +195,12 @@ export const OrderDetail = memo(() => {
               keyboardShouldPersistTaps="handled"
             >
               {detail.order.source !== "manual" ? (
-                <>
-                  <Divider />
-                  <OrderDetailCustomerSection
-                    order={detail.order}
-                    displayName={displayName}
-                    customerDefaultAddress={detail.customerDefaultAddress}
-                    onTikTok={handleTikTok}
-                  />
-                  <Divider />
-                </>
+                <OrderDetailCustomerSection
+                  order={detail.order}
+                  displayName={displayName}
+                  customerDefaultAddress={detail.customerDefaultAddress}
+                  onTikTok={handleTikTok}
+                />
               ) : null}
               <OrderDetailProductsSection
                 products={detail.products}
@@ -244,7 +246,6 @@ export const OrderDetail = memo(() => {
                 onDeleteProduct={() => {}}
                 onToggleShowAll={detail.toggleShowAllProducts}
               />
-              <Divider />
               <OrderDetailShippingSection
                 order={detail.order}
                 selectedProvider={selectedProvider}
@@ -261,6 +262,7 @@ export const OrderDetail = memo(() => {
                     content: (
                       <ShippingProviderSheet
                         selected={selectedProvider}
+                        spxConnected={spxConnected}
                         onClose={close}
                         onSelect={(provider) => {
                           setSelectedProvider(provider);
@@ -274,23 +276,25 @@ export const OrderDetail = memo(() => {
                 onChangePrepaid={handleChangePrepaid}
               />
               {detail.order.note ? (
-                <>
-                  <Divider />
-                  <OrderDetailNoteSection note={detail.order.note} />
-                </>
+                <OrderDetailNoteSection note={detail.order.note} />
               ) : null}
-              <Divider />
-              <OrderDetailFooterActions
+              <OrderDetailShipBar
+                section="actions"
+                onShip={handleShip}
+                trackingCode={detail.order.trackingCode}
+                providerName={detail.order.providerName}
+                hasShipment={!!detail.order.trackingCode}
+                shippingStatus={detail.order.shippingStatus}
+                onCancel={handleCancelShipment}
                 onPrint={() => {}}
                 onShare={() => {}}
-                onConfirm={() => {
-                  void detail.handleToggleConfirm();
-                }}
+                onConfirm={() => { void detail.handleToggleConfirm(); }}
                 isConfirmed={detail.order.status === "confirmed"}
                 confirmLoading={detail.confirmLoading}
               />
             </ScrollView>
             <OrderDetailShipBar
+              section="bottom"
               onShip={handleShip}
               trackingCode={detail.order.trackingCode}
               providerName={detail.order.providerName}
@@ -298,6 +302,10 @@ export const OrderDetail = memo(() => {
               shippingStatus={detail.order.shippingStatus}
               onCancel={handleCancelShipment}
               onPrint={() => {}}
+              onShare={() => {}}
+              onConfirm={() => { void detail.handleToggleConfirm(); }}
+              isConfirmed={detail.order.status === "confirmed"}
+              confirmLoading={detail.confirmLoading}
             />
           </>
         ) : null}
@@ -309,13 +317,24 @@ export const OrderDetail = memo(() => {
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral50,
+  },
+  gradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
   },
   scroll: {
     flex: 1,
+    zIndex: 1,
   },
   scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 16,
+    gap: 16,
   },
   loadingBox: {
     flex: 1,

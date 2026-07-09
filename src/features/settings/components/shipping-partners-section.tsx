@@ -8,23 +8,26 @@ import {
 } from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 
-const connectedPartners = [
-  {
-    key: "spx",
-    name: "SPX - SPX EXPRESS",
-    description: "Dịch vụ giao hàng toàn quốc, nhanh, rẻ và an toàn.",
-    isDefault: true,
-    color: "#ff3911",
-  },
-  {
-    key: "manual",
-    name: "Thủ công",
-    description: "Tự tạo và quản lý vận đơn ngoài hệ thống.",
-    color: "#ffffff",
-  },
-] as const;
+type ShippingPartnersSectionProps = {
+  spxConnected: boolean;
+  onConnectSpx: () => void;
+};
 
-const unconnectedPartners = [
+const SPX_PARTNER = {
+  key: "spx",
+  name: "SPX - SPX EXPRESS",
+  description: "Dịch vụ giao hàng toàn quốc, nhanh, rẻ và an toàn.",
+  color: "#ff3911",
+} as const;
+
+const MANUAL_PARTNER = {
+  key: "manual",
+  name: "Thủ công",
+  description: "Tự tạo và quản lý vận đơn ngoài hệ thống.",
+  color: "#ffffff",
+} as const;
+
+const COMING_SOON_PARTNERS = [
   {
     key: "viettel-post",
     name: "Viettel Post",
@@ -53,12 +56,25 @@ type Partner = {
   key: string;
   name: string;
   description: string;
-  isDefault?: boolean;
   comingSoon?: boolean;
   color: string;
+  onPress?: () => void;
 };
 
-export function ShippingPartnersSection() {
+export function ShippingPartnersSection({
+  spxConnected,
+  onConnectSpx,
+}: ShippingPartnersSectionProps) {
+  const connectedPartners: Partner[] = [
+    ...(spxConnected ? [SPX_PARTNER] : []),
+    MANUAL_PARTNER,
+  ];
+
+  const unconnectedPartners: Partner[] = [
+    ...(!spxConnected ? [{ ...SPX_PARTNER, onPress: onConnectSpx }] : []),
+    ...COMING_SOON_PARTNERS,
+  ];
+
   return (
     <View style={styles.partnerSection}>
       <Text style={styles.sectionTitle}>Đối tác vận chuyển</Text>
@@ -89,7 +105,7 @@ function PartnerGroup({
 
 function PartnerCard({ partner }: { partner: Partner }) {
   return (
-    <Pressable style={styles.partnerCard}>
+    <Pressable style={styles.partnerCard} onPress={partner.onPress}>
       <View style={styles.partnerContent}>
         <DeliveryLogo color={partner.color} image={images.ship} />
         <View style={styles.partnerTextWrap}>
@@ -97,11 +113,6 @@ function PartnerCard({ partner }: { partner: Partner }) {
             <Text style={styles.partnerName} numberOfLines={1}>
               {partner.name}
             </Text>
-            {partner.isDefault ? (
-              <View style={styles.defaultTag}>
-                <Text style={styles.defaultText}>Mặc định</Text>
-              </View>
-            ) : null}
             {partner.comingSoon ? (
               <View style={styles.comingSoonTag}>
                 <Text style={styles.comingSoonText}>Coming soon</Text>
@@ -110,6 +121,11 @@ function PartnerCard({ partner }: { partner: Partner }) {
           </View>
           <Text style={styles.partnerDescription}>{partner.description}</Text>
         </View>
+        {partner.onPress && !partner.comingSoon ? (
+          <View style={styles.connectTag}>
+            <Text style={styles.connectTagText}>Kết nối</Text>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
