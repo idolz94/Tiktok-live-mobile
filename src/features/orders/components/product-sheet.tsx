@@ -1,9 +1,8 @@
 import { AnimatedErrorText } from "@components/animated-error-text";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   ActivityIndicator,
   Pressable,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { z } from "zod";
 
 const addProductSchema = z.object({
   name: z.string().trim().min(1, "Tên sản phẩm không được bỏ trống"),
@@ -251,7 +251,7 @@ export function ProductSheet({
       <View style={styles.actions}>
         <Pressable
           style={[styles.cancelBtn, { borderColor: colors.border10 }]}
-          onPress={onClose}
+          onPress={() => onClose()}
           disabled={loading}
         >
           <Text style={[styles.cancelText, { color: colors.neutral500 }]}>
@@ -288,7 +288,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
-    paddingBottom: 36,
     paddingTop: 12,
     rowGap: 8,
   },

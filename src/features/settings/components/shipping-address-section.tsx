@@ -1,7 +1,15 @@
 import { ShopAddress } from "@features/settings/service/shop-addresses-api";
 import { formatShopAddress } from "@features/settings/schemas/shipping-address-form-schema";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleProp,
+  Text,
+  TextStyle,
+  View,
+} from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
+import { colors } from "@themes/colors";
 
 type ShippingAddressSectionProps = {
   address: ShopAddress | null;
@@ -10,7 +18,12 @@ type ShippingAddressSectionProps = {
   onEdit: (address: ShopAddress) => void;
 };
 
-export function ShippingAddressSection({ address, isLoading, onAdd, onEdit }: ShippingAddressSectionProps) {
+export function ShippingAddressSection({
+  address,
+  isLoading,
+  onAdd,
+  onEdit,
+}: ShippingAddressSectionProps) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Địa chỉ kho hàng</Text>
@@ -25,7 +38,11 @@ export function ShippingAddressSection({ address, isLoading, onAdd, onEdit }: Sh
   );
 }
 
-function AddressContent({ address, isLoading, onEdit }: Omit<ShippingAddressSectionProps, "onAdd">) {
+function AddressContent({
+  address,
+  isLoading,
+  onEdit,
+}: Omit<ShippingAddressSectionProps, "onAdd">) {
   if (isLoading) {
     return (
       <View style={styles.emptyWarehouseCard}>
@@ -39,7 +56,9 @@ function AddressContent({ address, isLoading, onEdit }: Omit<ShippingAddressSect
     return (
       <View style={styles.emptyWarehouseCard}>
         <Text style={styles.emptyWarehouseTitle}>Chưa có địa chỉ kho</Text>
-        <Text style={styles.emptyWarehouseText}>Thêm địa chỉ để tạo đơn và cấu hình vận chuyển.</Text>
+        <Text style={styles.emptyWarehouseText}>
+          Thêm địa chỉ để tạo đơn và cấu hình vận chuyển.
+        </Text>
       </View>
     );
   }
@@ -51,28 +70,65 @@ function AddressContent({ address, isLoading, onEdit }: Omit<ShippingAddressSect
           <Text style={styles.storeIcon}>⌂</Text>
         </View>
         <View style={styles.storeNameWrap}>
-          <Text style={styles.storeName}>{address.name || address.label || "Kho hàng"}</Text>
-          {address.isDefault ? <Text style={styles.storeDefaultText}>Mặc định</Text> : null}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "baseline",
+              columnGap: 2,
+            }}
+          >
+            <Text style={styles.storeName} numberOfLines={1}>
+              {address.name || address.label || "Kho hàng"}
+            </Text>
+            <InfoLine
+              text={address.phone || "Chưa có số điện thoại"}
+              textStyle={{
+                textDecorationLine: "underline",
+                color: colors.primary,
+              }}
+            />
+          </View>
+          {address.isDefault ? (
+            <Text style={styles.storeDefaultText}>Mặc định</Text>
+          ) : null}
+          <View style={styles.warehouseMeta}>
+            <InfoLine
+              icon="⌖"
+              text={formatShopAddress(address)}
+              numberOfLinesText={2}
+            />
+          </View>
         </View>
-        <Pressable style={styles.editButton} onPress={() => onEdit(address)}>
-          <Text style={styles.editIcon}>✎</Text>
-          <Text style={styles.editText}>Sửa</Text>
-        </Pressable>
       </View>
 
-      <View style={styles.warehouseMeta}>
-        <InfoLine icon="☎" text={address.phone || "Chưa có số điện thoại"} />
-        <InfoLine icon="⌖" text={formatShopAddress(address)} />
-      </View>
+      <Pressable onPress={() => onEdit(address)}>
+        <Text style={styles.editIcon}>✎</Text>
+        <Text style={styles.editText}>Sửa</Text>
+      </Pressable>
     </View>
   );
 }
 
-function InfoLine({ icon, text }: { icon: string; text: string }) {
+function InfoLine({
+  icon,
+  text,
+  textStyle,
+  numberOfLinesText,
+}: {
+  icon?: string;
+  text: string;
+  textStyle?: StyleProp<TextStyle>;
+  numberOfLinesText?: number;
+}) {
   return (
     <View style={styles.infoLine}>
-      <Text style={styles.infoIcon}>{icon}</Text>
-      <Text style={styles.infoText}>{text}</Text>
+      {!!icon && <Text style={styles.infoIcon}>{icon}</Text>}
+      <Text
+        style={[styles.infoText, textStyle]}
+        numberOfLines={numberOfLinesText}
+      >
+        {text}
+      </Text>
     </View>
   );
 }

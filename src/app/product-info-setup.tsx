@@ -12,7 +12,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { formatPrice, parsePrice, useProductInfoSetup } from "@features/product-info/use-product-info-setup";
+import {
+  formatPrice,
+  parsePrice,
+  useProductInfoSetup,
+} from "@features/product-info/use-product-info-setup";
 import { useCallback, useState } from "react";
 import { createStyles } from "@utils/createStyles";
 import { ProductPreset } from "@features/settings/service/product-presets-api";
@@ -27,10 +31,28 @@ type ProductFormProps = {
   initialColor: string;
   initialPrice: string;
   onClose: () => void;
-  onSave: (payload: { code: string; name?: string | null; color: string | null; price: number }, mode: "add" | "edit", presetId?: string) => Promise<void>;
+  onSave: (
+    payload: {
+      code: string;
+      name?: string | null;
+      color: string | null;
+      price: number;
+    },
+    mode: "add" | "edit",
+    presetId?: string,
+  ) => Promise<void>;
 };
 
-function ProductForm({ mode, presetId, initialCode, initialName, initialColor, initialPrice, onClose, onSave }: ProductFormProps) {
+function ProductForm({
+  mode,
+  presetId,
+  initialCode,
+  initialName,
+  initialColor,
+  initialPrice,
+  onClose,
+  onSave,
+}: ProductFormProps) {
   const toast = useToast();
   const [code, setCode] = useState(initialCode);
   const [name, setName] = useState(initialName);
@@ -41,13 +63,14 @@ function ProductForm({ mode, presetId, initialCode, initialName, initialColor, i
   // ponytail: local form state — stable mount prevents IME composing state loss on Vietnamese input
 
   const parsedPrice = parsePrice(price);
-  const hasChanged = mode === "add" || (
+  const hasChanged =
+    mode === "add" ||
     code.trim() !== initialCode.trim() ||
     name.trim() !== initialName.trim() ||
     color.trim() !== initialColor.trim() ||
-    parsedPrice !== parsePrice(initialPrice)
-  );
-  const canSubmit = code.trim().length > 0 && parsedPrice > 0 && hasChanged && !saving;
+    parsedPrice !== parsePrice(initialPrice);
+  const canSubmit =
+    code.trim().length > 0 && parsedPrice > 0 && hasChanged && !saving;
 
   const handlePriceChange = (value: string) => {
     const p = parsePrice(value);
@@ -59,14 +82,29 @@ function ProductForm({ mode, presetId, initialCode, initialName, initialColor, i
     const next: FormErrors = {};
     if (!code.trim()) next.code = "Mã SP không được trống";
     if (!price.trim() || parsedPrice <= 0) next.price = "Giá phải lớn hơn 0";
-    if (Object.keys(next).length > 0) { setErrors(next); return; }
+    if (Object.keys(next).length > 0) {
+      setErrors(next);
+      return;
+    }
 
     setSaving(true);
     try {
-      await onSave({ code: code.trim(), name: name.trim() || null, color: color.trim() || null, price: parsedPrice }, mode, presetId);
+      await onSave(
+        {
+          code: code.trim(),
+          name: name.trim() || null,
+          color: color.trim() || null,
+          price: parsedPrice,
+        },
+        mode,
+        presetId,
+      );
       setSaving(false);
       onClose();
-      toast(mode === "add" ? "Đã thêm sản phẩm" : "Đã cập nhật sản phẩm", "success");
+      toast(
+        mode === "add" ? "Đã thêm sản phẩm" : "Đã cập nhật sản phẩm",
+        "success",
+      );
     } catch {
       setSaving(false);
       toast("Thao tác thất bại. Vui lòng thử lại.", "error");
@@ -76,18 +114,29 @@ function ProductForm({ mode, presetId, initialCode, initialName, initialColor, i
   return (
     <View style={styles.sheet}>
       <View style={styles.sheetTitleRow}>
-        <Text style={styles.sheetTitle}>{mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}</Text>
-        <TouchableOpacity onPress={onClose} style={styles.sheetCloseButton} activeOpacity={0.75}>
+        <Text style={styles.sheetTitle}>
+          {mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}
+        </Text>
+        <TouchableOpacity
+          onPress={onClose}
+          style={styles.sheetCloseButton}
+          activeOpacity={0.75}
+        >
           <Text style={styles.sheetCloseText}>×</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.form}>
         <View style={styles.field}>
-          <Text style={styles.label}>Mã SP <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.label}>
+            Mã SP <Text style={styles.required}>*</Text>
+          </Text>
           <TextInput
             value={code}
-            onChangeText={(v) => { setCode(v); if (errors.code) setErrors((e) => ({ ...e, code: undefined })); }}
+            onChangeText={(v) => {
+              setCode(v);
+              if (errors.code) setErrors((e) => ({ ...e, code: undefined }));
+            }}
             placeholder="VD: SP001"
             placeholderTextColor="#BDBDBD"
             style={[styles.input, errors.code && styles.inputError]}
@@ -119,8 +168,12 @@ function ProductForm({ mode, presetId, initialCode, initialName, initialColor, i
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Giá <Text style={styles.required}>*</Text></Text>
-          <View style={[styles.priceInputWrap, errors.price && styles.inputError]}>
+          <Text style={styles.label}>
+            Giá <Text style={styles.required}>*</Text>
+          </Text>
+          <View
+            style={[styles.priceInputWrap, errors.price && styles.inputError]}
+          >
             <TextInput
               value={price}
               onChangeText={handlePriceChange}
@@ -137,7 +190,13 @@ function ProductForm({ mode, presetId, initialCode, initialName, initialColor, i
 
       <View style={styles.actions}>
         <Button
-          title={saving ? "Đang lưu..." : mode === "add" ? "Thêm sản phẩm" : "Cập nhật"}
+          title={
+            saving
+              ? "Đang lưu..."
+              : mode === "add"
+                ? "Thêm sản phẩm"
+                : "Cập nhật"
+          }
           loading={saving}
           onPress={handleSubmit}
           disabled={!canSubmit}
@@ -167,7 +226,8 @@ export default function ProductInfoSetupScreen() {
       const draftCode = preset?.code ?? "";
       const draftName = preset?.name ?? "";
       const draftColor = preset?.color ?? "";
-      const draftPrice = preset && preset.price > 0 ? formatPrice(preset.price) : "";
+      const draftPrice =
+        preset && preset.price > 0 ? formatPrice(preset.price) : "";
 
       if (mode === "add") hookOpenAdd();
       else if (preset) hookOpenEdit(preset);
@@ -183,7 +243,10 @@ export default function ProductInfoSetupScreen() {
             initialName={draftName}
             initialColor={draftColor}
             initialPrice={draftPrice}
-            onClose={() => { hide(); closeForm(); }}
+            onClose={() => {
+              hide();
+              closeForm();
+            }}
             onSave={savePreset}
           />
         ),
@@ -200,7 +263,10 @@ export default function ProductInfoSetupScreen() {
         onRightPress={() => showForm("add")}
       />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {loading ? (
           <View style={styles.centerState}>
             <ActivityIndicator color="#ff6b8a" />
@@ -212,7 +278,11 @@ export default function ProductInfoSetupScreen() {
             <Text style={styles.emptyDescription}>
               Thêm sản phẩm để tự động nhận diện từ comment LIVE
             </Text>
-            <TouchableOpacity onPress={() => showForm("add")} style={styles.emptyButton} activeOpacity={0.85}>
+            <TouchableOpacity
+              onPress={() => showForm("add")}
+              style={styles.emptyButton}
+              activeOpacity={0.85}
+            >
               <Text style={styles.emptyButtonText}>Thêm sản phẩm</Text>
             </TouchableOpacity>
           </View>
@@ -225,7 +295,8 @@ export default function ProductInfoSetupScreen() {
                 </View>
                 <View style={styles.presetInfo}>
                   <Text style={styles.presetCode} numberOfLines={1}>
-                    Mã: {preset.code}{preset.color ? ` - ${preset.color}` : ""}
+                    Mã: {preset.code}
+                    {preset.color ? ` - ${preset.color}` : ""}
                   </Text>
                   <Text style={styles.presetMeta} numberOfLines={1}>
                     {formatPrice(preset.price)} VNĐ
@@ -257,12 +328,29 @@ export default function ProductInfoSetupScreen() {
 
 const styles = createStyles(({ colors, textPresets }) => ({
   // --- ProductForm ---
-  sheet: { padding: 16, backgroundColor: colors.neutral100 },
-  sheetTitleRow: { flexDirection: "row" as const, alignItems: "center" as const, paddingBottom: 20 },
-  sheetTitle: { flex: 1, textAlign: "center" as const, paddingLeft: 32, color: colors.neutral900, ...textPresets.fs18_500 },
+  sheet: {
+    padding: 16,
+    backgroundColor: colors.neutral100,
+  },
+  sheetTitleRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingBottom: 20,
+  },
+  sheetTitle: {
+    flex: 1,
+    textAlign: "center" as const,
+    paddingLeft: 32,
+    color: colors.neutral900,
+    ...textPresets.fs18_500,
+  },
   sheetCloseButton: {
-    width: 32, height: 32, borderRadius: 99, backgroundColor: colors.neutral50,
-    alignItems: "center" as const, justifyContent: "center" as const,
+    width: 32,
+    height: 32,
+    borderRadius: 99,
+    backgroundColor: colors.neutral50,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   sheetCloseText: { fontSize: 20, lineHeight: 26, color: colors.neutral900 },
   form: { rowGap: 16 },
@@ -270,15 +358,29 @@ const styles = createStyles(({ colors, textPresets }) => ({
   label: { color: colors.neutral400, ...textPresets.fs14_400 },
   required: { color: colors.primary },
   input: {
-    borderWidth: 1, borderColor: colors.border10, borderRadius: 8,
-    paddingHorizontal: 16, paddingVertical: 13, color: colors.neutral900, ...textPresets.fs14_400,
+    borderWidth: 1,
+    borderColor: colors.border10,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    color: colors.neutral900,
+    ...textPresets.fs14_400,
   },
   inputError: { borderColor: colors.error },
   priceInputWrap: {
-    flexDirection: "row" as const, alignItems: "center" as const,
-    borderWidth: 1, borderColor: colors.border10, borderRadius: 8, paddingHorizontal: 16,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    borderWidth: 1,
+    borderColor: colors.border10,
+    borderRadius: 8,
+    paddingHorizontal: 16,
   },
-  priceInput: { flex: 1, paddingVertical: 13, color: colors.neutral900, ...textPresets.fs14_400 },
+  priceInput: {
+    flex: 1,
+    paddingVertical: 13,
+    color: colors.neutral900,
+    ...textPresets.fs14_400,
+  },
   currencyText: { color: colors.neutral400, ...textPresets.fs14_400 },
   actions: { flexDirection: "row" as const, marginTop: 16 },
   btnSave: { flex: 1, borderRadius: 40, overflow: "hidden" as const },
@@ -288,28 +390,47 @@ const styles = createStyles(({ colors, textPresets }) => ({
   stateText: { color: colors.neutral400, ...textPresets.fs14_400 },
   emptyCard: { alignItems: "center" as const, paddingVertical: 48, gap: 12 },
   emptyTitle: { color: colors.neutral900, ...textPresets.fs18_500 },
-  emptyDescription: { color: colors.neutral400, textAlign: "center" as const, ...textPresets.fs14_400 },
+  emptyDescription: {
+    color: colors.neutral400,
+    textAlign: "center" as const,
+    ...textPresets.fs14_400,
+  },
   emptyButton: {
-    marginTop: 8, backgroundColor: colors.primary, borderRadius: 40,
-    paddingHorizontal: 24, paddingVertical: 12,
+    marginTop: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
   emptyButtonText: { color: colors.neutral100, ...textPresets.fs14_500 },
   list: { gap: 10 },
   presetCard: {
-    flexDirection: "row" as const, alignItems: "center" as const, gap: 12,
-    padding: 14, borderRadius: 12, backgroundColor: colors.neutral100,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: colors.neutral100,
   },
   indexBadge: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: colors.primary,
-    alignItems: "center" as const, justifyContent: "center" as const,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   indexText: { color: colors.neutral100, ...textPresets.fs14_500 },
   presetInfo: { flex: 1, gap: 2 },
   presetCode: { color: colors.neutral900, ...textPresets.fs14_500 },
   presetMeta: { color: colors.neutral400, ...textPresets.fs12_400 },
   iconButton: {
-    width: 36, height: 36, borderRadius: 8,
-    alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: colors.neutral50,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: colors.neutral50,
   },
   editIcon: { fontSize: 16, color: colors.neutral400 },
   deleteButton: { backgroundColor: colors.primaryLight },

@@ -115,7 +115,10 @@ function SelectField({
         visible={popoverVisible}
         onVisibleChange={setPopoverVisible}
         trigger={
-          <Pressable onPress={() => setPopoverVisible(true)} style={styles.selectInput}>
+          <Pressable
+            onPress={() => setPopoverVisible(true)}
+            style={styles.selectInput}
+          >
             <Text
               style={[
                 textPresets.fs14_400,
@@ -423,15 +426,14 @@ function OrderCard({
 }) {
   const products = getOrderProducts(order);
   const total = Number(order.totalAmount ?? getOrderTotal(products));
-
   return (
     <View style={styles.orderCard}>
       <View style={styles.orderHeader}>
         <View style={styles.orderTitleBox}>
           <Text style={styles.orderCode}>{order.orderCode || order.id}</Text>
-          <Text style={styles.orderComment} numberOfLines={1}>
+          {/* <Text style={styles.orderComment} numberOfLines={1}>
             {order.comment || "Đơn hàng từ live"}
-          </Text>
+          </Text> */}
         </View>
         <OrderStatusBadge order={order} />
       </View>
