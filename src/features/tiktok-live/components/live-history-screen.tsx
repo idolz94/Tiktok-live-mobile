@@ -39,7 +39,10 @@ function formatTotalDuration(seconds: number) {
 
 function formatTimeRange(startedAt: string, endedAt: string | null) {
   const fmt = (d: string) =>
-    new Date(d).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+    new Date(d).toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   if (!endedAt) return `Phiên ${fmt(startedAt)}`;
   return `Phiên ${fmt(startedAt)} - ${fmt(endedAt)}`;
 }
@@ -104,7 +107,11 @@ const PRESETS = [
   { label: "Hôm nay", from: () => todayStr(), to: () => todayStr() },
   { label: "7 ngày", from: () => daysAgoStr(6), to: () => todayStr() },
   { label: "30 ngày", from: () => daysAgoStr(29), to: () => todayStr() },
-  { label: "Tháng này", from: () => daysAgoStr(new Date().getDate() - 1), to: () => todayStr() },
+  {
+    label: "Tháng này",
+    from: () => daysAgoStr(new Date().getDate() - 1),
+    to: () => todayStr(),
+  },
 ];
 
 function DateRangeSheet({
@@ -122,7 +129,11 @@ function DateRangeSheet({
 
   const toInput = (d: Date | null) =>
     d
-      ? d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
+      ? d.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
       : "";
 
   const [fromText, setFromText] = useState(toInput(range.from));
@@ -147,7 +158,12 @@ function DateRangeSheet({
 
   return (
     <View style={sheetStyles.container}>
-      <Text style={[sheetStyles.title, { color: colors.neutral900, ...textPresets.fs16_600 }]}>
+      <Text
+        style={[
+          sheetStyles.title,
+          { color: colors.neutral900, ...textPresets.fs16_600 },
+        ]}
+      >
         Lọc theo ngày
       </Text>
 
@@ -155,10 +171,18 @@ function DateRangeSheet({
         {PRESETS.map((p) => (
           <Pressable
             key={p.label}
-            style={[sheetStyles.preset, { backgroundColor: colors.neutral50, borderRadius: 99 }]}
+            style={[
+              sheetStyles.preset,
+              { backgroundColor: colors.neutral50, borderRadius: 99 },
+            ]}
             onPress={() => applyPreset(p.from(), p.to())}
           >
-            <Text style={[sheetStyles.presetText, { color: colors.neutral500, ...textPresets.fs12_500 }]}>
+            <Text
+              style={[
+                sheetStyles.presetText,
+                { color: colors.neutral500, ...textPresets.fs12_500 },
+              ]}
+            >
               {p.label}
             </Text>
           </Pressable>
@@ -167,11 +191,23 @@ function DateRangeSheet({
 
       <View style={sheetStyles.inputRow}>
         <View style={sheetStyles.inputWrap}>
-          <Text style={[sheetStyles.inputLabel, { color: colors.neutral400, ...textPresets.fs12_400 }]}>
+          <Text
+            style={[
+              sheetStyles.inputLabel,
+              { color: colors.neutral400, ...textPresets.fs12_400 },
+            ]}
+          >
             Từ ngày
           </Text>
           <TextInput
-            style={[sheetStyles.input, { color: colors.neutral900, borderColor: colors.neutral50, ...textPresets.fs14_400 }]}
+            style={[
+              sheetStyles.input,
+              {
+                color: colors.neutral900,
+                borderColor: colors.neutral50,
+                ...textPresets.fs14_400,
+              },
+            ]}
             placeholder="dd/mm/yyyy"
             placeholderTextColor={colors.neutral300}
             value={fromText}
@@ -181,11 +217,23 @@ function DateRangeSheet({
         </View>
         <View style={sheetStyles.inputDash} />
         <View style={sheetStyles.inputWrap}>
-          <Text style={[sheetStyles.inputLabel, { color: colors.neutral400, ...textPresets.fs12_400 }]}>
+          <Text
+            style={[
+              sheetStyles.inputLabel,
+              { color: colors.neutral400, ...textPresets.fs12_400 },
+            ]}
+          >
             Đến ngày
           </Text>
           <TextInput
-            style={[sheetStyles.input, { color: colors.neutral900, borderColor: colors.neutral50, ...textPresets.fs14_400 }]}
+            style={[
+              sheetStyles.input,
+              {
+                color: colors.neutral900,
+                borderColor: colors.neutral50,
+                ...textPresets.fs14_400,
+              },
+            ]}
             placeholder="dd/mm/yyyy"
             placeholderTextColor={colors.neutral300}
             value={toText}
@@ -197,10 +245,21 @@ function DateRangeSheet({
 
       <View style={sheetStyles.actions}>
         <Pressable
-          style={[sheetStyles.btnClear, { borderColor: colors.neutral100, backgroundColor: colors.neutral50 }]}
+          style={[
+            sheetStyles.btnClear,
+            {
+              borderColor: colors.neutral100,
+              backgroundColor: colors.neutral50,
+            },
+          ]}
           onPress={handleClear}
         >
-          <Text style={[sheetStyles.btnClearText, { color: colors.neutral500, ...textPresets.fs14_500 }]}>
+          <Text
+            style={[
+              sheetStyles.btnClearText,
+              { color: colors.neutral500, ...textPresets.fs14_500 },
+            ]}
+          >
             Xóa lọc
           </Text>
         </Pressable>
@@ -208,7 +267,12 @@ function DateRangeSheet({
           style={[sheetStyles.btnApply, { backgroundColor: colors.primary }]}
           onPress={handleApply}
         >
-          <Text style={[sheetStyles.btnApplyText, { color: colors.neutral100, ...textPresets.fs14_500 }]}>
+          <Text
+            style={[
+              sheetStyles.btnApplyText,
+              { color: colors.neutral100, ...textPresets.fs14_500 },
+            ]}
+          >
             Áp dụng
           </Text>
         </Pressable>
@@ -218,12 +282,22 @@ function DateRangeSheet({
 }
 
 const sheetStyles = StyleSheet.create({
-  container: { paddingHorizontal: 16, paddingBottom: 32, paddingTop: 8 },
+  container: { paddingHorizontal: 16, paddingTop: 8 },
   title: { marginBottom: 16, textAlign: "center" },
-  presetRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 },
+  presetRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 20,
+  },
   preset: { paddingHorizontal: 14, paddingVertical: 8 },
   presetText: {},
-  inputRow: { flexDirection: "row", alignItems: "center", columnGap: 12, marginBottom: 24 },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 12,
+    marginBottom: 24,
+  },
   inputWrap: { flex: 1, rowGap: 6 },
   inputLabel: {},
   input: {
@@ -234,17 +308,41 @@ const sheetStyles = StyleSheet.create({
   },
   inputDash: { width: 12, height: 1, backgroundColor: "#ccc", marginTop: 20 },
   actions: { flexDirection: "row", columnGap: 12 },
-  btnClear: { flex: 1, height: 48, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1 },
+  btnClear: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
   btnClearText: {},
-  btnApply: { flex: 2, height: 48, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  btnApply: {
+    flex: 2,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   btnApplyText: {},
 });
 
 // --- subcomponents ---
 
 const SessionRow = memo(
-  ({ session, isLast, onPress }: { session: LiveHistoryItem; isLast: boolean; onPress: (id: string) => void }) => {
-    const handlePress = useCallback(() => onPress(session.id), [session.id, onPress]);
+  ({
+    session,
+    isLast,
+    onPress,
+  }: {
+    session: LiveHistoryItem;
+    isLast: boolean;
+    onPress: (id: string) => void;
+  }) => {
+    const handlePress = useCallback(
+      () => onPress(session.id),
+      [session.id, onPress],
+    );
     return (
       <>
         <Pressable style={styles.sessionRow} onPress={handlePress}>
@@ -254,7 +352,9 @@ const SessionRow = memo(
             </Text>
             <View style={styles.sessionMeta}>
               <Icon name="group_user" size={12} tintColor="neutral300" />
-              <Text style={styles.sessionMetaText}>{removeAt(session.username)}</Text>
+              <Text style={styles.sessionMetaText}>
+                {removeAt(session.username)}
+              </Text>
               <View style={styles.metaDivider} />
               <Icon name="clock" size={12} tintColor="neutral300" />
               <Text style={styles.sessionMetaText}>
@@ -271,33 +371,44 @@ const SessionRow = memo(
 );
 
 const DayCard = memo(
-  ({ group, collapsed, onToggle, onPressSession }: {
+  ({
+    group,
+    collapsed,
+    onToggle,
+    onPressSession,
+  }: {
     group: DateGroup;
     collapsed: boolean;
     onToggle: (key: string) => void;
     onPressSession: (id: string) => void;
   }) => {
     const { shadows } = useThemes();
-    const handleToggle = useCallback(() => onToggle(group.dateKey), [group.dateKey, onToggle]);
+    const handleToggle = useCallback(
+      () => onToggle(group.dateKey),
+      [group.dateKey, onToggle],
+    );
     return (
       <View style={[styles.dayCard, shadows.sd2]}>
         <Pressable style={styles.groupHeader} onPress={handleToggle}>
           <View style={styles.groupDot} />
           <Text style={styles.groupDateText}>{group.dateKey}</Text>
           <View style={styles.groupHeaderDivider} />
-          <Text style={styles.groupDurationText}>{formatTotalDuration(group.totalDuration)}</Text>
+          <Text style={styles.groupDurationText}>
+            {formatTotalDuration(group.totalDuration)}
+          </Text>
           <View style={collapsed ? styles.iconRotated : undefined}>
             <Icon name="arrow_down" size={16} tintColor="neutral400" />
           </View>
         </Pressable>
-        {!collapsed && group.sessions.map((session, si) => (
-          <SessionRow
-            key={session.id}
-            session={session}
-            isLast={si === group.sessions.length - 1}
-            onPress={onPressSession}
-          />
-        ))}
+        {!collapsed &&
+          group.sessions.map((session, si) => (
+            <SessionRow
+              key={session.id}
+              session={session}
+              isLast={si === group.sessions.length - 1}
+              onPress={onPressSession}
+            />
+          ))}
       </View>
     );
   },
@@ -316,20 +427,25 @@ export const LiveHistoryScreen = memo(() => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: null,
+    to: null,
+  });
 
   const hasFilter = !!dateRange.from || !!dateRange.to;
 
   const groups = useMemo<DateGroup[]>(() => {
     const filtered = liveHistory.filter(
       (s) =>
-        (Number(s.commentCount || 0) > 0 || Number(s.orderCount || s.orders?.length || 0) > 0) &&
+        (Number(s.commentCount || 0) > 0 ||
+          Number(s.orderCount || s.orders?.length || 0) > 0) &&
         sessionMatchesRange(s, dateRange),
     );
     const map = new Map<string, DateGroup>();
     filtered.forEach((session) => {
       const key = getDateKey(session.startedAt);
-      if (!map.has(key)) map.set(key, { dateKey: key, totalDuration: 0, sessions: [] });
+      if (!map.has(key))
+        map.set(key, { dateKey: key, totalDuration: 0, sessions: [] });
       const group = map.get(key)!;
       group.sessions.push(session);
       group.totalDuration += Number(session.durationSeconds || 0);
@@ -369,7 +485,8 @@ export const LiveHistoryScreen = memo(() => {
     if (!hasFilter) return null;
     const fmt = (d: Date) =>
       d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
-    if (dateRange.from && dateRange.to) return `${fmt(dateRange.from)} – ${fmt(dateRange.to)}`;
+    if (dateRange.from && dateRange.to)
+      return `${fmt(dateRange.from)} – ${fmt(dateRange.to)}`;
     if (dateRange.from) return `Từ ${fmt(dateRange.from)}`;
     return `Đến ${fmt(dateRange.to!)}`;
   }, [dateRange, hasFilter]);
@@ -402,19 +519,31 @@ export const LiveHistoryScreen = memo(() => {
       <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Text style={styles.headerTitle}>Lịch Sử Live</Text>
         <Pressable
-          style={[styles.headerButton, hasFilter && { backgroundColor: colors.primary }]}
+          style={[
+            styles.headerButton,
+            hasFilter && { backgroundColor: colors.primary },
+          ]}
           onPress={openFilter}
         >
-          <Icon name="filter" size={20} tintColor={hasFilter ? "#ffffff" : "#000000"} />
+          <Icon
+            name="filter"
+            size={20}
+            tintColor={hasFilter ? "#ffffff" : "#000000"}
+          />
         </Pressable>
       </View>
 
       {hasFilter && (
         <View style={styles.filterBadgeRow}>
-          <View style={[styles.filterBadge, { backgroundColor: colors.neutral50 }]}>
+          <View
+            style={[styles.filterBadge, { backgroundColor: colors.neutral50 }]}
+          >
             <Icon name="clock" size={12} tintColor="neutral400" />
             <Text style={styles.filterBadgeText}>{filterLabel}</Text>
-            <Pressable onPress={() => setDateRange({ from: null, to: null })} hitSlop={8}>
+            <Pressable
+              onPress={() => setDateRange({ from: null, to: null })}
+              hitSlop={8}
+            >
               <Icon name="close" size={12} tintColor="neutral400" />
             </Pressable>
           </View>
@@ -427,7 +556,9 @@ export const LiveHistoryScreen = memo(() => {
             <Icon name="clock" size={32} tintColor="neutral300" />
           </View>
           <Text style={styles.emptyTitle}>
-            {hasFilter ? "Không có phiên nào trong khoảng này" : "Chưa có lịch sử LIVE"}
+            {hasFilter
+              ? "Không có phiên nào trong khoảng này"
+              : "Chưa có lịch sử LIVE"}
           </Text>
           <Text style={styles.emptyText}>
             {hasFilter
@@ -442,7 +573,9 @@ export const LiveHistoryScreen = memo(() => {
           renderItem={renderDayCard}
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
     </View>

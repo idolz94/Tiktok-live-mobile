@@ -3,12 +3,14 @@ import { useThemes } from "@hooks/use-theme";
 import type { ShopAddress, CustomerAddress } from "../../service/create-shipment-api";
 import { addressLine } from "../../utils/shipment";
 import { createStyles } from "@utils/createStyles";
+import { Ionicons } from "@expo/vector-icons";
 
 type FigmaAddressCardProps = {
   address: ShopAddress | CustomerAddress | null;
   loading?: boolean;
   onChangePress: () => void;
   onAddPress: () => void;
+  type?: "sender" | "recipient";
 };
 
 export function FigmaAddressCard({
@@ -16,16 +18,13 @@ export function FigmaAddressCard({
   loading,
   onChangePress,
   onAddPress,
+  type = "sender",
 }: FigmaAddressCardProps) {
   const { colors, textPresets } = useThemes();
+
   if (loading) {
     return (
-      <View
-        style={[
-          styles.addressCard,
-          { borderColor: colors.border10, backgroundColor: colors.surface },
-        ]}
-      >
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
@@ -48,91 +47,88 @@ export function FigmaAddressCard({
           </Text>
         </View>
         <Text style={[{ color: colors.primary }, textPresets.fs16_500]}>
-          Thêm mới
+          Thêm mới {type === "sender" ? "người gửi" : "người nhận"}
         </Text>
       </Pressable>
     );
   }
 
-  const initial = (address.name?.trim()?.charAt(0) || "L").toUpperCase();
   return (
-    <View
-      style={[
-        styles.addressCard,
-        { borderColor: colors.border10, backgroundColor: colors.surface },
-      ]}
-    >
-      <View style={styles.addressTopRow}>
-        <View
-          style={[
-            styles.avatar,
-            { backgroundColor: colors.primaryLight },
-          ]}
-        >
-          <Text style={[{ color: colors.primary }, textPresets.fs16_500]}>
-            {initial}
-          </Text>
+    <View style={styles.rowContainer}>
+      {/* Icon Box */}
+      <View
+        style={[
+          styles.iconBox,
+          { backgroundColor: type === "sender" ? "#E2583E" : "#2B3B4C" },
+        ]}
+      >
+        <View style={styles.iconWrapper}>
+          <Ionicons name="person" size={16} color="#fff" />
+          <Ionicons
+            name={type === "sender" ? "arrow-forward" : "arrow-back"}
+            size={10}
+            color="#fff"
+            style={[
+              styles.arrowSubIcon,
+              type === "sender" ? { right: -1 } : { left: -1 },
+            ]}
+          />
         </View>
-        <View style={styles.addressInfo}>
-          <View style={styles.addressNameRow}>
-            <Text
-              style={[
-                styles.addressName,
-                { color: colors.neutral900 },
-                textPresets.fs16_500,
-              ]}
-              numberOfLines={1}
-            >
-              {address.name ?? "—"}
-            </Text>
-            {address.isDefault && (
-              <View
-                style={[
-                  styles.defaultBadge,
-                  { backgroundColor: colors.primaryLight },
-                ]}
-              >
-                <Text style={[{ color: colors.primary }, textPresets.fs11_400]}>
-                  Mặc định
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>
+      </View>
+
+      {/* Info Container */}
+      <View style={styles.infoContainer}>
+        <View style={styles.namePhoneRow}>
+          <Text
+            style={[
+              { color: colors.neutral900 },
+              textPresets.fs16_500,
+            ]}
+          >
+            {address.name ?? "—"}
+          </Text>
+          <Text
+            style={[
+              {
+                color: "#E2583E",
+                textDecorationLine: "underline",
+              },
+              textPresets.fs14_400,
+            ]}
+          >
             {address.phone ?? "—"}
           </Text>
         </View>
-        <Pressable
-          onPress={onChangePress}
-          hitSlop={8}
-          style={[styles.changePill, { borderColor: colors.border10 }]}
+        <Text
+          style={[
+            { color: colors.neutral400 },
+            textPresets.fs12_400,
+            styles.addressText,
+          ]}
+          numberOfLines={2}
         >
-          <Text style={[{ color: colors.primary }, textPresets.fs12_500]}>
-            Thay đổi
-          </Text>
-        </Pressable>
+          {addressLine(address)}
+        </Text>
       </View>
-      <Text
-        style={[
-          styles.addressLine,
-          { color: colors.neutral400 },
-          textPresets.fs14_400,
-        ]}
-        numberOfLines={2}
+
+      {/* Sổ địa chỉ Button */}
+      <Pressable
+        onPress={onChangePress}
+        style={styles.bookButton}
       >
-        {addressLine(address)}
-      </Text>
+        <Ionicons name="book-outline" size={20} color="#4B5563" />
+        <Text style={styles.bookButtonText}>
+          Sổ địa{"\n"}chỉ
+        </Text>
+      </Pressable>
     </View>
   );
 }
 
 const styles = createStyles(() => ({
-  addressCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
-    gap: 12,
-    minHeight: 108,
+  loadingContainer: {
+    height: 60,
+    alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   addAddressCard: {
@@ -153,33 +149,54 @@ const styles = createStyles(() => ({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
-  addressTopRow: {
+  rowContainer: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 10,
+    gap: 12,
   },
-  avatar: {
+  iconBox: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 8,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+    alignSelf: "flex-start" as const,
   },
-  addressInfo: { flex: 1, gap: 4 },
-  addressNameRow: {
+  iconWrapper: {
+    width: 24,
+    height: 24,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  arrowSubIcon: {
+    position: "absolute" as const,
+    bottom: 0,
+  },
+  infoContainer: {
+    flex: 1,
+    gap: 4,
+  },
+  namePhoneRow: {
     flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 8,
+    alignItems: "baseline" as const,
+    flexWrap: "wrap" as const,
+    columnGap: 8,
   },
-  addressName: { flexShrink: 1 },
-  changePill: {
-    height: 32,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
+  addressText: {
+    lineHeight: 18,
+  },
+  bookButton: {
     alignItems: "center" as const,
     justifyContent: "center" as const,
+    width: 60,
+    gap: 4,
   },
-  defaultBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  addressLine: { lineHeight: 22 },
+  bookButtonText: {
+    fontSize: 11,
+    color: "#4B5563",
+    textAlign: "center" as const,
+    fontWeight: "500" as const,
+    lineHeight: 14,
+  },
 }));
+

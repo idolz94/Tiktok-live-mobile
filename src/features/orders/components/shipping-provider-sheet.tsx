@@ -139,7 +139,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
-    paddingBottom: 36,
     paddingTop: 12,
     rowGap: 8,
   },
