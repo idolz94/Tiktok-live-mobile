@@ -11,6 +11,7 @@ import { getOrderTotal } from "@features/orders/utils/order";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   addOrderItemApi,
+  deleteOrderItemApi,
   getOrderByIdApi,
   updateOrderDepositStatusApi,
   updateOrderItemApi,
@@ -40,6 +41,7 @@ type UiState = {
 type MutatingState = {
   addProduct: boolean;
   updateProduct: boolean;
+  deleteProduct: boolean;
   deposit: boolean;
   confirm: boolean;
 };
@@ -54,6 +56,7 @@ const UI_INIT: UiState = {
 const MUTATING_INIT: MutatingState = {
   addProduct: false,
   updateProduct: false,
+  deleteProduct: false,
   deposit: false,
   confirm: false,
 };
@@ -97,6 +100,7 @@ export function useOrderDetail(orderId: string) {
   // START: Ref lock chống double tap — state update async không đủ nhanh để block lần tap thứ 2
   const addingRef = useRef(false);
   const updatingRef = useRef(false);
+  const deletingRef = useRef(false);
   const depositRef = useRef(false);
   const confirmRef = useRef(false);
   // END: Ref lock
@@ -289,6 +293,24 @@ export function useOrderDetail(orderId: string) {
   );
   // END: Cập nhật sản phẩm
 
+  // START: Xoá sản phẩm — ref lock tránh double tap
+  const handleDeleteProduct = useCallback(
+    async (itemId: string) => {
+      if (!orderId || deletingRef.current) return;
+      deletingRef.current = true;
+      patchMutating({ deleteProduct: true });
+      try {
+        await deleteOrderItemApi(orderId, itemId);
+        await silentRefetch();
+      } finally {
+        deletingRef.current = false;
+        patchMutating({ deleteProduct: false });
+      }
+    },
+    [orderId, patchMutating, silentRefetch],
+  );
+  // END: Xoá sản phẩm
+
   // START: Toggle cọc/chưa cọc — optimistic update, rollback an toàn qua previousStatusRef
   const depositStatus = order?.depositStatus;
 
@@ -372,6 +394,8 @@ export function useOrderDetail(orderId: string) {
     handleAddProduct,
     updatingProduct: mutating.updateProduct,
     handleUpdateProduct,
+    deletingProduct: mutating.deleteProduct,
+    handleDeleteProduct,
     depositLoading: mutating.deposit,
     handleToggleDeposit,
     confirmLoading: mutating.confirm,

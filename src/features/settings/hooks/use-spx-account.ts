@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSpxAccountApi, getSpxAccountApi } from "../service/spx-account-api";
+import { createSpxAccountApi, deleteSpxAccountApi, getSpxAccountApi } from "../service/spx-account-api";
 
 export function useSpxAccount() {
   const [connected, setConnected] = useState(false);
@@ -25,5 +25,18 @@ export function useSpxAccount() {
     }
   }
 
-  return { connected, loading, submitting, connect };
+  async function disconnect(): Promise<boolean> {
+    setSubmitting(true);
+    try {
+      await deleteSpxAccountApi();
+      setConnected(false);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return { connected, loading, submitting, connect, disconnect };
 }

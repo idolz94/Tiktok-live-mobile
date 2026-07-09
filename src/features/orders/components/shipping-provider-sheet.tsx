@@ -10,6 +10,7 @@ type Props = {
   spxConnected: boolean;
   onClose: () => void;
   onSelect: (provider: ShippingProvider) => void;
+  onConnectSpx?: () => void;
 };
 
 type ProviderConfig = {
@@ -38,7 +39,7 @@ const SPX = {
   logo: images.logo_spx,
 };
 
-export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelect }: Props) {
+export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelect, onConnectSpx }: Props) {
   const { colors } = useThemes();
 
   const connected: ProviderConfig[] = [
@@ -103,23 +104,45 @@ export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelec
       >
         Chưa kết nối
       </Text>
-      {coming.map((p) => (
-        <View
-          key={p.id}
-          style={[
-            styles.row,
-            styles.rowDisabled,
-            { borderColor: colors.border10 },
-          ]}
-        >
-          <View style={[styles.avatar, { backgroundColor: p.color }]}>
-            <Text style={styles.avatarText}>{p.initial}</Text>
+      {coming.map((p) => {
+        const isSpx = p.id === "spx" && !!onConnectSpx;
+        if (isSpx) {
+          return (
+            <Pressable
+              key={p.id}
+              style={[styles.row, { borderColor: colors.border10 }]}
+              onPress={onConnectSpx}
+            >
+              <View style={[styles.avatar, { backgroundColor: p.logo ? "#fff" : p.color }]}>
+                {p.logo ? (
+                  <Image source={p.logo} style={styles.avatarLogo} resizeMode="contain" />
+                ) : (
+                  <Text style={styles.avatarText}>{p.initial}</Text>
+                )}
+              </View>
+              <Text style={[styles.rowLabel, { color: colors.neutral900 }]}>
+                {p.label}
+              </Text>
+              <View style={[styles.connectBadge, { backgroundColor: colors.primary }]}>
+                <Text style={styles.connectText}>Kết nối</Text>
+              </View>
+            </Pressable>
+          );
+        }
+        return (
+          <View
+            key={p.id}
+            style={[styles.row, styles.rowDisabled, { borderColor: colors.border10 }]}
+          >
+            <View style={[styles.avatar, { backgroundColor: p.color }]}>
+              <Text style={styles.avatarText}>{p.initial}</Text>
+            </View>
+            <Text style={[styles.rowLabel, { color: colors.neutral400 }]}>
+              {p.label}
+            </Text>
           </View>
-          <Text style={[styles.rowLabel, { color: colors.neutral400 }]}>
-            {p.label}
-          </Text>
-        </View>
-      ))}
+        );
+      })}
 
       <Pressable
         style={[styles.cancelBtn, { borderColor: colors.border10 }]}
@@ -133,7 +156,7 @@ export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelec
   );
 }
 
-const styles = createStyles(({ colors, textPresets }) => ({
+const styles = createStyles(({ textPresets }) => ({
   sheet: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -157,11 +180,12 @@ const styles = createStyles(({ colors, textPresets }) => ({
     width: 36,
     height: 36,
     borderRadius: 8,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-  avatarLogo: { width: 28, height: 28 },
+  avatarLogo: { width: 36, height: 36 },
   rowLabel: { flex: 1, ...textPresets.fs14_500 },
   checkCircle: {
     width: 22,
@@ -171,6 +195,12 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
   },
   checkMark: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  connectBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 99,
+  },
+  connectText: { color: "#fff", ...textPresets.fs12_500 },
   cancelBtn: {
     marginTop: 8,
     height: 48,

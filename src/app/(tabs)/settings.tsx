@@ -72,7 +72,6 @@ const socialLogins = [
 
 export default function SettingsTab() {
   const { user, logout } = useAuth();
-  const toast = useToast();
   const { top } = useSafeAreaInsets();
 
   const scrollRef = useRef<ScrollView>(null);
@@ -126,7 +125,7 @@ export default function SettingsTab() {
 
         <View style={styles.content}>
           <View style={styles.subscriptionCard}>
-            <View style={styles.subscriptionInfoRow}>
+            <Pressable style={styles.subscriptionInfoRow} onPress={() => router.push("/license-plans")}>
               <LinearGradient type="gra_primary" style={styles.appIcon}>
                 <Text style={styles.appIconText}>▣</Text>
               </LinearGradient>
@@ -135,14 +134,10 @@ export default function SettingsTab() {
                 <Text style={styles.subscriptionSubtitle}>1172-2700 đơn</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
-            </View>
-            <Pressable
-              onPress={() => {
-                toast.info("Tính năng đang được phát triển!");
-              }}
-            >
+            </Pressable>
+            <Pressable onPress={() => router.push("/license-plans")}>
               <LinearGradient type="gra_primary" style={styles.upgradeButton}>
-                <Text style={styles.upgradeText}>Nâng cấp</Text>
+                <Text style={styles.upgradeText}>Xem các gói</Text>
               </LinearGradient>
             </Pressable>
           </View>

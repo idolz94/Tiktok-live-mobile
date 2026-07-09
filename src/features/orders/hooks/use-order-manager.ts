@@ -16,6 +16,7 @@ import {
   updateOrderDepositStatusApi,
   updateOrderStatusApi,
 } from "../service/api";
+import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import {
   getCommentTikTokUsername,
   getOrderTikTokUsername,
@@ -326,6 +327,7 @@ export function useOrderManager({
         });
 
         await reloadOrders();
+        useCustomerRefreshStore.getState().invalidate();
         onAfterCreateOrder?.();
 
         return result;

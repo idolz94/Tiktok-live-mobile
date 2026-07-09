@@ -8,7 +8,7 @@ import { useSpxAccount } from "@features/settings/hooks/use-spx-account";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ShippingSettingsScreen() {
@@ -37,6 +37,7 @@ export default function ShippingSettingsScreen() {
           onSubmit={async (data) => {
             const ok = await spx.connect(data);
             if (ok) close();
+            else Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
           }}
           onClose={close}
         />
@@ -44,6 +45,21 @@ export default function ShippingSettingsScreen() {
       enablePanDownToClose: false,
     });
   }, [show, hide, spx]);
+
+  const handleDisconnectSpx = useCallback(() => {
+    Alert.alert("Ngắt kết nối SPX", "Bạn có chắc muốn ngắt kết nối tài khoản SPX?", [
+      { text: "Huỷ" },
+      {
+        text: "Ngắt kết nối",
+        style: "destructive",
+        onPress: () => {
+          void spx.disconnect().then((ok) => {
+            if (!ok) Alert.alert("Lỗi", "Không thể ngắt kết nối. Vui lòng thử lại.");
+          });
+        },
+      },
+    ]);
+  }, [spx]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
@@ -79,6 +95,7 @@ export default function ShippingSettingsScreen() {
         <ShippingPartnersSection
           spxConnected={spx.connected}
           onConnectSpx={handleConnectSpx}
+          onDisconnectSpx={handleDisconnectSpx}
         />
       </ScrollView>
     </SafeAreaView>

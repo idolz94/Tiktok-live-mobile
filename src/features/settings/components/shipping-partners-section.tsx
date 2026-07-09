@@ -11,6 +11,7 @@ import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 type ShippingPartnersSectionProps = {
   spxConnected: boolean;
   onConnectSpx: () => void;
+  onDisconnectSpx?: () => void;
 };
 
 const SPX_PARTNER = {
@@ -59,14 +60,16 @@ type Partner = {
   comingSoon?: boolean;
   color: string;
   onPress?: () => void;
+  tagLabel?: string;
 };
 
 export function ShippingPartnersSection({
   spxConnected,
   onConnectSpx,
+  onDisconnectSpx,
 }: ShippingPartnersSectionProps) {
   const connectedPartners: Partner[] = [
-    ...(spxConnected ? [SPX_PARTNER] : []),
+    ...(spxConnected ? [{ ...SPX_PARTNER, onPress: onDisconnectSpx, tagLabel: "Ngắt kết nối" }] : []),
     MANUAL_PARTNER,
   ];
 
@@ -123,7 +126,7 @@ function PartnerCard({ partner }: { partner: Partner }) {
         </View>
         {partner.onPress && !partner.comingSoon ? (
           <View style={styles.connectTag}>
-            <Text style={styles.connectTagText}>Kết nối</Text>
+            <Text style={styles.connectTagText}>{partner.tagLabel ?? "Kết nối"}</Text>
           </View>
         ) : null}
       </View>

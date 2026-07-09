@@ -167,6 +167,10 @@ export async function updateOrderItemApi(
   );
 }
 
+export async function deleteOrderItemApi(orderId: string, itemId: string) {
+  return deleteRequest<{ ok: boolean }>(`/orders/${orderId}/items/${itemId}`);
+}
+
 export type StatChartPoint = { date: string; value: number };
 export type StatSectionData = { total: number; avg: number; max: number; chart: StatChartPoint[] };
 export type OrderStatsData = {

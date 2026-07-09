@@ -211,7 +211,7 @@ export const OrderDetail = memo(() => {
                 productTotal={detail.productTotal}
                 isEditable={detail.order.status === "draft"}
                 isProductMutating={
-                  detail.addingProduct || detail.updatingProduct
+                  detail.addingProduct || detail.updatingProduct || detail.deletingProduct
                 }
                 onAddProduct={() => {
                   show({
@@ -243,7 +243,20 @@ export const OrderDetail = memo(() => {
                     ),
                   });
                 }}
-                onDeleteProduct={() => {}}
+                onDeleteProduct={(product) => {
+                  Alert.alert(
+                    "Xoá sản phẩm",
+                    `Xoá "${product.name || product.code || "sản phẩm"}" khỏi đơn?`,
+                    [
+                      { text: "Huỷ", style: "cancel" },
+                      {
+                        text: "Xoá",
+                        style: "destructive",
+                        onPress: () => detail.handleDeleteProduct(product.id),
+                      },
+                    ],
+                  );
+                }}
                 onToggleShowAll={detail.toggleShowAllProducts}
               />
               <OrderDetailShippingSection
@@ -267,6 +280,10 @@ export const OrderDetail = memo(() => {
                         onSelect={(provider) => {
                           setSelectedProvider(provider);
                           close();
+                        }}
+                        onConnectSpx={() => {
+                          close();
+                          router.push("/shipping-settings");
                         }}
                       />
                     ),

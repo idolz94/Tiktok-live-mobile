@@ -14,19 +14,18 @@ import { Ionicons } from "@expo/vector-icons";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_WIDTH = SCREEN_WIDTH - 80;
-const CARD_SIDE_PADDING = (SCREEN_WIDTH - CARD_WIDTH) / 2;
+const CARD_GAP = 16;
+const SIDE_INSET = (SCREEN_WIDTH - CARD_WIDTH) / 2;
 
-type PlanPricing = { monthly: string; annual: string };
-
-type PlanFeature = { icon: string; label: string };
+type FeatureItem = { icon: string; label: string; available: boolean };
 
 type Plan = {
   id: string;
   name: string;
   tagline: string;
   badge?: string;
-  pricing: PlanPricing;
-  features: PlanFeature[];
+  price: string;
+  features: FeatureItem[];
   highlighted: boolean;
 };
 
@@ -35,13 +34,18 @@ const PLANS: Plan[] = [
     id: "basic",
     name: "Basic",
     tagline: "Bắt đầu bán hàng livestream",
-    pricing: { monthly: "199.000đ", annual: "159.000đ" },
+    price: "199.000đ",
     highlighted: false,
     features: [
-      { icon: "flash-outline", label: "Gom comment tự động" },
-      { icon: "cube-outline", label: "Tạo đơn nhanh" },
-      { icon: "layers-outline", label: "100 đơn / tháng" },
-      { icon: "storefront-outline", label: "1 shop" },
+      { icon: "flash-outline", label: "Gom comment tự động", available: true },
+      { icon: "cube-outline", label: "Tạo đơn nhanh", available: true },
+      { icon: "layers-outline", label: "100 đơn / tháng", available: true },
+      { icon: "storefront-outline", label: "1 shop", available: true },
+      { icon: "document-text-outline", label: "Xuất báo cáo Excel", available: false },
+      { icon: "bar-chart-outline", label: "Báo cáo nâng cao", available: false },
+      { icon: "people-outline", label: "Quản lý nhân viên", available: false },
+      { icon: "code-slash-outline", label: "API tích hợp", available: false },
+      { icon: "headset-outline", label: "Hỗ trợ 24/7", available: false },
     ],
   },
   {
@@ -49,14 +53,18 @@ const PLANS: Plan[] = [
     name: "Pro",
     tagline: "Dành cho seller chuyên nghiệp",
     badge: "Phổ biến nhất",
-    pricing: { monthly: "499.000đ", annual: "399.000đ" },
+    price: "499.000đ",
     highlighted: true,
     features: [
-      { icon: "checkmark-circle-outline", label: "Tất cả tính năng Basic" },
-      { icon: "infinite-outline", label: "Không giới hạn đơn" },
-      { icon: "storefront-outline", label: "3 shop" },
-      { icon: "document-text-outline", label: "Xuất báo cáo Excel" },
-      { icon: "headset-outline", label: "Hỗ trợ ưu tiên" },
+      { icon: "flash-outline", label: "Gom comment tự động", available: true },
+      { icon: "cube-outline", label: "Tạo đơn nhanh", available: true },
+      { icon: "infinite-outline", label: "Không giới hạn đơn", available: true },
+      { icon: "storefront-outline", label: "3 shop", available: true },
+      { icon: "document-text-outline", label: "Xuất báo cáo Excel", available: true },
+      { icon: "bar-chart-outline", label: "Báo cáo nâng cao", available: false },
+      { icon: "people-outline", label: "Quản lý nhân viên", available: false },
+      { icon: "code-slash-outline", label: "API tích hợp", available: false },
+      { icon: "headset-outline", label: "Hỗ trợ ưu tiên", available: true },
     ],
   },
   {
@@ -64,21 +72,23 @@ const PLANS: Plan[] = [
     name: "Business",
     tagline: "Giải pháp cho doanh nghiệp",
     badge: "Cho doanh nghiệp",
-    pricing: { monthly: "999.000đ", annual: "799.000đ" },
+    price: "999.000đ",
     highlighted: false,
     features: [
-      { icon: "checkmark-circle-outline", label: "Tất cả tính năng Pro" },
-      { icon: "infinite-outline", label: "Không giới hạn shop" },
-      { icon: "code-slash-outline", label: "API tích hợp" },
-      { icon: "people-outline", label: "Quản lý nhân viên" },
-      { icon: "bar-chart-outline", label: "Báo cáo nâng cao" },
-      { icon: "headset-outline", label: "Hỗ trợ 24/7" },
+      { icon: "flash-outline", label: "Gom comment tự động", available: true },
+      { icon: "cube-outline", label: "Tạo đơn nhanh", available: true },
+      { icon: "infinite-outline", label: "Không giới hạn đơn", available: true },
+      { icon: "infinite-outline", label: "Không giới hạn shop", available: true },
+      { icon: "document-text-outline", label: "Xuất báo cáo Excel", available: true },
+      { icon: "bar-chart-outline", label: "Báo cáo nâng cao", available: true },
+      { icon: "people-outline", label: "Quản lý nhân viên", available: true },
+      { icon: "code-slash-outline", label: "API tích hợp", available: true },
+      { icon: "headset-outline", label: "Hỗ trợ 24/7", available: true },
     ],
   },
 ];
 
 export function LicensePlansScreen() {
-  const [isAnnual, setIsAnnual] = useState(false);
   const [activeIndex, setActiveIndex] = useState(1); // Pro selected by default
   const flatListRef = useRef<FlatList>(null);
 
@@ -86,67 +96,34 @@ export function LicensePlansScreen() {
     <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
       <Header title="Chọn gói dịch vụ" />
 
-      {/* Toggle pill */}
-      <View style={styles.toggleRow}>
-        <View style={styles.togglePill}>
-          <Pressable
-            style={[styles.toggleOption, !isAnnual && styles.toggleOptionActive]}
-            onPress={() => setIsAnnual(false)}
-          >
-            {!isAnnual ? (
-              <LinearGradient type="gra_primary" style={styles.toggleGradient}>
-                <Text style={styles.toggleTextActive}>Hàng tháng</Text>
-              </LinearGradient>
-            ) : (
-              <Text style={styles.toggleTextInactive}>Hàng tháng</Text>
-            )}
-          </Pressable>
-          <Pressable
-            style={[styles.toggleOption, isAnnual && styles.toggleOptionActive]}
-            onPress={() => setIsAnnual(true)}
-          >
-            {isAnnual ? (
-              <LinearGradient type="gra_primary" style={styles.toggleGradient}>
-                <Text style={styles.toggleTextActive}>Hàng năm</Text>
-              </LinearGradient>
-            ) : (
-              <Text style={styles.toggleTextInactive}>Hàng năm</Text>
-            )}
-          </Pressable>
-        </View>
-        {isAnnual && (
-          <View style={styles.saveBadge}>
-            <Text style={styles.saveBadgeText}>Tiết kiệm 20%</Text>
-          </View>
-        )}
-      </View>
-
       {/* Plan cards */}
-      <FlatList
-        ref={flatListRef}
-        data={PLANS}
-        horizontal
-        pagingEnabled={false}
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH + 16}
-        snapToAlignment="center"
-        decelerationRate="fast"
-        contentContainerStyle={styles.cardsContainer}
-        initialScrollIndex={1}
-        getItemLayout={(_, index) => ({
-          length: CARD_WIDTH + 16,
-          offset: (CARD_WIDTH + 16) * index,
-          index,
-        })}
-        onMomentumScrollEnd={(e) => {
-          const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + 16));
-          setActiveIndex(idx);
-        }}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <PlanCard plan={item} isAnnual={isAnnual} />
-        )}
-      />
+      <View style={styles.cardsWrapper}>
+        <FlatList
+          ref={flatListRef}
+          data={PLANS}
+          horizontal
+          pagingEnabled={false}
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={CARD_WIDTH + CARD_GAP}
+          decelerationRate="fast"
+          style={styles.flatList}
+          contentContainerStyle={styles.cardsContainer}
+          initialScrollIndex={1}
+          getItemLayout={(_, index) => ({
+            length: CARD_WIDTH + CARD_GAP,
+            offset: (CARD_WIDTH + CARD_GAP) * index,
+            index,
+          })}
+          onMomentumScrollEnd={(e) => {
+            const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP));
+            setActiveIndex(idx);
+          }}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <PlanCard plan={item} />
+          )}
+        />
+      </View>
 
       {/* Dots */}
       <View style={styles.dotsRow}>
@@ -171,13 +148,15 @@ export function LicensePlansScreen() {
   );
 }
 
-function PlanCard({ plan, isAnnual }: { plan: Plan; isAnnual: boolean }) {
-  const price = isAnnual ? plan.pricing.annual : plan.pricing.monthly;
+function PlanCard({ plan }: { plan: Plan }) {
+  const price = plan.price;
 
   if (plan.highlighted) {
     return (
-      <LinearGradient type="gra_primary" style={styles.card}>
-        <CardInner plan={plan} price={price} highlighted />
+      <LinearGradient type="gra_primary" style={styles.cardGradientBorder}>
+        <View style={[styles.card, styles.cardHighlightedInner]}>
+          <CardInner plan={plan} price={price} highlighted={false} />
+        </View>
       </LinearGradient>
     );
   }
@@ -232,9 +211,21 @@ function CardInner({
             <Ionicons
               name={f.icon as never}
               size={16}
-              color={highlighted ? "rgba(255,255,255,0.9)" : "#FF6B8A"}
+              color={
+                !f.available
+                  ? "#C0B8BD"
+                  : highlighted
+                  ? "rgba(255,255,255,0.9)"
+                  : "#FF6B8A"
+              }
             />
-            <Text style={[styles.featureLabel, highlighted ? styles.textLight : styles.textDark]}>
+            <Text
+              style={[
+                styles.featureLabel,
+                highlighted ? styles.textLight : styles.textDark,
+                !f.available && styles.featureLabelUnavailable,
+              ]}
+            >
               {f.label}
             </Text>
           </View>
@@ -244,59 +235,16 @@ function CardInner({
   );
 }
 
-const styles = createStyles(({ colors, textPresets }) => ({
+const styles = createStyles(({ colors, textPresets, shadows }) => ({
   safeArea: { flex: 1, backgroundColor: colors.neutral100 },
 
-  // Toggle
-  toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    gap: 10,
-  },
-  togglePill: {
-    flexDirection: "row",
-    backgroundColor: colors.surfaceGray,
-    borderRadius: 40,
-    padding: 3,
-  },
-  toggleOption: {
-    borderRadius: 36,
-    overflow: "hidden",
-  },
-  toggleOptionActive: {},
-  toggleGradient: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 36,
-  },
-  toggleTextActive: {
-    color: colors.neutral100,
-    ...textPresets.fs14_500,
-  },
-  toggleTextInactive: {
-    color: colors.neutral500,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    ...textPresets.fs14_400,
-  },
-  saveBadge: {
-    backgroundColor: "#FFF0F3",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  saveBadgeText: {
-    color: colors.primary,
-    ...textPresets.fs12_500,
-  },
-
   // Cards
+  cardsWrapper: { flex: 1, justifyContent: "center", overflow: "visible" },
+  flatList: { flexGrow: 0 },
   cardsContainer: {
-    paddingHorizontal: CARD_SIDE_PADDING,
-    gap: 16,
-    alignItems: "center",
+    paddingHorizontal: SIDE_INSET,
+    gap: CARD_GAP,
+    alignItems: "stretch",
   },
   card: {
     width: CARD_WIDTH,
@@ -304,13 +252,18 @@ const styles = createStyles(({ colors, textPresets }) => ({
     padding: 20,
     gap: 8,
     backgroundColor: colors.neutral100,
-    borderWidth: 1.5,
-    borderColor: "#f2f0f5",
-    shadowColor: "#110C22",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    borderWidth: 0.5,
+    borderColor: colors.border10,
+    ...shadows.sd2,
+  },
+  cardGradientBorder: {
+    borderRadius: 22,
+    padding: 2,
+    ...shadows.sd2,
+  },
+  cardHighlightedInner: {
+    borderRadius: 20,
+    borderWidth: 0,
   },
   badge: {
     alignSelf: "flex-start",
@@ -335,6 +288,10 @@ const styles = createStyles(({ colors, textPresets }) => ({
   featureList: { gap: 10 },
   featureRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   featureLabel: { ...textPresets.fs14_400, flex: 1 },
+  featureLabelUnavailable: {
+    textDecorationLine: "line-through",
+    color: "#C0B8BD",
+  },
 
   // Text variants
   textDark: { color: "#2D1F29" },

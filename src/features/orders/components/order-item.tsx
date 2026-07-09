@@ -131,7 +131,7 @@ export const OrderItem = memo(
                 <View style={[styles.productName, styles.productInfo]}>
                   <Text numberOfLines={2} style={styles.txtProduct}>
                     {p.code
-                      ? `Mã: ${p.code}${p.color ? ` - ${p.color}` : ""}${p.name ? ` (${p.name})` : ""}`
+                      ? `Mã: ${p.code}${p.color ? ` - ${p.color}` : ""}${p.name && p.name !== p.code ? ` (${p.name})` : ""}`
                       : p.name || "Sản phẩm"}
                   </Text>
                 </View>
@@ -146,7 +146,7 @@ export const OrderItem = memo(
                 numberOfLines={2}
                 style={[styles.txtProduct, styles.productName]}
               >
-                {item.productName || item.comment || "Sản phẩm"}
+                {item.productName || "Sản phẩm"}
               </Text>
               <Text style={styles.txtProductPrice}>
                 {formatMoney(
