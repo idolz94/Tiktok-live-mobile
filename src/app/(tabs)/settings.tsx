@@ -78,7 +78,6 @@ export default function SettingsTab() {
   useTabScrollToTop("settings", scrollRef);
 
   const username = user?.fullName || user?.username || "User";
-  const accountName = user?.username || user?.phone || "Lumi Live";
 
   return (
     <View style={styles.screen}>
@@ -148,19 +147,22 @@ export default function SettingsTab() {
 
           <View style={styles.settingsContainer}>
             {settingGroups.map((group, groupIndex) => (
-              <View key={groupIndex} style={styles.settingsGroup}>
-                {group.map((item, itemIndex) => (
-                  <View key={item.label}>
-                    {itemIndex > 0 && <View style={styles.itemDivider} />}
-                    <SettingItem
-                      icon={item.icon}
-                      label={item.label}
-                      onPress={item.onPress}
-                    />
-                  </View>
-                ))}
+              <View key={groupIndex}>
+                {groupIndex > 0 && <View style={styles.itemDivider} />}
+                <View style={styles.settingsGroup}>
+                  {group.map((item, itemIndex) => (
+                    <View key={item.label}>
+                      <SettingItem
+                        icon={item.icon}
+                        label={item.label}
+                        onPress={item.onPress}
+                      />
+                    </View>
+                  ))}
+                </View>
               </View>
             ))}
+            <View style={styles.itemDivider} />
             <View style={styles.settingsGroup}>
               <Pressable style={styles.settingItem} onPress={logout}>
                 <View style={styles.settingLeft}>
@@ -239,7 +241,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     paddingBottom: 40,
   },
   hero: {
-    minHeight: 400,
+    paddingBottom: 24,
     overflow: "hidden",
   },
   heroImage: {

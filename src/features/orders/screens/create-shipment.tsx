@@ -3,6 +3,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -346,24 +347,38 @@ export default function CreateShipmentScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <SectionBlock title="Thông tin người gửi">
+        <View
+          style={{
+            backgroundColor: colors.neutral100,
+            borderRadius: 16,
+            borderWidth: 0.5,
+            borderColor: colors.border10,
+            padding: 16,
+            gap: 12,
+          }}
+        >
           <FigmaAddressCard
+            type="sender"
             address={selectedSender}
             loading={isLoadingSender}
             onChangePress={openSenderSheet}
             onAddPress={() => openAddressForm("sender")}
           />
-        </SectionBlock>
-        <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
-
-        <SectionBlock title="Thông tin người nhận">
+          <View
+            style={{
+              height: StyleSheet.hairlineWidth,
+              backgroundColor: colors.border10,
+              marginLeft: 56,
+            }}
+          />
           <FigmaAddressCard
+            type="recipient"
             address={selectedRecipient}
             loading={isLoadingRecipient}
             onChangePress={openRecipientSheet}
             onAddPress={() => openAddressForm("recipient")}
           />
-        </SectionBlock>
+        </View>
         <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
 
         {!isManualProvider && !isSpxProvider ? (
