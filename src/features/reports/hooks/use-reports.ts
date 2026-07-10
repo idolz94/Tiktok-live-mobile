@@ -2,7 +2,19 @@ import { useState, useCallback, useEffect } from "react";
 import type { ReportPeriod, ChartPoint, ReportFilter } from "../types";
 import { getOrderStatsApi, type OrderStatsData, type StatChartPoint } from "@features/orders/service/api";
 
-function getPeriodDates(period: ReportPeriod): { dateFrom: string; dateTo: string } {
+function getPeriodDates(
+  period: ReportPeriod,
+  customFrom?: Date | null,
+  customTo?: Date | null,
+): { dateFrom: string; dateTo: string } {
+  if (period === "custom" && customFrom && customTo) {
+    const from = new Date(customFrom);
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(customTo);
+    to.setHours(23, 59, 59, 999);
+    return { dateFrom: from.toISOString(), dateTo: to.toISOString() };
+  }
+
   const now = new Date();
   const to = new Date(now);
   const from = new Date(now);
@@ -61,7 +73,7 @@ function buildChart(rawPoints: StatChartPoint[], period: ReportPeriod): ChartPoi
 
 export function useReports() {
   const [period, setPeriod] = useState<ReportPeriod>("7d");
-  const [filter, setFilter] = useState<ReportFilter>({ depositStatus: null, status: null });
+  const [filter, setFilter] = useState<ReportFilter>({ depositStatus: null, status: null, customFrom: null, customTo: null });
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [stats, setStats] = useState<OrderStatsData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -71,7 +83,7 @@ export function useReports() {
     try {
       setLoading(true);
       setError(null);
-      const { dateFrom, dateTo } = getPeriodDates(period);
+      const { dateFrom, dateTo } = getPeriodDates(period, filter.customFrom, filter.customTo);
       const data = await getOrderStatsApi({
         dateFrom,
         dateTo,

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -13,6 +13,10 @@ export default function AddressPickerPage() {
   const session = useAddressPageStore((state) => state.picker);
   const clearPicker = useAddressPageStore((state) => state.clearPicker);
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    if (!session) router.back();
+  }, [session]);
 
   const addresses = useMemo(() => {
     const q = query.trim().toLowerCase();

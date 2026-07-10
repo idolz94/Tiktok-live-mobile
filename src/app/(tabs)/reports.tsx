@@ -4,8 +4,11 @@ import { LinearGradient } from "@components/linear-gradient";
 import { Screen } from "@components/screen";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { useReports } from "@features/reports/hooks/use-reports";
-import type { ReportPeriod } from "@features/reports/types";
+import { FilterSheet } from "@features/reports/components/filter-sheet";
+import { DatePickerModal } from "@features/reports/components/date-picker-modal";
+import type { ReportPeriod, ReportFilter } from "@features/reports/types";
 import type { StatSectionData } from "@features/orders/service/api";
 import { BarChart as GiftedBarChart } from "react-native-gifted-charts";
 import {
@@ -17,6 +20,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCallback, useRef, useState } from "react";
 
 function splitCompact(value: number): { num: string; unit: string } {
   const n = Math.round(value || 0);
@@ -31,6 +35,7 @@ const PERIODS: { id: ReportPeriod; label: string }[] = [
   { id: "1m", label: "1 tháng" },
   { id: "6m", label: "6 tháng" },
   { id: "1y", label: "1 năm" },
+  { id: "custom", label: "Tuỳ chỉnh" },
 ];
 
 function pctValue(curr: number, prev: number): number {
@@ -42,7 +47,17 @@ function pctLabel(pct: number): string {
   return (pct >= 0 ? "+" : "") + pct + "%";
 }
 
-function dateLabel(period: ReportPeriod): string {
+function fmtShort(d: Date): string {
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function dateLabel(period: ReportPeriod, filter: ReportFilter): string {
+  if (period === "custom") {
+    if (filter.customFrom && filter.customTo) {
+      return `${fmtShort(filter.customFrom)} – ${fmtShort(filter.customTo)}`;
+    }
+    return "Tuỳ chỉnh";
+  }
   const now = new Date();
   const from = new Date(now);
   from.setHours(0, 0, 0, 0);
@@ -52,15 +67,53 @@ function dateLabel(period: ReportPeriod): string {
   else if (period === "1m") from.setDate(from.getDate() - 29);
   else if (period === "6m") { from.setMonth(from.getMonth() - 5); from.setDate(1); }
   else if (period === "1y") { from.setFullYear(from.getFullYear() - 1); from.setMonth(0); from.setDate(1); }
-  const df = `${String(from.getDate()).padStart(2, "0")}/${String(from.getMonth() + 1).padStart(2, "0")}`;
-  const dt = `${String(to.getDate()).padStart(2, "0")}/${String(to.getMonth() + 1).padStart(2, "0")}`;
-  return period === "1d" ? "Hôm nay" : `${df} - ${dt}`;
+  return period === "1d" ? "Hôm nay" : `${fmtShort(from)} - ${fmtShort(to)}`;
 }
 
 export default function ReportsTab() {
   const { colors } = useThemes();
   const { top } = useSafeAreaInsets();
-  const { period, setPeriod, stats, loading, error, refresh, chartData } = useReports();
+  const { show, hide } = useBottomSheet();
+  const { period, setPeriod, filter, setFilter, stats, loading, error, refresh, chartData } = useReports();
+
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const filterSheetId = useRef<string | null>(null);
+
+  const openFilter = useCallback(() => {
+    filterSheetId.current = show({
+      content: (
+        <FilterSheet
+          filter={filter}
+          onApply={(f, preset) => {
+            if (preset) {
+              setPeriod(preset);
+              setFilter({ ...f, customFrom: null, customTo: null });
+            } else {
+              setFilter(f);
+            }
+            hide(filterSheetId.current ?? undefined);
+          }}
+          onCustomDate={() => {
+            hide(filterSheetId.current ?? undefined);
+            setDatePickerOpen(true);
+          }}
+        />
+      ),
+      snapPoints: ["75%"],
+      enablePanDownToClose: true,
+    });
+  }, [show, hide, filter, setFilter, setPeriod]);
+
+  const handleDateConfirm = useCallback(
+    (from: Date, to: Date) => {
+      setFilter((prev) => ({ ...prev, customFrom: from, customTo: to }));
+      setPeriod("custom");
+      setDatePickerOpen(false);
+    },
+    [setFilter, setPeriod],
+  );
+
+  const activeFilter = filter.depositStatus !== null || filter.status !== null;
 
   return (
     <Screen>
@@ -73,6 +126,24 @@ export default function ReportsTab() {
 
       <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Text style={styles.headerTitle}>Báo cáo thống kê</Text>
+        <Pressable
+          onPress={openFilter}
+          hitSlop={8}
+          style={[
+            styles.filterBtn,
+            {
+              backgroundColor: activeFilter ? colors.primaryLight : colors.neutral50,
+              borderColor: activeFilter ? colors.primary : colors.border10,
+            },
+          ]}
+        >
+          <Ionicons
+            name="options-outline"
+            size={18}
+            color={activeFilter ? colors.primary : colors.neutral400}
+          />
+          {activeFilter && <View style={[styles.filterDot, { backgroundColor: colors.primary }]} />}
+        </Pressable>
       </View>
 
       <ScrollView
@@ -91,11 +162,19 @@ export default function ReportsTab() {
           {PERIODS.map((p) => (
             <Pressable
               key={p.id}
-              onPress={() => setPeriod(p.id)}
+              onPress={() => {
+                if (p.id === "custom") {
+                  setDatePickerOpen(true);
+                } else {
+                  setPeriod(p.id);
+                }
+              }}
               style={[styles.tab, period === p.id && styles.tabActive]}
             >
               <Text style={[styles.tabText, period === p.id && styles.tabTextActive]}>
-                {p.label}
+                {p.id === "custom" && filter.customFrom && filter.customTo
+                  ? `${fmtShort(filter.customFrom)}–${fmtShort(filter.customTo)}`
+                  : p.label}
               </Text>
             </Pressable>
           ))}
@@ -118,7 +197,7 @@ export default function ReportsTab() {
             <View style={styles.cardSection}>
               <View style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
-                  <Text style={styles.summaryDate}>{dateLabel(period)}</Text>
+                  <Text style={styles.summaryDate}>{dateLabel(period, filter)}</Text>
                   <Pressable onPress={refresh} hitSlop={8}>
                     <Icon name="print" size={18} tintColor="neutral400" />
                   </Pressable>
@@ -207,6 +286,14 @@ export default function ReportsTab() {
           </>
         )}
       </ScrollView>
+
+      <DatePickerModal
+        visible={datePickerOpen}
+        initialFrom={filter.customFrom}
+        initialTo={filter.customTo}
+        onConfirm={handleDateConfirm}
+        onClose={() => setDatePickerOpen(false)}
+      />
     </Screen>
   );
 }
@@ -334,6 +421,25 @@ const styles = createStyles(({ colors, textPresets }) => ({
   header: {
     paddingHorizontal: 16,
     paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  filterBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterDot: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   headerTitle: {
     color: colors.text,

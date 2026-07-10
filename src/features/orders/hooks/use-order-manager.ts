@@ -8,7 +8,6 @@ import type {
   OrderWithTikTok,
 } from "@app-types/index";
 import { CustomerSummary } from "@app-types/index";
-import { getOrderTotal } from "@features/orders/utils/order";
 import {
   createOrderFromCommentApi,
   deleteOrderApi,
@@ -60,11 +59,6 @@ function getOrderAvatar(order: OrderWithAvatarFallback) {
       order.customer_avatar_url ||
       "",
   ).trim();
-}
-
-function getOrderRevenue(order: OrderWithTikTok) {
-  const totalAmount = Number(order.totalAmount || 0);
-  return totalAmount > 0 ? totalAmount : getOrderTotal(order.products);
 }
 
 // START: Đồng bộ cách hiểu trạng thái đã cọc giữa card thống kê và bộ lọc
@@ -165,11 +159,6 @@ export function useOrderManager({
   //   [orders],
   // );
   // END: Code cũ tính tổng sản phẩm trên toàn bộ đơn hàng nên sai khi đang bật filter
-
-  const totalRevenue = useMemo(
-    () => orders.reduce((sum, item) => sum + getOrderRevenue(item), 0),
-    [orders],
-  );
 
   const filteredOrders = useMemo(() => {
     const keyword = orderSearchText.trim().toLowerCase();
@@ -493,7 +482,6 @@ export function useOrderManager({
     draftOrders,
     confirmedOrders,
     orderProductCount,
-    totalRevenue,
     createOrderFromComment,
     clearOrders,
     updateOrder,

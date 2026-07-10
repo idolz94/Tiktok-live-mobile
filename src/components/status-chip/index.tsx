@@ -1,3 +1,4 @@
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Text, View } from "react-native";
 
@@ -85,16 +86,6 @@ const LIVE_MAP: Record<LiveStatus, ChipMeta> = {
   realtime_reconnecting: { label: "Đang kết nối lại",    variant: "warning" },
 };
 
-// hex colors per variant: [text, background]
-const VARIANT_COLORS: Record<StatusVariant, [string, string]> = {
-  success: ["#16A34A", "#F0FDF4"],
-  warning: ["#D97706", "#FFFBEB"],
-  error:   ["#DC2626", "#FFF1F1"],
-  info:    ["#468ADF", "#EFF6FF"],
-  neutral: ["#525252", "#F5F5F5"],
-  live:    ["#F97316", "#FFEDD5"],
-};
-
 type Props =
   | { domain: "order";    status: OrderStatus }
   | { domain: "shipment"; status: ShipmentStatus }
@@ -102,6 +93,8 @@ type Props =
   | { domain: "live";     status: LiveStatus };
 
 export function StatusChip({ domain, status }: Props) {
+  const { colors } = useThemes();
+
   let meta: ChipMeta | undefined;
 
   if (domain === "order")    meta = ORDER_MAP[status as OrderStatus];
@@ -110,7 +103,18 @@ export function StatusChip({ domain, status }: Props) {
   if (domain === "live")     meta = LIVE_MAP[status as LiveStatus];
 
   const { label, variant } = meta ?? { label: status, variant: "neutral" as StatusVariant };
-  const [textColor, bgColor] = VARIANT_COLORS[variant];
+
+  const variantColors: Record<StatusVariant, [string, string]> = {
+    success: [colors.success,  colors.successLight],
+    warning: [colors.warning,  colors.warningLight],
+    error:   [colors.error,    colors.errorLight],
+    info:    [colors.info,     colors.infoLight],
+    neutral: [colors.neutral400, colors.neutral50],
+    // ponytail: no orange token yet; add when live color needed outside StatusChip
+    live:    ["#F97316", "#FFEDD5"],
+  };
+
+  const [textColor, bgColor] = variantColors[variant];
 
   return (
     <View

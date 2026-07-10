@@ -11,9 +11,12 @@ export const colors = {
 
   border10: "rgba(0, 0, 0, 0.1)",
   border20: "rgba(0, 0, 0, 0.2)",
+  /** @deprecated use `border10` */
   border: "rgba(0, 0, 0, 0.1)",
+  /** @deprecated use `border10` */
   borderGray: "rgba(0, 0, 0, 0.1)",
   borderLight: "rgba(0, 0, 0, 0.06)",
+  /** @deprecated use `textMuted` */
   textGray: "rgba(120, 120, 120, 1)",
   textLightMuted: "rgba(160, 160, 160, 1)",
 
@@ -26,24 +29,32 @@ export const colors = {
   pink50: "#FFEFE4",
 
   success: "rgba(44, 168, 123, 1)",
+  /** @deprecated use `success` */
+  successActive: "rgba(44, 168, 123, 1)",
   successDark: "rgba(217, 255, 238, 1)",
   successLight: "rgba(237, 250, 244, 1)",
-  successActive: "rgba(44, 168, 123, 1)",
+  /** @deprecated use `successLight` */
   successPastel: "rgba(237, 250, 244, 1)",
+  /** @deprecated use `successLight` */
   successBg: "rgba(237, 250, 244, 1)",
 
   info: "rgba(70, 138, 223, 1)",
   infoLight: "rgba(233, 242, 255, 1)",
+  /** @deprecated use `infoLight` */
   info200: "#E9F2FF",
 
   warning: "rgba(255, 168, 0, 1)",
-  warningAlt: "rgba(255, 245, 217, 1)",
   warningLight: "rgba(255, 245, 217, 1)",
+  /** @deprecated use `warningLight` */
+  warningAlt: "rgba(255, 245, 217, 1)",
 
+  /** @deprecated use `info` */
   link: "rgba(70, 138, 223, 1)",
+  /** @deprecated use `textMuted` */
   muted: "rgba(120, 120, 120, 1)",
   surface: "rgba(255, 255, 255, 1)",
   surfaceAlt: "rgba(248, 248, 248, 1)",
+  /** @deprecated use `surfaceAlt` */
   surfaceGray: "rgba(248, 248, 248, 1)",
   text: "#000000",
   textMuted: "rgba(120, 120, 120, 1)",
@@ -52,6 +63,7 @@ export const colors = {
   white: "#ffffff",
 
   error: "rgba(255, 66, 66, 1)",
+  errorLight: "rgba(255, 241, 241, 1)",
 };
 
 export const linearGradients = {

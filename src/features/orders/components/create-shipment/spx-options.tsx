@@ -86,6 +86,7 @@ export function SpxOptions({
 }: SpxOptionsProps) {
   const { colors, textPresets } = useThemes();
   const [paymentPopoverVisible, setPaymentPopoverVisible] = useState(false);
+  const [paymentRowWidth, setPaymentRowWidth] = useState(0);
 
   return (
     <>
@@ -167,9 +168,11 @@ export function SpxOptions({
           showBackdrop={false}
           showArrow={false}
           closeOnOutsidePress={true}
+          contentStyle={{ width: paymentRowWidth }}
           trigger={
             <Pressable
               onPress={() => setPaymentPopoverVisible(true)}
+              onLayout={(e) => setPaymentRowWidth(e.nativeEvent.layout.width)}
               style={[
                 styles.voucherRow,
                 {
@@ -209,7 +212,7 @@ export function SpxOptions({
             </Pressable>
           }
         >
-          <View style={{ minWidth: 220 }}>
+          <View>
             {[
               { label: "Người gửi thanh toán phí", value: 1 as PaymentSide },
               { label: "Người nhận thanh toán phí", value: 0 as PaymentSide },

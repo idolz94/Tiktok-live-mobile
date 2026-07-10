@@ -19,6 +19,7 @@ const SPX_PARTNER = {
   name: "SPX - SPX EXPRESS",
   description: "Dịch vụ giao hàng toàn quốc, nhanh, rẻ và an toàn.",
   color: "#ff3911",
+  logo: images.logo_spx,
 } as const;
 
 const MANUAL_PARTNER = {
@@ -59,6 +60,7 @@ type Partner = {
   description: string;
   comingSoon?: boolean;
   color: string;
+  logo?: ImageSourcePropType;
   onPress?: () => void;
   tagLabel?: string;
 };
@@ -110,7 +112,7 @@ function PartnerCard({ partner }: { partner: Partner }) {
   return (
     <Pressable style={styles.partnerCard} onPress={partner.onPress}>
       <View style={styles.partnerContent}>
-        <DeliveryLogo color={partner.color} image={images.ship} />
+        <DeliveryLogo color={partner.logo ? "#fff" : partner.color} image={partner.logo ?? images.ship} />
         <View style={styles.partnerTextWrap}>
           <View style={styles.partnerTitleRow}>
             <Text style={styles.partnerName} numberOfLines={1}>

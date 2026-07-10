@@ -1,3 +1,4 @@
+import { useThemes } from "@hooks/use-theme";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
@@ -18,6 +19,7 @@ export default function HomeTab() {
 
   const { currentLiveSessionId } = useTikTokLiveSocketContext();
   const { user } = useAuth();
+  const { colors, textPresets } = useThemes();
 
   useOrderManager({
     comments: [],
@@ -49,7 +51,7 @@ export default function HomeTab() {
       >
         <TiktokPage key="tiktok" />
         <View style={styles.page} key="facebook">
-          <Text>Facebook coming soon</Text>
+          <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>Facebook sắp ra mắt</Text>
         </View>
       </PagerView>
 

@@ -164,7 +164,7 @@ export const shippingSettingsStyles = createStyles(({ colors }) => ({
     alignItems: "center",
     justifyContent: "center",
   },
-  deliveryLogoImage: { width: 30, height: 30 },
+  deliveryLogoImage: { width: 44, height: 44 },
   partnerTextWrap: { flex: 1, minWidth: 0, gap: 4 },
   partnerTitleRow: {
     maxWidth: "100%",

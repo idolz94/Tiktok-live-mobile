@@ -72,15 +72,12 @@ export async function getShippingOrdersApi(): Promise<OrderWithTikTok[]> {
   return rows.map((order: any) => normalizeApiOrderForUi(order));
 }
 
-// START: Backend không có GET /orders/:id — lấy toàn bộ list rồi find theo id, đúng với cách web lấy order từ in-memory context
-export async function getOrderByIdApi(
-  orderId: string,
-): Promise<OrderWithTikTok | null> {
-  const orders = await getOrdersApi(null);
-
-  return orders.find((o) => o.id === orderId) ?? null;
+export async function getOrderByIdApi(orderId: string): Promise<OrderWithTikTok | null> {
+  const data = await getRequest<any>(`/orders/${orderId}`);
+  const raw = pickObjectResponse(data, ["order", "uiOrder", "item"]);
+  if (!raw) return null;
+  return normalizeApiOrderForUi(raw);
 }
-// END: Backend không có GET /orders/:id — lấy toàn bộ list rồi find theo id, đúng với cách web lấy order từ in-memory context
 
 export type CreateOrderFromCommentResult = {
   success: boolean;

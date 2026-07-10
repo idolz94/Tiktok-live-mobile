@@ -12,7 +12,7 @@ import { TextStyle } from "react-native";
 // | ExtraBold   | 800     |
 // | Black       | 900     |
 
-export const FontStyle = {
+export const textPresets = {
   fs40_600: {
     fontSize: 40,
     fontWeight: "600",

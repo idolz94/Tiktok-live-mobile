@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 import { colors } from "./colors";
 import { shadows } from "./shadow";
-import { FontStyle } from "./typography";
+import { textPresets } from "./typography";
 
 export const HairlineWidth = Math.min(StyleSheet.hairlineWidth, 0.333);
 
@@ -10,7 +10,7 @@ export const theme = {
   dark: false,
   colors: colors,
   shadows: shadows,
-  textPresets: FontStyle,
+  textPresets,
 } as const;
 
 export type AppTheme = typeof theme;

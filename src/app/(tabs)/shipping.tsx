@@ -437,21 +437,23 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
         <Pressable
           style={[styles.cardActionBtn, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}
           onPress={() =>
-            router.push({ pathname: "/order-detail" as never, params: { orderId: item.id } })
+            router.push({ pathname: "/order-detail" as never, params: { id: item.id } })
           }
         >
           <Text style={[styles.cardActionText, { color: colors.text, ...textPresets.fs12_500 }]}>
             Tổng quan
           </Text>
         </Pressable>
-        <Pressable
-          style={[styles.cardActionBtn, { borderColor: "#ffcdd2", backgroundColor: "#fff5f5" }]}
-          onPress={handleCancel}
-        >
-          <Text style={[styles.cardActionText, { color: colors.error, ...textPresets.fs12_500 }]}>
-            Huỷ đơn
-          </Text>
-        </Pressable>
+        {item.shippingStatus !== "cancelled" && (
+          <Pressable
+            style={[styles.cardActionBtn, { borderColor: "#ffcdd2", backgroundColor: "#fff5f5" }]}
+            onPress={handleCancel}
+          >
+            <Text style={[styles.cardActionText, { color: colors.error, ...textPresets.fs12_500 }]}>
+              Huỷ đơn
+            </Text>
+          </Pressable>
+        )}
       </View>
     </Pressable>
   );

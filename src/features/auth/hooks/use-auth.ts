@@ -1,6 +1,7 @@
 import {
   getMeBootstrapApi,
   loginApi,
+  logoutApi,
   registerApi,
 } from "@features/auth/services/api";
 import {
@@ -257,6 +258,7 @@ export const useAuth = () => {
     try {
       setIsBootstrapping(true);
       await beforeLogout?.();
+      try { await logoutApi(); } catch {}
       await logoutStore();
       setUserFromBootstrap(null);
       resetBootstrapGuard();
