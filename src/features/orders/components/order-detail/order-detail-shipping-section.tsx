@@ -29,6 +29,15 @@ export function OrderDetailShippingSection({
   onChangeShippingFee,
   onChangePrepaid,
 }: OrderDetailShippingSectionProps) {
+  // Khi đã có vận đơn, ưu tiên provider thật từ shipment thay vì state UI cục bộ
+  const displayProvider: ShippingProvider =
+    order.trackingCode && order.providerName
+      ? order.providerName === "spx"
+        ? "spx"
+        : "manual"
+      : selectedProvider;
+  const isSpx = displayProvider === "spx";
+
   return (
     <Section>
       <SectionHeader
@@ -43,18 +52,14 @@ export function OrderDetailShippingSection({
         <View
           style={[
             styles.providerIcon,
-            {
-              backgroundColor: selectedProvider === "spx" ? "#f90" : "#2ca87b",
-            },
+            { backgroundColor: isSpx ? "#f90" : "#2ca87b" },
           ]}
         >
-          <Text style={styles.providerInitial}>
-            {selectedProvider === "spx" ? "S" : "M"}
-          </Text>
+          <Text style={styles.providerInitial}>{isSpx ? "S" : "M"}</Text>
         </View>
         <View style={styles.providerInfo}>
           <Text style={styles.providerName}>
-            {selectedProvider === "spx" ? "Shopee Express" : "Vận chuyển thủ công"}
+            {isSpx ? "Shopee Express" : "Vận chuyển thủ công"}
           </Text>
           {order.trackingCode ? (
             <Text style={styles.providerCode}>{order.trackingCode}</Text>

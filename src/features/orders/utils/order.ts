@@ -110,8 +110,11 @@ export function formatMoneyFull(value: number): string {
 export const formatMoneyFromK = formatMoney;
 
 export function getProductTotal(
-  product: Pick<OrderProduct, "price" | "quantity">,
+  product: Pick<OrderProduct, "price" | "quantity" | "totalAmount">,
 ) {
+  // ponytail: dùng totalAmount khi > 0 (backend không lưu per-item totalAmount, trả về 0/null)
+  if (product.totalAmount != null && Number(product.totalAmount) > 0)
+    return Number(product.totalAmount);
   return Number(product.price || 0) * Number(product.quantity || 0);
 }
 

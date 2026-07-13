@@ -4,8 +4,6 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-na
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "@components/linear-gradient";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { getShipmentLabelApi } from "../service/create-shipment-api";
 import { formatLocaleInput } from "../utils/shipment";
@@ -19,6 +17,8 @@ type Params = {
   codAmount?: string;
   shippingFee?: string;
   voucherAmount?: string;
+  paymentSide?: string;
+  note?: string;
 };
 
 const SERVICE_LABEL: Record<string, string> = {
@@ -36,13 +36,15 @@ function fmtMoney(raw: string | undefined): string {
 }
 
 export default function OrderSuccessScreen() {
-  const { colors } = useThemes();
   const params = useLocalSearchParams<Params>();
   const isSpx = params.provider === "spx";
   const codAmount = params.codAmount ?? "0";
   const shippingFee = params.shippingFee ?? "0";
   const voucherAmount = params.voucherAmount ?? "0";
   const hasVoucher = Number(voucherAmount) > 0;
+  const paymentSide = Number(params.paymentSide ?? "0");
+  const totalAmount = Number(codAmount) + (paymentSide === 0 ? Number(shippingFee) : 0) - Number(voucherAmount);
+  const note = params.note?.trim() ?? "";
   const [printing, setPrinting] = useState(false);
 
   const handlePrintLabel = useCallback(async () => {
@@ -71,11 +73,7 @@ export default function OrderSuccessScreen() {
 
       {/* header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
-        </Pressable>
         <Text style={styles.headerTitle}>Tạo đơn hàng thành công</Text>
-        <View style={styles.backBtn} />
       </View>
 
       <ScrollView
@@ -91,7 +89,17 @@ export default function OrderSuccessScreen() {
           <Text style={styles.successSubtitle}>Mã vận đơn của bạn đã sẵn sàng xử lý</Text>
         </View>
 
-        {/* fulfillment card — SPX only */}
+        {/* fulfillment card */}
+        {!isSpx && (
+          <View style={styles.card}>
+            <View style={styles.detailsList}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Nhà vận chuyển</Text>
+                <Text style={styles.detailValue}>Thủ công</Text>
+              </View>
+            </View>
+          </View>
+        )}
         {isSpx && (
           <View style={styles.card}>
             <View style={styles.detailsList}>
@@ -141,6 +149,12 @@ export default function OrderSuccessScreen() {
         <View style={styles.card}>
           <Text style={styles.paymentTitle}>Thông tin thanh toán</Text>
           <View style={styles.priceList}>
+            {!!note && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Ghi chú đơn hàng</Text>
+                <Text numberOfLines={1} style={styles.detailValue}>{note}</Text>
+              </View>
+            )}
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Tiền thu hộ (COD)</Text>
               <Text style={styles.detailValue}>{fmtMoney(codAmount)}</Text>
@@ -158,7 +172,7 @@ export default function OrderSuccessScreen() {
             <View style={styles.divider} />
             <View style={styles.detailRow}>
               <Text style={styles.totalLabel}>Thành tiền</Text>
-              <Text style={styles.totalValue}>{fmtMoney(codAmount)}</Text>
+              <Text style={styles.totalValue}>{fmtMoney(String(totalAmount))}</Text>
             </View>
           </View>
         </View>
@@ -181,25 +195,16 @@ export default function OrderSuccessScreen() {
   );
 }
 
-const styles = createStyles(({ colors, textPresets, shadows }) => ({
-  safeArea: { flex: 1, backgroundColor: colors.neutral100 },
+const styles = createStyles(({ colors, textPresets }) => ({
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   header: {
     height: 44,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    justifyContent: "space-between",
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.neutral100,
-    alignItems: "center",
     justifyContent: "center",
-    ...shadows.sd1,
   },
-  headerTitle: { flex: 1, textAlign: "center", color: colors.neutral900, ...textPresets.fs16_500 },
+  headerTitle: { color: colors.neutral900, ...textPresets.fs16_500 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 120, gap: 16 },
   successBanner: { alignItems: "center", paddingVertical: 16, gap: 12 },
   checkCircle: {
@@ -251,6 +256,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   discountValue: { color: "#2ca87b", ...textPresets.fs12_400 },
   totalLabel: { color: colors.neutral900, ...textPresets.fs12_400 },
   totalValue: { color: "#FF6B8A", ...textPresets.fs12_400 },
+  noteText: { color: colors.neutral500, ...textPresets.fs12_400, lineHeight: 20 },
   floatingBottom: {
     position: "absolute",
     bottom: 0,

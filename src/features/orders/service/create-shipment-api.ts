@@ -52,6 +52,7 @@ export type SpxVoucher = {
 type ManualShippingPayload = {
   paymentSide: PaymentSide;
   shippingFee?: number;
+  codAmount?: number;
   note?: string;
   idempotencyKey: string;
   senderAddressId: string;

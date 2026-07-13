@@ -49,14 +49,6 @@ type SpxOptionsProps = {
   feeLoading?: boolean;
 };
 
-function formatVoucherAmount(voucher: SpxVoucher) {
-  const amount = Number(voucher.voucherAmount);
-  if (!amount) return null;
-  return voucher.discountBy === 2
-    ? `${amount}%`
-    : `${amount.toLocaleString("vi-VN")}đ`;
-}
-
 const SERVICE_TYPES = [
   { label: "Giao hàng Tiêu Chuẩn", value: 1 as ServiceType },
   { label: "Giao hàng Hỏa Tốc", value: 2 as ServiceType },
@@ -72,9 +64,9 @@ export function SpxOptions({
   timeslots,
   timeslotsLoading,
   timeslotsError,
-  vouchers,
+  vouchers: _vouchers,
   vouchersLoading,
-  vouchersError: _vouchersError,
+  vouchersError,
   selectedVoucherCode: _selectedVoucherCode,
   onOpenVoucherSheet,
   paymentSide,
@@ -378,10 +370,11 @@ export function SpxOptions({
       </Text>
       <Pressable
         onPress={onOpenVoucherSheet}
-        disabled={vouchersLoading}
+        disabled={vouchersLoading || !!vouchersError}
         style={[
           styles.voucherRow,
           { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+          !!vouchersError && { opacity: 0.5 },
         ]}
       >
         <Text

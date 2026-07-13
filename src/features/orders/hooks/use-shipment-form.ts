@@ -51,9 +51,10 @@ export function useShipmentForm({
   const [manualShippingFee, setManualShippingFeeRaw] = useState(() =>
     formatLocaleInput(String(initialShippingFee ?? "")),
   );
-  const [manualCodAmount, setManualCodAmountRaw] = useState(() =>
-    formatLocaleInput(String(order?.codAmount ?? orderTotal)),
-  );
+  const [manualCodAmount, setManualCodAmountRaw] = useState(() => {
+    const codAmount = Number(order?.codAmount ?? 0);
+    return formatLocaleInput(String(codAmount > 0 ? codAmount : orderTotal));
+  });
 
   const [serviceType, _setServiceType] = useState<ServiceType>(1);
   const setServiceType = useCallback((value: ServiceType) => {

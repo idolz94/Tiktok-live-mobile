@@ -85,12 +85,28 @@ export function OrderDetailShipBar({
         <View style={styles.bottomBar}>
           {hasShipment && trackingCode ? (
             <>
-              <View style={[styles.providerLogo, { backgroundColor: "#ff3911" }]}>
-                <Text style={styles.providerLogoText}>SPX</Text>
+              <View
+                style={[
+                  styles.providerLogo,
+                  {
+                    backgroundColor:
+                      providerName === "spx" || providerName === "Shopee Express"
+                        ? "#ff3911"
+                        : "#2ca87b",
+                  },
+                ]}
+              >
+                <Text style={styles.providerLogoText}>
+                  {providerName === "spx" || providerName === "Shopee Express" ? "SPX" : "M"}
+                </Text>
               </View>
               <View style={styles.shipInfo}>
                 <Text style={[styles.providerLabel, { color: colors.text }]} numberOfLines={1}>
-                  {providerName || "SPX Express"}
+                  {providerName === "spx" || providerName === "Shopee Express"
+                    ? "Shopee Express"
+                    : providerName === "manual"
+                      ? "Vận chuyển thủ công"
+                      : providerName || "SPX Express"}
                 </Text>
                 <Text style={[styles.trackingLabel, { color: colors.neutral400 }]} numberOfLines={1}>
                   {trackingCode}

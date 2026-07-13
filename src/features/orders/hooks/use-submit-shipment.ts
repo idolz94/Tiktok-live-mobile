@@ -100,9 +100,16 @@ export function useSubmitShipment(deps: Deps) {
 
     try {
       if (isManualProvider) {
+        const codAmount = deps.codAmount ?? 0;
+        if (codAmount < 0) {
+          setSubmitState("idle");
+          Alert.alert("Thông tin chưa hợp lệ", "Tiền thu hộ (COD) không được âm.");
+          return;
+        }
         await submitManualShippingApi(order.id, {
           paymentSide,
           shippingFee: manualShippingFee.trim() ? manualFee : undefined,
+          codAmount,
           note: manualNote.trim() || undefined,
           idempotencyKey,
           senderAddressId: selectedSender.id,
@@ -117,6 +124,8 @@ export function useSubmitShipment(deps: Deps) {
             codAmount: String(deps.codAmount ?? 0),
             shippingFee: String(deps.shippingFee ?? 0),
             voucherAmount: String(deps.voucherAmount ?? 0),
+            paymentSide: String(paymentSide),
+            note: manualNote.trim(),
           },
         });
         return;
@@ -166,6 +175,8 @@ export function useSubmitShipment(deps: Deps) {
             codAmount: String(deps.codAmount ?? 0),
             shippingFee: String(deps.shippingFee ?? 0),
             voucherAmount: String(deps.voucherAmount ?? 0),
+            paymentSide: String(paymentSide),
+            note: note?.trim() ?? "",
           },
         });
         return;

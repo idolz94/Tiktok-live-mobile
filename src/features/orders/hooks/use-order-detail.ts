@@ -295,11 +295,15 @@ export function useOrderDetail(orderId: string) {
             if (p.id !== itemId) return p;
             const old = prevProducts.find((o) => o.id === itemId);
             if (!old) return p;
+            const price = p.price > 0 ? p.price : old.price;
             return {
               ...p,
               code: p.code || old.code,
+              name: (p.name && p.name !== "Sản phẩm") ? p.name : old.name,
               color: p.color || old.color,
               variantName: p.variantName || old.variantName,
+              price,
+              totalAmount: (p.totalAmount ?? 0) > 0 ? p.totalAmount : p.quantity * price,
             };
           });
           return { ...prev, products };

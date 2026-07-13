@@ -2,7 +2,7 @@ import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Icon } from "@components/icon";
 import { OrderProduct } from "@app-types/index";
-import { formatMoney } from "@features/orders/utils/order";
+import { formatMoney, getProductTotal } from "@features/orders/utils/order";
 import { createStyles } from "@utils/createStyles";
 import { MoneyRow, Section, SectionHeader } from "./order-detail-primitives";
 
@@ -78,7 +78,7 @@ export function OrderDetailProductsSection({
               <View style={styles.productQtyPriceRow}>
                 <Text style={styles.productQty}>x{product.quantity}</Text>
                 <Text style={styles.productPrice}>
-                  {formatMoney(product.totalAmount ?? 0)}
+                  {formatMoney(getProductTotal(product))}
                 </Text>
               </View>
             </View>

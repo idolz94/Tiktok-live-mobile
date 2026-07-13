@@ -163,21 +163,21 @@ function SummaryCard({
 }
 
 function providerAbbr(name?: string | null): string {
-  if (!name) return "SPX";
-  const n = name.toUpperCase();
+  const n = name?.toUpperCase() ?? "";
   if (n.includes("GHN")) return "GHN";
   if (n.includes("GHTK")) return "GHTK";
   if (n.includes("VTP") || n.includes("VIETTEL")) return "VTP";
-  return "SPX";
+  if (n.includes("SPX") || n.includes("SHOPEE")) return "SPX";
+  return "TC";
 }
 
 function providerLabel(name?: string | null): string {
-  if (!name) return "Shopee Express";
-  const n = name.toLowerCase();
+  const n = name?.toLowerCase() ?? "";
   if (n.includes("ghn")) return "Giao Hàng Nhanh";
   if (n.includes("ghtk")) return "Giao Hàng Tiết Kiệm";
   if (n.includes("vtp") || n.includes("viettel")) return "Viettel Post";
-  return "Shopee Express";
+  if (n.includes("spx") || n.includes("shopee")) return "Shopee Express";
+  return "Thủ công";
 }
 
 function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: () => void }) {
@@ -288,10 +288,21 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
       {/* Provider row */}
       <View style={styles.cardProviderRow}>
         <View style={styles.cardProviderLeft}>
-          <View style={[styles.cardLogoBox, { borderColor: "#e0e0e0" }]}>
-            <Text style={{ color: "#ee4d2d", fontSize: 10, fontWeight: "900" }}>
-              {abbr}
-            </Text>
+          <View
+            style={[
+              styles.cardLogoBox,
+              abbr === "TC"
+                ? { backgroundColor: "#fff8e6", borderColor: "#e8cf88" }
+                : { borderColor: "#e0e0e0" },
+            ]}
+          >
+            {abbr === "TC" ? (
+              <Ionicons name="cube-outline" size={21} color="#c6a84d" />
+            ) : (
+              <Text style={{ color: abbr === "SPX" ? "#ee4d2d" : "#666", fontSize: 10, fontWeight: "900" }}>
+                {abbr}
+              </Text>
+            )}
           </View>
           <View style={styles.cardProviderInfo}>
             <Text
