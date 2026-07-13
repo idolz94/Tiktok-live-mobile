@@ -1,11 +1,12 @@
+import { images } from "@assets/images";
 import { CustomerButton, FilterButton } from "./types/order";
 
 export const CUSTOMER_BUTTONS: CustomerButton[] = [
-  { key: "retail", label: "Lẻ", icon: "group_user" },
-  { key: "wholesale", label: "Sỉ", icon: "group_user" },
+  { key: "retail", label: "Lẻ", icon: images.customer_type_le },
+  { key: "wholesale", label: "Sỉ", icon: images.customer_type_si },
   { key: "vip", label: "VIP", icon: "king" },
-  { key: "chot_dao", label: "Chốt Dạo", icon: "group_user" },
-  { key: "bomb", label: "Bomb", icon: "group_user" },
+  { key: "chot_dao", label: "Chốt Dạo", icon: images.customer_type_chot_dao },
+  { key: "bomb", label: "Bomb", icon: images.customer_type_bom_hang },
 ];
 
 export const STATUS_BUTTONS: FilterButton[] = [

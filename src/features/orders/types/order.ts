@@ -1,5 +1,6 @@
 import type { OrderFilter } from "@app-types/index";
 import type { LottieTypes } from "@assets/lotties";
+import { ImageSourcePropType } from "react-native";
 import { OrderManager } from "../hooks/use-order-manager";
 
 export type { Order, OrderProduct, OrderWithTikTok } from "@app-types/index";
@@ -24,7 +25,7 @@ export type FilterButton = {
 export type CustomerButton = {
   key: "vip" | "retail" | "wholesale" | "chot_dao" | "bomb";
   label: string;
-  icon?: "king" | "group_user";
+  icon?: "king" | "group_user" | ImageSourcePropType;
 };
 
 export type FilterChipKey = OrderFilter | CustomerButton["key"];

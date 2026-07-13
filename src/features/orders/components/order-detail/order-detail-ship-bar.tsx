@@ -12,9 +12,9 @@ type OrderDetailShipBarProps = {
   hasShipment?: boolean;
   shippingStatus?: string | null;
   onShare?: () => void;
-  onConfirm?: () => void;
-  isConfirmed?: boolean;
-  confirmLoading?: boolean;
+  onDeposit?: () => void;
+  isPaid?: boolean;
+  depositLoading?: boolean;
   section?: "actions" | "bottom";
 };
 
@@ -27,9 +27,9 @@ export function OrderDetailShipBar({
   hasShipment,
   shippingStatus,
   onShare,
-  onConfirm,
-  isConfirmed,
-  confirmLoading,
+  onDeposit,
+  isPaid,
+  depositLoading,
   section,
 }: OrderDetailShipBarProps) {
   const { colors } = useThemes();
@@ -41,12 +41,12 @@ export function OrderDetailShipBar({
   const actions = [
     { key: "print", label: "In đơn", icon: "print" as const, onPress: onPrint },
     {
-      key: "confirm",
-      label: isConfirmed ? "Bỏ chốt" : "Chốt đơn",
+      key: "deposit",
+      label: isPaid ? "Đã Cọc" : "Chưa Cọc",
       icon: "clipboard_check" as const,
-      onPress: onConfirm,
-      active: isConfirmed,
-      loading: confirmLoading,
+      onPress: onDeposit,
+      active: isPaid,
+      loading: depositLoading,
     },
     { key: "share", label: "Chia sẻ", icon: "receipt" as const, onPress: onShare },
   ];
@@ -57,9 +57,9 @@ export function OrderDetailShipBar({
         {actions.map((btn) => (
           <Pressable
             key={btn.key}
-            style={[styles.actionItem, btn.key === "confirm" && btn.active ? { opacity: 0.4 } : undefined]}
+            style={[styles.actionItem, btn.key === "deposit" && btn.active ? { opacity: 0.7 } : undefined]}
             onPress={btn.onPress}
-            disabled={btn.loading || (btn.key === "confirm" && !!btn.active)}
+            disabled={btn.loading}
           >
             {btn.loading ? (
               <ActivityIndicator size="small" color={colors.primary} />

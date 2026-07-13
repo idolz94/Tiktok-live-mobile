@@ -6,6 +6,7 @@ import { shippingSettingsStyles as styles } from "@features/settings/components/
 import { useShippingSettings } from "@features/settings/hooks/use-shipping-settings";
 import { useSpxAccount } from "@features/settings/hooks/use-spx-account";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { useToast } from "@components/toast";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { Alert, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -15,6 +16,7 @@ export default function ShippingSettingsScreen() {
   const s = useShippingSettings();
   const spx = useSpxAccount();
   const { show, hide } = useBottomSheet();
+  const toast = useToast();
 
   useFocusEffect(
     useCallback(() => {
@@ -36,15 +38,17 @@ export default function ShippingSettingsScreen() {
           submitting={spx.submitting}
           onSubmit={async (data) => {
             const ok = await spx.connect(data);
-            if (ok) close();
-            else Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
+            if (ok) {
+              close();
+              toast.success("Đã kết nối tài khoản SPX");
+            } else Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
           }}
           onClose={close}
         />
       ),
       enablePanDownToClose: false,
     });
-  }, [show, hide, spx]);
+  }, [show, hide, spx, toast]);
 
   const handleDisconnectSpx = useCallback(() => {
     Alert.alert("Ngắt kết nối SPX", "Bạn có chắc muốn ngắt kết nối tài khoản SPX?", [

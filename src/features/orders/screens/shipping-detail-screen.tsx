@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";
 import { getShipmentLabelApi } from "../service/create-shipment-api";
+import { updateOrderDepositStatusApi } from "../service/api";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
@@ -61,6 +62,10 @@ export default function ShippingDetailScreen() {
   const insets = useSafeAreaInsets();
   const [printing, setPrinting] = useState(false);
   const [navigated, setNavigated] = useState(false);
+  const [depositStatus, setDepositStatus] = useState<string>(
+    () => (order as ShippingOrder | null)?.depositStatus ?? "unpaid",
+  );
+  const [depositLoading, setDepositLoading] = useState(false);
 
   const order = orderParam
     ? (() => { try { return JSON.parse(orderParam) as ShippingOrder; } catch { return null; } })()
@@ -80,6 +85,21 @@ export default function ShippingDetailScreen() {
     }
   }, [order?.id, printing]);
 
+  const handleToggleDeposit = useCallback(async () => {
+    if (!order?.id || depositLoading) return;
+    const isPaid = depositStatus === "paid" || depositStatus === "deposited";
+    const nextStatus = isPaid ? "unpaid" : "paid";
+    setDepositLoading(true);
+    setDepositStatus(nextStatus);
+    try {
+      await updateOrderDepositStatusApi({ orderId: order.id, depositStatus: nextStatus });
+    } catch {
+      setDepositStatus(depositStatus);
+    } finally {
+      setDepositLoading(false);
+    }
+  }, [order?.id, depositStatus, depositLoading]);
+
   const handleCall = useCallback(() => {
     const phone = order?.customerPhone?.trim();
     if (!phone) return;
@@ -95,6 +115,8 @@ export default function ShippingDetailScreen() {
   }
 
   const isCancelled = order.shippingStatus === "cancelled";
+  const isManual = !/ghn|ghtk|vtp|viettel|spx|shopee/i.test(order.providerName ?? "");
+  const isWaitingManual = isManual && order.shippingStatus === "submitted";
   const currentStep = statusToStep(order.shippingStatus);
   const displayCode = order.trackingCode ?? order.orderCode ?? order.id.slice(0, 8);
   const senderDistrict = "Cửa hàng";
@@ -270,7 +292,7 @@ export default function ShippingDetailScreen() {
               </View>
               {order.trackingCode ? (
                 <Text style={[{ color: colors.neutral400, ...textPresets.fs12_400 }]}>
-                  Mã SPX: {order.trackingCode}
+                  {isManual ? "Mã đơn hàng" : "Mã SPX"}: {order.trackingCode}
                 </Text>
               ) : null}
             </View>
@@ -296,21 +318,52 @@ export default function ShippingDetailScreen() {
             </Pressable>
           ) : (
             <>
-              <Pressable style={[styles.actionButton, { backgroundColor: colors.neutral50 }]} onPress={() => { void handlePrintLabel(); }} disabled={printing}>
+              <Pressable
+                style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+                onPress={() => {
+                  if (isWaitingManual) {
+                    router.push({
+                      pathname: "/shipping-label" as never,
+                      params: { id: order.id, order: orderParam },
+                    });
+                  } else {
+                    void handlePrintLabel();
+                  }
+                }}
+                disabled={printing}
+              >
                 {printing
                   ? <ActivityIndicator size="small" color={colors.text} />
                   : <>
                       <Ionicons name="print-outline" size={18} color={colors.text} />
-                      <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>In Đơn Hàng SPX</Text>
+                      <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>
+                        {isWaitingManual ? "In Đơn Hàng" : "In Đơn Hàng SPX"}
+                      </Text>
                     </>
                 }
               </Pressable>
-              <Pressable
-                style={[styles.actionButton, { backgroundColor: colors.neutral50, opacity: 0.4 }]}
-                disabled
-              >
-                <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>Bỏ Chốt</Text>
-              </Pressable>
+              {isWaitingManual ? (
+                <Pressable
+                  style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+                  onPress={() => router.push({ pathname: "/order-detail" as never, params: { id: order.id } })}
+                >
+                  <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>Sửa Đơn Hàng</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+                  onPress={() => { void handleToggleDeposit(); }}
+                  disabled={depositLoading}
+                >
+                  {depositLoading ? (
+                    <ActivityIndicator size="small" color={colors.text} />
+                  ) : (
+                    <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>
+                      {depositStatus === "paid" || depositStatus === "deposited" ? "Đã Cọc" : "Chưa Cọc"}
+                    </Text>
+                  )}
+                </Pressable>
+              )}
             </>
           )}
         </View>

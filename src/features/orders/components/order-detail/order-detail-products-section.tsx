@@ -1,4 +1,12 @@
 import { Pressable, Text, View } from "react-native";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Icon } from "@components/icon";
 import { OrderProduct } from "@app-types/index";
@@ -35,6 +43,16 @@ export function OrderDetailProductsSection({
   onDeleteProduct,
   onToggleShowAll,
 }: OrderDetailProductsSectionProps) {
+  const chevronRotate = useSharedValue(showAllProducts ? 180 : 0);
+  const animatedChevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${chevronRotate.value}deg` }],
+  }));
+
+  const handleToggle = () => {
+    chevronRotate.value = withTiming(showAllProducts ? 0 : 180, { duration: 280 });
+    onToggleShowAll();
+  };
+
   return (
     <Section>
       <SectionHeader
@@ -43,9 +61,14 @@ export function OrderDetailProductsSection({
         onAction={isEditable ? onAddProduct : undefined}
         loading={isProductMutating}
       />
-      <View style={styles.productList}>
+      <Animated.View style={styles.productList} layout={LinearTransition.duration(280)}>
         {displayProducts.map((product, index) => (
-          <View key={product.id || index} style={styles.productItem}>
+          <Animated.View
+            key={product.id || index}
+            style={styles.productItem}
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(150)}
+          >
             <View style={styles.productInfo}>
               <Text style={styles.productName} numberOfLines={2}>
                 {product.code
@@ -82,15 +105,17 @@ export function OrderDetailProductsSection({
                 </Text>
               </View>
             </View>
-          </View>
+          </Animated.View>
         ))}
-      </View>
+      </Animated.View>
       {products.length > 3 ? (
-        <Pressable style={styles.expandBtn} onPress={onToggleShowAll}>
+        <Pressable style={styles.expandBtn} onPress={handleToggle}>
           <Text style={styles.expandText}>
             {showAllProducts ? "Thu gọn" : `Xem thêm (${hiddenCount})`}
           </Text>
-          <Icon name="chevron_down" size={14} tintColor="neutral400" />
+          <Animated.View style={animatedChevronStyle}>
+            <Icon name="chevron_down" size={14} tintColor="neutral400" />
+          </Animated.View>
         </Pressable>
       ) : null}
       <View style={styles.summaryBox}>

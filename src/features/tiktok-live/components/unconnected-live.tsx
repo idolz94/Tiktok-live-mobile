@@ -1,9 +1,8 @@
 import { IconsTypes } from "@assets/icons";
-import { images } from "@assets/images";
+import { Avatar } from "@components/avatar";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Button } from "@components/button";
 import { Icon } from "@components/icon";
-import { Image } from "@components/image";
 import { Separator } from "@components/separator";
 import { useThemes } from "@hooks/use-theme";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
@@ -130,12 +129,7 @@ export const UnConnectedLive = memo(
       return (
         <View style={styles.itemContainer}>
           <View style={styles.leftItem}>
-            <Image
-              source={
-                item.avatarUrl ? { uri: item.avatarUrl } : images.logo_app
-              }
-              style={styles.avatar}
-            />
+            <Avatar uri={item.avatarUrl ?? undefined} size={40} headers={{ Referer: "https://www.tiktok.com/" }} />
             <View style={{ rowGap: 2 }}>
               <Text style={styles.name}>
                 {item.displayName || item.username}
@@ -270,7 +264,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     columnGap: 16,
   },
   leftItem: { columnGap: 16, flexDirection: "row", alignItems: "center" },
-  avatar: { width: 40, height: 40, borderRadius: 99 },
   btnConnect: {
     paddingVertical: 9,
     paddingHorizontal: 16,

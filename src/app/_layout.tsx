@@ -103,6 +103,7 @@ function RootContent() {
                           <Stack.Screen name="manage-tiktok-channel" />
                           <Stack.Screen name="order-detail" />
                           <Stack.Screen name="shipping-detail" />
+                          <Stack.Screen name="shipping-label" />
                           <Stack.Screen name="license-expired" />
                           <Stack.Screen name="popover-demo" />
                         </Stack>

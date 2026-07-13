@@ -185,10 +185,13 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
   const [printing, setPrinting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const name = item.customerName || item.username || "Khách live";
-  const trackingUrl = getTrackingUrl(item);
   const abbr = providerAbbr(item.providerName);
+  const trackingUrl = abbr === "TC" ? null : getTrackingUrl(item);
   const label = providerLabel(item.providerName);
   const sColor = statusColor(item.shippingStatus, colors);
+  const statusLabel = abbr === "TC" && item.shippingStatus === "submitted"
+    ? "Chờ lấy hàng"
+    : STATUS_LABEL[item.shippingStatus];
 
   const addressText =
     [
@@ -205,12 +208,17 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
     item.quantity ||
     0;
   const noteText = (item as any).note?.trim() as string | undefined;
-  const productSummary = noteText
-    ? `Đơn hàng ${productCount} sản phẩm, ${noteText}`
-    : `Đơn hàng ${productCount} sản phẩm`;
+  const productSummary = `Đơn hàng ${productCount} sản phẩm`;
 
   const handlePrint = async () => {
     if (printing) return;
+    if (abbr === "TC") {
+      router.push({
+        pathname: "/shipping-label" as never,
+        params: { id: item.id, order: JSON.stringify(item) },
+      });
+      return;
+    }
     setPrinting(true);
     try {
       const res = await getShipmentLabelApi(item.id);
@@ -246,15 +254,7 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
   };
 
   return (
-    <Pressable
-      style={[styles.orderCard, { backgroundColor: colors.white }]}
-      onPress={() =>
-        router.push({
-          pathname: "/shipping-detail/[id]" as never,
-          params: { id: item.id, order: JSON.stringify(item) },
-        })
-      }
-    >
+    <View style={[styles.orderCard, { backgroundColor: colors.white }]}>
       {/* Top row: date/code + theo dõi */}
       <View style={styles.cardTopRow}>
         <Text
@@ -265,24 +265,17 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
           {"  "}
           {item.orderCode ?? item.id.slice(0, 12)}
         </Text>
+        {trackingUrl ? (
         <Pressable
           style={styles.cardTrackingLink}
-          onPress={() => {
-            if (!trackingUrl) {
-              Alert.alert(
-                "Chưa có link theo dõi",
-                `Mã: ${item.trackingCode ?? "—"}`,
-              );
-              return;
-            }
-            void Linking.openURL(trackingUrl);
-          }}
+          onPress={() => void Linking.openURL(trackingUrl)}
         >
           <Text style={{ color: "#c6a84d", fontSize: 12, fontWeight: "600" }}>
             Theo dõi
           </Text>
           <Ionicons name="chevron-forward" size={12} color="#c6a84d" />
         </Pressable>
+        ) : null}
       </View>
 
       {/* Provider row */}
@@ -312,14 +305,11 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
               {label}
             </Text>
             <Text style={{ color: sColor, fontSize: 13, fontWeight: "600" }}>
-              {STATUS_LABEL[item.shippingStatus]}
+              {statusLabel}
             </Text>
           </View>
         </View>
         <View style={styles.cardTrackingCodeBlock}>
-          <Text style={[{ color: colors.neutral400, ...textPresets.fs11_400 }]}>
-            MÃ - {abbr}
-          </Text>
           <Text
             style={{ color: "#c6a84d", fontSize: 14, fontWeight: "700" }}
             numberOfLines={1}
@@ -417,6 +407,24 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
             {productSummary}
           </Text>
         </View>
+
+        {/* Note */}
+        {noteText ? (
+          <View style={styles.cardIconRow}>
+            <Ionicons
+              name="document-text-outline"
+              size={16}
+              color={colors.neutral500}
+              style={{ marginTop: 1 }}
+            />
+            <Text
+              style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+              numberOfLines={2}
+            >
+              {noteText}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={[styles.cardDivider, { backgroundColor: colors.border10 }]} />
@@ -451,6 +459,7 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
             router.push({ pathname: "/order-detail" as never, params: { id: item.id } })
           }
         >
+          <Ionicons name="list-outline" size={14} color={colors.text} />
           <Text style={[styles.cardActionText, { color: colors.text, ...textPresets.fs12_500 }]}>
             Tổng quan
           </Text>
@@ -460,13 +469,14 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
             style={[styles.cardActionBtn, { borderColor: "#ffcdd2", backgroundColor: "#fff5f5" }]}
             onPress={handleCancel}
           >
+            <Ionicons name="close-circle-outline" size={14} color={colors.error} />
             <Text style={[styles.cardActionText, { color: colors.error, ...textPresets.fs12_500 }]}>
               Huỷ đơn
             </Text>
           </Pressable>
         )}
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -839,8 +849,10 @@ const styles = createStyles(({ colors }) => ({
     borderWidth: 1,
     borderRadius: 8,
     paddingVertical: 8,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 4,
     minHeight: 36,
   },
   cardActionText: { textAlign: "center" },

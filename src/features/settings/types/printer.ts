@@ -24,9 +24,6 @@ export type PrinterConfig = {
   /** Cấu hình nội dung in */
   companyName?: string;
   companyAddress?: string;
-  tiktokUsername?: string;
-  userPhone?: string;
-  userAddress?: string;
   recordNumb?: number;
 };
 
@@ -38,9 +35,6 @@ export const DEFAULT_PRINTER_CONFIG: PrinterConfig = {
   fontSize: "medium",
   companyName: "CÔNG TY ABC",
   companyAddress: "123 ĐƯỜNG ABC, THÀNH PHỐ DEF",
-  tiktokUsername: "ABC",
-  userPhone: "+84 912 345 678",
-  userAddress: "Số 123 Đường ABC, Thành phố DEF",
   recordNumb: 12345,
 };
 

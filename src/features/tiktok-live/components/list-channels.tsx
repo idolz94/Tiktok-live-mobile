@@ -28,7 +28,7 @@ export const ListChannels = ({ channels, onClose, onSelected }: Props) => {
       <Pressable onPress={() => onSelected(item)} style={styles.itemContainer}>
         <View style={styles.leftItem}>
           <Image
-            source={item.avatarUrl ? { uri: item.avatarUrl } : images.logo_app}
+            source={item.avatarUrl ? { uri: item.avatarUrl, headers: { Referer: "https://www.tiktok.com/" } } : images.logo_app}
             style={styles.avatar}
           />
           <View>

@@ -1,9 +1,9 @@
 import { ShopTikTokChannel } from "@app-types/database";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Avatar } from "@components/avatar";
 import { Header } from "@components/header";
 import { Screen } from "@components/screen";
 import { Ionicons } from "@expo/vector-icons";
-import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback } from "react";
@@ -19,15 +19,6 @@ import { EditChannel } from "./components/edit-channel";
 import { ChannelCardProps } from "./type";
 import { useManageTiktokChannel } from "./use-manage-tiktok-channel";
 
-function toInitial(username: string) {
-  return (
-    normalizeTikTokUsername(username)
-      .replace(/^@/, "")
-      .slice(0, 1)
-      .toUpperCase() || "T"
-  );
-}
-
 const ChannelCard = memo(
   ({ channel, onEdit }: ChannelCardProps) => {
     const { colors } = useThemes();
@@ -38,11 +29,7 @@ const ChannelCard = memo(
     return (
       <Pressable style={styles.card} onPress={handlePress}>
         <View style={styles.leftItem}>
-          <View style={styles.avatarBox}>
-            <Text style={styles.avatarText}>
-              {toInitial(channel.tiktokUsername)}
-            </Text>
-          </View>
+          <Avatar uri={channel.avatarUrl ?? undefined} size={40} headers={{ Referer: "https://www.tiktok.com/" }} />
           <View style={styles.textGroup}>
             <View style={styles.rowInline}>
               <Text style={styles.username}>{channel.tiktokUsername}</Text>
@@ -209,18 +196,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     flexDirection: "row",
     alignItems: "center",
     columnGap: 16,
-  },
-  avatarBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 99,
-    backgroundColor: colors.neutral900,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: colors.neutral100,
-    ...textPresets.fs14_500,
   },
   textGroup: {
     flex: 1,

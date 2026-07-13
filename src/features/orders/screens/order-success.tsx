@@ -1,7 +1,8 @@
 import { useLocalSearchParams, router } from "expo-router";
 import { useState, useCallback } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as WebBrowser from "expo-web-browser";
 import { LinearGradient } from "@components/linear-gradient";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { createStyles } from "@utils/createStyles";
@@ -52,7 +53,7 @@ export default function OrderSuccessScreen() {
     setPrinting(true);
     try {
       const res = await getShipmentLabelApi(params.orderId);
-      if (res.labelUrl) await Linking.openURL(res.labelUrl);
+      if (res.labelUrl) await WebBrowser.openBrowserAsync(res.labelUrl);
     } finally {
       setPrinting(false);
     }

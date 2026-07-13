@@ -11,8 +11,9 @@ import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { Alert, Image as RNImage, Pressable, Text, View } from "react-native";
+import Animated, { FadeIn, FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
@@ -73,6 +74,21 @@ export const OrderItem = memo(
       ]);
     }, [item.id, onRemove]);
 
+    const [showAll, setShowAll] = useState(false);
+    const displayProducts = showAll ? products : products.slice(0, 3);
+    const hiddenCount = products.length - 3;
+
+    const chevronRotate = useSharedValue(0);
+    const animatedChevronStyle = useAnimatedStyle(() => ({
+      transform: [{ rotate: `${chevronRotate.value}deg` }],
+    }));
+
+    const handleToggleShowAll = useCallback(() => {
+      const next = !showAll;
+      chevronRotate.value = withTiming(next ? 180 : 0, { duration: 280 });
+      setShowAll(next);
+    }, [showAll, chevronRotate]);
+
     return (
       <View style={[styles.container, shadows.sd2]}>
         <View style={styles.top}>
@@ -124,21 +140,24 @@ export const OrderItem = memo(
           </View>
         </View>
 
-        <View style={styles.productList}>
+        <Animated.View style={styles.productList} layout={LinearTransition.duration(280)}>
           {products.length > 0 ? (
-            products.map((p) => (
-              <View key={p.id} style={styles.productRow}>
-                <View style={[styles.productName, styles.productInfo]}>
-                  <Text numberOfLines={2} style={styles.txtProduct}>
-                    {p.code
-                      ? `Mã: ${p.code} - ${p.name || ""}${p.color ? ` (${p.color})` : ""}`
-                      : p.name || "Sản phẩm"}
+            displayProducts.map((p, i) => (
+              <Animated.View key={p.id} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
+                {i > 0 ? <Separator type="horizontal" size={1} style={styles.productSep} /> : null}
+                <View style={styles.productRow}>
+                  <View style={[styles.productName, styles.productInfo]}>
+                    <Text numberOfLines={2} style={styles.txtProduct}>
+                      {p.code
+                        ? `Mã: ${p.code} - ${p.name || ""}${p.color ? ` (${p.color})` : ""}`
+                        : p.name || "Sản phẩm"}
+                    </Text>
+                  </View>
+                  <Text style={styles.txtProductPrice}>
+                    {formatMoney(Number(p.price || 0) * Number(p.quantity || 1))}
                   </Text>
                 </View>
-                <Text style={styles.txtProductPrice}>
-                  {formatMoney(Number(p.price || 0) * Number(p.quantity || 1))}
-                </Text>
-              </View>
+              </Animated.View>
             ))
           ) : (
             <View style={styles.productRow}>
@@ -155,7 +174,17 @@ export const OrderItem = memo(
               </Text>
             </View>
           )}
-        </View>
+          {products.length > 3 ? (
+            <Pressable style={styles.expandBtn} onPress={handleToggleShowAll}>
+              <Text style={styles.expandText}>
+                {showAll ? "Thu gọn" : `Xem thêm (${hiddenCount})`}
+              </Text>
+              <Animated.View style={animatedChevronStyle}>
+                <Icon name="chevron_down" size={14} tintColor="neutral400" />
+              </Animated.View>
+            </Pressable>
+          ) : null}
+        </Animated.View>
 
         <Separator type="horizontal" size={1} style={styles.separator} />
 
@@ -248,8 +277,23 @@ const styles = createStyles(({ colors, textPresets }) => ({
   productInfo: {
     rowGap: 2,
   },
+  productSep: {
+    marginVertical: 8,
+  },
   separator: {
     marginVertical: 12,
+  },
+  expandBtn: {
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 4,
+    paddingVertical: 4,
+    marginTop: 4,
+  },
+  expandText: {
+    color: colors.neutral400,
+    ...textPresets.fs12_400,
   },
   subtotalRow: {
     flexDirection: "row",

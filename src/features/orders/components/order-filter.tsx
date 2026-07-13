@@ -1,10 +1,11 @@
 import type { OrderFilter } from "@app-types/index";
 import { Button } from "@components/button";
+import { IconsTypes } from "@assets/icons";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { CUSTOMER_BUTTONS, STATUS_BUTTONS } from "../constants";
 import {
   CustomerButton,
@@ -33,17 +34,25 @@ const FilterChip = memo(
         onPress={handlePress}
       >
         {icon ? (
-          <Icon
-            name={icon}
-            size={22}
-            tintColor={
-              icon === "king"
-                ? undefined
-                : isActive
-                  ? colors.neutral900
-                  : colors.neutral400
-            }
-          />
+          typeof icon === "string" ? (
+            <Icon
+              name={icon as IconsTypes}
+              size={22}
+              tintColor={
+                icon === "king"
+                  ? undefined
+                  : isActive
+                    ? colors.neutral900
+                    : colors.neutral400
+              }
+            />
+          ) : (
+            <Image
+              source={icon}
+              resizeMode="contain"
+              style={styles.customerIcon}
+            />
+          )
         ) : null}
         <Text
           style={[
@@ -191,6 +200,10 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   chipLabel: {
     ...textPresets.fs16_400,
+  },
+  customerIcon: {
+    width: 22,
+    height: 22,
   },
   footer: {
     borderTopWidth: 1,

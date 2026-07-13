@@ -64,7 +64,7 @@ export function SpxOptions({
   timeslots,
   timeslotsLoading,
   timeslotsError,
-  vouchers: _vouchers,
+  vouchers,
   vouchersLoading,
   vouchersError,
   selectedVoucherCode: _selectedVoucherCode,
@@ -368,24 +368,42 @@ export function SpxOptions({
       >
         Mã giảm phí vận chuyển
       </Text>
-      <Pressable
-        onPress={onOpenVoucherSheet}
-        disabled={vouchersLoading || !!vouchersError}
-        style={[
-          styles.voucherRow,
-          { backgroundColor: colors.neutral50, borderColor: colors.border10 },
-          !!vouchersError && { opacity: 0.5 },
-        ]}
-      >
-        <Text
-          style={[{ color: colors.neutral900, flex: 1 }, textPresets.fs14_500]}
-        >
-          Mã giảm phí vận chuyển
-        </Text>
-        <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>
-          ›
-        </Text>
-      </Pressable>
+      {(() => {
+        const voucherEmpty =
+          !vouchersLoading && !vouchersError && vouchers.length === 0;
+        const voucherDisabled =
+          vouchersLoading || !!vouchersError || voucherEmpty;
+        return (
+          <Pressable
+            onPress={onOpenVoucherSheet}
+            disabled={voucherDisabled}
+            style={[
+              styles.voucherRow,
+              {
+                backgroundColor: colors.neutral50,
+                borderColor: colors.border10,
+              },
+              (!!vouchersError || voucherEmpty) && { opacity: 0.5 },
+            ]}
+          >
+            <Text
+              style={[
+                { color: colors.neutral900, flex: 1 },
+                textPresets.fs14_500,
+              ]}
+            >
+              {voucherEmpty ? "Không có mã giảm phí vận chuyển" : "Mã giảm phí vận chuyển"}
+            </Text>
+            {!voucherDisabled && (
+              <Text
+                style={[{ color: colors.neutral400 }, textPresets.fs18_500]}
+              >
+                ›
+              </Text>
+            )}
+          </Pressable>
+        );
+      })()}
     </>
   );
 }

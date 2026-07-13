@@ -5,16 +5,17 @@ type AvatarProps = {
   uri?: string;
   username?: string;
   size?: number;
+  headers?: Record<string, string>;
 };
 
-export const Avatar = ({ uri, size = 42 }: AvatarProps) => {
+export const Avatar = ({ uri, size = 42, headers }: AvatarProps) => {
   const circleStyle = {
     width: size,
     height: size,
     borderRadius: size / 2,
   } as const;
 
-  const source = uri && uri.trim() ? { uri } : images.logo_app;
+  const source = uri && uri.trim() ? { uri, ...(headers ? { headers } : {}) } : images.logo_app;
 
   return (
     <Image

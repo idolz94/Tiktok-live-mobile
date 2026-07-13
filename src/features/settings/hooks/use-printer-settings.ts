@@ -9,6 +9,12 @@ import type {
   PrinterFontSize,
   PrinterConnectionState,
 } from "../types/printer";
+import { getInvoiceContentApi, updateInvoiceContentApi } from "../service/invoice-content-api";
+
+// ─── Invoice fields that must be persisted to DB ──────────────────────────────
+const INVOICE_FIELDS = new Set<keyof PrinterConfig>([
+  "companyName", "companyAddress", "recordNumb",
+]);
 
 export type { PrinterConnectionState };
 
@@ -51,6 +57,23 @@ export function usePrinterSettings() {
     name: string;
     type?: string;
   } | null>(null);
+
+  // Invoice-field debounce: accumulate changes, flush after 600 ms idle
+  const invoiceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingInvoiceRef = useRef<Partial<PrinterConfig>>({});
+
+  // Hydrate invoice fields from DB on mount (silently ignore failures)
+  useEffect(() => {
+    void getInvoiceContentApi().then((data) => {
+      if (!data) return;
+      setConfig({
+        companyName: data.companyName,
+        companyAddress: data.companyAddress,
+        recordNumb: data.recordNumb,
+      });
+    }).catch(() => {/* keep local values on failure */});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Track whether the printer was connected so we can detect unexpected disconnects
   const wasConnectedRef = useRef(false);
@@ -205,7 +228,7 @@ export function usePrinterSettings() {
               type: "columns",
               columns: [
                 { content: "HTTPS://LUMILIVE.VN/", width: 50, align: "left" },
-                { content: config.userPhone || "+84 912 345 678", width: 50, align: "right" },
+                { content: "+84 912 345 678", width: 50, align: "right" },
               ],
             },
             { type: "feed", lines: 1 },
@@ -233,7 +256,7 @@ export function usePrinterSettings() {
               type: "columns",
               columns: [
                 {
-                  content: `${config.tiktokUsername || "ANH A"}\n${config.userPhone || "+84 912 345 678"}\n${config.userAddress || "Số 123 Đường ABC,\nThành phố DEF"}`,
+                  content: `ANH A\n+84 912 345 678\nSố 123 Đường ABC,\nThành phố DEF`,
                   width: 55,
                   align: "left",
                 },
@@ -300,7 +323,7 @@ export function usePrinterSettings() {
                   align: "left",
                 },
                 {
-                  content: `\n\n${config.tiktokUsername || "ABC"}\nXIN CẢM ƠN`,
+                  content: "\n\nABC\nXIN CẢM ƠN",
                   width: 40,
                   align: "right",
                   style: { bold: true },
@@ -333,14 +356,31 @@ export function usePrinterSettings() {
   // ─── Config setters ──────────────────────────────────────────────────────────
 
   const handleSave = useCallback(
-    async (values: Partial<PrinterConfig>) => {
-      setIsSaving(true);
-      try {
-        setConfig(values);
-      } finally {
-        setIsSaving(false);
-      }
+    (values: Partial<PrinterConfig>) => {
+      // Always update local store immediately (no UX lag)
+      setConfig(values);
+
+      // Collect invoice fields and debounce the PATCH
+      const invoiceSlice = Object.fromEntries(
+        Object.entries(values).filter(([k]) => INVOICE_FIELDS.has(k as keyof PrinterConfig)),
+      ) as Partial<PrinterConfig>;
+
+      if (Object.keys(invoiceSlice).length === 0) return;
+
+      Object.assign(pendingInvoiceRef.current, invoiceSlice);
+
+      if (invoiceDebounceRef.current) clearTimeout(invoiceDebounceRef.current);
+      invoiceDebounceRef.current = setTimeout(() => {
+        const payload = pendingInvoiceRef.current;
+        pendingInvoiceRef.current = {};
+        setIsSaving(true);
+        void updateInvoiceContentApi(payload as Parameters<typeof updateInvoiceContentApi>[0])
+          .catch(() => {/* silent — local store already updated */})
+          .finally(() => setIsSaving(false));
+      }, 600);
     },
+    // ponytail: INVOICE_FIELDS is a module-level constant — safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [setConfig],
   );
 

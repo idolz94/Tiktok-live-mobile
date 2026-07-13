@@ -110,13 +110,18 @@ function mergeComment(
 }
 
 function sortAndLimitComments(map: Map<string, LiveComment>) {
-  return Array.from(map.values())
+  const comments = Array.from(map.values());
+  const latestJoined = comments.find((comment) => comment.type === "user_joined");
+  const sortedComments = comments
+    .filter((comment) => comment.type !== "user_joined")
     .sort((a, b) => {
       const bTime = new Date(b.createdAt || 0).getTime();
       const aTime = new Date(a.createdAt || 0).getTime();
       return bTime - aTime;
     })
-    .slice(0, MAX_COMMENTS);
+    .slice(0, latestJoined ? MAX_COMMENTS - 1 : MAX_COMMENTS);
+
+  return latestJoined ? [latestJoined, ...sortedComments] : sortedComments;
 }
 
 export function useTikTokComments() {
@@ -155,10 +160,8 @@ export function useTikTokComments() {
       if (rawComment?.type === "user_joined") {
         const item = rawComment as LiveComment;
         const map = commentMapRef.current;
-        const nextComments = [item, ...Array.from(map.values()).filter((c) => c.type !== "user_joined")].slice(
-          0,
-          MAX_COMMENTS,
-        );
+        map.set(createCommentUniqueKey(item), item);
+        const nextComments = sortAndLimitComments(map);
         commitComments(nextComments);
         return item;
       }

@@ -6,28 +6,28 @@ import { createStyles } from "@utils/createStyles";
 type OrderDetailFooterActionsProps = {
   onPrint: () => void;
   onShare: () => void;
-  onConfirm: () => void;
-  isConfirmed: boolean;
-  confirmLoading?: boolean;
+  onDeposit: () => void;
+  isPaid: boolean;
+  depositLoading?: boolean;
 };
 
 export function OrderDetailFooterActions({
   onPrint,
   onShare,
-  onConfirm,
-  isConfirmed,
-  confirmLoading,
+  onDeposit,
+  isPaid,
+  depositLoading,
 }: OrderDetailFooterActionsProps) {
   const { colors, textPresets } = useThemes();
 
   const buttons = [
     { label: "In đơn", icon: "print", onPress: onPrint },
     {
-      label: isConfirmed ? "Bỏ chốt" : "Chốt đơn",
+      label: isPaid ? "Đã Cọc" : "Chưa Cọc",
       icon: "clipboard_check",
-      onPress: onConfirm,
-      loading: confirmLoading,
-      active: isConfirmed,
+      onPress: onDeposit,
+      loading: depositLoading,
+      active: isPaid,
     },
     { label: "Chia sẻ hóa đơn", icon: "receipt", onPress: onShare },
   ];

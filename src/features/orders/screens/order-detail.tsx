@@ -9,6 +9,7 @@ import { useOrderDetail } from "@features/orders/hooks/use-order-detail";
 import { formatMoney } from "@features/orders/utils/order";
 import { useSpxAccount } from "@features/settings/hooks/use-spx-account";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { useToast } from "@components/toast";
 import { createStyles } from "@utils/createStyles";
 import {
   cancelShipmentApi,
@@ -38,6 +39,7 @@ export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useOrderDetail(id ?? "");
   const { show, hide } = useBottomSheet();
+  const toast = useToast();
   const { connected: spxConnected, submitting, connect } = useSpxAccount();
   const [selectedProvider, setSelectedProvider] =
     useState<ShippingProvider>("manual");
@@ -293,7 +295,7 @@ export const OrderDetail = memo(() => {
                                   const ok = await connect(data);
                                   if (ok) {
                                     closeConnectSheet();
-                                    Alert.alert("Thành công", "Đã kết nối tài khoản SPX");
+                                    toast.success("Đã kết nối tài khoản SPX");
                                   } else {
                                     Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
                                   }
@@ -324,9 +326,9 @@ export const OrderDetail = memo(() => {
                 onCancel={handleCancelShipment}
                 onPrint={() => {}}
                 onShare={() => {}}
-                onConfirm={() => { void detail.handleToggleConfirm(); }}
-                isConfirmed={detail.order.status === "confirmed"}
-                confirmLoading={detail.confirmLoading}
+                onDeposit={() => { void detail.handleToggleDeposit(); }}
+                isPaid={detail.isPaid}
+                depositLoading={detail.depositLoading}
               />
             </ScrollView>
             <OrderDetailShipBar
@@ -339,9 +341,6 @@ export const OrderDetail = memo(() => {
               onCancel={handleCancelShipment}
               onPrint={() => {}}
               onShare={() => {}}
-              onConfirm={() => { void detail.handleToggleConfirm(); }}
-              isConfirmed={detail.order.status === "confirmed"}
-              confirmLoading={detail.confirmLoading}
             />
           </>
         ) : null}

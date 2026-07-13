@@ -5,7 +5,7 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 import { listProductPresetsApi } from "@features/settings/service/product-presets-api";
 import { useSharedValue, withTiming } from "react-native-reanimated";
@@ -60,6 +60,13 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     pagerRef.current?.setPage(1);
     void orderManager.reloadOrders();
   }, [orderManager, ordersTab, pagerRef, refreshOrders]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void orderManager.reloadOrders();
+    }, [orderManager.reloadOrders]),
+  );
+
   const [localChannels, setLocalChannels] = useState<TikTokLiveChannel[]>(() =>
     (user?.tiktokChannels ?? []).map((c) => ({
       id: c.id,

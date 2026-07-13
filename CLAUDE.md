@@ -162,6 +162,89 @@ Rules:
 - Respect reduced-motion accessibility settings.
 - Do not claim device or simulator verification unless it was actually performed.
 
+### Screen layout pattern (reference: `LiveHistoryScreen`)
+
+New screens and screens being updated must follow this layout:
+
+**Background:**
+
+```tsx
+<LinearGradient
+  type="gra_background"
+  style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+  start={{ x: 0.5, y: 0 }}
+  end={{ x: 0.5, y: 1 }}
+/>
+```
+
+**Header:**
+
+```tsx
+<View style={{ paddingTop: top + 12, minHeight: 119, flexDirection: "row",
+  alignItems: "center", justifyContent: "space-between",
+  paddingHorizontal: 16, paddingBottom: 16 }}>
+  <Text style={{ color: colors.text, fontSize: 24, fontWeight: "600", lineHeight: 28 }}>
+    Tiêu đề màn
+  </Text>
+  {/* optional action button */}
+  <Pressable style={{ width: 44, height: 44, borderRadius: 999,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: colors.white }}>
+    <Icon name="..." size={20} />
+  </Pressable>
+</View>
+```
+
+- `top` comes from `useSafeAreaInsets().top`.
+- Title: `fontSize: 24`, `fontWeight: "600"`, `color: colors.text`.
+- Action button: `44×44`, `borderRadius: 999`, `backgroundColor: colors.white`.
+
+**List content:**
+
+```tsx
+contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, rowGap: 12 }}
+```
+
+**Cards:**
+
+```tsx
+{ borderRadius: 16, backgroundColor: colors.white, overflow: "hidden", ...shadows.sd2 }
+```
+
+**Empty state:**
+
+```tsx
+<View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, rowGap: 8 }}>
+  <View style={{ width: 64, height: 64, borderRadius: 32,
+    backgroundColor: colors.neutral50,
+    alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+    <Icon name="..." size={32} tintColor="neutral300" />
+  </View>
+  <Text style={{ color: colors.neutral500, ...textPresets.fs14_500, textAlign: "center" }}>
+    Tiêu đề trống
+  </Text>
+  <Text style={{ color: colors.neutral300, ...textPresets.fs12_400, textAlign: "center" }}>
+    Mô tả phụ
+  </Text>
+</View>
+```
+
+**Filter badge (if applicable):**
+
+```tsx
+<View style={{ flexDirection: "row", alignItems: "center", columnGap: 6,
+  paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99,
+  backgroundColor: colors.neutral50 }}>
+  <Icon name="..." size={12} tintColor="neutral400" />
+  <Text style={{ color: colors.neutral500, ...textPresets.fs12_500 }}>Label</Text>
+  <Pressable onPress={onClear} hitSlop={8}>
+    <Icon name="close" size={12} tintColor="neutral400" />
+  </Pressable>
+</View>
+```
+
+Screens using the old `<Screen>` + `<Header>` pattern should be migrated to this layout gradually as they are touched.
+
 ## 7. Routing rules
 
 Routing is controlled by Expo Router under `src/app/`.

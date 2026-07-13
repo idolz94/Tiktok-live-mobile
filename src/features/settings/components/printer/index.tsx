@@ -217,59 +217,6 @@ export function PrinterSettingsScreen() {
 
           <View style={styles.configDivider} />
 
-          {/* Tên khách hàng / Kênh */}
-          <View style={styles.configRow}>
-            <Text style={styles.configRowLabel}>Tên khách hàng</Text>
-            <View style={styles.configInputContainer}>
-              <TextInput
-                style={styles.configTextInput}
-                value={config.tiktokUsername}
-                onChangeText={(val) => handleSave({ tiktokUsername: val })}
-                placeholder="Tên người nhận hàng"
-                placeholderTextColor="#bdbdbd"
-                autoCorrect={false}
-              />
-            </View>
-          </View>
-
-          <View style={styles.configDivider} />
-
-          {/* Số điện thoại */}
-          <View style={styles.configRow}>
-            <Text style={styles.configRowLabel}>Số điện thoại</Text>
-            <View style={styles.configInputContainer}>
-              <TextInput
-                style={styles.configTextInput}
-                value={config.userPhone}
-                onChangeText={(val) => handleSave({ userPhone: val })}
-                placeholder="SĐT liên hệ"
-                placeholderTextColor="#bdbdbd"
-                keyboardType="phone-pad"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-          </View>
-
-          <View style={styles.configDivider} />
-
-          {/* Địa chỉ khách hàng */}
-          <View style={styles.configRow}>
-            <Text style={styles.configRowLabel}>Địa chỉ giao hàng</Text>
-            <View style={styles.configInputContainer}>
-              <TextInput
-                style={styles.configTextInput}
-                value={config.userAddress}
-                onChangeText={(val) => handleSave({ userAddress: val })}
-                placeholder="Số nhà, tên đường, thành phố..."
-                placeholderTextColor="#bdbdbd"
-                autoCorrect={false}
-              />
-            </View>
-          </View>
-
-          <View style={styles.configDivider} />
-
           {/* Số hóa đơn */}
           <View style={styles.configRow}>
             <Text style={styles.configRowLabel}>Số hóa đơn bắt đầu</Text>

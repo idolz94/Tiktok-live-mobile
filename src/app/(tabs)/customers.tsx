@@ -440,6 +440,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
   customerTypeIcon: {
     width: 20,
     height: 20,
+    // ponytail: multiply hides the #F5F5F5 baked background against light surfaces without editing assets
+    blendMode: "multiply",
   },
   customerTypeText: {
     color: colors.textDarkGray,
