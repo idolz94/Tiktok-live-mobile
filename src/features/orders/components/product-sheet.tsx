@@ -33,7 +33,7 @@ type ProductSheetProps = {
   initialQty?: number;
   loading?: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; price: number; quantity: number }) => void;
+  onSave: (data: { name: string; price: number; quantity: number; nameDirty: boolean; priceDirty: boolean }) => void;
 };
 
 function parsePriceDisplay(formatted: string): number {
@@ -76,6 +76,8 @@ export function ProductSheet({
       name: data.name.trim(),
       price: data.price,
       quantity: data.quantity,
+      nameDirty: dirtyFields.name === true,
+      priceDirty: dirtyFields.price === true,
     });
   });
 

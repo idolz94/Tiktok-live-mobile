@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
@@ -41,7 +42,7 @@ export default function AddressPickerPage() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.neutral100 }]}>
       <View style={styles.header}>
         <Pressable onPress={close} hitSlop={12} style={styles.backButton}>
-          <View style={styles.backIcon}><Icon name="arrow_down" size={22} tintColor="neutral900" /></View>
+          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
         </Pressable>
         <Text style={[styles.title, { color: colors.neutral900 }, textPresets.fs18_500]}>{session.title}</Text>
         <View style={styles.headerSpacer} />
@@ -104,7 +105,6 @@ const styles = createStyles(() => ({
   safeArea: { flex: 1 },
   header: { flexDirection: "row" as const, alignItems: "center" as const, paddingHorizontal: 16, paddingVertical: 12 },
   backButton: { width: 40, height: 40, alignItems: "center" as const, justifyContent: "center" as const },
-  backIcon: { transform: [{ rotate: "-90deg" }] },
   title: { flex: 1, textAlign: "center" as const },
   headerSpacer: { width: 40 },
   searchBox: { marginHorizontal: 16, height: 44, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, flexDirection: "row" as const, alignItems: "center" as const, gap: 8 },

@@ -15,17 +15,9 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Animated from "react-native-reanimated";
-import { AnimatedStyleHandle } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 import { RegisterForm, RegisterSchema } from "@features/auth/schemas";
 
-type Props = {
-  animatedStyle: AnimatedStyleHandle<{
-    opacity: number;
-  }>;
-};
-
-export const Register = ({ animatedStyle }: Props) => {
+export const Register = () => {
   const { colors } = useThemes();
   const { register } = useAuth();
 
@@ -68,9 +60,7 @@ export const Register = ({ animatedStyle }: Props) => {
 
   return (
     <FormProvider {...formMethod}>
-      <Animated.View
-        style={[StyleSheet.absoluteFill, animatedStyle, { rowGap: 20 }]}
-      >
+      <View style={{ rowGap: 20 }}>
         <View style={{ rowGap: 8 }}>
           <Text style={styles.label}>Họ và tên</Text>
           <View style={{ rowGap: 6 }}>
@@ -255,7 +245,7 @@ export const Register = ({ animatedStyle }: Props) => {
             {isLoading ? "Đang xử lý..." : "Đăng ký"}
           </Text>
         </Pressable>
-      </Animated.View>
+      </View>
     </FormProvider>
   );
 };

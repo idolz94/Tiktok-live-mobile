@@ -4,6 +4,7 @@ import {
   ShippingProvider,
   ShippingProviderSheet,
 } from "@features/orders/components/shipping-provider-sheet";
+import { SpxConnectSheet } from "@features/settings/components/spx-connect-sheet";
 import { useOrderDetail } from "@features/orders/hooks/use-order-detail";
 import { formatMoney } from "@features/orders/utils/order";
 import { useSpxAccount } from "@features/settings/hooks/use-spx-account";
@@ -37,7 +38,7 @@ export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useOrderDetail(id ?? "");
   const { show, hide } = useBottomSheet();
-  const { connected: spxConnected } = useSpxAccount();
+  const { connected: spxConnected, submitting, connect } = useSpxAccount();
   const [selectedProvider, setSelectedProvider] =
     useState<ShippingProvider>("manual");
 
@@ -140,13 +141,13 @@ export const OrderDetail = memo(() => {
   const handleSaveProductEdit = useCallback(
     (
       itemId: string,
-      data: { name: string; price: number; quantity: number },
+      data: { name: string; price: number; quantity: number; nameDirty: boolean; priceDirty: boolean },
     ) => {
       if (!itemId) return;
       hide();
       detail.handleUpdateProduct(itemId, {
-        productName: data.name,
-        price: data.price,
+        ...(data.nameDirty ? { productName: data.name } : {}),
+        ...(data.priceDirty ? { price: data.price } : {}),
         quantity: data.quantity,
       });
     },
@@ -282,8 +283,26 @@ export const OrderDetail = memo(() => {
                           close();
                         }}
                         onConnectSpx={() => {
-                          close();
-                          router.push("/shipping-settings");
+                          let sheetId: string;
+                          const closeConnectSheet = () => hide(sheetId);
+                          sheetId = show({
+                            content: (
+                              <SpxConnectSheet
+                                submitting={submitting}
+                                onSubmit={async (data) => {
+                                  const ok = await connect(data);
+                                  if (ok) {
+                                    closeConnectSheet();
+                                    Alert.alert("Thành công", "Đã kết nối tài khoản SPX");
+                                  } else {
+                                    Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
+                                  }
+                                }}
+                                onClose={closeConnectSheet}
+                              />
+                            ),
+                            enablePanDownToClose: false,
+                          });
                         }}
                       />
                     ),

@@ -48,7 +48,7 @@ export function useSpxShipping({
   const [feeError, setFeeError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !selectedSender || !selectedRecipient) {
       setVouchers([]);
       setVouchersError(null);
       setSelectedVoucherCode(null);
@@ -73,7 +73,7 @@ export function useSpxShipping({
     return () => {
       cancelled = true;
     };
-  }, [enabled, setSelectedVoucherCode]);
+  }, [enabled, selectedSender, selectedRecipient, setSelectedVoucherCode]);
 
   useEffect(() => {
     if (!enabled || collectType !== 1) {

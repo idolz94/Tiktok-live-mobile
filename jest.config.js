@@ -7,6 +7,9 @@ module.exports = {
   testPathIgnorePatterns: ["/node_modules/", "<rootDir>/\\.claude/"],
   modulePathIgnorePatterns: ["<rootDir>/\\.claude/"],
   moduleNameMapper: {
+    "^react-native-mmkv$": "<rootDir>/__mocks__/react-native-mmkv.js",
+    "^@react-native-async-storage/async-storage$": "<rootDir>/__mocks__/async-storage.js",
+    "^react-native-reanimated$": "<rootDir>/__mocks__/react-native-reanimated.js",
     "^@contexts/(.*)$": "<rootDir>/src/contexts/$1",
     "^@declare/(.*)$": "<rootDir>/declare/$1",
     "^@declare$": "<rootDir>/declare/index",

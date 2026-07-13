@@ -1,8 +1,11 @@
 import { useLocalSearchParams, router } from "expo-router";
 import { useState, useCallback } from "react";
-import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "@components/linear-gradient";
+import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { getShipmentLabelApi } from "../service/create-shipment-api";
 import { formatLocaleInput } from "../utils/shipment";
@@ -33,6 +36,7 @@ function fmtMoney(raw: string | undefined): string {
 }
 
 export default function OrderSuccessScreen() {
+  const { colors } = useThemes();
   const params = useLocalSearchParams<Params>();
   const isSpx = params.provider === "spx";
   const codAmount = params.codAmount ?? "0";
@@ -60,15 +64,15 @@ export default function OrderSuccessScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
       {/* background gradient */}
       <LinearGradient
-        colors={["rgba(255,107,138,0.28)", "rgba(255,166,109,0.15)", "rgba(255,255,255,0)"]}
-        style={styles.bgGradient}
+        type="gra_background"
+        style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
 
       {/* header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <Text style={styles.backIcon}>‹</Text>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
         </Pressable>
         <Text style={styles.headerTitle}>Tạo đơn hàng thành công</Text>
         <View style={styles.backBtn} />
@@ -163,23 +167,22 @@ export default function OrderSuccessScreen() {
       {/* bottom CTA */}
       <View style={styles.floatingBottom}>
         <Pressable onPress={handleDone} style={styles.ctaWrapper}>
-          <LinearGradient
+          <ExpoLinearGradient
             colors={["#FF6B8A", "#FFA66D", "#FFC86A"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.ctaButton}
           >
             <Text style={styles.ctaText}>Hoàn tất &amp; Về trang chủ</Text>
-          </LinearGradient>
+          </ExpoLinearGradient>
         </Pressable>
       </View>
     </SafeAreaView>
   );
 }
 
-const styles = createStyles(({ colors, textPresets }) => ({
+const styles = createStyles(({ colors, textPresets, shadows }) => ({
   safeArea: { flex: 1, backgroundColor: colors.neutral100 },
-  bgGradient: { position: "absolute", top: 0, left: 0, right: 0, height: 290 },
   header: {
     height: 44,
     flexDirection: "row",
@@ -187,8 +190,15 @@ const styles = createStyles(({ colors, textPresets }) => ({
     paddingHorizontal: 16,
     justifyContent: "space-between",
   },
-  backBtn: { width: 32, alignItems: "center" },
-  backIcon: { color: colors.neutral900, fontSize: 34, lineHeight: 34, marginTop: -4 },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.neutral100,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.sd1,
+  },
   headerTitle: { flex: 1, textAlign: "center", color: colors.neutral900, ...textPresets.fs16_500 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 120, gap: 16 },
   successBanner: { alignItems: "center", paddingVertical: 16, gap: 12 },

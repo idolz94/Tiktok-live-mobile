@@ -108,3 +108,14 @@ export const deleteTikTokChannelApi = async (
 ): Promise<void> => {
   await apiClient.delete(`/me/tiktok-channels/${channelId}`);
 };
+
+export const updateProfileApi = async (payload: {
+  fullName?: string;
+  phone?: string | null;
+  shopName?: string;
+  facebookUrl?: string | null;
+  tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
+}): Promise<void> => {
+  await apiClient.patch("/me/profile", payload);
+};

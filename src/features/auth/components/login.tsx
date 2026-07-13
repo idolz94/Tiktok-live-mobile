@@ -21,8 +21,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Animated from "react-native-reanimated";
-import { AnimatedStyleHandle } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 import { ForgotPass } from "./forgot-pass";
 
 const socialLogins = [
@@ -46,12 +44,9 @@ const socialLogins = [
 
 type Props = {
   switchToRegister: () => void;
-  animatedStyle: AnimatedStyleHandle<{
-    opacity: number;
-  }>;
 };
 
-export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
+export const Login = memo(({ switchToRegister }: Props) => {
   const { login } = useAuth();
   const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
@@ -113,7 +108,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
 
   return (
     <FormProvider {...formMethod}>
-      <Animated.View style={[{ rowGap: 20 }, animatedStyle]}>
+      <View style={{ rowGap: 20 }}>
         <View style={{ rowGap: 8 }}>
           <Text style={styles.label}>Tài khoản</Text>
           <Controller
@@ -258,7 +253,7 @@ export const Login = memo(({ switchToRegister, animatedStyle }: Props) => {
             <Text style={styles.registerTextNav}>{` Đăng ký ngay!`}</Text>
           </Pressable>
         </View>
-      </Animated.View>
+      </View>
     </FormProvider>
   );
 });

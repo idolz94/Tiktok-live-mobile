@@ -79,6 +79,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const clientIdRef = useRef(getOrCreateClientId());
   const isManualCloseRef = useRef(false);
+  // ponytail: chỉ reconnect foreground khi user đã từng bấm Kết nối
+  const hasEverConnectedRef = useRef(false);
   const isAuthFailedRef = useRef(false);
   const isConnectedRef = useRef(false);
   const isResumingRef = useRef(false);
@@ -381,6 +383,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     });
 
     isManualCloseRef.current = false;
+    hasEverConnectedRef.current = true;
     try {
       abortControllerRef.current?.abort();
     } catch {}
@@ -723,6 +726,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       isAppActiveRef.current = true;
 
       if (isManualCloseRef.current) return;
+      // ponytail: chỉ resume khi user đã từng bấm Kết nối
+      if (!hasEverConnectedRef.current) return;
 
         setTimeout(async () => {
           debugLiveLifecycle("RESUME_TIMER_FIRED", {
@@ -800,6 +805,32 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     };
   }, []);
   // ---end: setup effect---
+
+  // ---start: logout cleanup — clear live state khi user logout---
+  useEffect(() => {
+    if (hasAuthUser) return;
+
+    isManualCloseRef.current = true;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
+    hasEverConnectedRef.current = false;
+    isAuthFailedRef.current = false;
+    retryCountRef.current = 0;
+
+    clearComments();
+    clearLiveHistory();
+    setIsConnected(false);
+    setIsConnecting(false);
+    setLiveError(null);
+    setViewersCount(0);
+  }, [hasAuthUser, clearComments, clearLiveHistory]);
+  // ---end: logout cleanup---
 
   return {
     status,

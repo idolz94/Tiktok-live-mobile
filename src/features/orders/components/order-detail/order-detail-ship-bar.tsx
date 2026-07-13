@@ -57,9 +57,9 @@ export function OrderDetailShipBar({
         {actions.map((btn) => (
           <Pressable
             key={btn.key}
-            style={styles.actionItem}
+            style={[styles.actionItem, btn.key === "confirm" && btn.active ? { opacity: 0.4 } : undefined]}
             onPress={btn.onPress}
-            disabled={btn.loading}
+            disabled={btn.loading || (btn.key === "confirm" && !!btn.active)}
           >
             {btn.loading ? (
               <ActivityIndicator size="small" color={colors.primary} />

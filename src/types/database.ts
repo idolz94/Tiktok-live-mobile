@@ -46,6 +46,9 @@ export type Profile = {
   email: string | null;
   phone: string | null;
   avatar_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
+  youtube_url: string | null;
   status: 'active' | 'blocked';
   created_at: ISODateString;
   updated_at: ISODateString;

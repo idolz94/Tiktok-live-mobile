@@ -42,6 +42,7 @@ export function AddressFormModal({
   onSave,
 }: AddressFormModalProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemes();
 
   const {
     control,
@@ -154,7 +155,7 @@ export function AddressFormModal({
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   placeholder="Nhập họ và tên"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.textMuted}
                 />
               </FormField>
             )}
@@ -179,7 +180,7 @@ export function AddressFormModal({
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   placeholder="Nhập số điện thoại"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.textMuted}
                   keyboardType="phone-pad"
                 />
               </FormField>
@@ -251,7 +252,7 @@ export function AddressFormModal({
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   placeholder="Nhập địa chỉ chi tiết (số nhà, đường...)"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.textMuted}
                 />
               </FormField>
             )}
@@ -385,10 +386,10 @@ const formFieldStyles = createStyles(() => ({
   label: { marginBottom: 2 },
 }));
 
-const formModalStyles = createStyles(() => ({
+const formModalStyles = createStyles(({ colors }) => ({
   sheet: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
@@ -400,7 +401,7 @@ const formModalStyles = createStyles(() => ({
     marginBottom: 4,
   },
   sheetTitle: {
-    color: "#000",
+    color: colors.neutral900,
     fontSize: 18,
     lineHeight: 26,
     fontWeight: "600" as const,
@@ -409,12 +410,12 @@ const formModalStyles = createStyles(() => ({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#f2f2f2",
+    backgroundColor: colors.neutral50,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   closeBtnText: {
-    color: "#000",
+    color: colors.neutral500,
     fontSize: 24,
     lineHeight: 28,
   },
@@ -426,24 +427,25 @@ const formModalStyles = createStyles(() => ({
   },
   input: {
     minHeight: 44,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#fff",
+    borderColor: colors.border10,
+    backgroundColor: colors.surfaceAlt,
     paddingHorizontal: 12,
-    color: "#000",
+    color: colors.neutral900,
     fontSize: 14,
     lineHeight: 20,
   },
   inputError: {
-    borderColor: "#ef4444",
+    borderColor: colors.error,
+    backgroundColor: colors.errorLight,
   },
   pickerField: {
     minHeight: 44,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    backgroundColor: "#fff",
+    borderColor: colors.border10,
+    backgroundColor: colors.surfaceAlt,
     paddingHorizontal: 12,
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -451,12 +453,12 @@ const formModalStyles = createStyles(() => ({
   },
   pickerText: {
     flex: 1,
-    color: "#000",
+    color: colors.neutral900,
     fontSize: 14,
     lineHeight: 20,
   },
   pickerPlaceholder: {
-    color: "#9ca3af",
+    color: colors.textMuted,
   },
   pickerDisabled: {
     opacity: 0.5,
@@ -471,11 +473,12 @@ const formModalStyles = createStyles(() => ({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "space-between" as const,
+    paddingVertical: 4,
     gap: 12,
   },
   switchLabel: {
     flex: 1,
-    color: "#111827",
+    color: colors.neutral500,
     fontSize: 14,
     lineHeight: 22,
   },
@@ -485,39 +488,39 @@ const formModalStyles = createStyles(() => ({
     borderRadius: 24,
     justifyContent: "center" as const,
   },
-  switchTrackOn: { backgroundColor: "#ebb140" },
-  switchTrackOff: { backgroundColor: "#e5e7eb" },
+  switchTrackOn: { backgroundColor: colors.primary },
+  switchTrackOff: { backgroundColor: colors.border10 },
   switchThumb: {
     position: "absolute" as const,
     top: 2,
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
   },
   switchThumbOn: { right: 2 },
   switchThumbOff: { left: 2 },
   saveBtn: {
     height: 50,
-    borderRadius: 8,
-    backgroundColor: "#ebb140",
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    marginTop: 4,
+    marginTop: 8,
   },
-  saveBtnDisabled: { opacity: 0.65 },
+  saveBtnDisabled: { opacity: 0.5 },
   saveBtnText: {
-    color: "#fff",
-    fontSize: 14,
+    color: colors.white,
+    fontSize: 15,
     lineHeight: 22,
-    fontWeight: "700" as const,
-    letterSpacing: 0.7,
+    fontWeight: "600" as const,
+    letterSpacing: 0.3,
   },
   geoModalWrapper: {
     ...absoluteFill,
     justifyContent: "flex-end" as const,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: colors.transparent50,
   },
   backdrop: {
     ...absoluteFill,

@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Icon } from "@components/icon";
+import { Ionicons } from "@expo/vector-icons";
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 
 type OrderDetailHeaderProps = {
@@ -8,11 +9,12 @@ type OrderDetailHeaderProps = {
 };
 
 export function OrderDetailHeader({ onBack }: OrderDetailHeaderProps) {
+  const { colors } = useThemes();
   const { top } = useSafeAreaInsets();
   return (
-    <View style={[styles.header, { paddingTop: top + 10 }]}>
+    <View style={[styles.header, { paddingTop: top + 14 }]}>
       <Pressable onPress={onBack} hitSlop={12} style={styles.headerBtn}>
-        <Icon name="arrow_down" size={22} tintColor="neutral900" />
+        <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
       </Pressable>
       <Text style={styles.headerTitle}>Tổng quan đơn hàng</Text>
       <View style={styles.headerSpacer} />
@@ -26,7 +28,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "center",
     backgroundColor: "transparent",
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 16,
   },
   headerBtn: {
     width: 44,

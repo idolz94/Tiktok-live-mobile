@@ -1,5 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -22,6 +20,18 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { ToastData } from "./type";
+
+// ponytail: variant config table — icon char + pill color per variant
+const VARIANT_CONFIG: Record<
+  string,
+  { char: string; color: string }
+> = {
+  success: { char: "✓", color: "#2ca87b" },
+  error:   { char: "✕", color: "#ff4242" },
+  warning: { char: "!",  color: "#ffa800" },
+  info:    { char: "i",  color: "#468adf" },
+  loading: { char: "",   color: "#ff6b8a" },
+};
 
 interface ToastItemProps {
   toast: ToastData;
@@ -53,7 +63,7 @@ export const ToastItem = React.memo(function ToastItem({
     visible,
   } = toast;
 
-  const { colors, shadows } = useThemes();
+  const cfg = VARIANT_CONFIG[variant] ?? VARIANT_CONFIG.info;
 
   // Animations shared values
   const translateX = useSharedValue(0);
@@ -252,48 +262,22 @@ export const ToastItem = React.memo(function ToastItem({
     };
   });
 
-  // Render variant-specific icons
   const renderIcon = () => {
-    if (icon) {
-      if (typeof icon === "string") {
-        return <Ionicons name={icon as any} size={22} color={getIconColor()} />;
-      }
-      return icon;
+    if (icon) return typeof icon === "string" ? null : icon;
+
+    if (variant === "loading") {
+      return (
+        <View style={[styles.iconPill, { backgroundColor: cfg.color }]}>
+          <ActivityIndicator size="small" color="#fff" />
+        </View>
+      );
     }
 
-    switch (variant) {
-      case "success":
-        return (
-          <Ionicons name="checkmark-circle" size={22} color={colors.success} />
-        );
-      case "error":
-        return <Ionicons name="close-circle" size={22} color={colors.error} />;
-      case "warning":
-        return <Ionicons name="warning" size={22} color={colors.warning} />;
-      case "info":
-        return (
-          <Ionicons name="information-circle" size={22} color={colors.info} />
-        );
-      case "loading":
-        return <ActivityIndicator size="small" color={colors.primary} />;
-      default:
-        return null;
-    }
-  };
-
-  const getIconColor = () => {
-    switch (variant) {
-      case "success":
-        return colors.success;
-      case "error":
-        return colors.error;
-      case "warning":
-        return colors.warning;
-      case "info":
-        return colors.info;
-      default:
-        return colors.text;
-    }
+    return (
+      <View style={[styles.iconPill, { backgroundColor: cfg.color }]}>
+        <Text style={styles.iconChar}>{cfg.char}</Text>
+      </View>
+    );
   };
 
   const horizontalStyle = React.useMemo(() => {
@@ -317,25 +301,21 @@ export const ToastItem = React.memo(function ToastItem({
         style={[
           styles.container,
           horizontalStyle,
-          shadows.sd3,
           animatedStyle,
-          {
-            borderColor: colors.borderLight,
-            zIndex: 100 - index,
-          },
+          { zIndex: 100 - index },
         ]}
         accessibilityRole={(toast.accessibilityRole as any) || "alert"}
         accessibilityLiveRegion="polite"
       >
         <View style={styles.contentRow}>
           {/* Icon */}
-          <View style={styles.iconContainer}>{renderIcon()}</View>
+          {renderIcon()}
 
           {/* Text Contents */}
           <View style={styles.textContainer}>
             {typeof title === "string" ? (
               <Text
-                style={[styles.title, { color: colors.text }]}
+                style={styles.title}
                 numberOfLines={2}
               >
                 {title}
@@ -347,7 +327,7 @@ export const ToastItem = React.memo(function ToastItem({
               <View style={styles.descWrapper}>
                 {typeof description === "string" ? (
                   <Text
-                    style={[styles.description, { color: colors.textMuted }]}
+                    style={styles.description}
                     numberOfLines={3}
                   >
                     {description}
@@ -375,7 +355,7 @@ export const ToastItem = React.memo(function ToastItem({
               accessibilityLabel={action.label}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Text style={[styles.actionLabel, { color: colors.primary }]}>
+              <Text style={styles.actionLabel}>
                 {action.label}
               </Text>
             </Pressable>
@@ -386,43 +366,58 @@ export const ToastItem = React.memo(function ToastItem({
   );
 });
 
-const styles = createStyles(({ textPresets }) => ({
+const styles = createStyles(() => ({
   container: {
     position: "absolute",
     left: 16,
     right: 16,
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingVertical: 12,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 16,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     minHeight: 52,
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 8,
   },
   contentRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 12,
   },
-  iconContainer: {
-    width: 24,
-    height: 24,
+  iconPill: {
+    width: 32,
+    height: 32,
+    borderRadius: 100,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+  },
+  iconChar: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 16,
   },
   textContainer: {
     flex: 1,
     justifyContent: "center",
   },
   title: {
-    ...textPresets.fs14_500,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#fff",
     lineHeight: 18,
   },
   descWrapper: {
     marginTop: 2,
   },
   description: {
-    ...textPresets.fs12_400,
+    fontSize: 12,
+    fontWeight: "400",
+    color: "rgba(255,255,255,0.7)",
     lineHeight: 16,
   },
   actionButton: {
@@ -433,6 +428,8 @@ const styles = createStyles(({ textPresets }) => ({
     alignItems: "center",
   },
   actionLabel: {
-    ...textPresets.fs14_500,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#fff",
   },
 }));

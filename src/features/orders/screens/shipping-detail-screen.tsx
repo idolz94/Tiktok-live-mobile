@@ -60,6 +60,7 @@ export default function ShippingDetailScreen() {
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
   const [printing, setPrinting] = useState(false);
+  const [navigated, setNavigated] = useState(false);
 
   const order = orderParam
     ? (() => { try { return JSON.parse(orderParam) as ShippingOrder; } catch { return null; } })()
@@ -121,7 +122,7 @@ export default function ShippingDetailScreen() {
       )}
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
@@ -183,8 +184,12 @@ export default function ShippingDetailScreen() {
               </Pressable>
             </View>
             <Pressable
-              style={styles.detailLink}
-              onPress={() => router.push({ pathname: "/order-detail" as never, params: { orderId: order.id } })}
+              style={[styles.detailLink, navigated && { opacity: 0.4 }]}
+              disabled={navigated}
+              onPress={() => {
+                setNavigated(true);
+                router.push({ pathname: "/order-detail" as never, params: { id: order.id } });
+              }}
             >
               <Text style={[{ color: isCancelled ? "#ff6b8a" : colors.primary, ...textPresets.fs14_500 }]}>Chi tiết</Text>
               <Ionicons name="chevron-forward" size={14} color={isCancelled ? "#ff6b8a" : colors.primary} />
@@ -294,17 +299,17 @@ export default function ShippingDetailScreen() {
               <Pressable style={[styles.actionButton, { backgroundColor: colors.neutral50 }]} onPress={() => { void handlePrintLabel(); }} disabled={printing}>
                 {printing
                   ? <ActivityIndicator size="small" color={colors.text} />
-                  : <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>In vận đơn</Text>
+                  : <>
+                      <Ionicons name="print-outline" size={18} color={colors.text} />
+                      <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>In Đơn Hàng SPX</Text>
+                    </>
                 }
               </Pressable>
-              <Pressable style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}>
-                <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>{"Chăm sóc\nkhách hàng"}</Text>
-              </Pressable>
-              <Pressable style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}>
-                <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>Chỉnh sửa</Text>
-              </Pressable>
-              <Pressable style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}>
-                <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>Xem thêm</Text>
+              <Pressable
+                style={[styles.actionButton, { backgroundColor: colors.neutral50, opacity: 0.4 }]}
+                disabled
+              >
+                <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>Bỏ Chốt</Text>
               </Pressable>
             </>
           )}
@@ -319,7 +324,7 @@ const styles = createStyles(({ colors }) => ({
   headerBackground: { position: "absolute", top: 0, left: 0, right: 0, height: 290 },
   header: {
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -402,6 +407,7 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 44,
+    gap: 4,
   },
   actionButtonText: { textAlign: "center", lineHeight: 18 },
 }));

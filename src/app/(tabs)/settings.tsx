@@ -36,7 +36,11 @@ const settingGroups: {
     { icon: images.logo_facebook, label: "Quản lý kênh Facebook" },
   ],
   [
-    { icon: icons.settings, label: "Cài đặt chung" },
+    {
+      icon: icons.settings,
+      label: "Cài đặt chung",
+      onPress: () => router.push("/edit-profile"),
+    },
     {
       icon: icons.clipboard_check,
       label: "Cài đặt thông tin SP trước Live",

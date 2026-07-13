@@ -295,8 +295,9 @@ export default function ProductInfoSetupScreen() {
                 </View>
                 <View style={styles.presetInfo}>
                   <Text style={styles.presetCode} numberOfLines={1}>
-                    Mã: {preset.code}
-                    {preset.color ? ` - ${preset.color}` : ""}
+                    {preset.code}
+                    {preset.name ? ` - ${preset.name}` : ""}
+                    {preset.color ? ` (${preset.color})` : ""}
                   </Text>
                   <Text style={styles.presetMeta} numberOfLines={1}>
                     {formatPrice(preset.price)} VNĐ

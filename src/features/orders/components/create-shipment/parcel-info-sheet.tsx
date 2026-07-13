@@ -101,10 +101,16 @@ export function ParcelInfoSheet({
     onClose();
   };
 
-  const checkboxState: Record<string, { value: 0 | 1; toggle: () => void }> = {
+  const mutualLockedByTryOn = localTryOn === 1;
+
+  const checkboxState: Record<string, { value: 0 | 1; toggle: () => void; disabled?: boolean }> = {
     allowTryOn: {
       value: localTryOn,
-      toggle: () => setLocalTryOn((v) => (v === 1 ? 0 : 1)),
+      toggle: () => {
+        const next = localTryOn === 1 ? 0 : 1;
+        setLocalTryOn(next);
+        if (next === 1) setLocalMutual(1);
+      },
     },
     allowPartialDelivery: {
       value: localPartial,
@@ -112,7 +118,11 @@ export function ParcelInfoSheet({
     },
     allowMutualCheck: {
       value: localMutual,
-      toggle: () => setLocalMutual((v) => (v === 1 ? 0 : 1)),
+      disabled: mutualLockedByTryOn,
+      toggle: () => {
+        if (mutualLockedByTryOn) return;
+        setLocalMutual((v) => (v === 1 ? 0 : 1));
+      },
     },
   };
 
@@ -182,12 +192,13 @@ export function ParcelInfoSheet({
           ]}
         >
           {CHECKBOXES.map((item) => {
-            const { value, toggle } = checkboxState[item.key];
+            const { value, toggle, disabled } = checkboxState[item.key];
             return (
               <Pressable
                 key={item.key}
                 onPress={toggle}
-                style={styles.checkboxRow}
+                disabled={disabled}
+                style={[styles.checkboxRow, disabled && { opacity: 0.45 }]}
               >
                 <View
                   style={[

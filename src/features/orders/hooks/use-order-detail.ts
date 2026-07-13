@@ -280,8 +280,30 @@ export function useOrderDetail(orderId: string) {
       updatingRef.current = true;
       patchMutating({ updateProduct: true });
       try {
+        // ponytail: capture prevProducts qua functional setOrder để tránh stale closure
+        let prevProducts: OrderProduct[] = [];
+        setOrder((prev) => {
+          prevProducts = prev?.products ?? [];
+          return prev;
+        });
         await updateOrderItemApi(orderId, itemId, payload);
         await silentRefetch();
+        // Merge lại các display field từ item cũ nếu server trả về empty
+        setOrder((prev) => {
+          if (!prev) return prev;
+          const products = prev.products.map((p) => {
+            if (p.id !== itemId) return p;
+            const old = prevProducts.find((o) => o.id === itemId);
+            if (!old) return p;
+            return {
+              ...p,
+              code: p.code || old.code,
+              color: p.color || old.color,
+              variantName: p.variantName || old.variantName,
+            };
+          });
+          return { ...prev, products };
+        });
         patchUi({ editProductOpen: false });
         setSelectedProductId(null);
       } finally {
@@ -352,10 +374,9 @@ export function useOrderDetail(orderId: string) {
   const orderStatus = order?.status;
 
   const handleToggleConfirm = useCallback(async () => {
-    if (!orderId_ || confirmRef.current) return;
+    if (!orderId_ || confirmRef.current || orderStatus !== "draft") return;
 
-    const nextStatus: OrderStatus =
-      orderStatus === "confirmed" ? "draft" : "confirmed";
+    const nextStatus: OrderStatus = "confirmed";
 
     confirmRef.current = true;
     patchMutating({ confirm: true });

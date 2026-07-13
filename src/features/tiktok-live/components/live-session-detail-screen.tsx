@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { OrderFilter, OrderWithTikTok } from "@app-types/index";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
@@ -123,9 +124,7 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
         {/* Header */}
         <View style={[styles.header, { paddingTop: top + 12 }]}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-            <View style={styles.backIcon}>
-              <Icon name="arrow_down" size={20} tintColor="neutral900" />
-            </View>
+            <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
           </Pressable>
           <View style={styles.headerTitles}>
             <Text style={styles.headerTitle} numberOfLines={1}>
@@ -247,9 +246,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     alignItems: "center",
     justifyContent: "center",
     ...shadows.sd1,
-  },
-  backIcon: {
-    transform: [{ rotate: "90deg" }],
   },
   headerTitles: {
     flex: 1,

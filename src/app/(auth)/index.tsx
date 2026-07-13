@@ -8,46 +8,18 @@ import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
 import { Mode } from "@features/auth/schemas";
 
 export default function AuthScreen() {
   const params = useLocalSearchParams<{ mode?: Mode }>();
   const initialMode = params.mode === "register" ? "register" : "login";
 
-  const progress = useSharedValue(initialMode === "register" ? 1 : 0);
-
   const [mode, setMode] = useState<Mode>(initialMode);
 
   const isLogin = mode === "login";
 
-  const loginStyle = useAnimatedStyle(() => ({
-    opacity: 1 - progress.value,
-  }));
-
-  const registerStyle = useAnimatedStyle(() => ({
-    opacity: progress.value,
-  }));
-
-  const switchToRegister = () => {
-    setMode("register");
-
-    progress.value = withTiming(1, {
-      duration: 300,
-    });
-  };
-
-  const switchToLogin = () => {
-    setMode("login");
-
-    progress.value = withTiming(0, {
-      duration: 300,
-    });
-  };
+  const switchToRegister = () => setMode("register");
+  const switchToLogin = () => setMode("login");
 
   return (
     <Screen>
@@ -71,15 +43,12 @@ export default function AuthScreen() {
           <KeyboardAwareScrollView
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 40 }}
           >
-            <Login
-              switchToRegister={switchToRegister}
-              animatedStyle={loginStyle}
-            />
-            <Register
-              animatedStyle={registerStyle}
-            />
+            {isLogin ? (
+              <Login switchToRegister={switchToRegister} />
+            ) : (
+              <Register />
+            )}
           </KeyboardAwareScrollView>
         </View>
       </View>
@@ -87,7 +56,7 @@ export default function AuthScreen() {
   );
 }
 
-const styles = createStyles(({ colors, shadows, textPresets }) => ({
+const styles = createStyles(({ colors, textPresets }) => ({
   safeArea: {
     flex: 1,
     paddingTop: 40,

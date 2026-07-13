@@ -48,11 +48,13 @@ export function OrderDetailProductsSection({
           <View key={product.id || index} style={styles.productItem}>
             <View style={styles.productInfo}>
               <Text style={styles.productName} numberOfLines={2}>
-                {product.name || product.code || "Sản phẩm"}
+                {product.code
+                  ? `Mã: ${product.code}${product.color ? ` - ${product.color}` : ""}${product.name && product.name !== product.code ? ` (${product.name})` : ""}`
+                  : product.name || "Sản phẩm"}
               </Text>
-              {(product.variantName || product.color || product.size) ? (
+              {(!product.code && (product.variantName || product.size)) ? (
                 <Text style={styles.productVariant} numberOfLines={1}>
-                  {product.variantName || [product.color, product.size].filter(Boolean).join(" / ")}
+                  {product.variantName || product.size}
                 </Text>
               ) : null}
             </View>
@@ -76,10 +78,7 @@ export function OrderDetailProductsSection({
               <View style={styles.productQtyPriceRow}>
                 <Text style={styles.productQty}>x{product.quantity}</Text>
                 <Text style={styles.productPrice}>
-                  {formatMoney(
-                    product.totalAmount ||
-                      Number(product.price || 0) * Number(product.quantity || 0),
-                  )}
+                  {formatMoney(product.totalAmount ?? 0)}
                 </Text>
               </View>
             </View>

@@ -13,6 +13,8 @@ import * as WebBrowser from "expo-web-browser";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
+import { LinearGradient } from "@components/linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import {
   SectionBlock,
@@ -33,6 +35,7 @@ import type {
   PaymentSide,
 } from "@features/orders/types/shipment";
 import { useCreateShipment } from "@features/orders/hooks/use-create-shipment";
+import { useAuth } from "@features/auth/hooks/use-auth";
 
 const dimIcons = {
   length: require("../../../assets/images/dim-icons/length.png"),
@@ -44,6 +47,7 @@ const dimIcons = {
 export default function CreateShipmentScreen() {
   const { colors, textPresets } = useThemes();
   const { show, hide } = useBottomSheet();
+  const { user } = useAuth();
   const {
     order,
     isManualProvider,
@@ -151,6 +155,9 @@ export default function CreateShipmentScreen() {
             target === "sender"
               ? shopAddresses.length === 0
               : customerAddresses.length === 0,
+          ...(target === "sender" && user?.fullName
+            ? { name: user.fullName }
+            : {}),
         };
     setForm({
       title,
@@ -298,9 +305,9 @@ export default function CreateShipmentScreen() {
   };
 
   const openServicePoint = () => {
-    // void WebBrowser.openBrowserAsync(
-    //   "https://spx.vn/service-point?service_type=support_sending_non_shopee_parcel&hide_header=true",
-    // );
+    void WebBrowser.openBrowserAsync(
+      "https://spx.vn/service-point?service_type=support_sending_non_shopee_parcel&hide_header=true",
+    );
   };
 
   if (!order) {
@@ -319,15 +326,19 @@ export default function CreateShipmentScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colors.neutral100 }]}
+      style={styles.safeArea}
     >
+      <LinearGradient
+        type="gra_background"
+        style={StyleSheet.absoluteFill}
+      />
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           hitSlop={12}
-          style={[styles.headerButton, { backgroundColor: colors.neutral50 }]}
+          style={styles.headerButton}
         >
-          <Icon name="close" size={20} tintColor="neutral900" />
+          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.neutral900 }]}>
           Tạo đơn hàng
@@ -335,7 +346,7 @@ export default function CreateShipmentScreen() {
         <View style={styles.headerActions}>
           <Pressable
             hitSlop={12}
-            style={[styles.headerButton, { backgroundColor: colors.neutral50 }]}
+            style={styles.headerButton}
           >
             <Icon name="settings" size={22} tintColor="neutral900" />
           </Pressable>
@@ -379,10 +390,8 @@ export default function CreateShipmentScreen() {
             onAddPress={() => openAddressForm("recipient")}
           />
         </View>
-        <View style={[styles.divider, { backgroundColor: colors.neutral50 }]} />
-
         {!isManualProvider && !isSpxProvider ? (
-          <SectionBlock title="Thông tin đơn hàng">
+          <SectionBlock title="Thông tin đơn hàng" noPaddingHorizontal>
             <Pressable
               onPress={openDimensions}
               style={[
@@ -443,187 +452,192 @@ export default function CreateShipmentScreen() {
             </Pressable>
           </SectionBlock>
         ) : null}
-        {!isManualProvider && !isSpxProvider ? (
+        <SectionBlock title="Thông tin vận chuyển" noPaddingHorizontal>
           <View
-            style={[styles.divider, { backgroundColor: colors.neutral50 }]}
-          />
-        ) : null}
-
-        <SectionBlock title="Thông tin vận chuyển">
-          <MoneyField
-            label="Tiền thu hộ (COD)"
-            value={codAmountDisplay}
-            onChangeText={setManualCodAmount}
-            editable={isManualProvider}
-          />
-          {!isSpxProvider && (
-            <>
-              <Text
-                style={[{ color: colors.neutral400 }, textPresets.fs14_400]}
-              >
-                Tùy chọn thanh toán
-              </Text>
-              <View style={styles.radioGroup}>
-                {[
-                  { label: "Bên gửi trả phí", value: 1 },
-                  { label: "Bên nhận trả phí", value: 0 },
-                ].map((opt) => (
-                  <Pressable
-                    key={opt.label}
-                    onPress={() => setPaymentSide(opt.value as PaymentSide)}
-                    style={[
-                      styles.radioCard,
-                      {
-                        borderColor:
-                          paymentSide === opt.value
-                            ? colors.primary
-                            : colors.border10,
-                      },
-                    ]}
-                  >
-                    <View
+            style={{
+              backgroundColor: colors.neutral100,
+              borderRadius: 16,
+              borderWidth: 0.5,
+              borderColor: colors.border10,
+              padding: 16,
+              gap: 12,
+            }}
+          >
+            <MoneyField
+              label="Tiền thu hộ (COD)"
+              value={codAmountDisplay}
+              onChangeText={setManualCodAmount}
+              editable={isManualProvider}
+            />
+            {!isSpxProvider && (
+              <>
+                <Text
+                  style={[{ color: colors.neutral400 }, textPresets.fs14_400]}
+                >
+                  Tùy chọn thanh toán
+                </Text>
+                <View style={styles.radioGroup}>
+                  {[
+                    { label: "Bên gửi trả phí", value: 1 },
+                    { label: "Bên nhận trả phí", value: 0 },
+                  ].map((opt) => (
+                    <Pressable
+                      key={opt.label}
+                      onPress={() => setPaymentSide(opt.value as PaymentSide)}
                       style={[
-                        styles.radioOuter,
+                        styles.radioCard,
                         {
                           borderColor:
                             paymentSide === opt.value
                               ? colors.primary
-                              : colors.neutral300,
+                              : colors.border10,
                         },
                       ]}
                     >
-                      {paymentSide === opt.value && (
-                        <View
-                          style={[
-                            styles.radioInner,
-                            { backgroundColor: colors.primary },
-                          ]}
-                        />
-                      )}
+                      <View
+                        style={[
+                          styles.radioOuter,
+                          {
+                            borderColor:
+                              paymentSide === opt.value
+                                ? colors.primary
+                                : colors.neutral300,
+                          },
+                        ]}
+                      >
+                        {paymentSide === opt.value && (
+                          <View
+                            style={[
+                              styles.radioInner,
+                              { backgroundColor: colors.primary },
+                            ]}
+                          />
+                        )}
+                      </View>
+                      <Text
+                        style={[
+                          { color: colors.neutral900 },
+                          textPresets.fs14_400,
+                        ]}
+                      >
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </>
+            )}
+            {isManualProvider ? (
+              <>
+                <ShipmentInput
+                  label="Phí vận chuyển"
+                  value={manualShippingFee}
+                  onChangeText={setManualShippingFee}
+                  placeholder="0"
+                  keyboardType="numeric"
+                  money
+                />
+                <ShipmentInput
+                  label="Ghi chú"
+                  value={manualNote}
+                  onChangeText={setManualNote}
+                  placeholder="Nhập ghi chú"
+                  multiline
+                />
+              </>
+            ) : isSpxProvider ? (
+              <SpxOptions
+                serviceType={serviceType}
+                setServiceType={setServiceType}
+                collectType={collectType}
+                setCollectType={setCollectType}
+                pickupTimeRangeId={pickupTimeRangeId}
+                pickupTimeKey={pickupTimeKey}
+                setPickupTime={setPickupTime}
+                timeslots={timeslots}
+                timeslotsLoading={timeslotsLoading}
+                timeslotsError={timeslotsError}
+                vouchers={vouchers}
+                vouchersLoading={vouchersLoading}
+                vouchersError={vouchersError}
+                selectedVoucherCode={selectedVoucherCode}
+                paymentSide={paymentSide}
+                setPaymentSide={setPaymentSide}
+                onOpenServicePoint={openServicePoint}
+                onOpenVoucherSheet={openVoucherSheet}
+                estimatedDelivery={estimatedDelivery}
+                feeLoading={feeLoading}
+                parcelInfoSlot={
+                  <Pressable
+                    onPress={openParcelSheet}
+                    style={[
+                      styles.parcelRow,
+                      {
+                        backgroundColor: colors.neutral50,
+                        borderColor: colors.border10,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
+                    >
+                      Thông tin bưu gửi{" "}
+                      <Text style={{ color: colors.error }}>*</Text>
+                    </Text>
+                    <View
+                      style={{
+                        flex: 1,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        columnGap: 4,
+                      }}
+                    >
+                      <Text
+                        style={[
+                          { color: colors.neutral500 },
+                          textPresets.fs12_400,
+                        ]}
+                      >
+                        {displayQuantity} Sản phẩm,{" "}
+                        {(
+                          (parseInt(weightInput.replace(/\D/g, ""), 10) || 0) /
+                          1000
+                        ).toFixed(1)}{" "}
+                        KG
+                      </Text>
+                      <Icon
+                        name="arrow_down"
+                        size={14}
+                        tintColor={colors.neutral400}
+                      />
                     </View>
-                    <Text
-                      style={[
-                        { color: colors.neutral900 },
-                        textPresets.fs14_400,
-                      ]}
-                    >
-                      {opt.label}
-                    </Text>
                   </Pressable>
-                ))}
-              </View>
-            </>
-          )}
-          {isManualProvider ? (
-            <>
-              <ShipmentInput
-                label="Phí vận chuyển"
-                value={manualShippingFee}
-                onChangeText={setManualShippingFee}
-                placeholder="0"
-                keyboardType="numeric"
-                money
+                }
               />
-              <ShipmentInput
-                label="Ghi chú"
-                value={manualNote}
-                onChangeText={setManualNote}
-                placeholder="Nhập ghi chú"
-                multiline
-              />
-            </>
-          ) : isSpxProvider ? (
-            <SpxOptions
-              serviceType={serviceType}
-              setServiceType={setServiceType}
-              collectType={collectType}
-              setCollectType={setCollectType}
-              pickupTimeRangeId={pickupTimeRangeId}
-              pickupTimeKey={pickupTimeKey}
-              setPickupTime={setPickupTime}
-              timeslots={timeslots}
-              timeslotsLoading={timeslotsLoading}
-              timeslotsError={timeslotsError}
-              vouchers={vouchers}
-              vouchersLoading={vouchersLoading}
-              vouchersError={vouchersError}
-              selectedVoucherCode={selectedVoucherCode}
-              paymentSide={paymentSide}
-              setPaymentSide={setPaymentSide}
-              onOpenServicePoint={openServicePoint}
-              onOpenVoucherSheet={openVoucherSheet}
-              estimatedDelivery={estimatedDelivery}
-              feeLoading={feeLoading}
-              parcelInfoSlot={
-                <Pressable
-                  onPress={openParcelSheet}
-                  style={[
-                    styles.parcelRow,
-                    {
-                      backgroundColor: colors.neutral50,
-                      borderColor: colors.border10,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
-                  >
-                    Thông tin bưu gửi{" "}
-                    <Text style={{ color: colors.error }}>*</Text>
-                  </Text>
-                  <View
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                      columnGap: 4,
-                    }}
-                  >
-                    <Text
-                      style={[
-                        { color: colors.neutral500 },
-                        textPresets.fs12_400,
-                      ]}
-                    >
-                      {displayQuantity} Sản phẩm,{" "}
-                      {(
-                        (parseInt(weightInput.replace(/\D/g, ""), 10) || 0) /
-                        1000
-                      ).toFixed(1)}{" "}
-                      KG
-                    </Text>
-                    <Icon
-                      name="arrow_down"
-                      size={14}
-                      tintColor={colors.neutral400}
-                    />
-                  </View>
-                </Pressable>
-              }
-            />
-          ) : (
-            <>
-              <ShippingOptions
-                viewCondition={viewCondition}
-                setViewCondition={setViewCondition}
-                deliveryPolicy={deliveryPolicy}
-                setDeliveryPolicy={setDeliveryPolicy}
-                refusalFee={refusalFee}
-                setRefusalFee={setRefusalFee}
-                pickupOption={pickupOption}
-                setPickupOption={setPickupOption}
-              />
-              <ShipmentInput
-                label="Ghi chú"
-                value={note}
-                onChangeText={setNote}
-                placeholder="Nhập ghi chú"
-                multiline
-                topSpacing
-              />
-            </>
-          )}
+            ) : (
+              <>
+                <ShippingOptions
+                  viewCondition={viewCondition}
+                  setViewCondition={setViewCondition}
+                  deliveryPolicy={deliveryPolicy}
+                  setDeliveryPolicy={setDeliveryPolicy}
+                  refusalFee={refusalFee}
+                  setRefusalFee={setRefusalFee}
+                  pickupOption={pickupOption}
+                  setPickupOption={setPickupOption}
+                />
+                <ShipmentInput
+                  label="Ghi chú"
+                  value={note}
+                  onChangeText={setNote}
+                  placeholder="Nhập ghi chú"
+                  multiline
+                  topSpacing
+                />
+              </>
+            )}
+          </View>
         </SectionBlock>
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -732,7 +746,7 @@ export default function CreateShipmentScreen() {
   );
 }
 
-const styles = createStyles(({ textPresets }) => ({
+const styles = createStyles(({ colors, textPresets, shadows }) => ({
   safeArea: { flex: 1 },
   centerBox: {
     flex: 1,
@@ -743,19 +757,21 @@ const styles = createStyles(({ textPresets }) => ({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingBottom: 16,
   },
   headerButton: {
     width: 44,
     height: 44,
-    borderRadius: 999,
+    borderRadius: 22,
+    backgroundColor: colors.neutral100,
     alignItems: "center",
     justifyContent: "center",
+    ...shadows.sd1,
   },
   headerTitle: {
     flex: 1,
     textAlign: "center",
-    ...textPresets.fs20_600,
+    ...textPresets.fs16_600,
   },
   headerActions: {
     width: 44,
@@ -805,7 +821,6 @@ const styles = createStyles(({ textPresets }) => ({
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
   },
-  divider: { height: 8 },
   dimCard: { borderRadius: 16, borderWidth: 0.5, padding: 16, gap: 8 },
   dimRow: {
     flexDirection: "row",

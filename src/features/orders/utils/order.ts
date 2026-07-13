@@ -27,25 +27,36 @@ export function parseOrderFromComment(comment: string) {
   };
 }
 
+// ponytail: dùng ?? thay vì || để empty string và 0 không bị fallthrough
+function firstNonNil(...values: unknown[]): unknown {
+  return values.find((v) => v != null);
+}
+
 export function normalizeProductForUi(product: any, order?: any): OrderProduct {
   const code = String(
-    product?.code || product?.product_code || product?.productCode || "",
+    firstNonNil(product?.code, product?.product_code, product?.productCode) ?? "",
   );
-  const name = String(
-    product?.name ||
-      product?.product_name ||
-      product?.productName ||
-      order?.productName ||
-      order?.product_name ||
-      order?.comment ||
-      order?.comment_text ||
-      "Sản phẩm",
+  const rawName = firstNonNil(
+    product?.name,
+    product?.product_name,
+    product?.productName,
+    order?.productName,
+    order?.product_name,
+    order?.comment,
+    order?.comment_text,
   );
-  const quantity = Number(product?.quantity || 1);
-  const price = Number(product?.price || order?.price || 0);
-  const totalAmount = Number(
-    product?.totalAmount || product?.total_amount || quantity * price,
-  );
+  // Chỉ fallback về "Sản phẩm" khi không có giá trị nào (null/undefined/empty string sau trim)
+  const nameStr = rawName != null ? String(rawName).trim() : "";
+  const name = nameStr || "Sản phẩm";
+  const quantity = Number(product?.quantity ?? 1) || 1;
+  const rawPrice = firstNonNil(product?.price, order?.price);
+  const price = rawPrice != null ? Number(rawPrice) : 0;
+  // ponytail: ưu tiên tính lại từ quantity * price để đồng bộ sau mỗi update
+  const rawTotal = firstNonNil(product?.totalAmount, product?.total_amount);
+  const totalAmount =
+    rawTotal != null && Number(rawTotal) > 0
+      ? Number(rawTotal)
+      : quantity * price;
 
   return {
     id: String(product?.id || createId()),

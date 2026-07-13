@@ -131,7 +131,7 @@ export const OrderItem = memo(
                 <View style={[styles.productName, styles.productInfo]}>
                   <Text numberOfLines={2} style={styles.txtProduct}>
                     {p.code
-                      ? `Mã: ${p.code}${p.color ? ` - ${p.color}` : ""}${p.name && p.name !== p.code ? ` (${p.name})` : ""}`
+                      ? `Mã: ${p.code} - ${p.name || ""}${p.color ? ` (${p.color})` : ""}`
                       : p.name || "Sản phẩm"}
                   </Text>
                 </View>

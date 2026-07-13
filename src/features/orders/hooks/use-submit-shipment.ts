@@ -9,7 +9,6 @@ import {
   submitSpxApi,
 } from "../service/create-shipment-api";
 import { PaymentSide, PickupOption, Transport, ServiceType, CollectType } from "../types/shipment";
-import { parseLocaleNumber } from "../utils/shipment";
 
 type Deps = {
   order: OrderWithTikTok | null;
@@ -68,7 +67,6 @@ export function useSubmitShipment(deps: Deps) {
       paymentSide,
       note,
       manualShippingFee,
-      manualCodAmount,
       manualNote,
       manualFee,
       senderAddressId,
@@ -105,8 +103,10 @@ export function useSubmitShipment(deps: Deps) {
         await submitManualShippingApi(order.id, {
           paymentSide,
           shippingFee: manualShippingFee.trim() ? manualFee : undefined,
-          codAmount: manualCodAmount.trim() ? parseLocaleNumber(manualCodAmount) : undefined,
           note: manualNote.trim() || undefined,
+          idempotencyKey,
+          senderAddressId: selectedSender.id,
+          customerAddressId: selectedRecipient.id,
         });
         setSubmitState("success");
         router.replace({
@@ -183,16 +183,17 @@ export function useSubmitShipment(deps: Deps) {
         setSubmitState("outcome_unknown");
         setLastError("Không thể xác nhận trạng thái. Vui lòng thử lại hoặc quay lại kiểm tra.");
       } else {
-        setSubmitState("idle");
-        setLastError(
+        // ponytail: capture msg before setState — lastError is stale in the same render cycle
+        const msg =
           err instanceof Error
             ? err.message
-            : "Tạo vận đơn thất bại. Vui lòng kiểm tra thông tin và thử lại."
-        );
-        Alert.alert("Tạo vận đơn thất bại", lastError || "Vui lòng kiểm tra thông tin và thử lại.");
+            : "Tạo vận đơn thất bại. Vui lòng kiểm tra thông tin và thử lại.";
+        setSubmitState("idle");
+        setLastError(msg);
+        Alert.alert("Tạo vận đơn thất bại", msg);
       }
     }
-  }, [deps, lastError]);
+  }, [deps]);
 
   const handleRetryOutcomeUnknown = useCallback(async () => {
     setSubmitState("submitting");

@@ -224,6 +224,9 @@ export type AuthUser = {
   canUseApp?: boolean;
   hasOrders?: boolean;
   hasHistory?: boolean;
+  facebookUrl?: string | null;
+  tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
 };
 
 export type LiveTab = "live" | "orders";

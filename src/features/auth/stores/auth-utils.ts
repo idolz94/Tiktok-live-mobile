@@ -69,6 +69,9 @@ export function normalizeProfile(
     email: source.email || user?.email || null,
     phone: source.phone || metadata.phone || null,
     avatar_url: source.avatar_url || source.avatarUrl || null,
+    facebook_url: source.facebook_url || source.facebookUrl || null,
+    tiktok_url: source.tiktok_url || source.tiktokUrl || null,
+    youtube_url: source.youtube_url || source.youtubeUrl || null,
     status: source.status || "active",
     created_at:
       source.created_at || source.createdAt || new Date().toISOString(),
@@ -185,6 +188,11 @@ export function mapBootstrapToAuthUser(
     email: user.email || null,
     fullName: profile?.full_name || metadata.full_name || null,
     phone: profile?.phone || metadata.phone || null,
+
+    // Social profile URLs
+    facebookUrl: profile?.facebook_url || null,
+    tiktokUrl: profile?.tiktok_url || null,
+    youtubeUrl: profile?.youtube_url || null,
 
     // Shop info — cần để gọi các API nghiệp vụ (orders, products,...)
     shopId: shop?.id ? String(shop.id) : null,
