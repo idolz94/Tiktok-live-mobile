@@ -41,7 +41,7 @@ export default function ShippingSettingsScreen() {
             if (ok) {
               close();
               toast.success("Đã kết nối tài khoản SPX");
-            } else Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
+            } else toast.error({ title: "Lỗi", description: "Không thể kết nối tài khoản SPX. Vui lòng thử lại." });
           }}
           onClose={close}
         />
@@ -58,7 +58,7 @@ export default function ShippingSettingsScreen() {
         style: "destructive",
         onPress: () => {
           void spx.disconnect().then((ok) => {
-            if (!ok) Alert.alert("Lỗi", "Không thể ngắt kết nối. Vui lòng thử lại.");
+            if (!ok) toast.error({ title: "Lỗi", description: "Không thể ngắt kết nối. Vui lòng thử lại." });
           });
         },
       },

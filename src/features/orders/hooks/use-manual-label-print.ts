@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
+import { useToast } from "@components/toast";
 import { ThermalPrinter } from "@finan-me/react-native-thermal-printer";
 import { usePrinterStore } from "@features/settings/stores/printer-store";
 import { getProductTotal, formatMoneyFull } from "@features/orders/utils/order";
@@ -94,6 +94,7 @@ function buildLabelDocument(order: ShippingOrder, shopName: string) {
 
 export function useManualLabelPrint(order: ShippingOrder | null) {
   const { config } = usePrinterStore();
+  const toast = useToast();
   const [printing, setPrinting] = useState(false);
 
   const isPrinterConfigured =
@@ -103,10 +104,7 @@ export function useManualLabelPrint(order: ShippingOrder | null) {
     if (!order || printing) return;
 
     if (!isPrinterConfigured) {
-      Alert.alert(
-        "Chưa cấu hình máy in",
-        "Vui lòng cấu hình máy in nhiệt trước khi in.",
-      );
+      toast.warning({ title: "Chưa cấu hình máy in", description: "Vui lòng cấu hình máy in nhiệt trước khi in." });
       return;
     }
 
@@ -126,18 +124,18 @@ export function useManualLabelPrint(order: ShippingOrder | null) {
 
       const res = result.results.get(address);
       if (res?.success) {
-        Alert.alert("In thành công", "Nhãn vận đơn đã được gửi đến máy in.");
+        toast.success({ title: "In thành công", description: "Nhãn vận đơn đã được gửi đến máy in." });
       } else {
         const msg = res?.error?.message ?? "Không thể in. Vui lòng thử lại.";
-        Alert.alert("In thất bại", msg);
+        toast.error({ title: "In thất bại", description: msg });
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Không thể kết nối máy in.";
-      Alert.alert("In thất bại", msg);
+      toast.error({ title: "In thất bại", description: msg });
     } finally {
       setPrinting(false);
     }
-  }, [order, printing, isPrinterConfigured, config]);
+  }, [order, printing, isPrinterConfigured, config, toast]);
 
   return { printing, isPrinterConfigured, handlePrint };
 }

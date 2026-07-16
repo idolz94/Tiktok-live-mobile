@@ -7,7 +7,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Alert } from "react-native";
+import { useToast } from "@components/toast";
 import {
   AddressForm,
   addressFormSchema,
@@ -17,6 +17,7 @@ import {
 import { useShippingGeoPicker } from "./use-shipping-geo-picker";
 
 export function useShippingSettings(opts?: { afterSave?: () => void }) {
+  const toast = useToast();
   const [addresses, setAddresses] = useState<ShopAddress[]>([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -59,7 +60,7 @@ export function useShippingSettings(opts?: { afterSave?: () => void }) {
       const rows = await listShopAddressesApi();
       setAddresses(rows);
     } catch {
-      Alert.alert("Không tải được địa chỉ kho", "Vui lòng thử lại sau.");
+      toast.error({ title: "Không tải được địa chỉ kho", description: "Vui lòng thử lại sau." });
     } finally {
       setIsLoadingAddresses(false);
       setIsRefreshing(false);
@@ -123,7 +124,7 @@ export function useShippingSettings(opts?: { afterSave?: () => void }) {
       setAddressModalVisible(false);
       opts?.afterSave?.();
     } catch {
-      Alert.alert("Không lưu được địa chỉ kho", "Vui lòng kiểm tra thông tin và thử lại.");
+      toast.error({ title: "Không lưu được địa chỉ kho", description: "Vui lòng kiểm tra thông tin và thử lại." });
     } finally {
       setIsSavingAddress(false);
     }

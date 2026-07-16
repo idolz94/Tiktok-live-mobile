@@ -119,3 +119,10 @@ export const updateProfileApi = async (payload: {
 }): Promise<void> => {
   await apiClient.patch("/me/profile", payload);
 };
+
+export const changePasswordApi = async (payload: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> => {
+  await apiClient.patch("/me/password", payload);
+};

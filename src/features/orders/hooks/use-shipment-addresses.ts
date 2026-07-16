@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert } from "react-native";
+import { useToast } from "@components/toast";
 import {
   CustomerAddress,
   ShopAddress,
@@ -11,6 +11,7 @@ import { OrderWithTikTok } from "@app-types/index";
 
 export function useShipmentAddresses(order: OrderWithTikTok | null) {
   const mountedRef = useRef(true);
+  const toast = useToast();
 
   const [shopAddresses, setShopAddresses] = useState<ShopAddress[]>([]);
   const [customerAddresses, setCustomerAddresses] = useState<CustomerAddress[]>([]);
@@ -30,7 +31,7 @@ export function useShipmentAddresses(order: OrderWithTikTok | null) {
         return rows.find((item) => item.isDefault) ?? rows[0] ?? null;
       });
     } catch {
-      Alert.alert("Không tải được địa chỉ", "Vui lòng thử lại sau.");
+      toast.error({ title: "Không tải được địa chỉ", description: "Vui lòng thử lại sau." });
     } finally {
       if (mountedRef.current) setIsLoadingSender(false);
     }
@@ -48,7 +49,7 @@ export function useShipmentAddresses(order: OrderWithTikTok | null) {
         return rows.find((item) => item.id === order.customerAddressId) ?? rows.find((item) => item.isDefault) ?? rows[0] ?? null;
       });
     } catch {
-      Alert.alert("Không tải được địa chỉ", "Vui lòng thử lại sau.");
+      toast.error({ title: "Không tải được địa chỉ", description: "Vui lòng thử lại sau." });
     } finally {
       if (mountedRef.current) setIsLoadingRecipient(false);
     }

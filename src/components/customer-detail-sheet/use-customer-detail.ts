@@ -6,7 +6,7 @@ import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/order
 import { cancelShipmentApi, refreshShippingStatusApi, listCustomerAddressesApi, type CustomerAddress } from "@features/orders/service/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
 import { usePhoneField } from "@hooks/use-phone-field";
-import { Alert } from "react-native";
+import { useToast } from "@components/toast";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 export type DetailTab = "info" | "orders";
@@ -88,6 +88,7 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
 
   const { user } = useAuth();
   const orderManager = useOrderManager({ comments: [], hasOrders: user?.hasOrders ?? false, allStatuses: true });
+  const toast = useToast();
 
   const customer = useMemo(
     () => orderManager.customers.find((item) => getCustomerKey(item) === customerKey),
@@ -211,12 +212,9 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
         if (c.referenceInfo !== undefined && c.referenceInfo !== null) setReferenceInfo(c.referenceInfo);
       }
       invalidateCustomers();
-      Alert.alert("Thành công", "Đã lưu thông tin khách hàng.");
+      toast.success("Đã lưu thông tin khách hàng.");
     } catch (err) {
-      Alert.alert(
-        "Lưu thất bại",
-        err instanceof Error ? err.message : "Vui lòng thử lại.",
-      );
+      toast.error({ title: "Lưu thất bại", description: err instanceof Error ? err.message : "Vui lòng thử lại." });
     } finally {
       if (mountedRef.current) setIsSaving(false);
     }

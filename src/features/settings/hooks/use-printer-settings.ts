@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Alert } from "react-native";
+import { useToast } from "@components/toast";
 import { ThermalPrinter } from "@finan-me/react-native-thermal-printer";
 import { usePrinterStore } from "../stores/printer-store";
 import type {
@@ -48,6 +48,7 @@ function buildFontSize(fontSize: PrinterFontSize): 1 | 2 | 3 {
 
 export function usePrinterSettings() {
   const { config, setConfig } = usePrinterStore();
+  const toast = useToast();
   const [isTesting, setIsTesting] = useState(false);
   const isTestingPrintRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -107,7 +108,7 @@ export function usePrinterSettings() {
             const msg = reason
               ? `Lý do: ${reason}`
               : "Vui lòng kiểm tra lại máy in.";
-            Alert.alert("Máy in đã ngắt kết nối", msg);
+            toast.warning({ title: "Máy in đã ngắt kết nối", description: msg });
           }
         }
       },
@@ -136,7 +137,7 @@ export function usePrinterSettings() {
         config.connectionType === "wifi"
           ? "Vui lòng nhập địa chỉ IP máy in trước khi kết nối."
           : "Vui lòng chọn máy in Bluetooth trước khi kết nối.";
-      Alert.alert("Chưa cấu hình máy in", msg);
+      toast.warning({ title: "Chưa cấu hình máy in", description: msg });
       return;
     }
 
@@ -158,23 +159,23 @@ export function usePrinterSettings() {
           name: deviceName,
           type: result.deviceType,
         });
-        Alert.alert("Kết nối thành công", `Đã kết nối với ${deviceName}.`);
+        toast.success({ title: "Kết nối thành công", description: `Đã kết nối với ${deviceName}.` });
       } else {
         setConnectionState("disconnected");
         setConnectedDevice(null);
         const msg = result.error?.message ?? "Không thể kết nối máy in.";
-        Alert.alert("Kết nối thất bại", msg);
+        toast.error({ title: "Kết nối thất bại", description: msg });
       }
     } catch (e: unknown) {
       setConnectionState("disconnected");
       setConnectedDevice(null);
       const msg = e instanceof Error ? e.message : "Không thể kết nối máy in.";
-      Alert.alert("Kết nối thất bại", msg);
+      toast.error({ title: "Kết nối thất bại", description: msg });
     } finally {
       isTestingPrintRef.current = false;
       setIsTesting(false);
     }
-  }, [config]);
+  }, [config, toast]);
 
   // ─── Disconnect ─────────────────────────────────────────────────────────────
 
@@ -191,7 +192,7 @@ export function usePrinterSettings() {
     } catch {
       // Disconnect errors are non-critical — state is already reset
     }
-  }, [config]);
+  }, [config, toast]);
 
   // ─── Test print ─────────────────────────────────────────────────────────────
 
@@ -201,7 +202,7 @@ export function usePrinterSettings() {
         config.connectionType === "wifi"
           ? "Vui lòng nhập địa chỉ IP máy in trước khi in thử."
           : "Vui lòng chọn máy in Bluetooth trước khi in thử.";
-      Alert.alert("Chưa cấu hình máy in", msg);
+      toast.warning({ title: "Chưa cấu hình máy in", description: msg });
       return;
     }
 
@@ -338,20 +339,20 @@ export function usePrinterSettings() {
 
       const printerResult = result.results.get(address);
       if (printerResult?.success) {
-        Alert.alert("In thử thành công", "Máy in đang hoạt động bình thường.");
+        toast.success({ title: "In thử thành công", description: "Máy in đang hoạt động bình thường." });
       } else {
         const msg =
           printerResult?.error?.message ?? "Không thể kết nối máy in.";
-        Alert.alert("In thử thất bại", msg);
+        toast.error({ title: "In thử thất bại", description: msg });
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Không thể kết nối máy in.";
-      Alert.alert("In thử thất bại", msg);
+      toast.error({ title: "In thử thất bại", description: msg });
     } finally {
       isTestingPrintRef.current = false;
       setIsTesting(false);
     }
-  }, [config]);
+  }, [config, toast]);
 
   // ─── Config setters ──────────────────────────────────────────────────────────
 

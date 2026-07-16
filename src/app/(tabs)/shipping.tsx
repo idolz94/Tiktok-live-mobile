@@ -2,6 +2,7 @@ import type { ShippingStatus } from "@app-types/index";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { LinearGradient } from "@components/linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useToast } from "@components/toast";
 import {
   useShippingTab,
   type ShippingFilterKey,
@@ -184,6 +185,7 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
   const { colors, textPresets } = useThemes();
   const [printing, setPrinting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const toast = useToast();
   const name = item.customerName || item.username || "Khách live";
   const abbr = providerAbbr(item.providerName);
   const trackingUrl = abbr === "TC" ? null : getTrackingUrl(item);
@@ -223,9 +225,9 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
     try {
       const res = await getShipmentLabelApi(item.id);
       if (res.labelUrl) await Linking.openURL(res.labelUrl);
-      else Alert.alert("Chưa có nhãn in", "Vận đơn chưa có nhãn để in.");
+      else toast.info({ title: "Chưa có nhãn in", description: "Vận đơn chưa có nhãn để in." });
     } catch {
-      Alert.alert("Lỗi", "Không thể lấy nhãn in. Vui lòng thử lại.");
+      toast.error({ title: "Lỗi", description: "Không thể lấy nhãn in. Vui lòng thử lại." });
     } finally {
       setPrinting(false);
     }
@@ -244,7 +246,7 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
             await cancelShipmentApi(item.id, { trackingId: item.trackingCode });
             onCancelled();
           } catch {
-            Alert.alert("Lỗi", "Không thể huỷ vận đơn. Vui lòng thử lại.");
+            toast.error({ title: "Lỗi", description: "Không thể huỷ vận đơn. Vui lòng thử lại." });
           } finally {
             setCancelling(false);
           }

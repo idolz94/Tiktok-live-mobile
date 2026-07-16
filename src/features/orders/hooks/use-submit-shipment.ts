@@ -1,6 +1,6 @@
 import { OrderWithTikTok } from "@app-types/index";
 import { useCallback, useState } from "react";
-import { Alert } from "react-native";
+import { useToast } from "@components/toast";
 import { router } from "expo-router";
 import {
   CustomerAddress,
@@ -56,6 +56,7 @@ type SubmitState = "idle" | "submitting" | "success" | "outcome_unknown" | "erro
 export function useSubmitShipment(deps: Deps) {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [lastError, setLastError] = useState<string | null>(null);
+  const toast = useToast();
 
   const handleSubmitShipment = useCallback(async () => {
     const {
@@ -91,7 +92,7 @@ export function useSubmitShipment(deps: Deps) {
     } = deps;
 
     if (!order || !selectedSender || !selectedRecipient) {
-      Alert.alert("Thiếu thông tin", "Vui lòng chọn đầy đủ địa chỉ người gửi và người nhận.");
+      toast.warning({ title: "Thiếu thông tin", description: "Vui lòng chọn đầy đủ địa chỉ người gửi và người nhận." });
       return;
     }
 
@@ -103,7 +104,7 @@ export function useSubmitShipment(deps: Deps) {
         const codAmount = deps.codAmount ?? 0;
         if (codAmount < 0) {
           setSubmitState("idle");
-          Alert.alert("Thông tin chưa hợp lệ", "Tiền thu hộ (COD) không được âm.");
+          toast.warning({ title: "Thông tin chưa hợp lệ", description: "Tiền thu hộ (COD) không được âm." });
           return;
         }
         await submitManualShippingApi(order.id, {
@@ -132,12 +133,12 @@ export function useSubmitShipment(deps: Deps) {
       } else if (isSpxProvider) {
         if (!senderAddressId || !serviceType || !collectType || !weightGram) {
           setSubmitState("idle");
-          Alert.alert("Thiếu thông tin", "Vui lòng điền đầy đủ thông tin SPX.");
+          toast.warning({ title: "Thiếu thông tin", description: "Vui lòng điền đầy đủ thông tin SPX." });
           return;
         }
         if (collectType === 1 && !pickupTimeRangeId) {
           setSubmitState("idle");
-          Alert.alert("Thiếu thông tin", "Vui lòng chọn khung giờ lấy hàng.");
+          toast.warning({ title: "Thiếu thông tin", description: "Vui lòng chọn khung giờ lấy hàng." });
           return;
         }
         await submitSpxApi(order.id, {
@@ -181,7 +182,7 @@ export function useSubmitShipment(deps: Deps) {
         });
         return;
       } else {
-        Alert.alert("Thiếu thông tin", "Vui lòng chọn phương thức vận chuyển.");
+        toast.warning({ title: "Thiếu thông tin", description: "Vui lòng chọn phương thức vận chuyển." });
         setSubmitState("idle");
         return;
       }
@@ -201,10 +202,10 @@ export function useSubmitShipment(deps: Deps) {
             : "Tạo vận đơn thất bại. Vui lòng kiểm tra thông tin và thử lại.";
         setSubmitState("idle");
         setLastError(msg);
-        Alert.alert("Tạo vận đơn thất bại", msg);
+        toast.error({ title: "Tạo vận đơn thất bại", description: msg });
       }
     }
-  }, [deps]);
+  }, [deps, toast]);
 
   const handleRetryOutcomeUnknown = useCallback(async () => {
     setSubmitState("submitting");

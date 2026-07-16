@@ -56,6 +56,11 @@ const settingGroups: {
       label: "Cấu hình vận chuyển",
       onPress: () => router.push("/shipping-settings"),
     },
+    {
+      icon: icons.settings,
+      label: "Thay đổi mật khẩu",
+      onPress: () => router.push("/change-password"),
+    },
   ],
 ];
 

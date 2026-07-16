@@ -7,6 +7,7 @@ import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
+import { useToast } from "@components/toast";
 import { listProductPresetsApi } from "@features/settings/service/product-presets-api";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -21,6 +22,7 @@ const INITIAL_OFFSET = 48;
 
 export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
   const { colors } = useThemes();
+  const toast = useToast();
   const translateY = useSharedValue(INITIAL_OFFSET);
   const opacity = useSharedValue(0);
 
@@ -246,7 +248,7 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
       try {
         const success = await changeTikTokUsername(nextUsername);
         if (!success) {
-          Alert.alert("Lỗi", "Không thể kết nối đến TikTok Live. Vui lòng kiểm tra lại username.");
+          toast.error({ title: "Lỗi", description: "Không thể kết nối đến TikTok Live. Vui lòng kiểm tra lại username." });
           return false;
         }
 

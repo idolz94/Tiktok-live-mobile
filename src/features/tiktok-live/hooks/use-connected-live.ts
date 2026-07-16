@@ -4,7 +4,6 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { useCallback, useEffect, useRef } from "react";
 import type { ComponentRef } from "react";
-import { Alert } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import type { ConnectedLiveProps } from "../types/types";
 
@@ -68,12 +67,12 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
       );
 
       if (!order) {
-        Alert.alert("Không tìm thấy đơn", "Vui lòng tải lại danh sách đơn hàng.");
+        showToast.warning({ title: "Không tìm thấy đơn", description: "Vui lòng tải lại danh sách đơn hàng." });
         return;
       }
 
       onPrintOrder?.(comment, order.id) ??
-        Alert.alert("Đơn đã tạo", "Tính năng in lại sẽ được bổ sung sau.");
+        showToast.info({ title: "Đơn đã tạo", description: "Tính năng in lại sẽ được bổ sung sau." });
     },
     [onPrintOrder, orderManager.orders],
   );

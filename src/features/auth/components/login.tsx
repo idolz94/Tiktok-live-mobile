@@ -8,13 +8,13 @@ import { useAuth } from "@features/auth/hooks/use-auth";
 import { LoginForm, LoginSchema } from "@features/auth/schemas";
 import { useAuthStore } from "@features/auth/stores";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@components/toast";
 import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import {
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -50,6 +50,7 @@ export const Login = memo(({ switchToRegister }: Props) => {
   const { login } = useAuth();
   const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
+  const toast = useToast();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -93,18 +94,14 @@ export const Login = memo(({ switchToRegister }: Props) => {
           password,
           remember,
         });
-      } catch (error: any) {
-        Alert.alert(
-          "Đăng nhập thất bại",
-          error?.response?.data?.message ||
-            error?.message ||
-            "Đã có lỗi xảy ra",
-        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Đã có lỗi xảy ra";
+        toast.error({ title: "Đăng nhập thất bại", description: message });
       } finally {
         setLoading(false);
       }
     })();
-  }, [formMethod, login]);
+  }, [formMethod, login, toast]);
 
   return (
     <FormProvider {...formMethod}>

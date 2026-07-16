@@ -1,6 +1,7 @@
 import { LinearGradient } from "@components/linear-gradient";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@components/toast";
 import { useThemes } from "@hooks/use-theme";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { HairlineWidth } from "@themes";
@@ -8,7 +9,6 @@ import { createStyles } from "@utils/createStyles";
 import { useCallback, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import {
-  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -18,8 +18,9 @@ import {
 import { RegisterForm, RegisterSchema } from "@features/auth/schemas";
 
 export const Register = () => {
-  const { colors } = useThemes();
+  const { colors, textPresets } = useThemes();
   const { register } = useAuth();
+  const toast = useToast();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -47,16 +48,16 @@ export const Register = () => {
           fullName: fullName.trim(),
           tiktokId: tiktokId.trim().replace(/^@/, ""),
         });
-      } catch (error: any) {
-        Alert.alert(
-          "Đăng ký thất bại",
-          error instanceof Error ? error.message : "Đã có lỗi xảy ra",
-        );
+      } catch (error) {
+        toast.error({
+          title: "Đăng ký thất bại",
+          description: error instanceof Error ? error.message : "Đã có lỗi xảy ra",
+        });
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [formMethod, register]);
+  }, [formMethod, register, toast]);
 
   return (
     <FormProvider {...formMethod}>
@@ -166,6 +167,9 @@ export const Register = () => {
                   : undefined
               }
             />
+            <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>
+              Tối thiểu 6 ký tự, chỉ gồm chữ cái và chữ số.
+            </Text>
           </View>
         </View>
         <View style={{ rowGap: 8 }}>

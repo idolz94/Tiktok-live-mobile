@@ -21,13 +21,15 @@ export function getTikTokProfileUrl(username?: string | null) {
   return `https://www.tiktok.com/@${cleanUsername}`;
 }
 
-import { Alert, Linking } from "react-native";
+import { Linking } from "react-native";
+import { useToast } from "@components/toast";
 
 export function openTikTokProfile(username?: string | null) {
   const url = getTikTokProfileUrl(username);
 
   if (!url) {
-    Alert.alert("Không tìm thấy TikTok username của khách.");
+    // ponytail: openTikTokProfile called outside React tree — caller logs warning; cannot use hook here
+    console.warn("[lumi] openTikTokProfile: không tìm thấy TikTok username của khách.");
     return;
   }
 

@@ -6,7 +6,6 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useState, useCallback } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Linking,
   Pressable,
@@ -16,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useToast } from "@components/toast";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";
 import { getShipmentLabelApi } from "../service/create-shipment-api";
@@ -60,6 +60,7 @@ export default function ShippingDetailScreen() {
   const { order: orderParam } = useLocalSearchParams<{ id: string; order: string }>();
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
+  const toast = useToast();
   const [printing, setPrinting] = useState(false);
   const [navigated, setNavigated] = useState(false);
   const [depositStatus, setDepositStatus] = useState<string>(
@@ -77,9 +78,9 @@ export default function ShippingDetailScreen() {
     try {
       const res = await getShipmentLabelApi(order.id);
       if (res.labelUrl) await Linking.openURL(res.labelUrl);
-      else Alert.alert("Chưa có nhãn in", "Vận đơn chưa có nhãn để in.");
+      else toast.info({ title: "Chưa có nhãn in", description: "Vận đơn chưa có nhãn để in." });
     } catch {
-      Alert.alert("Lỗi", "Không thể lấy nhãn in. Vui lòng thử lại.");
+      toast.error({ title: "Lỗi", description: "Không thể lấy nhãn in. Vui lòng thử lại." });
     } finally {
       setPrinting(false);
     }

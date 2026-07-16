@@ -1,11 +1,11 @@
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { useToast } from "@components/toast";
 import { LinearGradient } from "@components/linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
@@ -17,6 +17,7 @@ import { SectionBlock, ShipmentInput, OptionChip } from "@features/orders/compon
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
 export default function ShippingEditScreen() {
+  const toast = useToast();
   const { order: orderParam } = useLocalSearchParams<{ order: string }>();
   const { colors, textPresets } = useThemes();
   const insets = useSafeAreaInsets();
@@ -59,7 +60,7 @@ export default function ShippingEditScreen() {
 
   const handleSave = () => {
     // ponytail: stub — wire to update API when backend endpoint available
-    Alert.alert("Đã lưu", "Thông tin vận đơn đã được cập nhật.");
+    toast.success({ title: "Đã lưu", description: "Thông tin vận đơn đã được cập nhật." });
     router.back();
   };
 

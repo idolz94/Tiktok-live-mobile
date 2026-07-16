@@ -1,6 +1,6 @@
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useCallback, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { useToast } from "@components/toast";
 
 type Props = {
   tiktokUsername: string;
@@ -13,6 +13,7 @@ export function useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave 
   const [name, setName] = useState(tiktokUsername);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const toast = useToast();
 
   const currentNormalized = useMemo(
     () => normalizeTikTokUsername(tiktokUsername),
@@ -42,11 +43,11 @@ export function useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave 
       await onSave(nextUsername);
       onClose();
     } catch (err) {
-      Alert.alert("Cập nhật thất bại", err instanceof Error ? err.message : "Thao tác thất bại");
+      toast.error({ title: "Cập nhật thất bại", description: err instanceof Error ? err.message : "Thao tác thất bại" });
     } finally {
       setSaving(false);
     }
-  }, [currentNormalized, name, onClose, onSave, usedUsernames]);
+  }, [currentNormalized, name, onClose, onSave, toast, usedUsernames]);
 
   const hasChanged = normalizeTikTokUsername(name) !== currentNormalized;
 

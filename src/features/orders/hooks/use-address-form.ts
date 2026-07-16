@@ -1,5 +1,6 @@
 import { OrderWithTikTok } from "@app-types/index";
 import { useCallback, useMemo, useState } from "react";
+import { useToast } from "@components/toast";
 import { Alert } from "react-native";
 import {
   CustomerAddress,
@@ -28,6 +29,7 @@ type Deps = {
 
 export function useAddressForm(deps: Deps) {
   const { order, setOrder, selectedSender, setSelectedSender, selectedRecipient, setSelectedRecipient, reloadShopAddresses, reloadCustomerAddresses } = deps;
+  const toast = useToast();
 
   const [addrFormTarget, setAddrFormTarget] = useState<"sender" | "recipient" | null>(null);
   const [addrFormMode, setAddrFormMode] = useState<"add" | "edit">("add");
@@ -41,13 +43,13 @@ export function useAddressForm(deps: Deps) {
 
   const handleAddAddress = useCallback((target: "sender" | "recipient") => {
     if (target === "recipient" && !order?.customerId) {
-      Alert.alert("Không thể thêm địa chỉ", "Đơn hàng chưa có khách hàng.");
+      toast.warning({ title: "Không thể thêm địa chỉ", description: "Đơn hàng chưa có khách hàng." });
       return;
     }
     setEditingAddr(null);
     setAddrFormMode("add");
     setAddrFormTarget(target);
-  }, [order?.customerId]);
+  }, [order?.customerId, toast]);
 
   const handleEditAddress = useCallback((target: "sender" | "recipient", addr: ShopAddress | CustomerAddress) => {
     setEditingAddr(addr);
@@ -74,12 +76,12 @@ export function useAddressForm(deps: Deps) {
             if (selectedRecipient?.id === addr.id) setSelectedRecipient(null);
             await reloadCustomerAddresses();
           } catch {
-            Alert.alert("Xoá thất bại", "Không thể xoá địa chỉ. Vui lòng thử lại.");
+            toast.error({ title: "Xoá thất bại", description: "Không thể xoá địa chỉ. Vui lòng thử lại." });
           }
         },
       },
     ]);
-  }, [order?.customerId, reloadCustomerAddresses, reloadShopAddresses, selectedRecipient?.id, selectedSender?.id, setSelectedRecipient, setSelectedSender]);
+  }, [order?.customerId, reloadCustomerAddresses, reloadShopAddresses, selectedRecipient?.id, selectedSender?.id, setSelectedRecipient, setSelectedSender, toast]);
 
   const handleSelectRecipient = useCallback((addr: CustomerAddress) => {
     if (!order) return;
@@ -95,7 +97,7 @@ export function useAddressForm(deps: Deps) {
   ) => {
     if (!order || isSavingAddr) return;
     if (target === "recipient" && !order.customerId) {
-      Alert.alert("Không thể lưu", "Đơn hàng chưa có khách hàng.");
+      toast.warning({ title: "Không thể lưu", description: "Đơn hàng chưa có khách hàng." });
       return;
     }
     const payload = addressPayload(values);
@@ -120,11 +122,11 @@ export function useAddressForm(deps: Deps) {
       setAddrFormTarget(null);
       setEditingAddr(null);
     } catch {
-      Alert.alert("Lưu thất bại", "Không thể lưu địa chỉ. Vui lòng thử lại.");
+      toast.error({ title: "Lưu thất bại", description: "Không thể lưu địa chỉ. Vui lòng thử lại." });
     } finally {
       setIsSavingAddr(false);
     }
-  }, [editingAddr, isSavingAddr, order, reloadCustomerAddresses, reloadShopAddresses, setOrder, setSelectedRecipient, setSelectedSender]);
+  }, [editingAddr, isSavingAddr, order, reloadCustomerAddresses, reloadShopAddresses, setOrder, setSelectedRecipient, setSelectedSender, toast]);
 
   return {
     addrFormTarget,

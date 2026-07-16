@@ -1,7 +1,6 @@
 import { icons, IconsTypes } from "@assets/icons";
-import { Image } from "@components/image";
 import { Colors } from "@themes/type";
-import { Tabs } from "expo-router";
+import { Image as ExpoImage } from "expo-image";
 
 type Props = {
   name: IconsTypes;
@@ -11,14 +10,11 @@ type Props = {
 
 export function Icon({ name, size, tintColor }: Props) {
   return (
-    <Image
+    <ExpoImage
       source={icons[name]}
-      resizeMode="contain"
-      style={{
-        width: size,
-        height: size,
-        tintColor,
-      }}
+      contentFit="contain"
+      style={{ width: size, height: size, tintColor }}
+      transition={0}
     />
   );
 }
