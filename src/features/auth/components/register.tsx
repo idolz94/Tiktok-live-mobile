@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "@components/linear-gradient";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -151,10 +152,12 @@ export const Register = () => {
                       placeholderTextColor={colors.neutral300}
                       style={styles.input}
                     />
-                    <Pressable onPress={() => setIsPasswordVisible((v) => !v)}>
-                      <Text style={styles.eye}>
-                        {isPasswordVisible ? "Ẩn" : "Hiện"}
-                      </Text>
+                    <Pressable onPress={() => setIsPasswordVisible((v) => !v)} hitSlop={8}>
+                      <Ionicons
+                        name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color={colors.neutral400}
+                      />
                     </Pressable>
                   </>
                 )}
@@ -270,7 +273,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   input: { flex: 1, color: colors.neutral900, ...textPresets.fs14_400 },
   check: { color: colors.success, ...textPresets.fs14_500 },
-  eye: { color: colors.neutral900, ...textPresets.fs14_400 },
   submitButton: {
     paddingVertical: 16,
     borderRadius: 99,

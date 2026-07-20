@@ -2,11 +2,10 @@ import { Header } from "@features/auth/components/header";
 import { Login } from "@features/auth/components/login";
 import { Register } from "@features/auth/components/register";
 import { LinearGradient } from "@components/linear-gradient";
-import { Screen } from "@components/screen";
 import { createStyles } from "@utils/createStyles";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Mode } from "@features/auth/schemas";
 
@@ -22,8 +21,8 @@ export default function AuthScreen() {
   const switchToLogin = () => setMode("login");
 
   return (
-    <Screen>
-      <LinearGradient type="gra_primary" style={StyleSheet.absoluteFill} />
+    <View style={styles.root}>
+      <LinearGradient type="gra_primary" style={styles.bg} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} />
       <View style={styles.safeArea}>
         <Header />
         <View style={styles.mainContent}>
@@ -52,11 +51,21 @@ export default function AuthScreen() {
           </KeyboardAwareScrollView>
         </View>
       </View>
-    </Screen>
+    </View>
   );
 }
 
 const styles = createStyles(({ colors, textPresets }) => ({
+  root: {
+    flex: 1,
+  },
+  bg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   safeArea: {
     flex: 1,
     paddingTop: 40,

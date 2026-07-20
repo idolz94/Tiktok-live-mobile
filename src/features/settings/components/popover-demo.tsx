@@ -8,14 +8,16 @@ import {
   Keyboard,
 } from "react-native";
 import { router } from "expo-router";
-import { Screen } from "@components/screen";
+import { LinearGradient } from "@components/linear-gradient";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Popover, usePopover, PopoverPlacement } from "@components/popover";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function PopoverDemoScreen() {
   const { colors, textPresets } = useThemes();
   const { showPopover } = usePopover();
+  const { top } = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
 
   const [counter, setCounter] = useState(0);
@@ -63,9 +65,15 @@ export function PopoverDemoScreen() {
   };
 
   return (
-    <Screen backgroundColorTheme="neutral100">
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       {/* Header bar */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>‹ Back</Text>
         </Pressable>
@@ -245,25 +253,27 @@ export function PopoverDemoScreen() {
           </Pressable>
         </View>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = createStyles(({ colors, textPresets, shadows }) => ({
-  screen: {
+  root: {
     flex: 1,
-    backgroundColor: colors.surfaceAlt,
+  },
+  bg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 54,
     paddingBottom: 16,
     paddingHorizontal: 16,
-    backgroundColor: colors.neutral100,
-    borderBottomWidth: 0.5,
-    borderColor: colors.borderLight,
   },
   backButton: {
     paddingVertical: 4,

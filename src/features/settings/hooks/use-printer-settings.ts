@@ -38,12 +38,6 @@ function buildPaperWidthMm(paperSize: PrinterPaperSize): number {
   return paperSize === "58mm" ? 58 : 80;
 }
 
-function buildFontSize(fontSize: PrinterFontSize): 1 | 2 | 3 {
-  if (fontSize === "small") return 1;
-  if (fontSize === "large") return 3;
-  return 2;
-}
-
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function usePrinterSettings() {

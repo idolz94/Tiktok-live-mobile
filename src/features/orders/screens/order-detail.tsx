@@ -1,4 +1,3 @@
-import { Screen } from "@components/screen";
 import { ProductSheet } from "@features/orders/components/product-sheet";
 import {
   ShippingProvider,
@@ -166,15 +165,14 @@ export const OrderDetail = memo(() => {
   }, [detail.order?.customerTikTokUsername]);
 
   return (
-    <Screen>
-      <View style={styles.container}>
-        <LinearGradient
-          type="gra_background"
-          style={styles.gradient}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-        />
-        <OrderDetailHeader onBack={() => router.back()} />
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+      <OrderDetailHeader onBack={() => router.back()} />
 
         {detail.loading ? (
           <View style={styles.loadingBox}>
@@ -344,26 +342,23 @@ export const OrderDetail = memo(() => {
             />
           </>
         ) : null}
-      </View>
-    </Screen>
+    </View>
   );
 });
 
 const styles = createStyles(({ colors, textPresets }) => ({
-  container: {
+  root: {
     flex: 1,
   },
-  gradient: {
+  bg: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 0,
   },
   scroll: {
     flex: 1,
-    zIndex: 1,
   },
   scrollContent: {
     paddingHorizontal: 16,

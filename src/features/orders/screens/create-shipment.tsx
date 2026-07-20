@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useThemes } from "@hooks/use-theme";
@@ -46,6 +46,7 @@ const dimIcons = {
 
 export default function CreateShipmentScreen() {
   const { colors, textPresets } = useThemes();
+  const { top, bottom } = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
   const { user } = useAuth();
   const {
@@ -312,27 +313,23 @@ export default function CreateShipmentScreen() {
 
   if (!order) {
     return (
-      <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: colors.neutral100 }]}
-      >
+      <View style={styles.root}>
         <View style={styles.centerBox}>
           <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>
             Không tìm thấy đơn hàng
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-    >
+    <View style={styles.root}>
       <LinearGradient
         type="gra_background"
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Pressable
           onPress={() => router.back()}
           hitSlop={12}
@@ -377,7 +374,7 @@ export default function CreateShipmentScreen() {
           />
           <View
             style={{
-              height: StyleSheet.hairlineWidth,
+              height: 0.5,
               backgroundColor: colors.border10,
               marginLeft: 56,
             }}
@@ -664,7 +661,11 @@ export default function CreateShipmentScreen() {
       <View
         style={[
           styles.footer,
-          { backgroundColor: colors.surface, borderTopColor: colors.border10 },
+          {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border10,
+            paddingBottom: Math.max(bottom, 16),
+          },
         ]}
       >
         <View style={styles.footerSummary}>
@@ -742,12 +743,12 @@ export default function CreateShipmentScreen() {
           </View>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const styles = createStyles(({ colors, textPresets, shadows }) => ({
-  safeArea: { flex: 1 },
+const styles = createStyles(({ colors }) => ({
+  root: { flex: 1 },
   centerBox: {
     flex: 1,
     alignItems: "center",
@@ -762,16 +763,16 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   headerButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.neutral100,
+    borderRadius: 999,
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
-    ...shadows.sd1,
   },
   headerTitle: {
     flex: 1,
     textAlign: "center",
-    ...textPresets.fs16_600,
+    fontSize: 24,
+    fontWeight: "600",
   },
   headerActions: {
     width: 44,
@@ -787,8 +788,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   footer: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 16,
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
   },
   outcomeUnknownBanner: {
     flexDirection: "row",
@@ -818,7 +818,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   summaryRowTotal: {
     marginTop: 4,
     paddingTop: 8,
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
     borderTopColor: "#E5E7EB",
   },
   dimCard: { borderRadius: 16, borderWidth: 0.5, padding: 16, gap: 8 },

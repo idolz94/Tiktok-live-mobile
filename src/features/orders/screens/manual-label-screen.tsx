@@ -14,7 +14,7 @@ export default function ManualLabelScreen() {
   const { order: orderParam } = useLocalSearchParams<{ order: string }>();
   const { colors, textPresets } = useThemes();
   const { config } = usePrinterStore();
-  const insets = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
 
   const order = orderParam
     ? (() => { try { return JSON.parse(orderParam) as ShippingOrder; } catch { return null; } })()
@@ -26,7 +26,7 @@ export default function ManualLabelScreen() {
     return (
       <View style={styles.root}>
         <LinearGradient type="gra_background" style={styles.bg} />
-        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <View style={[styles.header, { paddingTop: top + 12 }]}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </Pressable>
@@ -59,7 +59,7 @@ export default function ManualLabelScreen() {
       <LinearGradient type="gra_background" style={styles.bg} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
@@ -69,7 +69,7 @@ export default function ManualLabelScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: 88 + insets.bottom }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: 88 + bottom }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Printer status banner */}
@@ -189,7 +189,7 @@ export default function ManualLabelScreen() {
           {
             borderTopColor: colors.border10,
             backgroundColor: colors.white,
-            paddingBottom: Math.max(insets.bottom, 16),
+            paddingBottom: Math.max(bottom, 16),
           },
         ]}
       >
@@ -221,7 +221,6 @@ const styles = createStyles(({ colors, shadows }) => ({
   header: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    minHeight: 100,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,

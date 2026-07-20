@@ -3,7 +3,6 @@ import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { CustomerDetailSheet } from "@components/customer-detail-sheet";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
-import { Screen } from "@components/screen";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import {
   CustomerSummaryWithTikTok,
@@ -249,10 +248,10 @@ export default function CustomersTab() {
   );
 
   return (
-    <Screen>
+    <View style={styles.root}>
       <LinearGradient
         type="gra_background"
-        style={styles.headerBackground}
+        style={styles.bg}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
@@ -316,12 +315,15 @@ export default function CustomersTab() {
           )}
         </Animated.ScrollView>
       )}
-    </Screen>
+    </View>
   );
 }
 
 const styles = createStyles(({ colors, textPresets }) => ({
-  headerBackground: {
+  root: {
+    flex: 1,
+  },
+  bg: {
     position: "absolute",
     top: 0,
     left: 0,

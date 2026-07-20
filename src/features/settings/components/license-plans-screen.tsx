@@ -1,6 +1,8 @@
-import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { createStyles } from "@utils/createStyles";
+import { useThemes } from "@hooks/use-theme";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
   Dimensions,
@@ -9,8 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_WIDTH = SCREEN_WIDTH - 80;
@@ -89,12 +90,25 @@ const PLANS: Plan[] = [
 ];
 
 export function LicensePlansScreen() {
+  const { top } = useSafeAreaInsets();
+  const { colors } = useThemes();
   const [activeIndex, setActiveIndex] = useState(1); // Pro selected by default
   const flatListRef = useRef<FlatList>(null);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
-      <Header title="Chọn gói dịch vụ" />
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.headerBackground}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Chọn gói dịch vụ</Text>
+      </View>
 
       {/* Plan cards */}
       <View style={styles.cardsWrapper}>
@@ -144,7 +158,7 @@ export function LicensePlansScreen() {
         </Pressable>
         <Text style={styles.ctaNote}>Không cần thẻ ngân hàng · Huỷ bất cứ lúc nào</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -236,7 +250,11 @@ function CardInner({
 }
 
 const styles = createStyles(({ colors, textPresets, shadows }) => ({
-  safeArea: { flex: 1, backgroundColor: colors.neutral100 },
+  root: { flex: 1 },
+  headerBackground: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 16, columnGap: 12 },
+  backBtn: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: "600", lineHeight: 28 },
 
   // Cards
   cardsWrapper: { flex: 1, justifyContent: "center", overflow: "visible" },

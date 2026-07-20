@@ -1,13 +1,15 @@
 import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { Header } from "@components/header";
+import { LinearGradient } from "@components/linear-gradient";
+import { useThemes } from "@hooks/use-theme";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useCallback } from "react";
 import { ScrollView, Text, TextInput, Pressable, View } from "react-native";
 import { createStyles } from "@utils/createStyles";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type PrinterSheet } from "../../types/printer";
 import { usePrinterSettings } from "../../hooks/use-printer-settings";
 import { PrinterConnectionCard } from "./printer-connection-card";
-import { PrinterTemplateList } from "./printer-template-list";
 import {
   PRINTER_CONNECTION_OPTIONS,
   PRINTER_FONT_OPTIONS,
@@ -57,6 +59,8 @@ function OptionList<T extends string>({
 }
 
 export function PrinterSettingsScreen() {
+  const { top } = useSafeAreaInsets();
+  const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
   const {
     config,
@@ -147,8 +151,19 @@ export function PrinterSettingsScreen() {
       : "Bluetooth phải bật và máy in đã được ghép đôi với điện thoại.";
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
-      <Header title="Cài đặt máy in" />
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.headerBackground}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Cài đặt máy in</Text>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -248,12 +263,16 @@ export function PrinterSettingsScreen() {
           </Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = createStyles(({ colors }) => ({
-  safeArea: { flex: 1, backgroundColor: colors.neutral100 },
+  root: { flex: 1 },
+  headerBackground: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 16, columnGap: 12 },
+  backBtn: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
+  headerTitle: { color: colors.text, fontSize: 24, fontWeight: "600", lineHeight: 28 },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,

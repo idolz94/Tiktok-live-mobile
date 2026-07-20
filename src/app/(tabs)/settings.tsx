@@ -1,5 +1,4 @@
 import { LinearGradient } from "@components/linear-gradient";
-import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { icons } from "@assets/icons";
 import { images } from "@assets/images";
 import { useAuth } from "@features/auth/hooks/use-auth";
@@ -11,7 +10,6 @@ import {
   ImageSourcePropType,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -90,45 +88,39 @@ export default function SettingsTab() {
   const username = user?.fullName || user?.username || "User";
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
+        <Text style={styles.headerTitle}>Cài Đặt Chung</Text>
+      </View>
+
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.hero}>
-          <Image
-            source={{ uri: AVATAR_URL }}
-            blurRadius={18}
-            style={styles.heroImage}
-          />
-          <View style={styles.heroOverlay} />
-          <ExpoLinearGradient
-            colors={["rgba(255,255,255,0)", "#fff"]}
-            style={styles.heroFade}
-          />
-
-          <View style={[styles.topBar, { paddingTop: top + 14 }]}>
-            <Text style={styles.title}>Hồ sơ</Text>
+        <View style={styles.profileCard}>
+          <View style={styles.avatarWrap}>
+            <Image source={{ uri: AVATAR_URL }} style={styles.avatar} />
           </View>
+          <Text style={styles.name}>{username}</Text>
 
-          <View style={styles.profileSection}>
-            <View style={styles.avatarWrap}>
-              <Image source={{ uri: AVATAR_URL }} style={styles.avatar} />
-            </View>
-            <Text style={styles.name}>{username}</Text>
-
-            <View style={styles.socialLoginContainer}>
-              {socialLogins.map((item) => (
-                <Pressable
-                  key={item.type}
-                  style={styles.socialItemContainer}
-                  onPress={() => {}}
-                >
-                  <Image source={item.icon} style={styles.socialImg} />
-                </Pressable>
-              ))}
-            </View>
+          <View style={styles.socialLoginContainer}>
+            {socialLogins.map((item) => (
+              <Pressable
+                key={item.type}
+                style={styles.socialItemContainer}
+                onPress={() => {}}
+              >
+                <Image source={item.icon} style={styles.socialImg} />
+              </Pressable>
+            ))}
           </View>
         </View>
 
@@ -156,7 +148,7 @@ export default function SettingsTab() {
               <View key={groupIndex}>
                 {groupIndex > 0 && <View style={styles.itemDivider} />}
                 <View style={styles.settingsGroup}>
-                  {group.map((item, itemIndex) => (
+                  {group.map((item) => (
                     <View key={item.label}>
                       <SettingItem
                         icon={item.icon}
@@ -186,14 +178,6 @@ export default function SettingsTab() {
         </View>
       </ScrollView>
     </View>
-  );
-}
-
-function SocialButton({ label }: { label: string }) {
-  return (
-    <Pressable style={styles.socialButton}>
-      <Text style={styles.socialIcon}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -239,74 +223,34 @@ function SettingItem({
 }
 
 const styles = createStyles(({ colors, textPresets, shadows }) => ({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.neutral100,
-  },
-  container: {
-    paddingBottom: 40,
-  },
-  hero: {
-    paddingBottom: 24,
-    overflow: "hidden",
-  },
-  heroImage: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 400,
-    width: "100%",
-  },
-  heroOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 400,
-    backgroundColor: "rgba(255,255,255,0.3)",
-  },
-  heroFade: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 96,
-  },
-  topBar: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+  root: { flex: 1 },
+  bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  header: {
+    minHeight: 119,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  title: {
-    color: colors.neutral900,
-    lineHeight: 28,
-    ...textPresets.fs24_900,
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  roundButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.neutral50,
-  },
-  roundButtonIcon: {
-    color: colors.neutral900,
-    fontSize: 20,
-    fontWeight: "600",
-  },
-  profileSection: {
-    alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: "600",
+    lineHeight: 28,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
     gap: 16,
+  },
+  profileCard: {
+    alignItems: "center",
+    padding: 16,
+    gap: 16,
+    borderRadius: 16,
+    backgroundColor: colors.neutral100,
+    ...shadows.sd2,
   },
   avatarWrap: {
     width: 98,
@@ -321,41 +265,12 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     borderRadius: 49,
   },
   name: {
-    width: 273,
     color: colors.neutral900,
     textAlign: "center",
     lineHeight: 24,
     ...textPresets.fs18_500,
   },
-  nickname: {
-    width: 273,
-    color: colors.neutral400,
-    textAlign: "center",
-    lineHeight: 22,
-    marginTop: 4,
-    ...textPresets.fs14_400,
-  },
-  socialRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    marginTop: 24,
-  },
-  socialButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.neutral100,
-  },
-  socialIcon: {
-    color: colors.neutral900,
-    fontSize: 22,
-    fontWeight: "700",
-  },
   content: {
-    paddingHorizontal: 16,
     gap: 16,
   },
   subscriptionCard: {
@@ -492,7 +407,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     backgroundColor: colors.neutral100,
   },
   itemDivider: {
-    height: StyleSheet.hairlineWidth,
+    height: 0.5,
     backgroundColor: colors.border10,
     marginLeft: 16 + 24 + 16,
   },

@@ -59,7 +59,7 @@ function statusToStep(status: ShippingStatus): number {
 export default function ShippingDetailScreen() {
   const { order: orderParam } = useLocalSearchParams<{ id: string; order: string }>();
   const { colors, textPresets } = useThemes();
-  const insets = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
   const toast = useToast();
   const [printing, setPrinting] = useState(false);
   const [navigated, setNavigated] = useState(false);
@@ -145,7 +145,7 @@ export default function ShippingDetailScreen() {
       )}
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
+      <View style={[styles.header, { paddingTop: top + 14 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
@@ -155,7 +155,7 @@ export default function ShippingDetailScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + insets.bottom }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + bottom }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Status Stepper */}
@@ -308,7 +308,7 @@ export default function ShippingDetailScreen() {
           {
             borderTopColor: colors.border10,
             backgroundColor: colors.white,
-            paddingBottom: Math.max(insets.bottom, 16),
+            paddingBottom: Math.max(bottom, 16),
           },
         ]}
       >
@@ -383,7 +383,14 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     gap: 4,
   },
-  backBtn: { width: 32, alignItems: "center", justifyContent: "center" },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+  },
   headerTitle: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
   sectionCard: {

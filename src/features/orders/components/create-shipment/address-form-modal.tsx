@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   View,
@@ -14,6 +13,7 @@ import { createStyles } from "@utils/createStyles";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { GeoPickerSheet } from "@components/geo-picker";
 import { Icon } from "@components/icon";
+import { LinearGradient } from "@components/linear-gradient";
 import {
   fetchProvinces,
   getWards,
@@ -22,7 +22,6 @@ import {
 import { addrSchema } from "../../schemas/shipment-schema";
 import type { AddrFormValues } from "../../types/shipment";
 import { absoluteFill } from "../../utils/shipment";
-import { Screen } from "@components/screen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
@@ -117,7 +116,13 @@ export function AddressFormModal({
   };
 
   return (
-    <Screen>
+    <View style={formModalStyles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={formModalStyles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <View style={formModalStyles.sheet}>
         <View style={[formModalStyles.sheetHeader, { paddingTop: insets.top }]}>
           <Text style={formModalStyles.sheetTitle}>{title}</Text>
@@ -350,7 +355,7 @@ export function AddressFormModal({
           />
         </View>
       )}
-    </Screen>
+    </View>
   );
 }
 
@@ -387,9 +392,18 @@ const formFieldStyles = createStyles(() => ({
 }));
 
 const formModalStyles = createStyles(({ colors }) => ({
+  root: {
+    flex: 1,
+  },
+  bg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   sheet: {
     flex: 1,
-    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,

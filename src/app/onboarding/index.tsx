@@ -2,7 +2,6 @@ import { Mode } from "@features/auth/schemas";
 import { images } from "@assets/images";
 import { Image } from "@components/image";
 import { LinearGradient } from "@components/linear-gradient";
-import { Screen } from "@components/screen";
 import { createStyles } from "@utils/createStyles";
 import { saveBoolean, STORAGE_KEYS } from "@utils/storage";
 import { router } from "expo-router";
@@ -21,7 +20,13 @@ export default function Onboarding() {
   };
 
   return (
-    <Screen>
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <Image source={images.onboarding_img_bg} style={styles.image} />
       <View style={styles.content}>
         <Text style={styles.sloganText}>{`Sáng comment\nSáng doanh thu`}</Text>
@@ -56,15 +61,29 @@ export default function Onboarding() {
           </Pressable>
         </View>
       </View>
-    </Screen>
+    </View>
   );
 }
 
 const styles = createStyles(({ colors, textPresets }) => ({
+  root: {
+    flex: 1,
+  },
+  bg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   image: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: "100%",
     height: "100%",
-    ...StyleSheet.absoluteFill,
   },
   sloganText: {
     color: colors.neutral900,

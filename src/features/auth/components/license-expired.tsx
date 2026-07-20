@@ -1,5 +1,5 @@
 import { Button } from "@components/button";
-import { Screen } from "@components/screen";
+import { LinearGradient } from "@components/linear-gradient";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
 import { memo, useCallback } from "react";
@@ -17,7 +17,13 @@ export const LicenseExpiredScreen = memo(() => {
   // END: Logout rồi navigate thẳng về auth
 
   return (
-    <Screen>
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <View style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.title}>Tài khoản hết hạn</Text>
@@ -33,11 +39,21 @@ export const LicenseExpiredScreen = memo(() => {
           containerStyle={styles.btnSave}
         />
       </View>
-    </Screen>
+    </View>
   );
 });
 
 const styles = createStyles(({ colors, textPresets }) => ({
+  root: {
+    flex: 1,
+  },
+  bg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   container: {
     flex: 1,
     paddingHorizontal: 24,

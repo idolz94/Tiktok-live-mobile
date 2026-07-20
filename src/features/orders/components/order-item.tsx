@@ -131,11 +131,19 @@ export const OrderItem = memo(
               style={[
                 styles.typeCustomer,
                 {
-                  backgroundColor: colors.neutral50,
+                  backgroundColor:
+                    item.status === "confirmed" ? colors.success : colors.neutral50,
                 },
               ]}
             >
-              <Text style={styles.txtTag}>{statusLabel(item.status)}</Text>
+              <Text
+                style={[
+                  styles.txtTag,
+                  item.status === "confirmed" && { color: colors.neutral100 },
+                ]}
+              >
+                {statusLabel(item.status)}
+              </Text>
             </View>
           </View>
         </View>
@@ -231,7 +239,7 @@ export const OrderItem = memo(
 
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
-    paddingVertical: 10,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     backgroundColor: colors.neutral100,
     marginBottom: 8,
@@ -264,6 +272,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   productList: {
     marginTop: 12,
     rowGap: 6,
+    paddingHorizontal: 16,
   },
   productRow: {
     flexDirection: "row",

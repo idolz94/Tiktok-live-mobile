@@ -9,8 +9,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 const dimIcons = {
   length: require("../../../../assets/images/dim-icons/length.png"),
   width: require("../../../../assets/images/dim-icons/width.png"),
@@ -72,7 +70,6 @@ export function ParcelInfoSheet({
   onClose,
 }: ParcelInfoSheetProps) {
   const { colors, textPresets } = useThemes();
-  const insets = useSafeAreaInsets();
 
   const [localLength, setLocalLength] = useState(dimLength);
   const [localWidth, setLocalWidth] = useState(dimWidth);

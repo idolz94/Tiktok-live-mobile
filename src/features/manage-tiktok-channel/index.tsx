@@ -1,11 +1,11 @@
 import { ShopTikTokChannel } from "@app-types/database";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Avatar } from "@components/avatar";
-import { Header } from "@components/header";
-import { Screen } from "@components/screen";
+import { LinearGradient } from "@components/linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { router } from "expo-router";
 import { memo, useCallback } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EditChannel } from "./components/edit-channel";
 import { ChannelCardProps } from "./type";
 import { useManageTiktokChannel } from "./use-manage-tiktok-channel";
@@ -55,6 +56,7 @@ const ChannelCard = memo(
 );
 
 export const ManageTiktokChannel = () => {
+  const { top } = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
   const { colors } = useThemes();
   const {
@@ -89,8 +91,21 @@ export const ManageTiktokChannel = () => {
   const hasChannels = channels.length > 0;
 
   return (
-    <Screen>
-      <Header title="Quản lý kênh TikTok" />
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.headerBackground}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Quản lý kênh TikTok</Text>
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.container}
@@ -130,26 +145,45 @@ export const ManageTiktokChannel = () => {
                 />
               ))}
             </View>
-
-            {/* {hasChannels ? (
-              <>
-                <Text style={styles.hintText}>
-                  Chỉ hỗ trợ sửa và xoá kênh đã liên kết.
-                </Text>
-                <Text style={styles.hintText}>
-                  Tên người dùng chỉ có thể chứa chữ thường, số, dấu gạch dưới
-                  và dấu chấm.
-                </Text>
-              </>
-            ) : null} */}
           </>
         )}
       </ScrollView>
-    </Screen>
+    </View>
   );
 };
 
 const styles = createStyles(({ colors, textPresets }) => ({
+  root: {
+    flex: 1,
+  },
+  headerBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    columnGap: 12,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+  },
+  headerTitle: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: "600",
+    lineHeight: 28,
+  },
   container: {
     paddingHorizontal: 16,
     paddingBottom: 32,

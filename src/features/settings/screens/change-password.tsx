@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { LinearGradient } from "@components/linear-gradient";
 import { useChangePassword } from "@features/settings/hooks/use-change-password";
@@ -39,10 +40,9 @@ export function ChangePasswordScreen() {
         <Pressable
           onPress={() => router.canGoBack() && router.back()}
           style={styles.backButton}
+          hitSlop={8}
         >
-          <Text style={[styles.backIcon, { color: colors.neutral900 }, textPresets.fs20_600]}>
-            ‹
-          </Text>
+          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
         </Pressable>
         <Text style={styles.headerTitle}>Thay đổi mật khẩu</Text>
       </View>
@@ -75,9 +75,11 @@ export function ChangePasswordScreen() {
                       autoCapitalize="none"
                     />
                     <Pressable onPress={() => setShowCurrent((v) => !v)} hitSlop={8}>
-                      <Text style={[{ color: colors.primary }, textPresets.fs14_400]}>
-                        {showCurrent ? "Ẩn" : "Hiện"}
-                      </Text>
+                      <Ionicons
+                        name={showCurrent ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color={colors.neutral400}
+                      />
                     </Pressable>
                   </View>
                   <AnimatedErrorText message={fd && error ? error.message : undefined} />
@@ -107,9 +109,11 @@ export function ChangePasswordScreen() {
                       autoCapitalize="none"
                     />
                     <Pressable onPress={() => setShowNew((v) => !v)} hitSlop={8}>
-                      <Text style={[{ color: colors.primary }, textPresets.fs14_400]}>
-                        {showNew ? "Ẩn" : "Hiện"}
-                      </Text>
+                      <Ionicons
+                        name={showNew ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color={colors.neutral400}
+                      />
                     </Pressable>
                   </View>
                   <AnimatedErrorText message={fd && error ? error.message : undefined} />
@@ -142,9 +146,11 @@ export function ChangePasswordScreen() {
                       autoCapitalize="none"
                     />
                     <Pressable onPress={() => setShowConfirm((v) => !v)} hitSlop={8}>
-                      <Text style={[{ color: colors.primary }, textPresets.fs14_400]}>
-                        {showConfirm ? "Ẩn" : "Hiện"}
-                      </Text>
+                      <Ionicons
+                        name={showConfirm ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color={colors.neutral400}
+                      />
                     </Pressable>
                   </View>
                   <AnimatedErrorText message={fd && error ? error.message : undefined} />
@@ -187,7 +193,6 @@ const styles = createStyles(({ colors, shadows }) => ({
     bottom: 0,
   },
   header: {
-    minHeight: 119,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
@@ -202,7 +207,6 @@ const styles = createStyles(({ colors, shadows }) => ({
     justifyContent: "center",
     backgroundColor: colors.white,
   },
-  backIcon: { marginTop: -2 },
   headerTitle: {
     color: colors.text,
     fontSize: 24,

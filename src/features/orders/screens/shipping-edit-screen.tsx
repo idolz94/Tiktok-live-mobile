@@ -20,7 +20,7 @@ export default function ShippingEditScreen() {
   const toast = useToast();
   const { order: orderParam } = useLocalSearchParams<{ order: string }>();
   const { colors, textPresets } = useThemes();
-  const insets = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
 
   const order = orderParam
     ? (() => { try { return JSON.parse(orderParam) as ShippingOrder; } catch { return null; } })()
@@ -68,18 +68,17 @@ export default function ShippingEditScreen() {
     <View style={styles.root}>
       <LinearGradient type="gra_background" style={StyleSheet.absoluteFill} />
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12, backgroundColor: colors.surface, borderBottomColor: colors.border10 }]}>
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text, ...textPresets.fs18_500 }]}>
+        <Text style={[styles.headerTitle, { color: colors.text, fontSize: 24, fontWeight: "600" }]}>
           Chỉnh sửa vận đơn
         </Text>
-        <View style={styles.backBtn} />
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + insets.bottom }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + bottom }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -232,7 +231,7 @@ export default function ShippingEditScreen() {
       </ScrollView>
 
       {/* Submit bar */}
-      <View style={[styles.submitBar, { backgroundColor: colors.surface, borderTopColor: colors.border10, paddingBottom: Math.max(insets.bottom, 16) }]}>
+      <View style={[styles.submitBar, { backgroundColor: colors.surface, borderTopColor: colors.border10, paddingBottom: Math.max(bottom, 16) }]}>
         <Pressable
           style={[styles.submitBtn, { backgroundColor: colors.primary }]}
           onPress={handleSave}
@@ -246,17 +245,17 @@ export default function ShippingEditScreen() {
   );
 }
 
-const styles = createStyles(() => ({
+const styles = createStyles(({ colors }) => ({
   root: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingBottom: 16,
+    gap: 4,
   },
-  backBtn: { width: 32, alignItems: "center", justifyContent: "center" },
-  headerTitle: { flex: 1, textAlign: "center" },
+  backBtn: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
+  headerTitle: { flex: 1 },
   scrollContent: { gap: 12, paddingTop: 12, paddingHorizontal: 16 },
   card: { borderRadius: 12, overflow: "hidden" },
   dimRow: { flexDirection: "row", gap: 8 },
@@ -264,7 +263,7 @@ const styles = createStyles(() => ({
   submitBar: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
   },
   submitBtn: {
     height: 52,

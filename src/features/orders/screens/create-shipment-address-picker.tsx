@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Icon } from "@components/icon";
+import { LinearGradient } from "@components/linear-gradient";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { addressLine } from "@features/orders/utils/shipment";
@@ -11,6 +12,7 @@ import { useAddressPageStore } from "@features/orders/stores/address-page-store"
 
 export default function AddressPickerPage() {
   const { colors, textPresets } = useThemes();
+  const { top, bottom } = useSafeAreaInsets();
   const session = useAddressPageStore((state) => state.picker);
   const clearPicker = useAddressPageStore((state) => state.clearPicker);
   const [query, setQuery] = useState("");
@@ -32,20 +34,27 @@ export default function AddressPickerPage() {
 
   if (!session) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.neutral100 }]}>
+      <View style={styles.root}>
+        <LinearGradient type="gra_background" style={styles.bg} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} />
+        <View style={[styles.header, { paddingTop: top + 12 }]}>
+          <Pressable onPress={close} hitSlop={12} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
+          </Pressable>
+        </View>
         <View style={styles.centerBox}><Text style={[{ color: colors.neutral500 }, textPresets.fs14_400]}>Không có dữ liệu địa chỉ</Text></View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.neutral100 }]}>
-      <View style={styles.header}>
+    <View style={styles.root}>
+      <LinearGradient type="gra_background" style={styles.bg} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} />
+
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Pressable onPress={close} hitSlop={12} style={styles.backButton}>
           <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.neutral900 }, textPresets.fs18_500]}>{session.title}</Text>
-        <View style={styles.headerSpacer} />
+        <Text style={[styles.title, { color: colors.text, fontSize: 24, fontWeight: "600" }]}>{session.title}</Text>
       </View>
 
       <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border10 }]}>
@@ -92,32 +101,32 @@ export default function AddressPickerPage() {
         />
       )}
 
-      <View style={[styles.footer, { backgroundColor: colors.neutral100 }]}>
+      <View style={[styles.footer, { backgroundColor: colors.neutral100, paddingBottom: Math.max(bottom, 16) }]}>
         <Pressable onPress={session.onAddPress} style={[styles.addButton, { backgroundColor: colors.primary }]}>
           <Text style={[styles.addText, textPresets.fs16_600]}>Thêm địa chỉ mới</Text>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const styles = createStyles(() => ({
-  safeArea: { flex: 1 },
-  header: { flexDirection: "row" as const, alignItems: "center" as const, paddingHorizontal: 16, paddingVertical: 12 },
-  backButton: { width: 40, height: 40, alignItems: "center" as const, justifyContent: "center" as const },
-  title: { flex: 1, textAlign: "center" as const },
-  headerSpacer: { width: 40 },
-  searchBox: { marginHorizontal: 16, height: 44, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, flexDirection: "row" as const, alignItems: "center" as const, gap: 8 },
+const styles = createStyles(({ colors }) => ({
+  root: { flex: 1 },
+  bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 12, gap: 4 },
+  backButton: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
+  title: { flex: 1 },
+  searchBox: { marginHorizontal: 16, height: 44, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   searchInput: { flex: 1, paddingVertical: 0 },
-  centerBox: { flex: 1, alignItems: "center" as const, justifyContent: "center" as const },
+  centerBox: { flex: 1, alignItems: "center", justifyContent: "center" },
   listContent: { padding: 16, paddingBottom: 100, gap: 12 },
-  emptyText: { textAlign: "center" as const, paddingVertical: 32 },
+  emptyText: { textAlign: "center", paddingVertical: 32 },
   card: { borderWidth: 1, borderRadius: 14, padding: 14, gap: 6 },
-  cardTop: { flexDirection: "row" as const, alignItems: "center" as const, gap: 8 },
+  cardTop: { flexDirection: "row", alignItems: "center", gap: 8 },
   name: { flex: 1 },
   badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  actions: { flexDirection: "row" as const, gap: 16, marginTop: 4 },
-  footer: { position: "absolute" as const, left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: 24 },
-  addButton: { height: 52, borderRadius: 14, alignItems: "center" as const, justifyContent: "center" as const },
+  actions: { flexDirection: "row", gap: 16, marginTop: 4 },
+  footer: { position: "absolute", left: 0, right: 0, bottom: 0, padding: 16 },
+  addButton: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   addText: { color: "#fff" },
 }));

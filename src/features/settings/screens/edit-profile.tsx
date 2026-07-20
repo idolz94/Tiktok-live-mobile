@@ -5,18 +5,20 @@ import { router } from "expo-router";
 import {
   ActivityIndicator,
   Image,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemes } from "@hooks/use-theme";
 import { images } from "@assets/images";
 
 export function EditProfileScreen() {
-  const { colors, textPresets } = useThemes();
+  const { top, bottom } = useSafeAreaInsets();
+  const { colors, textPresets, shadows } = useThemes();
   const {
     fullName,
     phone,
@@ -36,42 +38,35 @@ export function EditProfileScreen() {
   } = useEditProfile();
 
   return (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colors.neutral50 }]}
-      edges={["top", "left", "right", "bottom"]}
-    >
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.neutral100 }]}>
-        <TouchableOpacity
-          onPress={() => router.canGoBack() && router.back()}
-          style={[styles.headerBtn, { backgroundColor: colors.neutral50 }]}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.backIcon, { color: colors.neutral900 }, textPresets.fs20_600]}>
-            ‹
-          </Text>
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.neutral900 }, textPresets.fs18_500]}>
-          Chỉnh sửa hồ sơ
-        </Text>
-        {/* invisible spacer to balance title */}
-        <View style={styles.headerBtn} />
+    <View style={styles.root}>
+      <LinearGradient
+        type="gra_background"
+        style={styles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
+        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
+          <Text style={styles.backButtonText}>‹</Text>
+        </Pressable>
+        <Text style={styles.headerTitle}>Cài Đặt Chung</Text>
+        <View style={styles.headerRight} />
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* Thông tin */}
-        <View style={[styles.section, { backgroundColor: colors.neutral100 }]}>
+        <View style={[styles.section, shadows.sd2]}>
           <Text style={[styles.sectionTitle, { color: colors.neutral900 }, textPresets.fs16_500]}>
             Thông tin
           </Text>
 
           <View style={styles.fieldGroup}>
-            {/* Shop name */}
             <View style={styles.field}>
               <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
                 Tên cửa hàng
@@ -88,7 +83,6 @@ export function EditProfileScreen() {
               </View>
             </View>
 
-            {/* Full name */}
             <View style={styles.field}>
               <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
                 Họ và tên
@@ -105,7 +99,6 @@ export function EditProfileScreen() {
               </View>
             </View>
 
-            {/* Phone */}
             <View style={styles.field}>
               <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
                 Điện thoại
@@ -125,11 +118,8 @@ export function EditProfileScreen() {
           </View>
         </View>
 
-        {/* Section break */}
-        <View style={[styles.sectionBreak, { backgroundColor: colors.neutral50 }]} />
-
         {/* Mạng xã hội */}
-        <View style={[styles.section, { backgroundColor: colors.neutral100 }]}>
+        <View style={[styles.section, shadows.sd2]}>
           <Text style={[styles.sectionTitle, { color: colors.neutral900 }, textPresets.fs16_500]}>
             Mạng xã hội
           </Text>
@@ -195,13 +185,14 @@ export function EditProfileScreen() {
             </View>
           </View>
         </View>
-
-        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Sticky footer */}
       <View
-        style={[styles.footer, { backgroundColor: colors.neutral100, borderTopColor: colors.border10 }]}
+        style={[
+          styles.footer,
+          { backgroundColor: colors.neutral100, borderTopColor: colors.border10, paddingBottom: Math.max(bottom, 16) },
+        ]}
       >
         <TouchableOpacity
           onPress={() => { void save(); }}
@@ -220,53 +211,59 @@ export function EditProfileScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const styles = createStyles(() => ({
-  safeArea: {
-    flex: 1,
-  },
+const styles = createStyles(({ colors }) => ({
+  root: { flex: 1 },
+  bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   header: {
+    minHeight: 119,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 12,
     paddingBottom: 16,
   },
-  headerBtn: {
+  backButton: {
     width: 44,
     height: 44,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.white,
   },
-  backIcon: {
-    marginTop: -2,
+  backButtonText: {
+    color: colors.text,
+    fontSize: 32,
+    lineHeight: 32,
+    fontWeight: "300",
   },
   headerTitle: {
     flex: 1,
     textAlign: "center",
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: "600",
+    lineHeight: 28,
   },
+  headerRight: { width: 44, height: 44 },
+  scroll: { flex: 1 },
   scrollContent: {
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 80,
+    gap: 12,
   },
   section: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 20,
+    borderRadius: 16,
+    backgroundColor: colors.neutral100,
+    overflow: "hidden",
+    padding: 16,
   },
-  sectionTitle: {
-    marginBottom: 16,
-  },
-  fieldGroup: {
-    gap: 20,
-  },
-  field: {
-    gap: 8,
-  },
+  sectionTitle: { marginBottom: 16 },
+  fieldGroup: { gap: 20 },
+  field: { gap: 8 },
   label: {},
   inputBox: {
     height: 48,
@@ -276,17 +273,11 @@ const styles = createStyles(() => ({
     flexDirection: "row",
     alignItems: "center",
   },
-  inputText: {
-    flex: 1,
-  },
-  sectionBreak: {
-    height: 8,
-  },
+  inputText: { flex: 1 },
   footer: {
     borderTopWidth: 0.5,
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 24,
   },
   saveButton: {
     height: 56,
@@ -294,10 +285,7 @@ const styles = createStyles(() => ({
     alignItems: "center",
     justifyContent: "center",
   },
-  socialBrandIcon: {
-    width: 22,
-    height: 22,
-  },
+  socialBrandIcon: { width: 22, height: 22 },
   youtubeBadge: {
     width: 22,
     height: 22,
@@ -306,9 +294,5 @@ const styles = createStyles(() => ({
     alignItems: "center",
     justifyContent: "center",
   },
-  youtubeBadgeText: {
-    color: "#fff",
-    fontSize: 9,
-    fontWeight: "700",
-  },
+  youtubeBadgeText: { color: "#fff", fontSize: 9, fontWeight: "700" },
 }));

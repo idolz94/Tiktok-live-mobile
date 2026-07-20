@@ -1,7 +1,7 @@
 import { useLocalSearchParams, router } from "expo-router";
 import { useState, useCallback } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import { LinearGradient } from "@components/linear-gradient";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
@@ -38,6 +38,7 @@ function fmtMoney(raw: string | undefined): string {
 
 export default function OrderSuccessScreen() {
   const params = useLocalSearchParams<Params>();
+  const { top, bottom } = useSafeAreaInsets();
   const isSpx = params.provider === "spx";
   const codAmount = params.codAmount ?? "0";
   const shippingFee = params.shippingFee ?? "0";
@@ -64,7 +65,7 @@ export default function OrderSuccessScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
+    <View style={styles.root}>
       {/* background gradient */}
       <LinearGradient
         type="gra_background"
@@ -73,7 +74,7 @@ export default function OrderSuccessScreen() {
       />
 
       {/* header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: top + 12 }]}>
         <Text style={styles.headerTitle}>Tạo đơn hàng thành công</Text>
       </View>
 
@@ -180,7 +181,7 @@ export default function OrderSuccessScreen() {
       </ScrollView>
 
       {/* bottom CTA */}
-      <View style={styles.floatingBottom}>
+      <View style={[styles.floatingBottom, { paddingBottom: Math.max(bottom, 16) }]}>
         <Pressable onPress={handleDone} style={styles.ctaWrapper}>
           <ExpoLinearGradient
             colors={["#FF6B8A", "#FFA66D", "#FFC86A"]}
@@ -192,17 +193,17 @@ export default function OrderSuccessScreen() {
           </ExpoLinearGradient>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = createStyles(({ colors, textPresets }) => ({
-  safeArea: { flex: 1, backgroundColor: "transparent" },
+  root: { flex: 1 },
   header: {
-    height: 44,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
+    paddingBottom: 12,
     justifyContent: "center",
   },
   headerTitle: { color: colors.neutral900, ...textPresets.fs16_500 },
@@ -268,7 +269,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderTopColor: "rgba(0,0,0,0.1)",
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 8,
   },
   ctaWrapper: { borderRadius: 40, overflow: "hidden" },
   ctaButton: {
