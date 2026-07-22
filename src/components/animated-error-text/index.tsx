@@ -1,6 +1,7 @@
 import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
 import { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet } from "react-native";
+import { Animated } from "react-native";
 
 type Props = {
   message?: string;
@@ -84,7 +85,7 @@ export function AnimatedErrorText({ message }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createStyles({
   base: {
     overflow: "hidden",
     marginTop: 4,

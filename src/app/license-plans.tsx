@@ -1,3 +1,3 @@
-import { LicensePlansScreen } from "@features/settings/components/license-plans-screen";
+import { LicensePlansScreen } from "@features/settings/screens/license-plans";
 
 export default LicensePlansScreen;

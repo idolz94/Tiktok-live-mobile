@@ -581,21 +581,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     color: colors.neutral400,
     ...textPresets.fs12_400,
   },
-  addNewField: {
-    height: 48,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "rgba(0,0,0,0.2)",
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  addNewFieldText: {
-    color: colors.neutral400,
-    ...textPresets.fs14_400,
-  },
   saveButtonWrapper: {
     borderRadius: 40,
     overflow: "hidden",

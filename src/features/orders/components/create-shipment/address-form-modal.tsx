@@ -477,12 +477,6 @@ const formModalStyles = createStyles(({ colors }) => ({
   pickerDisabled: {
     opacity: 0.5,
   },
-  textarea: {
-    minHeight: 92,
-    paddingTop: 10,
-    paddingBottom: 10,
-    textAlignVertical: "top" as const,
-  },
   switchRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,

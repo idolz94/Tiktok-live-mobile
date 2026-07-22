@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, View, ViewStyle } from "react-native";
+import { createStyles } from "@utils/createStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSharedValue } from "react-native-reanimated";
 import { useToastStore } from "./store";
@@ -152,9 +153,11 @@ export function ToastContainer() {
   );
 }
 
-const styles = StyleSheet.create({
+// Chuyển StyleSheet.create -> createStyles theo quy tắc styling mục 6.
+// Vẫn giữ import StyleSheet vì còn dùng StyleSheet.absoluteFill (được phép).
+const styles = createStyles(() => ({
   placementContainer: {
     position: "absolute",
     zIndex: 9999,
   },
-});
+}));

@@ -842,7 +842,6 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     gap: 10,
   },
-  optionGrid: { gap: 10 },
   radioGroup: { gap: 12 },
   radioCard: {
     flexDirection: "row",

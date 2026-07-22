@@ -258,7 +258,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   discountValue: { color: "#2ca87b", ...textPresets.fs12_400 },
   totalLabel: { color: colors.neutral900, ...textPresets.fs12_400 },
   totalValue: { color: "#FF6B8A", ...textPresets.fs12_400 },
-  noteText: { color: colors.neutral500, ...textPresets.fs12_400, lineHeight: 20 },
   floatingBottom: {
     position: "absolute",
     bottom: 0,

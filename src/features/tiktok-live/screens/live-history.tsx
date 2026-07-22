@@ -1,3 +1,8 @@
+/**
+ * LiveHistoryScreen — màn hình lịch sử phiên live.
+ * Di chuyển từ `tiktok-live/components/live-history-screen.tsx` sang `screens/`
+ * theo cấu trúc feature (PROJECT_GUIDE mục 4.1). Hành vi giữ nguyên.
+ */
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
@@ -13,7 +18,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -281,7 +285,9 @@ function DateRangeSheet({
   );
 }
 
-const sheetStyles = StyleSheet.create({
+// Chuyển từ StyleSheet.create sang createStyles theo quy tắc styling mục 6/19.
+// Giữ nguyên hex `#ccc` (inputDash) vì chưa có token khớp — không ép map để tránh lệch giao diện.
+const sheetStyles = createStyles(() => ({
   container: { paddingHorizontal: 16, paddingTop: 8 },
   title: { marginBottom: 16, textAlign: "center" },
   presetRow: {
@@ -325,7 +331,7 @@ const sheetStyles = StyleSheet.create({
     justifyContent: "center",
   },
   btnApplyText: {},
-});
+}));
 
 // --- subcomponents ---
 
