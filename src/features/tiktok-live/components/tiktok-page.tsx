@@ -8,7 +8,7 @@ import { Segment } from "./segment";
 import { UnConnectedLive } from "./unconnected-live";
 import { ConnectedLive } from "./connected-live";
 import { Orders } from "@features/orders/screens/orders";
-import { useTiktokPage } from "./use-tiktok-page";
+import { useTiktokPage } from "@features/tiktok-live/hooks/use-tiktok-page";
 
 export type TikTokLiveChannel = {
   id: string;

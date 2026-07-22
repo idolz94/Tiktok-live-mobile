@@ -1,3 +1,8 @@
+/**
+ * LicensePlansScreen — màn hình danh sách gói license.
+ * Di chuyển từ `settings/components/license-plans-screen.tsx` sang `screens/`
+ * theo cấu trúc feature (PROJECT_GUIDE mục 4.1). Hành vi giữ nguyên.
+ */
 import { LinearGradient } from "@components/linear-gradient";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";

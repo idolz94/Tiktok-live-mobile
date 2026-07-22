@@ -443,7 +443,6 @@ const styles = createStyles(() => ({
     borderWidth: 1,
     borderRadius: 10,
   },
-  tabCheck: { color: "#fff", fontSize: 14, lineHeight: 18 },
   feeBox: {
     borderWidth: 1,
     borderRadius: 12,

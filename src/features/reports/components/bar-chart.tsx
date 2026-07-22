@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
 import type { ChartPoint } from "../types";
 
 type Props = {
@@ -87,8 +88,9 @@ export function BarChart({ data, color, height = CHART_HEIGHT, formatValue = Str
   );
 }
 
-const styles = StyleSheet.create({
+// Chuyển StyleSheet.create -> createStyles theo quy tắc styling mục 6.
+const styles = createStyles(() => ({
   label: {
     fontFamily: "Inter",
   },
-});
+}));

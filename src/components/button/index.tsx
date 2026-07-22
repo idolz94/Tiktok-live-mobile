@@ -117,6 +117,5 @@ const styles = createStyles(({ colors, textPresets }) => ({
     bottom: 0,
     justifyContent: "center",
   },
-  spinnerSide: { left: 14 },
   spinnerCenter: { left: 0, right: 0, alignItems: "center" },
 }));

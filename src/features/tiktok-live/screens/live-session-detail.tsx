@@ -1,3 +1,8 @@
+/**
+ * LiveSessionDetailScreen — màn hình chi tiết một phiên live.
+ * Di chuyển từ `tiktok-live/components/live-session-detail-screen.tsx` sang `screens/`
+ * theo cấu trúc feature (PROJECT_GUIDE mục 4.1). Hành vi giữ nguyên.
+ */
 import { Ionicons } from "@expo/vector-icons";
 import { OrderFilter, OrderWithTikTok } from "@app-types/index";
 import { Icon } from "@components/icon";

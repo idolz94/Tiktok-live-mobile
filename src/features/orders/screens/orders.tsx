@@ -3,7 +3,6 @@ import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Icon } from "@components/icon";
 import { useThemes } from "@hooks/use-theme";
 import { FlashList, FlashListRef } from "@shopify/flash-list";
-import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
@@ -214,33 +213,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   txtCurrentLive: {
     color: colors.neutral900,
     ...textPresets.fs20_600,
-  },
-  infoCard: {
-    flex: 1,
-    backgroundColor: colors.neutral100,
-    borderRadius: 12,
-    padding: 16,
-    columnGap: 12,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    borderWidth: HairlineWidth * 3,
-    borderColor: colors.border10,
-    overflow: "hidden",
-  },
-  infoCardIcon: {
-    width: 32,
-    height: 32,
-  },
-  infoCardTextGroup: {
-    rowGap: 4,
-  },
-  valueCount: {
-    color: colors.neutral900,
-    ...textPresets.fs20_600,
-  },
-  txtCardFlag: {
-    color: colors.neutral400,
-    ...textPresets.fs12_400,
   },
   footerRow: {
     paddingVertical: 16,

@@ -172,5 +172,4 @@ const styles = createStyles(({ colors, textPresets }) => ({
   btnPhone: { backgroundColor: "rgba(82,196,26,0.1)" },
   customerActionLabel: { ...textPresets.fs12_500 },
   socialImg: { width: 16, height: 16 },
-  metaText: { color: colors.neutral400, ...textPresets.fs12_400 },
 }));

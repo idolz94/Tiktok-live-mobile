@@ -1,4 +1,4 @@
-import { LiveHistoryScreen } from "@features/tiktok-live/components/live-history-screen";
+import { LiveHistoryScreen } from "@features/tiktok-live/screens/live-history";
 
 export default function HistoryTab() {
   return <LiveHistoryScreen />;

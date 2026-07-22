@@ -1,3 +1,9 @@
+/**
+ * useTiktokPage — hook điều phối trang TikTok live (channels, connect, pager).
+ * Di chuyển từ `tiktok-live/components/use-tiktok-page.tsx` sang `hooks/`
+ * theo quy tắc "hook không nằm trong components/" (PROJECT_GUIDE mục 4.3).
+ * Giữ đuôi `.tsx` vì bottom-sheet content trả về JSX. Hành vi giữ nguyên.
+ */
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { createTikTokChannelApi, getTikTokChannelsApi } from "@features/auth/services/api";
 import { useAuthStore } from "@features/auth/stores";
@@ -15,7 +21,7 @@ import type PagerView from "react-native-pager-view";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { useThemes } from "@hooks/use-theme";
 import type { PagerViewOnPageSelectedEvent } from "react-native-pager-view";
-import { TikTokLiveChannel } from "./tiktok-page";
+import { TikTokLiveChannel } from "@features/tiktok-live/components/tiktok-page";
 
 const ANIMATION_DURATION = 250;
 const INITIAL_OFFSET = 48;
