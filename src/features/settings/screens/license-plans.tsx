@@ -1,21 +1,17 @@
-/**
- * LicensePlansScreen — màn hình danh sách gói license.
- * Di chuyển từ `settings/components/license-plans-screen.tsx` sang `screens/`
- * theo cấu trúc feature (PROJECT_GUIDE mục 4.1). Hành vi giữ nguyên.
- */
 import { LinearGradient } from "@components/linear-gradient";
-import { createStyles } from "@utils/createStyles";
-import { useThemes } from "@hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
-import { useRef, useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { Dimensions, Pressable, Text, View } from "react-native";
+import Animated, {
+  type SharedValue,
+  interpolate,
+  interpolateColor,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -47,8 +43,16 @@ const PLANS: Plan[] = [
       { icon: "cube-outline", label: "Tạo đơn nhanh", available: true },
       { icon: "layers-outline", label: "100 đơn / tháng", available: true },
       { icon: "storefront-outline", label: "1 shop", available: true },
-      { icon: "document-text-outline", label: "Xuất báo cáo Excel", available: false },
-      { icon: "bar-chart-outline", label: "Báo cáo nâng cao", available: false },
+      {
+        icon: "document-text-outline",
+        label: "Xuất báo cáo Excel",
+        available: false,
+      },
+      {
+        icon: "bar-chart-outline",
+        label: "Báo cáo nâng cao",
+        available: false,
+      },
       { icon: "people-outline", label: "Quản lý nhân viên", available: false },
       { icon: "code-slash-outline", label: "API tích hợp", available: false },
       { icon: "headset-outline", label: "Hỗ trợ 24/7", available: false },
@@ -64,10 +68,22 @@ const PLANS: Plan[] = [
     features: [
       { icon: "flash-outline", label: "Gom comment tự động", available: true },
       { icon: "cube-outline", label: "Tạo đơn nhanh", available: true },
-      { icon: "infinite-outline", label: "Không giới hạn đơn", available: true },
+      {
+        icon: "infinite-outline",
+        label: "Không giới hạn đơn",
+        available: true,
+      },
       { icon: "storefront-outline", label: "3 shop", available: true },
-      { icon: "document-text-outline", label: "Xuất báo cáo Excel", available: true },
-      { icon: "bar-chart-outline", label: "Báo cáo nâng cao", available: false },
+      {
+        icon: "document-text-outline",
+        label: "Xuất báo cáo Excel",
+        available: true,
+      },
+      {
+        icon: "bar-chart-outline",
+        label: "Báo cáo nâng cao",
+        available: false,
+      },
       { icon: "people-outline", label: "Quản lý nhân viên", available: false },
       { icon: "code-slash-outline", label: "API tích hợp", available: false },
       { icon: "headset-outline", label: "Hỗ trợ ưu tiên", available: true },
@@ -83,9 +99,21 @@ const PLANS: Plan[] = [
     features: [
       { icon: "flash-outline", label: "Gom comment tự động", available: true },
       { icon: "cube-outline", label: "Tạo đơn nhanh", available: true },
-      { icon: "infinite-outline", label: "Không giới hạn đơn", available: true },
-      { icon: "infinite-outline", label: "Không giới hạn shop", available: true },
-      { icon: "document-text-outline", label: "Xuất báo cáo Excel", available: true },
+      {
+        icon: "infinite-outline",
+        label: "Không giới hạn đơn",
+        available: true,
+      },
+      {
+        icon: "infinite-outline",
+        label: "Không giới hạn shop",
+        available: true,
+      },
+      {
+        icon: "document-text-outline",
+        label: "Xuất báo cáo Excel",
+        available: true,
+      },
       { icon: "bar-chart-outline", label: "Báo cáo nâng cao", available: true },
       { icon: "people-outline", label: "Quản lý nhân viên", available: true },
       { icon: "code-slash-outline", label: "API tích hợp", available: true },
@@ -94,11 +122,18 @@ const PLANS: Plan[] = [
   },
 ];
 
+const AnimatedFlatList = Animated.FlatList<Plan>;
+
 export function LicensePlansScreen() {
   const { top } = useSafeAreaInsets();
   const { colors } = useThemes();
-  const [activeIndex, setActiveIndex] = useState(1); // Pro selected by default
-  const flatListRef = useRef<FlatList>(null);
+  const scrollX = useSharedValue((CARD_WIDTH + CARD_GAP) * 1);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollX.value = e.contentOffset.x;
+    },
+  });
 
   return (
     <View style={styles.root}>
@@ -109,16 +144,20 @@ export function LicensePlansScreen() {
         end={{ x: 0.5, y: 1 }}
       />
       <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          hitSlop={8}
+        >
           <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
         </Pressable>
         <Text style={styles.headerTitle}>Chọn gói dịch vụ</Text>
       </View>
 
       {/* Plan cards */}
+
       <View style={styles.cardsWrapper}>
-        <FlatList
-          ref={flatListRef}
+        <AnimatedFlatList
           data={PLANS}
           horizontal
           pagingEnabled={false}
@@ -133,48 +172,70 @@ export function LicensePlansScreen() {
             offset: (CARD_WIDTH + CARD_GAP) * index,
             index,
           })}
-          onMomentumScrollEnd={(e) => {
-            const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP));
-            setActiveIndex(idx);
-          }}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <PlanCard plan={item} />
-          )}
+          renderItem={({ item }) => <PlanCard plan={item} />}
         />
-      </View>
-
-      {/* Dots */}
-      <View style={styles.dotsRow}>
-        {PLANS.map((_, i) => (
-          <View
-            key={i}
-            style={[styles.dot, i === activeIndex && styles.dotActive]}
-          />
-        ))}
+        <View style={styles.dotsRow}>
+          {PLANS.map((_, i) => (
+            <AnimatedDot key={i} index={i} scrollX={scrollX} />
+          ))}
+        </View>
       </View>
 
       {/* Sticky CTA */}
-      <View style={styles.ctaContainer}>
+      {/* <View style={styles.ctaContainer}>
         <Pressable style={({ pressed }) => [pressed && { opacity: 0.85 }]}>
           <LinearGradient type="gra_primary" style={styles.ctaButton}>
             <Text style={styles.ctaText}>Bắt đầu dùng miễn phí 7 ngày</Text>
           </LinearGradient>
         </Pressable>
-        <Text style={styles.ctaNote}>Không cần thẻ ngân hàng · Huỷ bất cứ lúc nào</Text>
-      </View>
+        <Text style={styles.ctaNote}>
+          Không cần thẻ ngân hàng · Huỷ bất cứ lúc nào
+        </Text>
+      </View> */}
     </View>
   );
 }
 
-function PlanCard({ plan }: { plan: Plan }) {
-  const price = plan.price;
+const SNAP_WIDTH = CARD_WIDTH + CARD_GAP;
 
+function AnimatedDot({
+  index,
+  scrollX,
+}: {
+  index: number;
+  scrollX: SharedValue<number>;
+}) {
+  const { colors } = useThemes();
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const inputRange = [
+      (index - 1) * SNAP_WIDTH,
+      index * SNAP_WIDTH,
+      (index + 1) * SNAP_WIDTH,
+    ];
+
+    const width = interpolate(scrollX.value, inputRange, [6, 18, 6], "clamp");
+    const backgroundColor = interpolateColor(scrollX.value, inputRange, [
+      "#D9D0D5",
+      colors.primary,
+      "#D9D0D5",
+    ]);
+
+    return { width, backgroundColor };
+  });
+
+  return <Animated.View style={[styles.dot, animatedStyle]} />;
+}
+
+function PlanCard({ plan }: { plan: Plan }) {
   if (plan.highlighted) {
     return (
       <LinearGradient type="gra_primary" style={styles.cardGradientBorder}>
         <View style={[styles.card, styles.cardHighlightedInner]}>
-          <CardInner plan={plan} price={price} highlighted={false} />
+          <CardInner plan={plan} highlighted={false} />
         </View>
       </LinearGradient>
     );
@@ -182,47 +243,81 @@ function PlanCard({ plan }: { plan: Plan }) {
 
   return (
     <View style={styles.card}>
-      <CardInner plan={plan} price={price} highlighted={false} />
+      <CardInner plan={plan} highlighted={false} />
     </View>
   );
 }
 
 function CardInner({
   plan,
-  price,
   highlighted,
 }: {
   plan: Plan;
-  price: string;
   highlighted: boolean;
 }) {
   return (
     <>
       {plan.badge && (
-        <View style={[styles.badge, highlighted ? styles.badgeLight : styles.badgePink]}>
-          <Text style={[styles.badgeText, highlighted ? styles.badgeTextLight : styles.badgeTextPink]}>
+        <View
+          style={[
+            styles.badge,
+            highlighted ? styles.badgeLight : styles.badgePink,
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeText,
+              highlighted ? styles.badgeTextLight : styles.badgeTextPink,
+            ]}
+          >
             {plan.badge}
           </Text>
         </View>
       )}
 
-      <Text style={[styles.planName, highlighted ? styles.textLight : styles.textDark]}>
+      <Text
+        style={[
+          styles.planName,
+          highlighted ? styles.textLight : styles.textDark,
+        ]}
+      >
         {plan.name}
       </Text>
-      <Text style={[styles.planTagline, highlighted ? styles.textLightMuted : styles.textMuted]}>
+      <Text
+        style={[
+          styles.planTagline,
+          highlighted ? styles.textLightMuted : styles.textMuted,
+        ]}
+      >
         {plan.tagline}
       </Text>
 
       <View style={styles.priceRow}>
-        <Text style={[styles.price, highlighted ? styles.textLight : styles.textDark]}>
-          {price}
+        <Text
+          style={[
+            styles.price,
+            highlighted ? styles.textLight : styles.textDark,
+          ]}
+        >
+          {plan.price}
         </Text>
-        <Text style={[styles.period, highlighted ? styles.textLightMuted : styles.textMuted]}>
-          {" "}/ tháng
+        <Text
+          style={[
+            styles.period,
+            highlighted ? styles.textLightMuted : styles.textMuted,
+          ]}
+        >
+          {" "}
+          / tháng
         </Text>
       </View>
 
-      <View style={[styles.divider, highlighted ? styles.dividerLight : styles.dividerDefault]} />
+      <View
+        style={[
+          styles.divider,
+          highlighted ? styles.dividerLight : styles.dividerDefault,
+        ]}
+      />
 
       <View style={styles.featureList}>
         {plan.features.map((f) => (
@@ -234,8 +329,8 @@ function CardInner({
                 !f.available
                   ? "#C0B8BD"
                   : highlighted
-                  ? "rgba(255,255,255,0.9)"
-                  : "#FF6B8A"
+                    ? "rgba(255,255,255,0.9)"
+                    : "#FF6B8A"
               }
             />
             <Text
@@ -256,13 +351,40 @@ function CardInner({
 
 const styles = createStyles(({ colors, textPresets, shadows }) => ({
   root: { flex: 1 },
-  headerBackground: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 16, columnGap: 12 },
-  backBtn: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
-  headerTitle: { color: colors.text, fontSize: 24, fontWeight: "600", lineHeight: 28 },
+  headerBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    columnGap: 12,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+  },
+  headerTitle: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: "600",
+    lineHeight: 28,
+  },
 
   // Cards
-  cardsWrapper: { flex: 1, justifyContent: "center", overflow: "visible" },
+  cardsWrapper: {
+    flex: 1,
+    justifyContent: "center",
+  },
   flatList: { flexGrow: 0 },
   cardsContainer: {
     paddingHorizontal: SIDE_INSET,
@@ -277,12 +399,10 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     backgroundColor: colors.neutral100,
     borderWidth: 0.5,
     borderColor: colors.border10,
-    ...shadows.sd2,
   },
   cardGradientBorder: {
     borderRadius: 22,
     padding: 2,
-    ...shadows.sd2,
   },
   cardHighlightedInner: {
     borderRadius: 20,
@@ -335,10 +455,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     height: 6,
     borderRadius: 3,
     backgroundColor: "#D9D0D5",
-  },
-  dotActive: {
-    width: 18,
-    backgroundColor: colors.primary,
   },
 
   // CTA
