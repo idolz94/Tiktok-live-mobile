@@ -1,21 +1,21 @@
-import { LinearGradient } from "@components/linear-gradient";
 import { icons } from "@assets/icons";
 import { images } from "@assets/images";
+import {
+  CollapsibleHeader,
+  useCollapsibleHeaderHeight,
+} from "@components/header/collapsible-header";
+import { LinearGradient } from "@components/linear-gradient";
+import { useToast } from "@components/toast";
 import { useAuth } from "@features/auth/hooks/use-auth";
+import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
 import { useRef } from "react";
-import {
-  Image,
-  ImageSourcePropType,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
-import { useToast } from "@components/toast";
+import { Image, ImageSourcePropType, Pressable, Text, View } from "react-native";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 
 const AVATAR_URL =
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&q=80";
@@ -77,16 +77,20 @@ const socialLogins = [
   },
 ] as const;
 
-// Di chuyển từ src/app/(tabs)/settings.tsx sang feature theo cấu trúc route-mỏng/feature-dày
-// (PROJECT_GUIDE mục 4 & 8): route giờ chỉ là wrapper mỏng render screen này qua named export.
-// Đặt tên SettingsTabScreen để tránh trùng với SettingsScreen trong components/settings-screen.tsx.
 export function SettingsTabScreen() {
   const { user, logout } = useAuth();
-  const { top } = useSafeAreaInsets();
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<Animated.ScrollView>(null);
+  const scrollY = useSharedValue(0);
+  const headerHeight = useCollapsibleHeaderHeight();
 
   useTabScrollToTop("settings", scrollRef);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   const username = user?.fullName || user?.username || "User";
 
@@ -99,14 +103,17 @@ export function SettingsTabScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Text style={styles.headerTitle}>Cài Đặt Chung</Text>
-      </View>
+      <CollapsibleHeader title="Cài Đặt Chung" scrollY={scrollY} />
 
-      <ScrollView
+      <Animated.ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: headerHeight },
+        ]}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         <View style={styles.profileCard}>
           <View style={styles.avatarWrap}>
@@ -129,7 +136,10 @@ export function SettingsTabScreen() {
 
         <View style={styles.content}>
           <View style={styles.subscriptionCard}>
-            <Pressable style={styles.subscriptionInfoRow} onPress={() => router.push("/license-plans")}>
+            <Pressable
+              style={styles.subscriptionInfoRow}
+              onPress={() => router.push("/license-plans")}
+            >
               <LinearGradient type="gra_primary" style={styles.appIcon}>
                 <Text style={styles.appIconText}>▣</Text>
               </LinearGradient>
@@ -165,7 +175,12 @@ export function SettingsTabScreen() {
             ))}
             <View style={styles.itemDivider} />
             <View style={styles.settingsGroup}>
-              <Pressable style={styles.settingItem} onPress={() => { void logout(); }}>
+              <Pressable
+                style={styles.settingItem}
+                onPress={() => {
+                  void logout();
+                }}
+              >
                 <View style={styles.settingLeft}>
                   <Image
                     source={icons.disconnect}
@@ -179,7 +194,7 @@ export function SettingsTabScreen() {
             </View>
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
@@ -195,31 +210,20 @@ function SettingItem({
 }) {
   const toast = useToast();
 
-  const _onPress = () => {
-    if (typeof onPress === "function") {
+  const handlePress = () => {
+    if (onPress) {
       onPress();
     } else {
       toast.info("Tính năng đang được phát triển!");
     }
   };
 
-  const inner = (
-    <View style={styles.settingLeft}>
-      <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
-      <Text style={styles.settingText}>{label}</Text>
-    </View>
-  );
-  if (!_onPress) {
-    return (
-      <View style={styles.settingItem}>
-        {inner}
-        <Text style={styles.chevron}>›</Text>
-      </View>
-    );
-  }
   return (
-    <Pressable style={styles.settingItem} onPress={_onPress}>
-      {inner}
+    <Pressable style={styles.settingItem} onPress={handlePress}>
+      <View style={styles.settingLeft}>
+        <Image source={icon} style={styles.settingIcon} resizeMode="contain" />
+        <Text style={styles.settingText}>{label}</Text>
+      </View>
       <Text style={styles.chevron}>›</Text>
     </Pressable>
   );
@@ -228,20 +232,6 @@ function SettingItem({
 const styles = createStyles(({ colors, textPresets, shadows }) => ({
   root: { flex: 1 },
   bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  header: {
-    minHeight: 119,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
   scrollContent: {
     paddingHorizontal: 16,
     paddingBottom: 40,
@@ -251,9 +241,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     alignItems: "center",
     padding: 16,
     gap: 16,
-    borderRadius: 16,
-    backgroundColor: colors.neutral100,
-    ...shadows.sd2,
   },
   avatarWrap: {
     width: 98,
@@ -327,79 +314,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   upgradeText: {
     color: colors.neutral900,
     ...textPresets.fs14_500,
-  },
-  tiktokCard: {
-    backgroundColor: colors.neutral50,
-    borderRadius: 20,
-    padding: 16,
-    gap: 12,
-    marginTop: 16,
-    borderWidth: 0.5,
-    borderColor: colors.border10,
-  },
-  tiktokHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  manageText: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  manageCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: colors.neutral100,
-    borderWidth: 0.5,
-    borderColor: colors.border10,
-    ...shadows.sd1,
-  },
-  manageTitle: {
-    color: colors.neutral900,
-    marginTop: 2,
-    ...textPresets.fs14_500,
-  },
-  manageSubtitle: {
-    color: colors.neutral400,
-    marginTop: 2,
-    ...textPresets.fs12_400,
-  },
-  cardLabel: {
-    color: colors.neutral400,
-    ...textPresets.fs12_400,
-  },
-  connectionText: {
-    marginTop: 2,
-    color: colors.neutral400,
-    ...textPresets.fs12_400,
-  },
-  input: {
-    borderWidth: 0.5,
-    borderColor: colors.border10,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: colors.neutral900,
-    backgroundColor: colors.neutral100,
-    ...textPresets.fs14_400,
-  },
-  changeButton: {
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-  },
-  changeButtonText: {
-    color: colors.neutral100,
-    ...textPresets.fs14_500,
-  },
-  serverText: {
-    color: colors.neutral400,
-    ...textPresets.fs11_400,
   },
   settingsContainer: {
     gap: 12,
