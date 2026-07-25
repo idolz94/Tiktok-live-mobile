@@ -8,7 +8,10 @@ import {
   type ShippingFilterKey,
   type ShippingOrder,
 } from "@features/orders/hooks/use-shipping-tab";
-import { getShipmentLabelApi, cancelShipmentApi } from "@features/orders/service/create-shipment-api";
+import {
+  getShipmentLabelApi,
+  cancelShipmentApi,
+} from "@features/orders/service/create-shipment-api";
 import { router } from "expo-router";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { useThemes } from "@hooks/use-theme";
@@ -18,7 +21,6 @@ import { icons } from "@assets/icons";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Image,
   Linking,
   Pressable,
@@ -27,6 +29,14 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  CollapsibleHeader,
+  useCollapsibleHeaderHeight,
+} from "@components/header/collapsible-header";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
   not_shipped: "Chưa giao",
@@ -181,7 +191,13 @@ function providerLabel(name?: string | null): string {
   return "Thủ công";
 }
 
-function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: () => void }) {
+function OrderCard({
+  item,
+  onCancelled,
+}: {
+  item: ShippingOrder;
+  onCancelled: () => void;
+}) {
   const { colors, textPresets } = useThemes();
   const [printing, setPrinting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -191,9 +207,10 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
   const trackingUrl = abbr === "TC" ? null : getTrackingUrl(item);
   const label = providerLabel(item.providerName);
   const sColor = statusColor(item.shippingStatus, colors);
-  const statusLabel = abbr === "TC" && item.shippingStatus === "submitted"
-    ? "Chờ lấy hàng"
-    : STATUS_LABEL[item.shippingStatus];
+  const statusLabel =
+    abbr === "TC" && item.shippingStatus === "submitted"
+      ? "Chờ lấy hàng"
+      : STATUS_LABEL[item.shippingStatus];
 
   const addressText =
     [
@@ -203,7 +220,9 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
       item.customerAddressData?.province,
     ]
       .filter(Boolean)
-      .join(", ") || item.customerAddress?.trim() || "";
+      .join(", ") ||
+    item.customerAddress?.trim() ||
+    "";
 
   const productCount =
     item.products?.reduce((s, p) => s + Number(p.quantity || 0), 0) ||
@@ -225,9 +244,16 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
     try {
       const res = await getShipmentLabelApi(item.id);
       if (res.labelUrl) await Linking.openURL(res.labelUrl);
-      else toast.info({ title: "Chưa có nhãn in", description: "Vận đơn chưa có nhãn để in." });
+      else
+        toast.info({
+          title: "Chưa có nhãn in",
+          description: "Vận đơn chưa có nhãn để in.",
+        });
     } catch {
-      toast.error({ title: "Lỗi", description: "Không thể lấy nhãn in. Vui lòng thử lại." });
+      toast.error({
+        title: "Lỗi",
+        description: "Không thể lấy nhãn in. Vui lòng thử lại.",
+      });
     } finally {
       setPrinting(false);
     }
@@ -246,7 +272,10 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
             await cancelShipmentApi(item.id, { trackingId: item.trackingCode });
             onCancelled();
           } catch {
-            toast.error({ title: "Lỗi", description: "Không thể huỷ vận đơn. Vui lòng thử lại." });
+            toast.error({
+              title: "Lỗi",
+              description: "Không thể huỷ vận đơn. Vui lòng thử lại.",
+            });
           } finally {
             setCancelling(false);
           }
@@ -268,15 +297,15 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
           {item.orderCode ?? item.id.slice(0, 12)}
         </Text>
         {trackingUrl ? (
-        <Pressable
-          style={styles.cardTrackingLink}
-          onPress={() => void Linking.openURL(trackingUrl)}
-        >
-          <Text style={{ color: "#c6a84d", fontSize: 12, fontWeight: "600" }}>
-            Theo dõi
-          </Text>
-          <Ionicons name="chevron-forward" size={12} color="#c6a84d" />
-        </Pressable>
+          <Pressable
+            style={styles.cardTrackingLink}
+            onPress={() => void Linking.openURL(trackingUrl)}
+          >
+            <Text style={{ color: "#c6a84d", fontSize: 12, fontWeight: "600" }}>
+              Theo dõi
+            </Text>
+            <Ionicons name="chevron-forward" size={12} color="#c6a84d" />
+          </Pressable>
         ) : null}
       </View>
 
@@ -294,7 +323,13 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
             {abbr === "TC" ? (
               <Ionicons name="cube-outline" size={21} color="#c6a84d" />
             ) : (
-              <Text style={{ color: abbr === "SPX" ? "#ee4d2d" : "#666", fontSize: 10, fontWeight: "900" }}>
+              <Text
+                style={{
+                  color: abbr === "SPX" ? "#ee4d2d" : "#666",
+                  fontSize: 10,
+                  fontWeight: "900",
+                }}
+              >
                 {abbr}
               </Text>
             )}
@@ -321,16 +356,25 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
         </View>
       </View>
 
-      <View style={[styles.cardDivider, { backgroundColor: colors.border10 }]} />
+      <View
+        style={[styles.cardDivider, { backgroundColor: colors.border10 }]}
+      />
 
       {/* Info section */}
       <View style={styles.cardInfoSection}>
         {/* Customer name + inline actions */}
         <View style={styles.cardInfoNameRow}>
           <View style={[styles.cardIconRow, { flex: 1 }]}>
-            <Ionicons name="person-outline" size={16} color={colors.neutral500} />
+            <Ionicons
+              name="person-outline"
+              size={16}
+              color={colors.neutral500}
+            />
             <Text
-              style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+              style={[
+                styles.cardInfoFlex,
+                { color: colors.text, ...textPresets.fs12_400 },
+              ]}
               numberOfLines={1}
             >
               {name}
@@ -338,17 +382,32 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
           </View>
           <View style={styles.cardNameActions}>
             <Pressable
-              style={[styles.cardPrintBtn, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
-              onPress={() => { void handlePrint(); }}
+              style={[
+                styles.cardPrintBtn,
+                {
+                  backgroundColor: colors.neutral50,
+                  borderColor: colors.border10,
+                },
+              ]}
+              onPress={() => {
+                void handlePrint();
+              }}
               disabled={printing}
             >
-              {printing
-                ? <ActivityIndicator size="small" color={colors.text} />
-                : <Image source={icons.print} style={[styles.cardPrintIcon, { tintColor: colors.text }]} />
-              }
+              {printing ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <Image
+                  source={icons.print}
+                  style={[styles.cardPrintIcon, { tintColor: colors.text }]}
+                />
+              )}
             </Pressable>
             <Pressable
-              style={[styles.cardDetailBtn, { borderColor: "#2196f3", backgroundColor: "#f0f7ff" }]}
+              style={[
+                styles.cardDetailBtn,
+                { borderColor: "#2196f3", backgroundColor: "#f0f7ff" },
+              ]}
               onPress={() =>
                 router.push({
                   pathname: "/shipping-detail/[id]" as never,
@@ -356,7 +415,9 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
                 })
               }
             >
-              <Text style={{ color: "#2196f3", ...textPresets.fs12_500 }}>Chi tiết 🛒</Text>
+              <Text style={{ color: "#2196f3", ...textPresets.fs12_500 }}>
+                Chi tiết 🛒
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -366,7 +427,10 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
           <View style={styles.cardIconRow}>
             <Ionicons name="call-outline" size={16} color={colors.neutral500} />
             <Text
-              style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+              style={[
+                styles.cardInfoFlex,
+                { color: colors.text, ...textPresets.fs12_400 },
+              ]}
             >
               {item.customerPhone}
             </Text>
@@ -389,7 +453,11 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
               {(item.customerAddressData as any)?.isOld ? (
                 <View style={styles.cardOldBadge}>
                   <Text
-                    style={{ color: "#ff9800", fontSize: 10, fontWeight: "600" }}
+                    style={{
+                      color: "#ff9800",
+                      fontSize: 10,
+                      fontWeight: "600",
+                    }}
                   >
                     Địa chỉ cũ
                   </Text>
@@ -403,7 +471,10 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
         <View style={styles.cardIconRow}>
           <Ionicons name="cube-outline" size={16} color={colors.neutral500} />
           <Text
-            style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+            style={[
+              styles.cardInfoFlex,
+              { color: colors.text, ...textPresets.fs12_400 },
+            ]}
             numberOfLines={2}
           >
             {productSummary}
@@ -420,7 +491,10 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
               style={{ marginTop: 1 }}
             />
             <Text
-              style={[styles.cardInfoFlex, { color: colors.text, ...textPresets.fs12_400 }]}
+              style={[
+                styles.cardInfoFlex,
+                { color: colors.text, ...textPresets.fs12_400 },
+              ]}
               numberOfLines={2}
             >
               {noteText}
@@ -429,7 +503,9 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
         ) : null}
       </View>
 
-      <View style={[styles.cardDivider, { backgroundColor: colors.border10 }]} />
+      <View
+        style={[styles.cardDivider, { backgroundColor: colors.border10 }]}
+      />
 
       {/* Money rows */}
       <View style={styles.cardMoneySection}>
@@ -451,28 +527,53 @@ function OrderCard({ item, onCancelled }: { item: ShippingOrder; onCancelled: ()
         </View>
       </View>
 
-      <View style={[styles.cardDivider, { backgroundColor: colors.border10 }]} />
+      <View
+        style={[styles.cardDivider, { backgroundColor: colors.border10 }]}
+      />
 
       {/* Action buttons */}
       <View style={styles.cardActions}>
         <Pressable
-          style={[styles.cardActionBtn, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}
+          style={[
+            styles.cardActionBtn,
+            { borderColor: colors.border10, backgroundColor: colors.neutral50 },
+          ]}
           onPress={() =>
-            router.push({ pathname: "/order-detail" as never, params: { id: item.id } })
+            router.push({
+              pathname: "/order-detail" as never,
+              params: { id: item.id },
+            })
           }
         >
           <Ionicons name="list-outline" size={14} color={colors.text} />
-          <Text style={[styles.cardActionText, { color: colors.text, ...textPresets.fs12_500 }]}>
+          <Text
+            style={[
+              styles.cardActionText,
+              { color: colors.text, ...textPresets.fs12_500 },
+            ]}
+          >
             Tổng quan
           </Text>
         </Pressable>
         {item.shippingStatus !== "cancelled" && (
           <Pressable
-            style={[styles.cardActionBtn, { borderColor: "#ffcdd2", backgroundColor: "#fff5f5" }]}
+            style={[
+              styles.cardActionBtn,
+              { borderColor: "#ffcdd2", backgroundColor: "#fff5f5" },
+            ]}
             onPress={handleCancel}
           >
-            <Ionicons name="close-circle-outline" size={14} color={colors.error} />
-            <Text style={[styles.cardActionText, { color: colors.error, ...textPresets.fs12_500 }]}>
+            <Ionicons
+              name="close-circle-outline"
+              size={14}
+              color={colors.error}
+            />
+            <Text
+              style={[
+                styles.cardActionText,
+                { color: colors.error, ...textPresets.fs12_500 },
+              ]}
+            >
               Huỷ đơn
             </Text>
           </Pressable>
@@ -571,32 +672,34 @@ function ShippingSkeleton() {
       />
       <View style={[styles.container, { paddingBottom: 34 }]}>
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <SkeletonBox style={{ width: 180, height: 28, borderRadius: 6 }} />
-        <SkeletonBox style={{ width: 44, height: 44, borderRadius: 999 }} />
-      </View>
-      <View style={styles.summaryWrap}>
-        <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
-        <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
-        <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
-      </View>
-      <View style={[styles.countRow, { paddingBottom: 20 }]}>
-        <View style={{ gap: 6 }}>
-          <SkeletonBox style={{ width: 120, height: 22, borderRadius: 6 }} />
-          <SkeletonBox style={{ width: 60, height: 16, borderRadius: 4 }} />
+          <SkeletonBox style={{ width: 180, height: 28, borderRadius: 6 }} />
+          <SkeletonBox style={{ width: 44, height: 44, borderRadius: 999 }} />
         </View>
-        <SkeletonBox style={{ width: 72, height: 36, borderRadius: 999 }} />
-      </View>
-      {[0, 1].map((i) => (
-        <View key={i} style={[styles.orderCard, { paddingBottom: 16 }]}>
-          <View style={styles.userRow}>
-            <SkeletonBox style={{ width: 40, height: 40, borderRadius: 999 }} />
-            <SkeletonBox style={{ flex: 1, height: 20, borderRadius: 6 }} />
+        <View style={styles.summaryWrap}>
+          <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
+          <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
+          <SkeletonBox style={{ height: 64, borderRadius: 12 }} />
+        </View>
+        <View style={[styles.countRow, { paddingBottom: 20 }]}>
+          <View style={{ gap: 6 }}>
+            <SkeletonBox style={{ width: 120, height: 22, borderRadius: 6 }} />
+            <SkeletonBox style={{ width: 60, height: 16, borderRadius: 4 }} />
           </View>
-          <SkeletonBox style={{ height: 96, borderRadius: 12 }} />
-          <SkeletonBox style={{ height: 80, borderRadius: 8 }} />
-          {i < 1 && <View style={styles.divider} />}
+          <SkeletonBox style={{ width: 72, height: 36, borderRadius: 999 }} />
         </View>
-      ))}
+        {[0, 1].map((i) => (
+          <View key={i} style={[styles.orderCard, { paddingBottom: 16 }]}>
+            <View style={styles.userRow}>
+              <SkeletonBox
+                style={{ width: 40, height: 40, borderRadius: 999 }}
+              />
+              <SkeletonBox style={{ flex: 1, height: 20, borderRadius: 6 }} />
+            </View>
+            <SkeletonBox style={{ height: 96, borderRadius: 12 }} />
+            <SkeletonBox style={{ height: 80, borderRadius: 8 }} />
+            {i < 1 && <View style={styles.divider} />}
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -604,6 +707,8 @@ function ShippingSkeleton() {
 
 // Di chuyển từ src/app/(tabs)/shipping.tsx sang feature theo cấu trúc route-mỏng/feature-dày
 // (PROJECT_GUIDE mục 4 & 8): route giờ chỉ là wrapper mỏng render screen này qua named export.
+const AnimatedFlatList = Animated.FlatList<ShippingOrder>;
+
 export function ShippingTabScreen() {
   const {
     orders,
@@ -616,11 +721,19 @@ export function ShippingTabScreen() {
     setFilter,
   } = useShippingTab();
   const { colors, textPresets } = useThemes();
-  const insets = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
 
-  const scrollRef = useRef<FlatList>(null);
+  const scrollRef = useRef<any>(null);
   useTabScrollToTop("shipping", scrollRef, { isFlatList: true });
+
+  const scrollY = useSharedValue(0);
+  const headerHeight = useCollapsibleHeaderHeight();
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
   if (loading) return <ShippingSkeleton />;
 
@@ -632,10 +745,13 @@ export function ShippingTabScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <FlatList
+      <CollapsibleHeader title="Quản lý vận đơn" scrollY={scrollY} />
+      <AnimatedFlatList
         ref={scrollRef}
         data={orders}
         keyExtractor={(item) => item.id}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -643,19 +759,12 @@ export function ShippingTabScreen() {
             tintColor={colors.primary}
           />
         }
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: headerHeight },
+        ]}
         ListHeaderComponent={
           <View>
-            <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-              <Text
-                style={[
-                  styles.title,
-                  { color: colors.text, ...textPresets.fs24_800 },
-                ]}
-              >
-                Quản lý vận đơn
-              </Text>
-            </View>
             <View style={styles.summaryWrap}>
               <SummaryCard
                 value={summary.codAmount}
@@ -729,7 +838,9 @@ export function ShippingTabScreen() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => <OrderCard item={item} onCancelled={refresh} />}
+        renderItem={({ item }) => (
+          <OrderCard item={item} onCancelled={refresh} />
+        )}
         ItemSeparatorComponent={() => <View style={styles.divider} />}
       />
     </View>
@@ -738,7 +849,13 @@ export function ShippingTabScreen() {
 
 const styles = createStyles(({ colors }) => ({
   root: { flex: 1 },
-  headerBackground: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  headerBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   container: { paddingBottom: 34 },
   header: {
     minHeight: 119,
@@ -748,7 +865,6 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  title: { lineHeight: 28 },
   summaryWrap: { gap: 8, paddingHorizontal: 16, paddingBottom: 16 },
   summaryCard: {
     borderWidth: 0.5,
@@ -817,23 +933,64 @@ const styles = createStyles(({ colors }) => ({
   },
   sheetRowText: { flex: 1, lineHeight: 24 },
   sheetCheck: { fontSize: 18, lineHeight: 22 },
-  orderCard: { padding: 16, gap: 12, backgroundColor: colors.white, borderRadius: 12, marginHorizontal: 16 },
+  orderCard: {
+    padding: 16,
+    gap: 12,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginHorizontal: 16,
+  },
   skeletonBox: { backgroundColor: "#EBEBEB" },
   userRow: { flexDirection: "row", alignItems: "center", gap: 16 },
-  cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   cardTrackingLink: { flexDirection: "row", alignItems: "center", gap: 2 },
-  cardProviderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  cardProviderLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
-  cardLogoBox: { width: 40, height: 40, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#ffffff" },
+  cardProviderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  cardProviderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  cardLogoBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+  },
   cardProviderInfo: { gap: 4, flex: 1 },
   cardTrackingCodeBlock: { alignItems: "flex-end", gap: 2 },
   cardDivider: { height: 0.5 },
   cardInfoSection: { gap: 8 },
   cardInfoNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   cardNameActions: { flexDirection: "row", alignItems: "center", gap: 6 },
-  cardPrintBtn: { width: 30, height: 30, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  cardPrintBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardPrintIcon: { width: 16, height: 16 },
-  cardDetailBtn: { borderWidth: 1, borderRadius: 8, height: 30, paddingHorizontal: 10, alignItems: "center", justifyContent: "center" },
+  cardDetailBtn: {
+    borderWidth: 1,
+    borderRadius: 8,
+    height: 30,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardIconRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   cardInfoFlex: { flex: 1 },
   cardAddressBlock: { flex: 1, gap: 4 },
@@ -850,9 +1007,19 @@ const styles = createStyles(({ colors }) => ({
     minHeight: 36,
   },
   cardActionText: { textAlign: "center" },
-  cardOldBadge: { backgroundColor: "#fff3e0", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: "flex-start" },
+  cardOldBadge: {
+    backgroundColor: "#fff3e0",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: "flex-start",
+  },
   cardMoneySection: { gap: 4 },
-  cardMoneyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  cardMoneyRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   divider: { height: 12 },
   empty: { padding: 40, alignItems: "center" },
   emptyText: {},

@@ -2,6 +2,10 @@ import { Avatar } from "@components/avatar";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { CustomerDetailSheet } from "@components/customer-detail-sheet";
 import { Icon } from "@components/icon";
+import {
+  CollapsibleHeader,
+  useCollapsibleHeaderHeight,
+} from "@components/header/collapsible-header";
 import { LinearGradient } from "@components/linear-gradient";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import {
@@ -15,24 +19,16 @@ import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   Image,
-  LayoutChangeEvent,
   Pressable,
-  ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemes } from "@hooks/use-theme";
 import Animated, {
   useAnimatedScrollHandler,
-  useAnimatedStyle,
   useSharedValue,
-  interpolate,
 } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 
 type CustomerTab = "all" | "new" | "tiktok";
@@ -125,80 +121,17 @@ export function CustomersScreen() {
   const scrollRef = useRef<any>(null);
   useTabScrollToTop("customers", scrollRef);
 
-  const { top } = useSafeAreaInsets();
   const { show } = useBottomSheet();
   const { comments, currentLiveSessionId } = useTikTokLiveSocketContext();
   const { user } = useAuth();
 
-  const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-  const HEADER_MAX_HEIGHT = top + 76;
-  const HEADER_MIN_HEIGHT = top + 50;
-  const SCROLL_DISTANCE = 80;
-
   const scrollY = useSharedValue(0);
-  const [titleWidth, setTitleWidth] = useState(130);
+  const headerHeight = useCollapsibleHeaderHeight();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
     },
-  });
-
-  const onTitleLayout = useCallback((e: LayoutChangeEvent) => {
-    setTitleWidth(e.nativeEvent.layout.width);
-  }, []);
-
-  const centerTranslateX = useMemo(() => {
-    return SCREEN_WIDTH / 2 - 16 - titleWidth / 2;
-  }, [titleWidth, SCREEN_WIDTH]);
-
-  const headerAnimatedStyle = useAnimatedStyle(() => {
-    const height = interpolate(
-      scrollY.value,
-      [0, SCROLL_DISTANCE],
-      [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
-      "clamp",
-    );
-    return {
-      height,
-    };
-  });
-
-  const blurAnimatedStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      scrollY.value,
-      [0, SCROLL_DISTANCE],
-      [0, 1],
-      "clamp",
-    );
-    return {
-      opacity,
-    };
-  });
-
-  const titleAnimatedStyle = useAnimatedStyle(() => {
-    const transX = interpolate(
-      scrollY.value,
-      [0, SCROLL_DISTANCE],
-      [0, centerTranslateX],
-      "clamp",
-    );
-    const transY = interpolate(
-      scrollY.value,
-      [0, SCROLL_DISTANCE],
-      [0, -25],
-      "clamp",
-    );
-    const scale = interpolate(
-      scrollY.value,
-      [0, SCROLL_DISTANCE],
-      [1, 0.8],
-      "clamp",
-    );
-    return {
-      transform: [{ translateX: transX }, { translateY: transY }, { scale }],
-    };
   });
 
   const orderManager = useOrderManager({
@@ -258,29 +191,15 @@ export function CustomersScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <Animated.View style={[styles.header, headerAnimatedStyle]}>
-        <Animated.View style={[StyleSheet.absoluteFill, blurAnimatedStyle]}>
-          <BlurView
-            intensity={30}
-            tint="light"
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
-        <Animated.View
-          onLayout={onTitleLayout}
-          style={[styles.titleContainer, titleAnimatedStyle]}
-        >
-          <Text style={styles.title}>Khách hàng</Text>
-        </Animated.View>
-      </Animated.View>
+      <CollapsibleHeader title="Khách hàng" scrollY={scrollY} />
 
       {orderManager.orderLoading ? (
-        <View style={[styles.statusBox, { paddingTop: HEADER_MAX_HEIGHT }]}>
+        <View style={[styles.statusBox, { paddingTop: headerHeight }]}>
           <ActivityIndicator color="#FF6B8A" />
           <Text style={styles.statusText}>Đang tải khách hàng...</Text>
         </View>
       ) : orderManager.orderError ? (
-        <View style={[styles.statusBox, { paddingTop: HEADER_MAX_HEIGHT }]}>
+        <View style={[styles.statusBox, { paddingTop: headerHeight }]}>
           <Text style={styles.errorText}>{orderManager.orderError}</Text>
           <Pressable
             style={styles.retryButton}
@@ -294,7 +213,7 @@ export function CustomersScreen() {
           ref={scrollRef}
           contentContainerStyle={[
             styles.listContent,
-            { paddingTop: HEADER_MAX_HEIGHT },
+            { paddingTop: headerHeight },
             displayedCustomers.length === 0 && styles.listContentEmpty,
           ]}
           onScroll={scrollHandler}
@@ -331,27 +250,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  header: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    overflow: "hidden",
-    borderBottomWidth: 0.5,
-    borderBottomColor: "rgba(0,0,0,0.05)",
-  },
-  titleContainer: {
-    position: "absolute",
-    left: 16,
-    bottom: 12,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
   },
   listContent: {
     paddingHorizontal: 16,
