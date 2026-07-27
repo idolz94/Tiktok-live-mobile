@@ -115,7 +115,7 @@ export const Register = () => {
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
-                        keyboardType="phone-pad"
+                        keyboardType="default"
                         autoCapitalize="none"
                         placeholder="Nhập tên đăng nhập"
                         placeholderTextColor={colors.neutral300}
@@ -192,7 +192,9 @@ export const Register = () => {
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
+                        keyboardType="default"
                         autoCapitalize="none"
+                        autoCorrect={false}
                         placeholder="@username"
                         placeholderTextColor={colors.neutral300}
                         style={styles.input}

@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 const fullNamePattern = /^[\p{L}\s]+$/u;
-const blockedTextSymbolsPattern = /[@$%^&<>]/;
-const tiktokIdPattern = /^@?[A-Za-z0-9._]+$/;
+const usernamePattern = /^[\p{L}\p{N}]+$/u;
+const tiktokIdPattern = /^[A-Za-z0-9._]+$/;
 
 export type Mode = "login" | "register";
 
@@ -24,16 +24,14 @@ export const RegisterSchema = z.object({
     .string()
     .trim()
     .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự")
-    .refine((value) => !blockedTextSymbolsPattern.test(value), {
-      message: "Tên đăng nhập không được chứa ký tự đặc biệt @$%^&<>",
-    }),
+    .regex(usernamePattern, "Tên đăng nhập chỉ được gồm chữ cái và số"),
   password: z.string().min(5, "Mật khẩu phải có ít nhất 5 ký tự"),
   tiktokId: z
     .string()
     .trim()
     .min(1, "Vui lòng nhập TikTok ID")
     .refine((value) => tiktokIdPattern.test(value), {
-      message: "TikTok ID chỉ được gồm chữ cái, số, dấu gạch dưới và dấu chấm",
+      message: "ID Tiktok chỉ có thể chứa chữ không dấu, số, dấu gạch dưới và dấu chấm.",
     }),
   agreePolicy: z.boolean().refine(v => v === true, { message: "Vui lòng đồng ý điều khoản" }),
 });

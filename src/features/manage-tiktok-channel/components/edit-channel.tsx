@@ -22,7 +22,7 @@ export const EditChannel = ({
   onSave,
 }: Props) => {
   const { colors } = useThemes();
-  const { name, setName, setError, saving, error, onSubmit, hasChanged } =
+  const { name, setName, setError, saving, error, onSubmit, hasChanged, validateName } =
     useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave });
 
   return (
@@ -43,19 +43,25 @@ export const EditChannel = ({
               value={name}
               onChangeText={(v) => {
                 setName(v);
-                setError("");
+                if (v && !/^[A-Za-z0-9._]+$/.test(v.trim())) {
+                  setError("ID Tiktok chỉ có thể chứa chữ không dấu, số, dấu gạch dưới và dấu chấm.");
+                } else {
+                  setError("");
+                }
               }}
+              onBlur={validateName}
               style={styles.input}
               autoFocus
+              keyboardType="default"
               autoCapitalize="none"
+              autoCorrect={false}
               placeholderTextColor={colors.neutral300}
             />
           </View>
-          <Text style={styles.des}>
-            Tên người dùng chỉ có thể chứa chữ thường, số, dấu gạch dưới và dấu
-            chấm.
+          <Text style={[styles.des, error && styles.errorText]}>
+            {error ||
+              "ID Tiktok chỉ có thể chứa chữ không dấu, số, dấu gạch dưới và dấu chấm."}
           </Text>
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
         </View>
       </View>
 

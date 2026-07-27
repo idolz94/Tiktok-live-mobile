@@ -1,4 +1,4 @@
-import { DEFAULT_WS_URL } from "@constants/config";
+import { API_URL_ENDPOINT } from "@constants/config";
 import { secureStorage } from "@utils/storage";
 import { AxiosResponse } from "axios";
 
@@ -27,7 +27,7 @@ export async function getAuthToken() {
   }
 }
 
-export function setAuthToken(token?: string | null) {
+export function setAuthToken(_token?: string | null) {
   if (__DEV__) {
     console.warn(
       "[Request SSE] Không nên sử dụng setAuthToken trực tiếp trên Mobile. Hãy dùng useAuthStore.",
@@ -82,7 +82,7 @@ function joinUrl(baseUrl: string, path: string) {
 }
 
 export function buildApiUrl(path: string, params?: RequestParams) {
-  return appendParams(joinUrl(DEFAULT_WS_URL, path), params);
+  return appendParams(joinUrl(API_URL_ENDPOINT, path), params);
 }
 
 function extractData<T>(response: AxiosResponse<any>): T {

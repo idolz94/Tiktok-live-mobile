@@ -15,7 +15,7 @@ import { Popover, usePopover, PopoverPlacement } from "@components/popover";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function PopoverDemoScreen() {
-  const { colors, textPresets } = useThemes();
+  const { colors } = useThemes();
   const { showPopover } = usePopover();
   const { top } = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);

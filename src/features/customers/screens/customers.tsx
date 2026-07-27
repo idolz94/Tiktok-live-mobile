@@ -1,7 +1,6 @@
 import { Avatar } from "@components/avatar";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { CustomerDetailSheet } from "@components/customer-detail-sheet";
-import { Icon } from "@components/icon";
 import {
   CollapsibleHeader,
   useCollapsibleHeaderHeight,
@@ -16,7 +15,7 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { createStyles } from "@utils/createStyles";
 import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -30,14 +29,6 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
-
-type CustomerTab = "all" | "new" | "tiktok";
-
-const TAB_LABELS: Record<CustomerTab, string> = {
-  all: "Tất cả",
-  new: "Chưa TikTok",
-  tiktok: "TikTok",
-};
 
 const CustomerRow = memo(
   ({
@@ -117,7 +108,6 @@ const CustomerListCard = memo(
 // Di chuyển từ src/app/(tabs)/customers.tsx sang feature theo cấu trúc route-mỏng/feature-dày
 // (PROJECT_GUIDE mục 4 & 8): route giờ chỉ là wrapper mỏng render screen này qua named export.
 export function CustomersScreen() {
-  const [activeTab, setActiveTab] = useState<CustomerTab>("all");
   const scrollRef = useRef<any>(null);
   useTabScrollToTop("customers", scrollRef);
 
@@ -150,28 +140,6 @@ export function CustomersScreen() {
   const customers: CustomerSummaryWithTikTok[] = orderManager.customers.filter(
     (c) => c.totalOrders >= 1,
   );
-  const tiktokCustomers = useMemo(
-    () => customers.filter((c) => !!c.customerTikTokUsername),
-    [customers],
-  );
-  const newCustomers = useMemo(
-    () => customers.filter((c) => !c.customerTikTokUsername),
-    [customers],
-  );
-
-  const displayedCustomers =
-    activeTab === "tiktok"
-      ? tiktokCustomers
-      : activeTab === "new"
-        ? newCustomers
-        : customers;
-
-  const counts: Record<CustomerTab, number> = {
-    all: customers.length,
-    new: newCustomers.length,
-    tiktok: tiktokCustomers.length,
-  };
-
   const handlePressCustomer = useCallback(
     (key: string) =>
       show({
@@ -214,13 +182,13 @@ export function CustomersScreen() {
           contentContainerStyle={[
             styles.listContent,
             { paddingTop: headerHeight },
-            displayedCustomers.length === 0 && styles.listContentEmpty,
+            customers.length === 0 && styles.listContentEmpty,
           ]}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
-          {displayedCustomers.length === 0 ? (
+          {customers.length === 0 ? (
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>Chưa có khách hàng</Text>
               <Text style={styles.emptyText}>
@@ -230,7 +198,7 @@ export function CustomersScreen() {
             </View>
           ) : (
             <CustomerListCard
-              customers={displayedCustomers}
+              customers={customers}
               onPress={handlePressCustomer}
             />
           )}

@@ -143,7 +143,7 @@ function ProductForm({
             placeholder="VD: SP001"
             placeholderTextColor="#BDBDBD"
             style={[styles.input, errors.code && styles.inputError]}
-            autoCapitalize="characters"
+            autoCapitalize="none"
           />
           <AnimatedErrorText message={errors.code} />
         </View>
