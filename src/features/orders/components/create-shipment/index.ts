@@ -8,3 +8,4 @@ export { ShipmentInput } from "./shipment-input";
 export { ShippingOptions } from "./shipping-options";
 export { SummaryRow } from "./summary-row";
 export { SpxOptions } from "./spx-options";
+export { FeeDetailSheet } from "./fee-detail-sheet";

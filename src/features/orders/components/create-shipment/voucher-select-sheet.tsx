@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
@@ -13,9 +14,12 @@ type Props = {
   onClose: () => void;
 };
 
+const PANEL_COLOR = "#ff3911"; // ponytail: kept for border/radio, panel bg now uses colors.primary
+
 function fmtVND(raw: string) {
   const n = Number(raw);
-  return isNaN(n) || n === 0 ? null : n.toLocaleString("vi-VN") + "đ";
+  if (isNaN(n) || n === 0) return null;
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 function fmtPercent(raw: string) {
@@ -23,10 +27,13 @@ function fmtPercent(raw: string) {
   return isNaN(n) || n === 0 ? null : `${n}%`;
 }
 
-function discountLabel(v: SpxVoucher) {
-  // discountBy: 1 = fixed, 2 = percent
-  if (v.discountBy === 2) return fmtPercent(v.voucherAmount) ?? v.voucherName;
-  return fmtVND(v.voucherAmount) ?? v.voucherName;
+function discountLabel(v: SpxVoucher): { value: string; isPercent: boolean } | null {
+  if (v.discountBy === 1) {
+    const pct = fmtPercent(v.voucherAmount);
+    return pct ? { value: pct, isPercent: true } : null;
+  }
+  const vnd = fmtVND(v.voucherAmount);
+  return vnd ? { value: vnd, isPercent: false } : null;
 }
 
 function now() {
@@ -36,6 +43,7 @@ function now() {
 export function VoucherSelectSheet({ vouchers, loading, error, selectedCode, onSelect, onClose }: Props) {
   const { colors, textPresets } = useThemes();
   const ts = now();
+  const [localSelected, setLocalSelected] = useState(selectedCode);
 
   return (
     <View style={[vStyles.sheet, { backgroundColor: colors.surface }]}>
@@ -60,65 +68,75 @@ export function VoucherSelectSheet({ vouchers, loading, error, selectedCode, onS
           keyExtractor={(v) => v.voucherCode}
           contentContainerStyle={vStyles.list}
           ListHeaderComponent={
-            <Pressable
-              onPress={() => { onSelect(null); onClose(); }}
-              style={[vStyles.row, { borderColor: !selectedCode ? colors.primary : colors.border10, backgroundColor: !selectedCode ? colors.primaryLight : colors.neutral50 }]}
-            >
-              <View style={[vStyles.radio, { borderColor: !selectedCode ? colors.primary : colors.border20 }]}>
-                {!selectedCode && <View style={[vStyles.radioDot, { backgroundColor: colors.primary }]} />}
-              </View>
-              <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>Không dùng voucher</Text>
-            </Pressable>
+            vouchers.length > 0 ? (
+              <Text style={[vStyles.sectionTitle, { color: colors.neutral500 }, textPresets.fs12_500]}>
+                Mã khuyến mãi khả dụng
+              </Text>
+            ) : null
           }
           renderItem={({ item: v }) => {
-            const selected = selectedCode === v.voucherCode;
+            const selected = localSelected === v.voucherCode;
             const expired = v.validEndTime > 0 && ts > v.validEndTime;
             const notYet = v.validStartTime > 0 && ts < v.validStartTime;
             const disabled = expired || notYet;
             const discount = discountLabel(v);
-            const cap = fmtVND(v.voucherCap);
             const minSpend = fmtVND(v.minSpend);
+            const isNew = /mới|new/i.test(v.voucherName);
+            const panelBg = disabled ? colors.neutral300 : colors.primary;
 
             return (
               <Pressable
                 disabled={disabled}
-                onPress={() => { onSelect(v.voucherCode); onClose(); }}
-                style={[
-                  vStyles.row,
-                  {
-                    borderColor: selected ? colors.primary : colors.border10,
-                    backgroundColor: disabled ? colors.neutral100 : selected ? colors.primaryLight : colors.surface,
-                    opacity: disabled ? 0.55 : 1,
-                  },
-                ]}
+                onPress={() => {
+                  const next = selected ? null : v.voucherCode;
+                  setLocalSelected(next);
+                  onSelect(next);
+                }}
+                style={[vStyles.card, {
+                  borderColor: selected ? PANEL_COLOR : colors.border10,
+                  opacity: disabled ? 0.55 : 1,
+                  backgroundColor: colors.surface,
+                }]}
               >
-                <View style={[vStyles.radio, { borderColor: selected ? colors.primary : colors.border20 }]}>
-                  {selected && <View style={[vStyles.radioDot, { backgroundColor: colors.primary }]} />}
-                </View>
-                <View style={vStyles.info}>
-                  <View style={vStyles.topRow}>
-                    {!!discount && (
-                      <View style={[vStyles.discountBadge, { backgroundColor: colors.primary }]}>
-                        <Text style={[textPresets.fs12_500, { color: "#fff" }]}>{discount}</Text>
-                      </View>
-                    )}
-                    <Text style={[vStyles.name, { color: disabled ? colors.neutral400 : colors.neutral900 }, textPresets.fs14_500]} numberOfLines={1}>
-                      {v.voucherName || v.voucherCode}
+                <View style={[vStyles.leftPanel, { backgroundColor: panelBg }]}>
+                  <View style={vStyles.discountRow}>
+                    {discount ? (
+                      discount.isPercent ? (
+                        <Text style={[vStyles.discountAmount, textPresets.fs16_900]} numberOfLines={1}>
+                          {discount.value}
+                        </Text>
+                      ) : (
+                        <Text style={vStyles.discountAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+                          <Text style={{ fontSize: 10, fontWeight: "900" }}>đ </Text>
+                          <Text style={{ fontSize: 18, fontWeight: "900" }}>{discount.value}</Text>
+                        </Text>
+                      )
+                    ) : null}
+                    <Text style={[vStyles.discountSub, textPresets.fs12_400]}>
+                      {disabled ? (expired ? "Hết hạn" : "Chưa mở") : "Ước tính giảm giá"}
                     </Text>
                   </View>
-                  <View style={vStyles.metaRow}>
-                    {!!minSpend && (
-                      <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>Tối thiểu {minSpend}</Text>
-                    )}
-                    {!!cap && (
-                      <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>Giảm tối đa {cap}</Text>
-                    )}
-                  </View>
-                  {disabled && (
-                    <Text style={[{ color: colors.error }, textPresets.fs11_400]}>
-                      {expired ? "Voucher đã hết hạn" : "Chưa đến thời gian áp dụng"}
+                </View>
+                <View style={vStyles.content}>
+                  <Text
+                    style={[{ color: disabled ? colors.neutral400 : colors.neutral900 }, textPresets.fs14_500]}
+                    numberOfLines={2}
+                  >
+                    {v.voucherName || v.voucherCode}
+                  </Text>
+                  {!!minSpend && (
+                    <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>
+                      Phí vận chuyển tối thiểu đ{minSpend}
                     </Text>
                   )}
+                  {isNew && !disabled && (
+                    <View style={[vStyles.newTag, { borderColor: PANEL_COLOR }]}>
+                      <Text style={[{ color: PANEL_COLOR }, textPresets.fs11_400]}>Dành cho tài khoản mới</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={[vStyles.radio, { borderColor: selected ? PANEL_COLOR : colors.border20, marginRight: 12, alignSelf: "center" }]}>
+                  {selected && <View style={[vStyles.radioDot, { backgroundColor: PANEL_COLOR }]} />}
                 </View>
               </Pressable>
             );
@@ -136,37 +154,77 @@ export function VoucherSelectSheet({ vouchers, loading, error, selectedCode, onS
 
 const vStyles = createStyles(() => ({
   sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
     paddingBottom: 32,
-    maxHeight: 560,
-    overflow: "hidden" as const,
+    minHeight: 200,
   },
   header: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "space-between" as const,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
   center: {
-    minHeight: 140,
+    padding: 32,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   list: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
     gap: 10,
   },
-  row: {
+  sectionTitle: {
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  card: {
+    flexDirection: "row" as const,
+    alignItems: "stretch" as const,
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: "hidden" as const,
+  },
+  leftPanel: {
+    width: 128,
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 4,
+  },
+  discountRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
+    flexWrap: "wrap" as const,
+    justifyContent: "center" as const,
+    gap: 4,
+  },
+  discountAmount: {
+    color: "#fff",
+    textAlign: "center" as const,
+  },
+  discountSub: {
+    color: "rgba(255,255,255,0.85)",
+    textAlign: "center" as const,
+    marginTop: 4,
+  },
+  content: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    gap: 4,
+  },
+  newTag: {
+    alignSelf: "flex-start" as const,
     borderWidth: 1,
-    borderRadius: 14,
-    padding: 14,
-    gap: 12,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 2,
   },
   radio: {
     width: 20,
@@ -180,24 +238,6 @@ const vStyles = createStyles(() => ({
     width: 9,
     height: 9,
     borderRadius: 5,
-  },
-  info: { flex: 1, gap: 4 },
-  topRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 8,
-    flexWrap: "wrap" as const,
-  },
-  discountBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  name: { flexShrink: 1 },
-  metaRow: {
-    flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
-    gap: 8,
   },
   empty: {
     textAlign: "center" as const,

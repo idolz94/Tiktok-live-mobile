@@ -17,7 +17,6 @@ type CreateOrderFromCommentPayload = {
 };
 
 const DEFAULT_PRICE = 20000;
-const DEFAULT_QUANTITY = 1;
 
 function pickArrayResponse(data: any, keys: string[]) {
   if (Array.isArray(data)) return data;
@@ -90,14 +89,14 @@ export async function createOrderFromCommentApi({
   comment,
   liveSessionId,
   price = DEFAULT_PRICE,
-  quantity = DEFAULT_QUANTITY,
+  quantity,
   note = "",
 }: CreateOrderFromCommentPayload): Promise<CreateOrderFromCommentResult> {
   const data = await postRequest<any>("/orders/from-comment", {
     comment,
     liveSessionId,
     price,
-    quantity,
+    ...(quantity !== undefined ? { quantity } : {}),
     note,
   });
 

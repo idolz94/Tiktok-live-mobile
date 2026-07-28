@@ -1,7 +1,9 @@
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import {
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -37,6 +39,8 @@ type ParcelInfoSheetProps = {
   setAllowPartialDelivery: (v: 0 | 1) => void;
   allowMutualCheck: 0 | 1;
   setAllowMutualCheck: (v: 0 | 1) => void;
+  itemPicture?: string | null;
+  setItemPicture: (v: string | null) => void;
   onClose: () => void;
 };
 
@@ -67,6 +71,8 @@ export function ParcelInfoSheet({
   setAllowPartialDelivery,
   allowMutualCheck,
   setAllowMutualCheck,
+  itemPicture,
+  setItemPicture,
   onClose,
 }: ParcelInfoSheetProps) {
   const { colors, textPresets } = useThemes();
@@ -83,6 +89,22 @@ export function ParcelInfoSheet({
   const [localTryOn, setLocalTryOn] = useState(allowTryOn);
   const [localPartial, setLocalPartial] = useState(allowPartialDelivery);
   const [localMutual, setLocalMutual] = useState(allowMutualCheck);
+  const [localPicture, setLocalPicture] = useState<string | null>(itemPicture ?? null);
+
+  const pickImage = async (source: "gallery" | "camera") => {
+    if (source === "camera") {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Cần quyền truy cập", "Vui lòng cấp quyền camera trong Cài đặt.");
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.7 });
+      if (!result.canceled) setLocalPicture(result.assets[0].uri);
+    } else {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.7 });
+      if (!result.canceled) setLocalPicture(result.assets[0].uri);
+    }
+  };
 
   const handleConfirm = () => {
     onChangeWeightInput(localWeight.replace(/\D/g, "") || "0");
@@ -95,6 +117,7 @@ export function ParcelInfoSheet({
     setAllowTryOn(localTryOn);
     setAllowPartialDelivery(localPartial);
     setAllowMutualCheck(localMutual);
+    setItemPicture(localPicture);
     onClose();
   };
 
@@ -336,6 +359,36 @@ export function ParcelInfoSheet({
           </View>
         </View>
 
+        {/* Product picture */}
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.neutral400 }]}>
+            Ảnh hàng hoá{" "}
+            <Text style={{ color: colors.neutral300 }}>(tuỳ chọn)</Text>
+          </Text>
+          <View style={styles.pictureRow}>
+            {localPicture ? (
+              <Pressable onPress={() => setLocalPicture(null)} style={styles.pictureThumb}>
+                <Image source={{ uri: localPicture }} style={styles.thumbImg} />
+                <View style={styles.removeOverlay}>
+                  <Text style={styles.removeX}>✕</Text>
+                </View>
+              </Pressable>
+            ) : null}
+            <Pressable
+              onPress={() => pickImage("gallery")}
+              style={[styles.pictureBtn, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}
+            >
+              <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>🖼 Thư viện</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => pickImage("camera")}
+              style={[styles.pictureBtn, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]}
+            >
+              <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>📷 Chụp ảnh</Text>
+            </Pressable>
+          </View>
+        </View>
+
         {/* Note */}
         <View style={[styles.formGroup, { marginBottom: 24 }]}>
           <View style={styles.noteLabelRow}>
@@ -479,6 +532,39 @@ const styles = createStyles(() => ({
     paddingBottom: 12,
     minHeight: 88,
     textAlignVertical: "top",
+  },
+  pictureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  pictureThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  thumbImg: { width: 64, height: 64 },
+  removeOverlay: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 20,
+    height: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderBottomLeftRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removeX: { color: "#fff", fontSize: 10, lineHeight: 13 },
+  pictureBtn: {
+    height: 40,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   footer: {
     paddingTop: 8,

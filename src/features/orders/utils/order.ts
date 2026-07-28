@@ -34,18 +34,19 @@ function firstNonNil(...values: unknown[]): unknown {
 
 export function normalizeProductForUi(product: any, order?: any): OrderProduct {
   const code = String(
-    firstNonNil(product?.code, product?.product_code, product?.productCode) ?? "",
+    firstNonNil(product?.code, product?.productCode, product?.product_code) ?? "",
   );
-  const rawName = firstNonNil(
+  // ponytail: dùng firstNonEmpty thay vì firstNonNil để empty string "" không chặn fallback tiếp theo
+  const rawName = [
     product?.name,
-    product?.product_name,
     product?.productName,
+    product?.product_name,
     order?.productName,
     order?.product_name,
     order?.comment,
     order?.comment_text,
-  );
-  // Chỉ fallback về "Sản phẩm" khi không có giá trị nào (null/undefined/empty string sau trim)
+  ].find((v) => v != null && String(v).trim() !== "");
+  // Chỉ fallback về "Sản phẩm" khi không có giá trị nào
   const nameStr = rawName != null ? String(rawName).trim() : "";
   const name = nameStr || "Sản phẩm";
   const quantity = Number(product?.quantity ?? 1) || 1;
@@ -164,18 +165,18 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
   const createdAt = String(
     order?.createdAt || order?.created_at || new Date().toISOString(),
   );
-  const subtotalAmount = Number(
-    order?.subtotalAmount ?? order?.subtotal_amount ?? getOrderTotal(products),
-  );
+  const productTotal = rawProducts.length ? getOrderTotal(products) : 0;
+  const rawSubtotalAmount = Number(order?.subtotalAmount ?? order?.subtotal_amount ?? 0);
+  const subtotalAmount = rawSubtotalAmount > 0 ? rawSubtotalAmount : productTotal;
   const shippingFee = Number(order?.shippingFee ?? order?.shipping_fee ?? 0);
   const discountAmount = Number(order?.discountAmount ?? order?.discount_amount ?? 0);
   const depositAmount = Number(order?.depositAmount ?? order?.deposit_amount ?? 0);
-  const totalAmount = Number(
-    order?.totalAmount ?? order?.total_amount ?? Math.max(0, subtotalAmount + shippingFee - discountAmount),
-  );
-  const codAmount = Number(
-    order?.codAmount ?? order?.cod_amount ?? Math.max(0, totalAmount - depositAmount),
-  );
+  const computedTotalAmount = Math.max(0, subtotalAmount + shippingFee - discountAmount);
+  const rawTotalAmount = Number(order?.totalAmount ?? order?.total_amount ?? 0);
+  const totalAmount = rawTotalAmount > 0 ? rawTotalAmount : computedTotalAmount;
+  const computedCodAmount = Math.max(0, totalAmount - depositAmount);
+  const rawCodAmount = Number(order?.codAmount ?? order?.cod_amount ?? 0);
+  const codAmount = rawCodAmount > 0 ? rawCodAmount : computedCodAmount;
 
   return {
     id: String(order?.id || createId()),
@@ -190,7 +191,7 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
     ),
     customerId: order?.customerId || order?.customer_id || null,
     customerName: String(
-      order?.customerName || order?.customer_name || order?.username || "",
+      order?.customerName || order?.customer_name || "",
     ),
     customerPhone: String(order?.customerPhone || order?.customer_phone || ""),
     customerAddress: String(

@@ -88,7 +88,7 @@ export function OrderDetailCustomerSection({
               !order.customerPhone && styles.contactTextMuted,
             ]}
           >
-            {order.customerPhone || "Chưa có số điện thoại"}
+            {order.customerPhone || customerDefaultAddress?.phone || "Chưa có số điện thoại"}
           </Text>
         </View>
         <View style={styles.contactRow}>

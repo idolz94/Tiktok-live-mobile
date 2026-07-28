@@ -12,7 +12,8 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
   const showToast = useToast();
 
   const listRef = useRef<ComponentRef<typeof FlashList<LiveComment>>>(null);
-  const createdCommentKeysRef = useRef<Set<string>>(new Set());
+  // ponytail: Map commentKey → orderId để có thể cleanup khi order bị xoá
+  const createdCommentKeysRef = useRef<Map<string, string>>(new Map());
   const rafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
   useEffect(() => {
@@ -24,6 +25,17 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
     });
   }, [comments.length]);
 
+  // Khi orders list thay đổi, remove comment keys của các order đã bị xoá
+  const { orders } = orderManager;
+  useEffect(() => {
+    const orderIds = new Set(orders.map((o) => o.id));
+    for (const [key, orderId] of createdCommentKeysRef.current) {
+      if (!orderIds.has(orderId)) {
+        createdCommentKeysRef.current.delete(key);
+      }
+    }
+  }, [orders]);
+
   const isCommentOrderCreated = useCallback(
     (comment: LiveComment) =>
       Boolean(
@@ -31,7 +43,9 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
         comment.orderId ||
         createdCommentKeysRef.current.has(createOrderCommentKey(comment)),
       ),
-    [],
+    // ponytail: orders dep → new ref sau mỗi lần orders thay đổi (xoá/thêm) → CommentCardItem re-render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orders],
   );
 
   const handleCreateOrder = useCallback(
@@ -44,8 +58,12 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
       }
 
       try {
-        createdCommentKeysRef.current.add(commentKey);
+        createdCommentKeysRef.current.set(commentKey, "pending");
         const result = await orderManager.createOrderFromComment(comment);
+
+        if (result?.orderId) {
+          createdCommentKeysRef.current.set(commentKey, result.orderId);
+        }
 
         showToast("Tạo đơn thành công", "success");
 

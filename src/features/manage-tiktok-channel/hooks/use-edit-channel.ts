@@ -30,7 +30,7 @@ export function useEditChannel({ tiktokUsername, usedUsernames, onClose, onSave 
       return false;
     }
 
-    if (!tiktokUsernamePattern.test(name.trim())) {
+    if (!tiktokUsernamePattern.test(nextUsername)) {
       setError("ID Tiktok chỉ có thể chứa chữ không dấu, số, dấu gạch dưới và dấu chấm.");
       return false;
     }

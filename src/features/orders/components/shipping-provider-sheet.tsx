@@ -1,4 +1,5 @@
 import { images } from "@assets/images";
+import { useSpxAccount } from "@features/settings/hooks/use-spx-account";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Image, Pressable, Text, View } from "react-native";
@@ -7,7 +8,7 @@ export type ShippingProvider = "manual" | "spx";
 
 type Props = {
   selected: ShippingProvider;
-  spxConnected: boolean;
+  spxConnected?: boolean;
   onClose: () => void;
   onSelect: (provider: ShippingProvider) => void;
   onConnectSpx?: () => void;
@@ -35,20 +36,22 @@ const SPX = {
   id: "spx" as ShippingProvider,
   label: "Shopee Express",
   initial: "S",
-  color: "#ffb000",
+  color: "#ff3911",
   logo: images.logo_spx,
 };
 
 export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelect, onConnectSpx }: Props) {
   const { colors } = useThemes();
+  const { connected: storeSpxConnected } = useSpxAccount();
+  const isSpxConnected = Boolean(spxConnected || storeSpxConnected);
 
   const connected: ProviderConfig[] = [
     { id: "manual", label: "Vận chuyển thủ công", initial: "M", color: "#2ca87b", connected: true },
-    ...(spxConnected ? [{ ...SPX, connected: true as const }] : []),
+    ...(isSpxConnected ? [{ ...SPX, connected: true as const }] : []),
   ];
 
   const coming: DisabledProviderConfig[] = [
-    ...(!spxConnected ? [{ ...SPX, connected: false as const }] : []),
+    ...(!isSpxConnected ? [{ ...SPX, connected: false as const }] : []),
     { id: "viettelpost", label: "Viettel Post", initial: "V", color: "#cc0000", connected: false },
   ];
 
@@ -72,7 +75,7 @@ export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelec
               onClose();
             }}
           >
-            <View style={[styles.avatar, { backgroundColor: p.logo ? "#fff" : p.color }]}>
+            <View style={[styles.avatar, { backgroundColor: p.color }]}>
               {p.logo ? (
                 <Image source={p.logo} style={styles.avatarLogo} resizeMode="contain" />
               ) : (
@@ -113,7 +116,7 @@ export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelec
               style={[styles.row, { borderColor: colors.border10 }]}
               onPress={onConnectSpx}
             >
-              <View style={[styles.avatar, { backgroundColor: p.logo ? "#fff" : p.color }]}>
+              <View style={[styles.avatar, { backgroundColor: p.color }]}>
                 {p.logo ? (
                   <Image source={p.logo} style={styles.avatarLogo} resizeMode="contain" />
                 ) : (
@@ -156,7 +159,7 @@ export function ShippingProviderSheet({ selected, spxConnected, onClose, onSelec
   );
 }
 
-const styles = createStyles(({ textPresets }) => ({
+const styles = createStyles(({ textPresets, shadows }) => ({
   sheet: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -174,6 +177,8 @@ const styles = createStyles(({ textPresets }) => ({
     paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 12,
+    backgroundColor: "#fff",
+    ...shadows.sd2,
   },
   rowDisabled: { opacity: 0.45 },
   avatar: {

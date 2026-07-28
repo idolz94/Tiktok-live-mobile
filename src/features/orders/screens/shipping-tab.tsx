@@ -202,7 +202,7 @@ function OrderCard({
   const [printing, setPrinting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const toast = useToast();
-  const name = item.customerName || item.username || "Khách live";
+  const name = item.customerName || "Khách hàng";
   const abbr = providerAbbr(item.providerName);
   const trackingUrl = abbr === "TC" ? null : getTrackingUrl(item);
   const label = providerLabel(item.providerName);

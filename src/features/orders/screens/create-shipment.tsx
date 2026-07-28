@@ -24,6 +24,7 @@ import {
   ShippingOptions,
   SpxOptions,
   SummaryRow,
+  FeeDetailSheet,
 } from "@features/orders/components/create-shipment";
 import { PackageDimModal } from "@features/orders/components/create-shipment/package-dim-modal";
 import { ParcelInfoSheet } from "@features/orders/components/create-shipment/parcel-info-sheet";
@@ -89,6 +90,7 @@ export default function CreateShipmentScreen() {
     shippingFee,
     codAmountDisplay,
     totalCollected,
+    voucherAmount,
     manualShippingFee,
     setManualShippingFee,
     manualNote,
@@ -129,6 +131,8 @@ export default function CreateShipmentScreen() {
     setAllowTryOn,
     allowPartialDelivery,
     setAllowPartialDelivery,
+    itemPicture,
+    setItemPicture,
     feeLoading,
     feeError,
     estimatedDelivery,
@@ -277,6 +281,8 @@ export default function CreateShipmentScreen() {
           setAllowPartialDelivery={setAllowPartialDelivery}
           allowMutualCheck={allowMutualCheck}
           setAllowMutualCheck={setAllowMutualCheck}
+          itemPicture={itemPicture}
+          setItemPicture={setItemPicture}
           onClose={close}
         />
       ),
@@ -297,7 +303,6 @@ export default function CreateShipmentScreen() {
           selectedCode={selectedVoucherCode}
           onSelect={(code) => {
             setSelectedVoucherCode(code);
-            close();
           }}
           onClose={close}
         />
@@ -460,12 +465,6 @@ export default function CreateShipmentScreen() {
               gap: 12,
             }}
           >
-            <MoneyField
-              label="Tiền thu hộ (COD)"
-              value={codAmountDisplay}
-              onChangeText={setManualCodAmount}
-              editable={isManualProvider}
-            />
             {!isSpxProvider && (
               <>
                 <Text
@@ -669,36 +668,49 @@ export default function CreateShipmentScreen() {
         ]}
       >
         <View style={styles.footerSummary}>
-          <SummaryRow
-            label="Tiền hàng"
-            value={`${declaredValue.toLocaleString("vi-VN")}đ`}
-          />
-          <View style={styles.summaryRow}>
-            <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>
-              Phí vận chuyển
-            </Text>
-            {feeLoading ? (
-              <Text
-                style={[textPresets.fs14_500, { color: colors.neutral400 }]}
-              >
-                Đang tính...
-              </Text>
-            ) : feeError ? (
-              <Text style={[textPresets.fs12_400, { color: colors.error }]}>
-                {feeError}
-              </Text>
-            ) : (
-              <Text
-                style={[textPresets.fs14_500, { color: colors.neutral900 }]}
-              >
-                {shippingFee.toLocaleString("vi-VN")}đ
-              </Text>
-            )}
-          </View>
           <View style={[styles.summaryRow, styles.summaryRowTotal]}>
-            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
-              Shipper thu
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
+                Shipper thu
+              </Text>
+              {isSpxProvider && (
+                <Pressable
+                  onPress={() => {
+                    show({
+                      content: (
+                        <FeeDetailSheet
+                          codAmount={Number(codAmountDisplay.replace(/\D/g, "")) || 0}
+                          shippingFee={shippingFee}
+                          voucherAmount={voucherAmount}
+                          totalCollected={totalCollected}
+                          isSubmitting={isSubmitting}
+                          isSubmitDisabled={
+                            !selectedSender ||
+                            !selectedRecipient ||
+                            (isSpxProvider &&
+                              (!parcelItemName.trim() ||
+                                weightInput.trim() === "" ||
+                                (collectType === 1 && !pickupTimeRangeId)))
+                          }
+                          onSubmit={() => {
+                            hide();
+                            handleSubmitShipment();
+                          }}
+                          onClose={hide}
+                        />
+                      ),
+                    });
+                  }}
+                  hitSlop={8}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
+                >
+                  <Text style={[textPresets.fs12_400, { color: colors.primary }]}>
+                    Chi tiết
+                  </Text>
+                  <Ionicons name="chevron-up" size={13} color={colors.primary} />
+                </Pressable>
+              )}
+            </View>
             <Text style={[textPresets.fs14_500, { color: colors.primary }]}>
               {totalCollected.toLocaleString("vi-VN")}đ
             </Text>

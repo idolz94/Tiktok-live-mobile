@@ -64,6 +64,21 @@ function getPayloadUsername(payload: Record<string, any>) {
   );
 }
 
+function getPayloadSessionIds(payload: Record<string, any>) {
+  return [
+    payload.liveSessionId,
+    payload.live_session_id,
+    payload.dbLiveSessionId,
+    payload.db_live_session_id,
+    payload.collectorSessionId,
+    payload.collector_session_id,
+    payload.externalSessionId,
+    payload.external_session_id,
+    payload.sessionId,
+    payload.session_id,
+  ].map((value) => String(value || "")).filter(Boolean);
+}
+
 // --- Debug vòng đời live khi app chuyển background/foreground ---
 function debugLiveLifecycle(label: string, payload?: Record<string, unknown>) {
   if (!__DEV__) return;
@@ -236,6 +251,26 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           return;
         }
         // --- end bỏ qua disconnect tạm thời ---
+        const payloadSessionIds = getPayloadSessionIds(payload);
+        const currentSessionIds = [
+          currentLiveSession?.id,
+          currentLiveSession?.sessionId,
+          currentLiveSessionId,
+        ].map((value) => String(value || "")).filter(Boolean);
+        if (
+          payloadSessionIds.length > 0 &&
+          currentSessionIds.length > 0 &&
+          !payloadSessionIds.some((id) => currentSessionIds.includes(id))
+        ) {
+          debugLiveLifecycle("IGNORE_FOREIGN_TERMINAL_EVENT", {
+            type,
+            payloadSessionIds,
+            currentSessionIds,
+            currentUsername: tiktokUsernameRef.current,
+          });
+          return;
+        }
+
         if (type === "LIVE_ERROR" || type === "COLLECTOR_STOPPED") {
           finalizeCurrentSessionLocally(
             type === "LIVE_ERROR" ? "live_error" : "collector_stopped",

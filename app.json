@@ -33,7 +33,13 @@
           "backgroundColor": "#FFFFFF"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Lumi cần quyền truy cập camera để chụp ảnh hàng hoá."
+        }
+      ]
     ]
   }
 }

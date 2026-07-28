@@ -67,7 +67,7 @@ export function SpxOptions({
   vouchers,
   vouchersLoading,
   vouchersError,
-  selectedVoucherCode: _selectedVoucherCode,
+  selectedVoucherCode,
   onOpenVoucherSheet,
   paymentSide,
   setPaymentSide,
@@ -247,7 +247,7 @@ export function SpxOptions({
               { marginTop: 10 },
             ]}
           >
-            Khung giờ lấy hàng
+            Khung giờ lấy hàng <Text style={{ color: colors.primary }}>*</Text>
           </Text>
           {timeslotsLoading ? (
             <View
@@ -359,7 +359,7 @@ export function SpxOptions({
         })}
       </View>
 
-      <Text
+      {serviceType !== 2 && <Text
         style={[
           { color: colors.neutral400 },
           textPresets.fs12_400,
@@ -367,12 +367,20 @@ export function SpxOptions({
         ]}
       >
         Mã giảm phí vận chuyển
-      </Text>
-      {(() => {
+      </Text>}
+      {serviceType !== 2 && (() => {
         const voucherEmpty =
           !vouchersLoading && !vouchersError && vouchers.length === 0;
         const voucherDisabled =
           vouchersLoading || !!vouchersError || voucherEmpty;
+        const selectedVoucher = vouchers.find(v => v.voucherCode === selectedVoucherCode);
+        const voucherDiscountText = (() => {
+          if (!selectedVoucher) return null;
+          const n = Number(selectedVoucher.voucherAmount);
+          if (isNaN(n) || n === 0) return null;
+          if (selectedVoucher.discountBy === 1) return `-${n}%`;
+          return `-đ${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+        })();
         return (
           <Pressable
             onPress={onOpenVoucherSheet}
@@ -394,13 +402,13 @@ export function SpxOptions({
             >
               {voucherEmpty ? "Không có mã giảm phí vận chuyển" : "Mã giảm phí vận chuyển"}
             </Text>
-            {!voucherDisabled && (
-              <Text
-                style={[{ color: colors.neutral400 }, textPresets.fs18_500]}
-              >
-                ›
+            {voucherDiscountText ? (
+              <Text style={[{ color: colors.primary }, textPresets.fs14_500]}>
+                {voucherDiscountText} ›
               </Text>
-            )}
+            ) : !voucherDisabled ? (
+              <Text style={[{ color: colors.neutral400 }, textPresets.fs18_500]}>›</Text>
+            ) : null}
           </Pressable>
         );
       })()}

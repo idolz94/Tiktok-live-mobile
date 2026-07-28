@@ -77,6 +77,13 @@ export const CommentCardItem = memo(
       localOrderId,
     );
 
+    // Reset localOrderId nếu order đã bị xoá (isCommentOrderCreated trả false và item không có orderId)
+    useEffect(() => {
+      if (localOrderId && !isCommentOrderCreated(item) && !item.isOrderCreated && !item.orderId) {
+        setLocalOrderId("");
+      }
+    }, [isCommentOrderCreated, item, localOrderId]);
+
     const isOwner = item.intent === "user" || isOwnComment(item);
 
     if (item.type === "user_joined") {
@@ -137,7 +144,8 @@ export const CommentCardItem = memo(
     prev.item.aiStatus === next.item.aiStatus &&
     prev.item.finalScore === next.item.finalScore &&
     prev.item.priorityLevel === next.item.priorityLevel &&
-    prev.item.isOrderCreated === next.item.isOrderCreated,
+    prev.item.isOrderCreated === next.item.isOrderCreated &&
+    prev.isCommentOrderCreated === next.isCommentOrderCreated,
 );
 
 CommentCardItem.displayName = "CommentCardItem";

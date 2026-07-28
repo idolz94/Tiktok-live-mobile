@@ -14,12 +14,14 @@ import { z } from "zod";
 
 const addProductSchema = z.object({
   name: z.string().trim().min(1, "Tên sản phẩm không được bỏ trống"),
+  color: z.string().trim().optional(),
   price: z.number().min(1, "Giá phải lớn hơn 0"),
   quantity: z.number().min(1, "Số lượng phải lớn hơn 0"),
 });
 
 const editProductSchema = z.object({
   name: z.string().trim().min(1, "Tên sản phẩm không được bỏ trống"),
+  color: z.string().trim().optional(),
   price: z.number().min(1, "Giá phải lớn hơn 0"),
   quantity: z.number().min(1, "Số lượng phải lớn hơn 0"),
 });
@@ -29,11 +31,12 @@ type ProductForm = z.infer<typeof addProductSchema>;
 type ProductSheetProps = {
   mode: "add" | "edit";
   initialName?: string;
+  initialColor?: string;
   initialPrice?: number;
   initialQty?: number;
   loading?: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; price: number; quantity: number; nameDirty: boolean; priceDirty: boolean }) => void;
+  onSave: (data: { name: string; color: string; price: number; quantity: number; nameDirty: boolean; colorDirty: boolean; priceDirty: boolean; quantityDirty: boolean }) => void;
 };
 
 function parsePriceDisplay(formatted: string): number {
@@ -43,6 +46,7 @@ function parsePriceDisplay(formatted: string): number {
 export function ProductSheet({
   mode,
   initialName = "",
+  initialColor = "",
   initialPrice = 0,
   initialQty = 1,
   loading = false,
@@ -64,6 +68,7 @@ export function ProductSheet({
     mode: "onChange",
     defaultValues: {
       name: initialName,
+      color: initialColor,
       price: initialPrice,
       quantity: initialQty < 1 ? 1 : initialQty,
     },
@@ -74,10 +79,13 @@ export function ProductSheet({
   const onSubmit = handleSubmit((data) => {
     onSave({
       name: data.name.trim(),
+      color: data.color?.trim() || "",
       price: data.price,
       quantity: data.quantity,
       nameDirty: dirtyFields.name === true,
+      colorDirty: dirtyFields.color === true,
       priceDirty: dirtyFields.price === true,
+      quantityDirty: dirtyFields.quantity === true,
     });
   });
 
@@ -121,6 +129,24 @@ export function ProductSheet({
                 }
               />
             </>
+          )}
+        />
+      </View>
+
+      <View style={{ rowGap: 6 }}>
+        <Text style={[styles.label, { color: colors.neutral400 }]}>Màu sắc</Text>
+        <Controller
+          control={control}
+          name="color"
+          render={({ field: { onChange, value, onBlur } }) => (
+            <TextInput
+              style={[styles.input, { color: colors.neutral900, borderColor: colors.border10 }]}
+              value={value ?? ""}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              placeholder="VD: Trắng"
+              placeholderTextColor={colors.neutral300}
+            />
           )}
         />
       </View>

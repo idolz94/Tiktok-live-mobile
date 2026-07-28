@@ -240,15 +240,15 @@ export default function ShippingDetailScreen() {
               <Ionicons name="person" size={20} color="#fff" />
             </View>
             <View style={styles.recipientInfo}>
-              <Text style={[{ color: colors.neutral500, ...textPresets.fs14_500 }]}>Người Nhận</Text>
+              <Text style={[{ color: colors.neutral500, ...textPresets.fs12_400 }]}>Người Nhận</Text>
               <Text style={[{ color: colors.text, ...textPresets.fs14_500 }]}>
                 {order.customerName || "Khách hàng"}
-                {order.customerPhone ? (
-                  <Text style={{ color: "#ff5c00", textDecorationLine: "underline" }}>
-                    {" "}{order.customerPhone}
-                  </Text>
-                ) : null}
               </Text>
+              {order.customerPhone ? (
+                <Text style={{ color: "#ff5c00", textDecorationLine: "underline", ...textPresets.fs12_400 }}>
+                  {order.customerPhone}
+                </Text>
+              ) : null}
             </View>
             {order.customerPhone ? (
               <Pressable style={[styles.callBtn, { backgroundColor: colors.neutral50 }]} onPress={handleCall}>
@@ -336,9 +336,9 @@ export default function ShippingDetailScreen() {
                 {printing
                   ? <ActivityIndicator size="small" color={colors.text} />
                   : <>
-                      <Ionicons name="print-outline" size={18} color={colors.text} />
+                      <Ionicons name="print-outline" size={16} color={colors.text} />
                       <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>
-                        {isWaitingManual ? "In Đơn Hàng" : "In Đơn Hàng SPX"}
+                        {isWaitingManual ? "In Đơn Hàng" : "In Đơn SPX"}
                       </Text>
                     </>
                 }
@@ -462,13 +462,14 @@ const styles = createStyles(({ colors }) => ({
   actionGrid: { flexDirection: "row", gap: 8 },
   actionButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 44,
-    gap: 4,
+    minHeight: 40,
+    gap: 6,
   },
   actionButtonText: { textAlign: "center", lineHeight: 18 },
 }));

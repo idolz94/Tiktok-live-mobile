@@ -61,6 +61,9 @@ export function useSpxShipping({
       .then((res) => {
         if (cancelled) return;
         setVouchers(res.vouchers ?? []);
+        if (!selectedVoucherCode && res.vouchers?.length) {
+          setSelectedVoucherCode(res.vouchers[0].voucherCode);
+        }
         setVouchersLoading(false);
       })
       .catch((err: unknown) => {

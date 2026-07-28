@@ -312,7 +312,6 @@ export function useOrderManager({
         const result = await createOrderFromCommentApi({
           comment: item,
           liveSessionId,
-          quantity: 1,
         });
 
         await reloadOrders();

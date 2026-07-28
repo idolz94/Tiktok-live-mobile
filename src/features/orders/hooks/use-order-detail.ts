@@ -105,12 +105,6 @@ export function useOrderDetail(orderId: string) {
   const confirmRef = useRef(false);
   // END: Ref lock
 
-  // START: previousStatusRef để rollback optimistic deposit an toàn — tránh stale closure
-  const previousStatusRef = useRef<
-    OrderWithTikTok["depositStatus"] | undefined
-  >(undefined);
-  // END: previousStatusRef
-
   // START: Fetch order khi màn mở, luôn lấy data mới nhất từ server
   const fetchOrder = useCallback(async () => {
     if (!orderId) {
@@ -306,7 +300,16 @@ export function useOrderDetail(orderId: string) {
               totalAmount: (p.totalAmount ?? 0) > 0 ? p.totalAmount : p.quantity * price,
             };
           });
-          return { ...prev, products };
+          // ponytail: đồng bộ order-level productName từ firstProduct sau merge
+          // để order summary không hiển thị "Sản phẩm" sai khi server trả productName null
+          const firstMerged = products[0];
+          const productName =
+            firstMerged && firstMerged.name && firstMerged.name !== "Sản phẩm"
+              ? firstMerged.name
+              : (prev.productName && prev.productName !== "Sản phẩm")
+                ? prev.productName
+                : firstMerged?.name ?? prev.productName;
+          return { ...prev, products, productName };
         });
         patchUi({ editProductOpen: false });
         setSelectedProductId(null);
@@ -337,9 +340,7 @@ export function useOrderDetail(orderId: string) {
   );
   // END: Xoá sản phẩm
 
-  // START: Toggle cọc/chưa cọc — optimistic update, rollback an toàn qua previousStatusRef
-  const depositStatus = order?.depositStatus;
-
+  // START: Toggle cọc/chưa cọc — đồng bộ với list Orders
   const handleToggleDeposit = useCallback(async () => {
     if (!orderId_ || depositRef.current) return;
 
@@ -348,30 +349,19 @@ export function useOrderDetail(orderId: string) {
     depositRef.current = true;
     patchMutating({ deposit: true });
 
-    setOrder((current) => {
-      if (!current) return current;
-      previousStatusRef.current = current.depositStatus;
-      return { ...current, depositStatus: nextStatus };
-    });
-
     try {
-      const updatedOrder = await updateOrderDepositStatusApi({
+      await updateOrderDepositStatusApi({
         orderId: orderId_,
         depositStatus: nextStatus,
       });
-      setOrder(updatedOrder);
-    } catch (err) {
       setOrder((current) =>
-        current && previousStatusRef.current
-          ? { ...current, depositStatus: previousStatusRef.current }
-          : current,
+        current ? { ...current, depositStatus: nextStatus } : current,
       );
-      throw err;
     } finally {
       depositRef.current = false;
       patchMutating({ deposit: false });
     }
-  }, [depositStatus, isPaid, orderId_, patchMutating]);
+  }, [isPaid, orderId_, patchMutating]);
   // END: Toggle cọc/chưa cọc
 
   // START: Toggle trạng thái đơn giữa confirmed và draft — ref lock tránh double tap

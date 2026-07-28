@@ -98,14 +98,15 @@ export function OrderDetailShippingSection({
   );
 }
 
-const styles = createStyles(({ colors, textPresets }) => ({
+const styles = createStyles(({ colors, textPresets, shadows }) => ({
   providerCard: {
     flexDirection: "row",
     alignItems: "center",
     columnGap: 12,
     padding: 12,
     borderRadius: 16,
-    backgroundColor: "#f7f8fa",
+    backgroundColor: colors.white,
+    ...shadows.sd1,
   },
   providerIcon: {
     width: 32,

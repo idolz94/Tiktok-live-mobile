@@ -158,6 +158,8 @@ function makeHookReturn(overrides: Partial<ReturnType<typeof useCreateShipment>>
     setAllowTryOn: jest.fn(),
     allowPartialDelivery: 0 as any,
     setAllowPartialDelivery: jest.fn(),
+    itemPicture: null,
+    setItemPicture: jest.fn(),
     manualShippingFee: "",
     setManualShippingFee: jest.fn(),
     manualCodAmount: "",
@@ -178,8 +180,10 @@ function makeHookReturn(overrides: Partial<ReturnType<typeof useCreateShipment>>
     feeError: null,
     // computed
     shippingFee: 25000,
+    codAmount: 150000,
     codAmountDisplay: "150.000",
     goodsValueDisplay: "150.000",
+    voucherAmount: 0,
     totalCollected: 175000,
     // submit
     isSubmitting: false,

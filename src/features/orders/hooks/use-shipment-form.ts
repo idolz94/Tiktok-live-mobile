@@ -80,6 +80,7 @@ export function useShipmentForm({
   const [allowMutualCheck, setAllowMutualCheck] = useState<0 | 1>(0);
   const [allowTryOn, setAllowTryOn] = useState<0 | 1>(0);
   const [allowPartialDelivery, setAllowPartialDelivery] = useState<0 | 1>(0);
+  const [itemPicture, setItemPicture] = useState<string | null>(null);
   const [idempotencyKey] = useState(() => generateUuid());
 
   const setManualShippingFee = useCallback((text: string) => {
@@ -141,6 +142,8 @@ export function useShipmentForm({
     setAllowTryOn,
     allowPartialDelivery,
     setAllowPartialDelivery,
+    itemPicture,
+    setItemPicture,
     idempotencyKey,
   };
 }

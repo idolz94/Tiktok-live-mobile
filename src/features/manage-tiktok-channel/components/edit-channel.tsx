@@ -39,11 +39,12 @@ export const EditChannel = ({
         <View style={styles.inputGroup}>
           <View style={styles.inputContainer}>
             <TextInput
-              placeholder="Nhập TikTok ID của bạn"
+              placeholder="@username"
               value={name}
               onChangeText={(v) => {
                 setName(v);
-                if (v && !/^[A-Za-z0-9._]+$/.test(v.trim())) {
+                const cleaned = v.trim().replace(/^@/, "");
+                if (cleaned && !/^[A-Za-z0-9._]+$/.test(cleaned)) {
                   setError("ID Tiktok chỉ có thể chứa chữ không dấu, số, dấu gạch dưới và dấu chấm.");
                 } else {
                   setError("");

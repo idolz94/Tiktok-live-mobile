@@ -21,6 +21,7 @@ import {
   Alert,
   Linking,
   ScrollView,
+  Share,
   Text,
   View,
 } from "react-native";
@@ -34,10 +35,36 @@ import { OrderDetailProductsSection } from "@features/orders/components/order-de
 import { OrderDetailShipBar } from "@features/orders/components/order-detail/order-detail-ship-bar";
 import { OrderDetailShippingSection } from "@features/orders/components/order-detail/order-detail-shipping-section";
 
+function buildOrderShareText(order: NonNullable<ReturnType<typeof useOrderDetail>["order"]>) {
+  const lines = [
+    `Đơn hàng: ${order.orderCode}`,
+    `Khách: ${order.customerName || order.username || "Khách live"}`,
+  ];
+
+  if (order.customerPhone) lines.push(`SĐT: ${order.customerPhone}`);
+  if (order.customerAddress) lines.push(`Địa chỉ: ${order.customerAddress}`);
+
+  lines.push(
+    "Sản phẩm:",
+    ...(order.products.length
+      ? order.products.map((item) => {
+          const name = [item.name, item.color, item.size].filter(Boolean).join(" - ");
+          return `- ${name || "Sản phẩm"} x${item.quantity}: ${formatMoney((item.totalAmount ?? 0) > 0 ? item.totalAmount! : item.price * item.quantity)}`;
+        })
+      : [`- ${order.productName || "Sản phẩm"} x${order.quantity}: ${formatMoney(order.price * order.quantity)}`]),
+    `Tổng tiền: ${formatMoney(order.totalAmount ?? 0)}`,
+    `Phí vận chuyển: ${formatMoney(order.shippingFee ?? 0)}`,
+    `Cần thu: ${formatMoney(order.codAmount ?? 0)}`,
+  );
+
+  if (order.note) lines.push(`Ghi chú: ${order.note}`);
+  return lines.join("\n");
+}
+
 export const OrderDetail = memo(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useOrderDetail(id ?? "");
-  const { show, hide } = useBottomSheet();
+  const { show, hide, replace } = useBottomSheet();
   const toast = useToast();
   const { connected: spxConnected, submitting, connect } = useSpxAccount();
   const [selectedProvider, setSelectedProvider] =
@@ -47,12 +74,13 @@ export const OrderDetail = memo(() => {
     if (spxConnected) setSelectedProvider("spx");
   }, [spxConnected]);
   const [shippingFeeDisplay, setShippingFeeDisplay] = useState("");
+  const [shippingFeeAmount, setShippingFeeAmount] = useState<number | null>(null);
   const [prepaidDisplay, setPrepaidDisplay] = useState("");
   const [prepaidAmount, setPrepaidAmount] = useState<number | null>(null);
 
   const displayName = useMemo(() => {
     const order = detail.order;
-    return order?.customerName || order?.username || "Khách live";
+    return order?.customerName || "Khách hàng";
   }, [detail.order]);
 
   const hiddenCount = Math.max(
@@ -61,7 +89,8 @@ export const OrderDetail = memo(() => {
   );
 
   const handleChangeShippingFee = useCallback(
-    (_amount: number, display: string) => {
+    (amount: number, display: string) => {
+      setShippingFeeAmount(amount);
       setShippingFeeDisplay(display);
     },
     [],
@@ -74,8 +103,7 @@ export const OrderDetail = memo(() => {
 
   const localRemain = Math.max(
     0,
-    (detail.order?.totalAmount ?? detail.productTotal + detail.shippingFee) -
-      (prepaidAmount ?? 0),
+    detail.productTotal + (shippingFeeAmount ?? detail.shippingFee) - (prepaidAmount ?? 0),
   );
 
   const handleShip = useCallback(() => {
@@ -98,7 +126,7 @@ export const OrderDetail = memo(() => {
     detail.order,
     detail.shippingFee,
     selectedProvider,
-    shippingFeeDisplay,
+    shippingFeeAmount,
     prepaidAmount,
   ]);
 
@@ -128,10 +156,11 @@ export const OrderDetail = memo(() => {
   }, [detail]);
 
   const handleSaveNewProduct = useCallback(
-    (data: { name: string; price: number; quantity: number }) => {
+    (data: { name: string; color: string; price: number; quantity: number }) => {
       hide();
       detail.handleAddProduct({
         productName: data.name,
+        color: data.color,
         price: data.price,
         quantity: data.quantity,
       });
@@ -142,14 +171,25 @@ export const OrderDetail = memo(() => {
   const handleSaveProductEdit = useCallback(
     (
       itemId: string,
-      data: { name: string; price: number; quantity: number; nameDirty: boolean; priceDirty: boolean },
+      data: { name: string; color: string; price: number; quantity: number; nameDirty: boolean; colorDirty: boolean; priceDirty: boolean; quantityDirty: boolean },
     ) => {
       if (!itemId) return;
       hide();
+      // ponytail: luôn gửi productName + productCode để heal DB rows có null/empty
+      // dùng data.name nếu user sửa, fallback sang giá trị hiện tại trong state (không phải "Sản phẩm")
+      const currentProduct = detail.products.find((p) => p.id === itemId);
+      const resolvedName = data.nameDirty
+        ? data.name
+        : (currentProduct?.name && currentProduct.name !== "Sản phẩm"
+            ? currentProduct.name
+            : data.name);
+      const resolvedCode = currentProduct?.code || undefined;
       detail.handleUpdateProduct(itemId, {
-        ...(data.nameDirty ? { productName: data.name } : {}),
+        productName: resolvedName,
+        ...(resolvedCode ? { productCode: resolvedCode } : {}),
+        ...(data.colorDirty ? { color: data.color } : {}),
         ...(data.priceDirty ? { price: data.price } : {}),
-        quantity: data.quantity,
+        ...(data.quantityDirty ? { quantity: data.quantity } : {}),
       });
     },
     [detail, hide],
@@ -163,6 +203,11 @@ export const OrderDetail = memo(() => {
       Linking.openURL(`tiktok://user?username=${username}`);
     });
   }, [detail.order?.customerTikTokUsername]);
+
+  const handleShare = useCallback(() => {
+    if (!detail.order) return;
+    void Share.share({ message: buildOrderShareText(detail.order) });
+  }, [detail.order]);
 
   return (
     <View style={styles.root}>
@@ -233,6 +278,7 @@ export const OrderDetail = memo(() => {
                       <ProductSheet
                         mode="edit"
                         initialName={product.name ?? ""}
+                        initialColor={product.color ?? ""}
                         initialPrice={product.price}
                         initialQty={product.quantity}
                         loading={detail.updatingProduct}
@@ -272,41 +318,44 @@ export const OrderDetail = memo(() => {
                 onOpenProvider={() => {
                   let id: string;
                   const close = () => hide(id);
-                  id = show({
-                    content: (
-                      <ShippingProviderSheet
-                        selected={selectedProvider}
-                        spxConnected={spxConnected}
-                        onClose={close}
-                        onSelect={(provider) => {
-                          setSelectedProvider(provider);
-                          close();
-                        }}
-                        onConnectSpx={() => {
-                          let sheetId: string;
-                          const closeConnectSheet = () => hide(sheetId);
-                          sheetId = show({
-                            content: (
-                              <SpxConnectSheet
-                                submitting={submitting}
-                                onSubmit={async (data) => {
-                                  const ok = await connect(data);
-                                  if (ok) {
-                                    closeConnectSheet();
-                                    toast.success("Đã kết nối tài khoản SPX");
-                                  } else {
-                                    Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
-                                  }
-                                }}
-                                onClose={closeConnectSheet}
-                              />
-                            ),
-                            enablePanDownToClose: false,
-                          });
-                        }}
-                      />
-                    ),
-                  });
+                  const showProviderSheet = () => {
+                    replace({
+                      content: (
+                        <ShippingProviderSheet
+                          selected={selectedProvider}
+                          spxConnected={spxConnected}
+                          onClose={close}
+                          onSelect={(provider) => {
+                            setSelectedProvider(provider);
+                            close();
+                          }}
+                          onConnectSpx={showConnectSheet}
+                        />
+                      ),
+                    }, id);
+                  };
+                  const showConnectSheet = () => {
+                    replace({
+                      content: (
+                        <SpxConnectSheet
+                          submitting={submitting}
+                          onSubmit={async (data) => {
+                            const ok = await connect(data);
+                            if (ok) {
+                              showProviderSheet();
+                              toast.success("Đã kết nối tài khoản SPX");
+                            } else {
+                              Alert.alert("Lỗi", "Không thể kết nối tài khoản SPX. Vui lòng thử lại.");
+                            }
+                          }}
+                          onClose={showProviderSheet}
+                        />
+                      ),
+                      enablePanDownToClose: false,
+                    }, id);
+                  };
+                  id = show({ content: null });
+                  showProviderSheet();
                 }}
                 onChangeShippingFee={handleChangeShippingFee}
                 onChangePrepaid={handleChangePrepaid}
@@ -323,7 +372,7 @@ export const OrderDetail = memo(() => {
                 shippingStatus={detail.order.shippingStatus}
                 onCancel={handleCancelShipment}
                 onPrint={() => {}}
-                onShare={() => {}}
+                onShare={handleShare}
                 onDeposit={() => { void detail.handleToggleDeposit(); }}
                 isPaid={detail.isPaid}
                 depositLoading={detail.depositLoading}
@@ -338,7 +387,7 @@ export const OrderDetail = memo(() => {
               shippingStatus={detail.order.shippingStatus}
               onCancel={handleCancelShipment}
               onPrint={() => {}}
-              onShare={() => {}}
+              onShare={handleShare}
             />
           </>
         ) : null}

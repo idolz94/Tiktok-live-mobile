@@ -203,9 +203,9 @@ export const Register = () => {
                         <Text style={styles.check}>✓</Text>
                       )}
                     </View>
-                    <AnimatedErrorText
-                      message={isDirty && error ? error.message : undefined}
-                    />
+                    <Text style={[styles.inputNote, isDirty && error ? styles.inputNoteError : null]}>
+                      ID Tiktok chỉ có thể chứa chữ không dấu, số, dấu gạch dưới và dấu chấm.
+                    </Text>
                   </>
                 );
               }}
@@ -299,6 +299,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   checkboxText: { fontWeight: "900", color: colors.neutral100 },
   rememberText: { color: colors.neutral900, ...textPresets.fs14_400 },
+  inputNote: { color: colors.neutral400, ...textPresets.fs12_400 },
+  inputNoteError: { color: colors.error },
   highLightText: {
     color: colors.primary,
     ...textPresets.fs14_500,

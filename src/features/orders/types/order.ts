@@ -46,7 +46,9 @@ export type OrderFilterBarProps = {
 
 // START: Types dùng cho useOrderDetail — tập trung ở đây để hook file gọn hơn
 export type OrderItemPayload = {
+  productCode?: string;
   productName: string;
+  color?: string;
   quantity: number;
   price: number;
   note?: string;

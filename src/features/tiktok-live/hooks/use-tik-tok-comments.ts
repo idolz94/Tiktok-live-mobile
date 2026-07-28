@@ -61,6 +61,10 @@ export function createCommentUniqueKey(comment: LiveComment) {
 
   const text = normalizeTextForKey(getCommentText(comment));
 
+  if (comment.type === "user_joined") {
+    return `joined:${username}:${String(comment.createdAt || comment.id || "")}`;
+  }
+
   return `user_text:${username}:${text}`;
 }
 
@@ -111,7 +115,14 @@ function mergeComment(
 
 function sortAndLimitComments(map: Map<string, LiveComment>) {
   const comments = Array.from(map.values());
-  const latestJoined = comments.find((comment) => comment.type === "user_joined");
+  const latestJoined = comments.reduce<LiveComment | undefined>((latest, comment) => {
+    if (comment.type !== "user_joined") return latest;
+    if (!latest) return comment;
+    return new Date(comment.createdAt || 0).getTime() >
+      new Date(latest.createdAt || 0).getTime()
+      ? comment
+      : latest;
+  }, undefined);
   const sortedComments = comments
     .filter((comment) => comment.type !== "user_joined")
     .sort((a, b) => {

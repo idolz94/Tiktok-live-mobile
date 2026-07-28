@@ -1,6 +1,6 @@
 import { OrderWithTikTok } from "@app-types/index";
 import { getOrderTotal } from "@features/orders/utils/order";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { useShipmentAddresses } from "./use-shipment-addresses";
 import { useAddressForm } from "./use-address-form";
@@ -67,8 +67,13 @@ export function useCreateShipment() {
   const codAmount = isManualProvider ? parseLocaleNumber(form.manualCodAmount) : isSpxProvider ? spxCodAmount : orderCodAmount;
   const codAmountDisplay = useMemo(() => isManualProvider ? form.manualCodAmount : formatLocaleInput(String(codAmount)), [codAmount, isManualProvider, form.manualCodAmount]);
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
+  const selectedVoucher = spx.vouchers.find(v => v.voucherCode === form.selectedVoucherCode);
+  const voucherAmount = selectedVoucher ? Math.round(parseFloat(selectedVoucher.voucherAmount)) : 0;
+
   const totalCollected = isSpxProvider
-    ? codAmount + shippingFee
+    ? form.paymentSide === 0
+      ? codAmount + shippingFee - voucherAmount
+      : codAmount - voucherAmount
     : form.paymentSide === 0 ? codAmount + shippingFee : codAmount;
 
   const pickupTimeLabel = useMemo(() => {
@@ -83,8 +88,18 @@ export function useCreateShipment() {
     return "";
   }, [isSpxProvider, form.pickupTimeRangeId, spx.timeslots]);
 
-  const selectedVoucher = spx.vouchers.find(v => v.voucherCode === form.selectedVoucherCode);
-  const voucherAmount = selectedVoucher ? Math.round(parseFloat(selectedVoucher.voucherAmount)) : 0;
+  useEffect(() => {
+    if (!isSpxProvider || !spx.timeslots.length || form.pickupTimeRangeId) return;
+    for (let gi = 0; gi < spx.timeslots.length; gi++) {
+      const day = spx.timeslots[gi];
+      const slot = day.slots[0];
+      if (slot) {
+        const key = `${day.pickupTime}-${slot.id}-${gi}-0`;
+        form.setPickupTime(slot.id, key, day.pickupTime);
+        break;
+      }
+    }
+  }, [isSpxProvider, spx.timeslots, form.pickupTimeRangeId]);
 
   const { isSubmitting, submitState, handleSubmitShipment, handleRetryOutcomeUnknown } = useSubmitShipment({
     order, isManualProvider, isSpxProvider, selectedSender, selectedRecipient,
@@ -127,9 +142,11 @@ export function useCreateShipment() {
     ...form,
     ...spx,
     shippingFee,
+    codAmount,
     codAmountDisplay,
     goodsValueDisplay,
     totalCollected,
+    voucherAmount,
     isSubmitting,
     submitState,
     handleSubmitShipment,
