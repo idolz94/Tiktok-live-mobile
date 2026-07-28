@@ -12,6 +12,7 @@ import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { GeoPickerSheet } from "@components/geo-picker";
+import { Header } from "@components/header";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
 import {
@@ -22,7 +23,6 @@ import {
 import { addrSchema } from "../../schemas/shipment-schema";
 import type { AddrFormValues } from "../../types/shipment";
 import { absoluteFill } from "../../utils/shipment";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 type AddressFormModalProps = {
@@ -40,7 +40,6 @@ export function AddressFormModal({
   onClose,
   onSave,
 }: AddressFormModalProps) {
-  const insets = useSafeAreaInsets();
   const { colors } = useThemes();
 
   const {
@@ -123,18 +122,8 @@ export function AddressFormModal({
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
+      <Header title={title} transparent />
       <View style={formModalStyles.sheet}>
-        <View style={[formModalStyles.sheetHeader, { paddingTop: insets.top }]}>
-          <Text style={formModalStyles.sheetTitle}>{title}</Text>
-          <Pressable
-            onPress={onClose}
-            style={formModalStyles.closeBtn}
-            hitSlop={8}
-          >
-            <Text style={formModalStyles.closeBtnText}>×</Text>
-          </Pressable>
-        </View>
-
         <KeyboardAwareScrollView
           style={formModalStyles.scrollView}
           contentContainerStyle={formModalStyles.scrollContent}
@@ -407,31 +396,6 @@ const formModalStyles = createStyles(({ colors }) => ({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
-  },
-  sheetHeader: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    marginBottom: 4,
-  },
-  sheetTitle: {
-    color: colors.neutral900,
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: "600" as const,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.neutral50,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  closeBtnText: {
-    color: colors.neutral500,
-    fontSize: 24,
-    lineHeight: 28,
   },
   scrollView: { flex: 1 },
   scrollContent: {

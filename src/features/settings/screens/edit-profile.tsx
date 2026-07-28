@@ -15,9 +15,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemes } from "@hooks/use-theme";
 import { images } from "@assets/images";
+import { Header } from "@components/header";
 
 export function EditProfileScreen() {
-  const { top, bottom } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
   const { colors, textPresets, shadows } = useThemes();
   const {
     fullName,
@@ -46,13 +47,7 @@ export function EditProfileScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <Text style={styles.backButtonText}>‹</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Cài Đặt Chung</Text>
-        <View style={styles.headerRight} />
-      </View>
+      <Header title="Cài đặt chung" transparent />
 
       <ScrollView
         style={styles.scroll}
@@ -62,18 +57,34 @@ export function EditProfileScreen() {
       >
         {/* Thông tin */}
         <View style={[styles.section, shadows.sd2]}>
-          <Text style={[styles.sectionTitle, { color: colors.neutral900 }, textPresets.fs16_500]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.neutral900 },
+              textPresets.fs16_500,
+            ]}
+          >
             Thông tin
           </Text>
 
           <View style={styles.fieldGroup}>
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.neutral400 },
+                  textPresets.fs14_400,
+                ]}
+              >
                 Tên cửa hàng
               </Text>
               <View style={[styles.inputBox, { borderColor: colors.border10 }]}>
                 <TextInput
-                  style={[styles.inputText, { color: colors.neutral900 }, textPresets.fs14_400]}
+                  style={[
+                    styles.inputText,
+                    { color: colors.neutral900 },
+                    textPresets.fs14_400,
+                  ]}
                   value={shopName}
                   onChangeText={setShopName}
                   placeholder="Nhập tên cửa hàng"
@@ -84,12 +95,22 @@ export function EditProfileScreen() {
             </View>
 
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.neutral400 },
+                  textPresets.fs14_400,
+                ]}
+              >
                 Họ và tên
               </Text>
               <View style={[styles.inputBox, { borderColor: colors.border10 }]}>
                 <TextInput
-                  style={[styles.inputText, { color: colors.neutral900 }, textPresets.fs14_400]}
+                  style={[
+                    styles.inputText,
+                    { color: colors.neutral900 },
+                    textPresets.fs14_400,
+                  ]}
                   value={fullName}
                   onChangeText={setFullName}
                   placeholder="Nhập họ và tên"
@@ -100,12 +121,22 @@ export function EditProfileScreen() {
             </View>
 
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.neutral400 },
+                  textPresets.fs14_400,
+                ]}
+              >
                 Điện thoại
               </Text>
               <View style={[styles.inputBox, { borderColor: colors.border10 }]}>
                 <TextInput
-                  style={[styles.inputText, { color: colors.neutral900 }, textPresets.fs14_400]}
+                  style={[
+                    styles.inputText,
+                    { color: colors.neutral900 },
+                    textPresets.fs14_400,
+                  ]}
                   value={phone}
                   onChangeText={setPhone}
                   placeholder="Nhập số điện thoại"
@@ -120,18 +151,34 @@ export function EditProfileScreen() {
 
         {/* Mạng xã hội */}
         <View style={[styles.section, shadows.sd2]}>
-          <Text style={[styles.sectionTitle, { color: colors.neutral900 }, textPresets.fs16_500]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.neutral900 },
+              textPresets.fs16_500,
+            ]}
+          >
             Mạng xã hội
           </Text>
 
           <View style={styles.fieldGroup}>
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.neutral400 },
+                  textPresets.fs14_400,
+                ]}
+              >
                 Facebook
               </Text>
               <View style={[styles.inputBox, { borderColor: colors.border10 }]}>
                 <TextInput
-                  style={[styles.inputText, { color: colors.neutral900 }, textPresets.fs14_400]}
+                  style={[
+                    styles.inputText,
+                    { color: colors.neutral900 },
+                    textPresets.fs14_400,
+                  ]}
                   value={facebookUrl}
                   onChangeText={setFacebookUrl}
                   placeholder="facebook.com/yourprofile"
@@ -140,17 +187,30 @@ export function EditProfileScreen() {
                   keyboardType="url"
                   returnKeyType="next"
                 />
-                <Image source={images.logo_facebook} style={styles.socialBrandIcon} />
+                <Image
+                  source={images.logo_facebook}
+                  style={styles.socialBrandIcon}
+                />
               </View>
             </View>
 
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.neutral400 },
+                  textPresets.fs14_400,
+                ]}
+              >
                 Tiktok
               </Text>
               <View style={[styles.inputBox, { borderColor: colors.border10 }]}>
                 <TextInput
-                  style={[styles.inputText, { color: colors.neutral900 }, textPresets.fs14_400]}
+                  style={[
+                    styles.inputText,
+                    { color: colors.neutral900 },
+                    textPresets.fs14_400,
+                  ]}
                   value={tiktokUrl}
                   onChangeText={setTiktokUrl}
                   placeholder="tiktok.com/@yourprofile"
@@ -159,17 +219,30 @@ export function EditProfileScreen() {
                   keyboardType="url"
                   returnKeyType="next"
                 />
-                <Image source={images.logo_tiktok} style={styles.socialBrandIcon} />
+                <Image
+                  source={images.logo_tiktok}
+                  style={styles.socialBrandIcon}
+                />
               </View>
             </View>
 
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.neutral400 }, textPresets.fs14_400]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.neutral400 },
+                  textPresets.fs14_400,
+                ]}
+              >
                 Youtube
               </Text>
               <View style={[styles.inputBox, { borderColor: colors.border10 }]}>
                 <TextInput
-                  style={[styles.inputText, { color: colors.neutral900 }, textPresets.fs14_400]}
+                  style={[
+                    styles.inputText,
+                    { color: colors.neutral900 },
+                    textPresets.fs14_400,
+                  ]}
                   value={youtubeUrl}
                   onChangeText={setYoutubeUrl}
                   placeholder="youtube.com/@yourchannel"
@@ -191,22 +264,35 @@ export function EditProfileScreen() {
       <View
         style={[
           styles.footer,
-          { backgroundColor: colors.neutral100, borderTopColor: colors.border10, paddingBottom: Math.max(bottom, 16) },
+          {
+            backgroundColor: colors.neutral100,
+            borderTopColor: colors.border10,
+            paddingBottom: Math.max(bottom, 16),
+          },
         ]}
       >
         <TouchableOpacity
-          onPress={() => { void save(); }}
+          onPress={() => {
+            void save();
+          }}
           disabled={!isDirty || isSubmitting}
           activeOpacity={0.8}
         >
           <LinearGradient
             type="gra_primary"
-            style={[styles.saveButton, (!isDirty || isSubmitting) && { opacity: 0.5 }]}
+            style={[
+              styles.saveButton,
+              (!isDirty || isSubmitting) && { opacity: 0.5 },
+            ]}
           >
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>Lưu</Text>
+              <Text
+                style={[{ color: colors.neutral900 }, textPresets.fs16_500]}
+              >
+                Lưu
+              </Text>
             )}
           </LinearGradient>
         </TouchableOpacity>
@@ -218,37 +304,6 @@ export function EditProfileScreen() {
 const styles = createStyles(({ colors }) => ({
   root: { flex: 1 },
   bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  header: {
-    minHeight: 119,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  backButtonText: {
-    color: colors.text,
-    fontSize: 32,
-    lineHeight: 32,
-    fontWeight: "300",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
-  headerRight: { width: 44, height: 44 },
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 16,

@@ -11,7 +11,13 @@ import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
 import { useRef } from "react";
-import { Image, ImageSourcePropType, Pressable, Text, View } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,

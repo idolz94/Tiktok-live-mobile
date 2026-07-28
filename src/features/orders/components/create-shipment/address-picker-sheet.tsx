@@ -1,8 +1,17 @@
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
-import { ShopAddress, CustomerAddress } from "../../service/create-shipment-api";
+import {
+  ShopAddress,
+  CustomerAddress,
+} from "../../service/create-shipment-api";
 import { addressLine } from "../../utils/shipment";
 
 export type AddressPickerSheetProps<T extends ShopAddress | CustomerAddress> = {
@@ -31,7 +40,9 @@ export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
   return (
     <View style={[pickerStyles.sheet, { backgroundColor: colors.surface }]}>
       <View style={pickerStyles.header}>
-        <Text style={[{ color: colors.neutral900 }, textPresets.fs18_500]}>{title}</Text>
+        <Text style={[{ color: colors.neutral900 }, textPresets.fs18_500]}>
+          {title}
+        </Text>
         <Pressable onPress={onClose} hitSlop={12}>
           <Icon name="close" size={20} tintColor="neutral400" />
         </Pressable>
@@ -47,7 +58,13 @@ export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
           keyExtractor={(item) => item.id}
           contentContainerStyle={pickerStyles.listContent}
           ListEmptyComponent={
-            <Text style={[pickerStyles.emptyText, { color: colors.textLightMuted }, textPresets.fs14_400]}>
+            <Text
+              style={[
+                pickerStyles.emptyText,
+                { color: colors.textLightMuted },
+                textPresets.fs14_400,
+              ]}
+            >
               Chưa có địa chỉ
             </Text>
           }
@@ -55,34 +72,72 @@ export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
             const selected = item.id === selectedId;
             return (
               <Pressable
-                onPress={() => { onSelect(item); }}
+                onPress={() => {
+                  onSelect(item);
+                }}
                 style={[
                   pickerStyles.row,
                   {
                     borderColor: selected ? colors.primary : colors.border10,
-                    backgroundColor: selected ? colors.primaryLight : colors.neutral50,
+                    backgroundColor: selected
+                      ? colors.primaryLight
+                      : colors.neutral50,
                   },
                 ]}
               >
                 <View style={pickerStyles.rowContent}>
                   <View style={pickerStyles.nameLine}>
-                    <Text style={[{ color: colors.neutral900 }, textPresets.fs14_500]}>
+                    <Text
+                      style={[
+                        { color: colors.neutral900 },
+                        textPresets.fs14_500,
+                      ]}
+                    >
                       {item.name ?? "—"}
                     </Text>
                     {item.isDefault && (
-                      <View style={[pickerStyles.badge, { backgroundColor: colors.primaryLight }]}>
-                        <Text style={[{ color: colors.primary }, textPresets.fs11_400]}>Mặc định</Text>
+                      <View
+                        style={[
+                          pickerStyles.badge,
+                          { backgroundColor: colors.primaryLight },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            { color: colors.primary },
+                            textPresets.fs11_400,
+                          ]}
+                        >
+                          Mặc định
+                        </Text>
                       </View>
                     )}
                   </View>
-                  <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]}>{item.phone ?? "—"}</Text>
-                  <Text style={[{ color: colors.neutral500 }, textPresets.fs12_400]} numberOfLines={2}>
+                  <Text
+                    style={[{ color: colors.neutral500 }, textPresets.fs12_400]}
+                  >
+                    {item.phone ?? "—"}
+                  </Text>
+                  <Text
+                    style={[{ color: colors.neutral500 }, textPresets.fs12_400]}
+                    numberOfLines={2}
+                  >
                     {addressLine(item)}
                   </Text>
                 </View>
                 <View style={pickerStyles.actions}>
-                  <Pressable onPress={(event) => { event.stopPropagation(); onEditPress(item); }} hitSlop={8}>
-                    <Text style={[{ color: colors.primary }, textPresets.fs12_500]}>Sửa</Text>
+                  <Pressable
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      onEditPress(item);
+                    }}
+                    hitSlop={8}
+                  >
+                    <Text
+                      style={[{ color: colors.primary }, textPresets.fs12_500]}
+                    >
+                      Sửa
+                    </Text>
                   </Pressable>
                 </View>
               </Pressable>
@@ -96,7 +151,9 @@ export function AddressPickerSheet<T extends ShopAddress | CustomerAddress>({
         style={[pickerStyles.addButton, { borderColor: colors.primary }]}
       >
         <Icon name="plus_circle" size={18} tintColor="primary" />
-        <Text style={[{ color: colors.primary }, textPresets.fs14_500]}>Thêm địa chỉ mới</Text>
+        <Text style={[{ color: colors.primary }, textPresets.fs14_500]}>
+          Thêm địa chỉ mới
+        </Text>
       </Pressable>
     </View>
   );
