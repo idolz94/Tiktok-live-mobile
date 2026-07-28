@@ -10,6 +10,7 @@ import { useToast } from "@components/toast";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
 export type DetailTab = "info" | "orders";
+export type OrderStatFilter = "all" | "confirmed" | "deposited" | "unpaid" | "draft";
 
 // ponytail: per-customerId cache map, cleared on explicit reload
 const customerAddressCache = new Map<string, CustomerAddress[]>();
@@ -107,16 +108,32 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
   const displayName = customer?.username || latestOrder?.customerName || latestOrder?.username || "Khách hàng";
   const avatar = customer?.avatar || latestOrder?.avatar || latestOrder?.avatarUrl || "";
   const tiktokUsername = customer?.customerTikTokUsername || (latestOrder ? getOrderTikTokUsername(latestOrder) : "");
-  const groupedOrders = useMemo(() => groupOrdersByDate(customerOrders), [customerOrders]);
-  const productCount = useMemo(
-    () => customerOrders.reduce((sum, order) => sum + getProductQuantity(getOrderProducts(order)), 0),
-    [customerOrders],
-  );
-
   const confirmedCount = customerOrders.filter((o) => o.status === "confirmed").length;
   const depositedCount = customerOrders.filter((o) => o.depositStatus === "paid" || o.depositStatus === "deposited").length;
   const unpaidCount = customerOrders.filter((o) => o.depositStatus !== "paid" && o.depositStatus !== "deposited").length;
   const draftCount = customerOrders.filter((o) => o.status === "draft").length;
+
+  const [statFilter, setStatFilter] = useState<OrderStatFilter>("all");
+  const filteredOrders = useMemo(
+    () =>
+      customerOrders.filter((o) => {
+        const deposited = o.depositStatus === "paid" || o.depositStatus === "deposited";
+        return (
+          statFilter === "all" ||
+          (statFilter === "confirmed" && o.status === "confirmed") ||
+          (statFilter === "deposited" && deposited) ||
+          (statFilter === "unpaid" && !deposited) ||
+          (statFilter === "draft" && o.status === "draft")
+        );
+      }),
+    [customerOrders, statFilter],
+  );
+
+  const groupedOrders = useMemo(() => groupOrdersByDate(filteredOrders), [filteredOrders]);
+  const productCount = useMemo(
+    () => filteredOrders.reduce((sum, order) => sum + getProductQuantity(getOrderProducts(order)), 0),
+    [filteredOrders],
+  );
 
   useEffect(() => {
     if (!customerKey || !latestOrder) return;
@@ -247,6 +264,7 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
     displayName, avatar, tiktokUsername,
     customer, customerOrders, groupedOrders,
     productCount, confirmedCount, depositedCount, unpaidCount, draftCount,
+    statFilter, setStatFilter,
     loading, notFound,
     handleSave,
     handleCancelShipment,

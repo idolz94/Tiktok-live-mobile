@@ -14,6 +14,8 @@ type HeaderProps = {
   onBackPress?: () => void;
   rightIcon?: IconName;
   onRightPress?: () => void;
+  /** Bỏ nền để lộ gradient phía dưới (dùng cho màn có LinearGradient nền). */
+  transparent?: boolean;
 };
 
 const ICON_SIZE = 20;
@@ -26,6 +28,7 @@ export const Header = memo(
     onBackPress,
     rightIcon,
     onRightPress,
+    transparent = false,
   }: HeaderProps) => {
     const insets = useSafeAreaInsets();
     const { colors } = useThemes();
@@ -41,16 +44,22 @@ export const Header = memo(
     };
 
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View
+        style={[
+          styles.container,
+          transparent && styles.containerTransparent,
+          { paddingTop: insets.top },
+        ]}
+      >
         <View style={styles.row}>
           <View style={styles.side}>
             {showBack && (
               <Pressable
                 hitSlop={8}
                 onPress={handleBack}
-                style={({ pressed }) => [
+                style={[
                   styles.iconButton,
-                  // pressed && styles.iconButtonPressed,
+                  transparent && styles.iconButtonTransparent,
                 ]}
               >
                 <Ionicons
@@ -75,9 +84,9 @@ export const Header = memo(
               <Pressable
                 hitSlop={8}
                 onPress={onRightPress}
-                style={({ pressed }) => [
+                style={[
                   styles.iconButton,
-                  // pressed && styles.iconButtonPressed,
+                  transparent && styles.iconButtonTransparent,
                 ]}
               >
                 <Ionicons
@@ -99,8 +108,9 @@ Header.displayName = "Header";
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     backgroundColor: colors.neutral100,
-    // borderBottomWidth: StyleSheet.hairlineWidth,
-    // borderBottomColor: colors.neutral300,
+  },
+  containerTransparent: {
+    backgroundColor: "transparent",
   },
   row: {
     height: 44,
@@ -125,9 +135,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
   },
   title: {
-    ...textPresets.fs16_600,
+    ...textPresets.fs18_700,
     color: colors.neutral900,
-    maxWidth: "60%",
   },
   iconButton: {
     width: BUTTON_SIZE,
@@ -137,7 +146,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
     backgroundColor: colors.neutral50,
   },
-  // iconButtonPressed: {
-  //   backgroundColor: colors.neutral300,
-  // },
+  iconButtonTransparent: {
+    backgroundColor: "transparent",
+  },
 }));

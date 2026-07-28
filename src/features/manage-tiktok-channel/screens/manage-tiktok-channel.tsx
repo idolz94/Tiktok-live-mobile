@@ -3,13 +3,13 @@
  * theo cấu trúc feature dọc (PROJECT_GUIDE mục 4.1).
  */
 import { ShopTikTokChannel } from "@app-types/database";
-import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Avatar } from "@components/avatar";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { router } from "expo-router";
 import { memo, useCallback } from "react";
 import {
   ActivityIndicator,
@@ -19,10 +19,9 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EditChannel } from "../components/edit-channel";
-import { ChannelCardProps } from "../type";
 import { useManageTiktokChannel } from "../hooks/use-manage-tiktok-channel";
+import { ChannelCardProps } from "../type";
 
 const ChannelCard = memo(
   ({ channel, onEdit }: ChannelCardProps) => {
@@ -34,7 +33,11 @@ const ChannelCard = memo(
     return (
       <Pressable style={styles.card} onPress={handlePress}>
         <View style={styles.leftItem}>
-          <Avatar uri={channel.avatarUrl ?? undefined} size={40} headers={{ Referer: "https://www.tiktok.com/" }} />
+          <Avatar
+            uri={channel.avatarUrl ?? undefined}
+            size={40}
+            headers={{ Referer: "https://www.tiktok.com/" }}
+          />
           <View style={styles.textGroup}>
             <View style={styles.rowInline}>
               <Text style={styles.username}>{channel.tiktokUsername}</Text>
@@ -60,7 +63,6 @@ const ChannelCard = memo(
 );
 
 export function ManageTiktokChannel() {
-  const { top } = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
   const { colors } = useThemes();
   const {
@@ -103,12 +105,7 @@ export function ManageTiktokChannel() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Quản lý kênh TikTok</Text>
-      </View>
+      <Header title="Quản lý kênh TikTok" transparent />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -166,27 +163,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    columnGap: 12,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
   },
   container: {
     paddingHorizontal: 16,

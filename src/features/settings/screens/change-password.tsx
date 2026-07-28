@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { AnimatedErrorText } from "@components/animated-error-text";
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { useChangePassword } from "@features/settings/hooks/use-change-password";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { router } from "expo-router";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import {
@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export function ChangePasswordScreen() {
   const { colors, textPresets } = useThemes();
   const { control, isDirty, isSubmitting, submit } = useChangePassword();
-  const { top, bottom } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
 
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -36,16 +36,7 @@ export function ChangePasswordScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable
-          onPress={() => router.canGoBack() && router.back()}
-          style={styles.backButton}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Thay đổi mật khẩu</Text>
-      </View>
+      <Header title="Thay đổi mật khẩu" transparent />
 
       <ScrollView
         style={{ flex: 1 }}
@@ -191,27 +182,6 @@ const styles = createStyles(({ colors, shadows }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 12,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
   },
   scrollContent: {
     padding: 16,

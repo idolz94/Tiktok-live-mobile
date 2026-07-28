@@ -40,12 +40,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useCustomerDetail, type DetailTab } from "./use-customer-detail";
+import {
+  useCustomerDetail,
+  type DetailTab,
+  type OrderStatFilter,
+} from "./use-customer-detail";
 
 type StatCardProps = {
   label: string;
   value: number;
   tone: "success" | "info" | "danger" | "muted";
+  filterKey: OrderStatFilter;
+  active: boolean;
+  onPress: (key: OrderStatFilter) => void;
 };
 
 type FieldProps = {
@@ -218,7 +225,14 @@ function Field({
   );
 }
 
-function StatCard({ label, value, tone }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  tone,
+  filterKey,
+  active,
+  onPress,
+}: StatCardProps) {
   const toneStyle = {
     success: styles.statCard_success,
     info: styles.statCard_info,
@@ -227,10 +241,13 @@ function StatCard({ label, value, tone }: StatCardProps) {
   }[tone];
 
   return (
-    <View style={[styles.statCard, toneStyle]}>
+    <Pressable
+      style={[styles.statCard, toneStyle, active && styles.statCard_active]}
+      onPress={() => onPress(filterKey)}
+    >
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -632,6 +649,8 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: "transparent",
   },
   statCard_success: {
     backgroundColor: colors.successLight,
@@ -644,6 +663,10 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   statCard_muted: {
     backgroundColor: colors.neutral50,
+  },
+  statCard_active: {
+    borderWidth: 1.5,
+    borderColor: colors.primary,
   },
   statValue: {
     color: colors.neutral900,
@@ -1075,12 +1098,17 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
     depositedCount,
     unpaidCount,
     draftCount,
+    statFilter,
+    setStatFilter,
     loading,
     notFound,
     handleSave,
     handleCancelShipment,
     cancellingId,
   } = useCustomerDetail(customerKey, initialTab);
+
+  const onPressStatCard = (key: OrderStatFilter) =>
+    setStatFilter((current) => (current === key ? "all" : key));
 
   const openAddressForm = (addr?: CustomerAddress) => {
     const cid = customer?.customerId;
@@ -1469,14 +1497,34 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                     label="Đã chốt"
                     value={confirmedCount}
                     tone="success"
+                    filterKey="confirmed"
+                    active={statFilter === "confirmed"}
+                    onPress={onPressStatCard}
                   />
-                  <StatCard label="Đã cọc" value={depositedCount} tone="info" />
+                  <StatCard
+                    label="Đã cọc"
+                    value={depositedCount}
+                    tone="info"
+                    filterKey="deposited"
+                    active={statFilter === "deposited"}
+                    onPress={onPressStatCard}
+                  />
                   <StatCard
                     label="Chưa cọc"
                     value={unpaidCount}
                     tone="danger"
+                    filterKey="unpaid"
+                    active={statFilter === "unpaid"}
+                    onPress={onPressStatCard}
                   />
-                  <StatCard label="Đơn nháp" value={draftCount} tone="muted" />
+                  <StatCard
+                    label="Đơn nháp"
+                    value={draftCount}
+                    tone="muted"
+                    filterKey="draft"
+                    active={statFilter === "draft"}
+                    onPress={onPressStatCard}
+                  />
                 </View>
                 <View style={styles.orderToolbar}>
                   <Text style={styles.productCount}>

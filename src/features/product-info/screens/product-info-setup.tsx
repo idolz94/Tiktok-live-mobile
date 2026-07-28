@@ -1,13 +1,11 @@
-import { router } from "expo-router";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { Button } from "@components/button";
-import { Icon } from "@components/icon";
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { useToast } from "@components/toast";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -22,7 +20,6 @@ import {
 import { useCallback, useState } from "react";
 import { createStyles } from "@utils/createStyles";
 import { ProductPreset } from "@features/settings/service/product-presets-api";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type FormErrors = { code?: string; price?: string };
 
@@ -214,7 +211,6 @@ function ProductForm({
 // Di chuyển từ src/app/product-info-setup.tsx sang feature theo cấu trúc route-mỏng/feature-dày
 // (PROJECT_GUIDE mục 4 & 8): route giờ chỉ là wrapper mỏng render screen này qua named export.
 export function ProductInfoSetupScreen() {
-  const { top } = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
   const {
     presets,
@@ -270,23 +266,12 @@ export function ProductInfoSetupScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.backButton}
-          hitSlop={8}
-        >
-          <Text style={styles.backButtonText}>‹</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Thông tin sản phẩm</Text>
-        <Pressable
-          style={styles.headerButton}
-          onPress={() => showForm("add")}
-          hitSlop={8}
-        >
-          <Icon name="plus_circle" size={20} tintColor="#000000" />
-        </Pressable>
-      </View>
+      <Header
+        title="Thông tin sản phẩm"
+        rightIcon="add-circle-outline"
+        onRightPress={() => showForm("add")}
+        transparent
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -355,44 +340,6 @@ export function ProductInfoSetupScreen() {
 const styles = createStyles(({ colors, textPresets }) => ({
   root: { flex: 1 },
   bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  header: {
-    minHeight: 119,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    backgroundColor: colors.white,
-  },
-  backButtonText: {
-    color: colors.text,
-    fontSize: 32,
-    lineHeight: 32,
-    fontWeight: "300" as const,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "600" as const,
-    lineHeight: 28,
-    flex: 1,
-    textAlign: "center" as const,
-  },
-  headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    backgroundColor: colors.white,
-  },
   // --- ProductForm ---
   sheet: {
     padding: 16,
