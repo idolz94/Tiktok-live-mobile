@@ -14,7 +14,7 @@ import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Header } from "@components/header";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import {
   SectionBlock,
@@ -24,7 +24,6 @@ import {
   ShippingOptions,
   SpxOptions,
   SummaryRow,
-  FeeDetailSheet,
 } from "@features/orders/components/create-shipment";
 import { PackageDimModal } from "@features/orders/components/create-shipment/package-dim-modal";
 import { ParcelInfoSheet } from "@features/orders/components/create-shipment/parcel-info-sheet";
@@ -47,16 +46,14 @@ const dimIcons = {
 
 export default function CreateShipmentScreen() {
   const { colors, textPresets } = useThemes();
-  const { top, bottom } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
   const { user } = useAuth();
   const {
     order,
     isManualProvider,
     isSpxProvider,
-    primaryProduct: _primaryProduct,
     displayQuantity,
-    orderTotal: _orderTotal,
     shopAddresses,
     customerAddresses,
     selectedSender,
@@ -90,12 +87,10 @@ export default function CreateShipmentScreen() {
     shippingFee,
     codAmountDisplay,
     totalCollected,
-    voucherAmount,
     manualShippingFee,
     setManualShippingFee,
     manualNote,
     setManualNote,
-    manualCodAmount: _manualCodAmount,
     setManualCodAmount,
     note,
     setNote,
@@ -131,8 +126,6 @@ export default function CreateShipmentScreen() {
     setAllowTryOn,
     allowPartialDelivery,
     setAllowPartialDelivery,
-    itemPicture,
-    setItemPicture,
     feeLoading,
     feeError,
     estimatedDelivery,
@@ -281,8 +274,6 @@ export default function CreateShipmentScreen() {
           setAllowPartialDelivery={setAllowPartialDelivery}
           allowMutualCheck={allowMutualCheck}
           setAllowMutualCheck={setAllowMutualCheck}
-          itemPicture={itemPicture}
-          setItemPicture={setItemPicture}
           onClose={close}
         />
       ),
@@ -303,6 +294,7 @@ export default function CreateShipmentScreen() {
           selectedCode={selectedVoucherCode}
           onSelect={(code) => {
             setSelectedVoucherCode(code);
+            close();
           }}
           onClose={close}
         />
@@ -315,6 +307,15 @@ export default function CreateShipmentScreen() {
       "https://spx.vn/service-point?service_type=support_sending_non_shopee_parcel&hide_header=true",
     );
   };
+
+  const submitDisabled =
+    isSubmitting ||
+    !selectedSender ||
+    !selectedRecipient ||
+    (isSpxProvider &&
+      (!parcelItemName.trim() ||
+        weightInput.trim() === "" ||
+        (collectType === 1 && !pickupTimeRangeId)));
 
   if (!order) {
     return (
@@ -330,46 +331,15 @@ export default function CreateShipmentScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient
-        type="gra_background"
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          style={styles.headerButton}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.neutral900 }]}>
-          Tạo đơn hàng
-        </Text>
-        <View style={styles.headerActions}>
-          <Pressable
-            hitSlop={12}
-            style={styles.headerButton}
-          >
-            <Icon name="settings" size={22} tintColor="neutral900" />
-          </Pressable>
-        </View>
-      </View>
+      <LinearGradient type="gra_background" style={StyleSheet.absoluteFill} />
+      <Header title="Tạo đơn hàng" rightIcon="settings-outline" transparent />
 
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View
-          style={{
-            backgroundColor: colors.neutral100,
-            borderRadius: 16,
-            borderWidth: 0.5,
-            borderColor: colors.border10,
-            padding: 16,
-            gap: 12,
-          }}
-        >
+        <View style={styles.card}>
           <FigmaAddressCard
             type="sender"
             address={selectedSender}
@@ -377,13 +347,7 @@ export default function CreateShipmentScreen() {
             onChangePress={openSenderSheet}
             onAddPress={() => openAddressForm("sender")}
           />
-          <View
-            style={{
-              height: 0.5,
-              backgroundColor: colors.border10,
-              marginLeft: 56,
-            }}
-          />
+          <View style={styles.addressDivider} />
           <FigmaAddressCard
             type="recipient"
             address={selectedRecipient}
@@ -455,16 +419,13 @@ export default function CreateShipmentScreen() {
           </SectionBlock>
         ) : null}
         <SectionBlock title="Thông tin vận chuyển" noPaddingHorizontal>
-          <View
-            style={{
-              backgroundColor: colors.neutral100,
-              borderRadius: 16,
-              borderWidth: 0.5,
-              borderColor: colors.border10,
-              padding: 16,
-              gap: 12,
-            }}
-          >
+          <View style={styles.card}>
+            <MoneyField
+              label="Tiền thu hộ (COD)"
+              value={codAmountDisplay}
+              onChangeText={setManualCodAmount}
+              editable={isManualProvider}
+            />
             {!isSpxProvider && (
               <>
                 <Text
@@ -575,20 +536,15 @@ export default function CreateShipmentScreen() {
                     ]}
                   >
                     <Text
-                      style={[{ color: colors.neutral900 }, textPresets.fs14_500]}
+                      style={[
+                        { color: colors.neutral900 },
+                        textPresets.fs14_500,
+                      ]}
                     >
                       Thông tin bưu gửi{" "}
                       <Text style={{ color: colors.error }}>*</Text>
                     </Text>
-                    <View
-                      style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
-                        columnGap: 4,
-                      }}
-                    >
+                    <View style={styles.parcelRowRight}>
                       <Text
                         style={[
                           { color: colors.neutral500 },
@@ -635,7 +591,7 @@ export default function CreateShipmentScreen() {
             )}
           </View>
         </SectionBlock>
-        <View style={{ height: 24 }} />
+        <View style={styles.spacer} />
       </ScrollView>
 
       {submitState === "outcome_unknown" && (
@@ -668,49 +624,36 @@ export default function CreateShipmentScreen() {
         ]}
       >
         <View style={styles.footerSummary}>
-          <View style={[styles.summaryRow, styles.summaryRowTotal]}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
-                Shipper thu
+          <SummaryRow
+            label="Tiền hàng"
+            value={`${declaredValue.toLocaleString("vi-VN")}đ`}
+          />
+          <View style={styles.summaryRow}>
+            <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>
+              Phí vận chuyển
+            </Text>
+            {feeLoading ? (
+              <Text
+                style={[textPresets.fs14_500, { color: colors.neutral400 }]}
+              >
+                Đang tính...
               </Text>
-              {isSpxProvider && (
-                <Pressable
-                  onPress={() => {
-                    show({
-                      content: (
-                        <FeeDetailSheet
-                          codAmount={Number(codAmountDisplay.replace(/\D/g, "")) || 0}
-                          shippingFee={shippingFee}
-                          voucherAmount={voucherAmount}
-                          totalCollected={totalCollected}
-                          isSubmitting={isSubmitting}
-                          isSubmitDisabled={
-                            !selectedSender ||
-                            !selectedRecipient ||
-                            (isSpxProvider &&
-                              (!parcelItemName.trim() ||
-                                weightInput.trim() === "" ||
-                                (collectType === 1 && !pickupTimeRangeId)))
-                          }
-                          onSubmit={() => {
-                            hide();
-                            handleSubmitShipment();
-                          }}
-                          onClose={hide}
-                        />
-                      ),
-                    });
-                  }}
-                  hitSlop={8}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
-                >
-                  <Text style={[textPresets.fs12_400, { color: colors.primary }]}>
-                    Chi tiết
-                  </Text>
-                  <Ionicons name="chevron-up" size={13} color={colors.primary} />
-                </Pressable>
-              )}
-            </View>
+            ) : feeError ? (
+              <Text style={[textPresets.fs12_400, { color: colors.error }]}>
+                {feeError}
+              </Text>
+            ) : (
+              <Text
+                style={[textPresets.fs14_500, { color: colors.neutral900 }]}
+              >
+                {shippingFee.toLocaleString("vi-VN")}đ
+              </Text>
+            )}
+          </View>
+          <View style={[styles.summaryRow, styles.summaryRowTotal]}>
+            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
+              Shipper thu
+            </Text>
             <Text style={[textPresets.fs14_500, { color: colors.primary }]}>
               {totalCollected.toLocaleString("vi-VN")}đ
             </Text>
@@ -718,38 +661,23 @@ export default function CreateShipmentScreen() {
         </View>
         <Pressable
           onPress={handleSubmitShipment}
-          disabled={
-            isSubmitting ||
-            !selectedSender ||
-            !selectedRecipient ||
-            (isSpxProvider &&
-              (!parcelItemName.trim() ||
-                weightInput.trim() === "" ||
-                (collectType === 1 && !pickupTimeRangeId)))
-          }
+          disabled={submitDisabled}
           style={[
             styles.submitButton,
             {
-              backgroundColor:
-                isSubmitting ||
-                !selectedSender ||
-                !selectedRecipient ||
-                (isSpxProvider &&
-                  (!parcelItemName.trim() ||
-                    weightInput.trim() === "" ||
-                    (collectType === 1 && !pickupTimeRangeId)))
-                  ? colors.neutral300
-                  : colors.primary,
+              backgroundColor: submitDisabled
+                ? colors.neutral300
+                : colors.primary,
             },
           ]}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={styles.submitButtonContent}>
             {isSubmitting ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Icon name="truck" size={18} tintColor="white" />
             )}
-            <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>
+            <Text style={[{ color: colors.white }, textPresets.fs16_500]}>
               Tạo vận đơn
             </Text>
           </View>
@@ -766,30 +694,18 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     justifyContent: "center",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+  card: {
+    backgroundColor: colors.neutral100,
+    borderRadius: 16,
+    borderWidth: 0.5,
+    borderColor: colors.border10,
+    padding: 16,
+    gap: 12,
   },
-  headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    backgroundColor: colors.white,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 24,
-    fontWeight: "600",
-  },
-  headerActions: {
-    width: 44,
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  addressDivider: {
+    height: 0.5,
+    backgroundColor: colors.border10,
+    marginLeft: 56,
   },
   scroll: { flex: 1 },
   scrollContent: {
@@ -797,6 +713,7 @@ const styles = createStyles(({ colors }) => ({
     paddingBottom: 24,
     gap: 12,
   },
+  spacer: { height: 24 },
   footer: {
     paddingHorizontal: 16,
     paddingTop: 12,
@@ -817,6 +734,11 @@ const styles = createStyles(({ colors }) => ({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+  },
+  submitButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   footerSummary: {
     gap: 8,
@@ -853,6 +775,13 @@ const styles = createStyles(({ colors }) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  parcelRowRight: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    columnGap: 4,
   },
   radioGroup: { gap: 12 },
   radioCard: {

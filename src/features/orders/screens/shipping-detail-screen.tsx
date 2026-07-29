@@ -1,4 +1,5 @@
 import type { ShippingStatus } from "@app-types/index";
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { icons } from "@assets/icons";
@@ -57,9 +58,12 @@ function statusToStep(status: ShippingStatus): number {
 }
 
 export default function ShippingDetailScreen() {
-  const { order: orderParam } = useLocalSearchParams<{ id: string; order: string }>();
+  const { order: orderParam } = useLocalSearchParams<{
+    id: string;
+    order: string;
+  }>();
   const { colors, textPresets } = useThemes();
-  const { top, bottom } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
   const toast = useToast();
   const [printing, setPrinting] = useState(false);
   const [navigated, setNavigated] = useState(false);
@@ -69,7 +73,13 @@ export default function ShippingDetailScreen() {
   const [depositLoading, setDepositLoading] = useState(false);
 
   const order = orderParam
-    ? (() => { try { return JSON.parse(orderParam) as ShippingOrder; } catch { return null; } })()
+    ? (() => {
+        try {
+          return JSON.parse(orderParam) as ShippingOrder;
+        } catch {
+          return null;
+        }
+      })()
     : null;
 
   const handlePrintLabel = useCallback(async () => {
@@ -78,9 +88,16 @@ export default function ShippingDetailScreen() {
     try {
       const res = await getShipmentLabelApi(order.id);
       if (res.labelUrl) await Linking.openURL(res.labelUrl);
-      else toast.info({ title: "Chưa có nhãn in", description: "Vận đơn chưa có nhãn để in." });
+      else
+        toast.info({
+          title: "Chưa có nhãn in",
+          description: "Vận đơn chưa có nhãn để in.",
+        });
     } catch {
-      toast.error({ title: "Lỗi", description: "Không thể lấy nhãn in. Vui lòng thử lại." });
+      toast.error({
+        title: "Lỗi",
+        description: "Không thể lấy nhãn in. Vui lòng thử lại.",
+      });
     } finally {
       setPrinting(false);
     }
@@ -93,7 +110,10 @@ export default function ShippingDetailScreen() {
     setDepositLoading(true);
     setDepositStatus(nextStatus);
     try {
-      await updateOrderDepositStatusApi({ orderId: order.id, depositStatus: nextStatus });
+      await updateOrderDepositStatusApi({
+        orderId: order.id,
+        depositStatus: nextStatus,
+      });
     } catch {
       setDepositStatus(depositStatus);
     } finally {
@@ -109,17 +129,27 @@ export default function ShippingDetailScreen() {
 
   if (!order) {
     return (
-      <View style={[styles.root, { justifyContent: "center", alignItems: "center" }]}>
-        <Text style={{ color: colors.neutral500 }}>Không tìm thấy đơn hàng.</Text>
+      <View
+        style={[
+          styles.root,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text style={{ color: colors.neutral500 }}>
+          Không tìm thấy đơn hàng.
+        </Text>
       </View>
     );
   }
 
   const isCancelled = order.shippingStatus === "cancelled";
-  const isManual = !/ghn|ghtk|vtp|viettel|spx|shopee/i.test(order.providerName ?? "");
+  const isManual = !/ghn|ghtk|vtp|viettel|spx|shopee/i.test(
+    order.providerName ?? "",
+  );
   const isWaitingManual = isManual && order.shippingStatus === "submitted";
   const currentStep = statusToStep(order.shippingStatus);
-  const displayCode = order.trackingCode ?? order.orderCode ?? order.id.slice(0, 8);
+  const displayCode =
+    order.trackingCode ?? order.orderCode ?? order.id.slice(0, 8);
   const senderDistrict = "Cửa hàng";
   const receiverDistrict =
     order.customerAddressData?.district ??
@@ -130,7 +160,11 @@ export default function ShippingDetailScreen() {
     <View style={styles.root}>
       {isCancelled ? (
         <ExpoLinearGradient
-          colors={["rgba(255,107,138,0.2)", "rgba(255,166,109,0.1)", "transparent"]}
+          colors={[
+            "rgba(255,107,138,0.2)",
+            "rgba(255,166,109,0.1)",
+            "transparent",
+          ]}
           style={styles.headerBackground}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
@@ -144,66 +178,87 @@ export default function ShippingDetailScreen() {
         />
       )}
 
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: top + 14 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text, ...textPresets.fs20_600 }]} numberOfLines={1}>
-          {STATUS_LABEL[order.shippingStatus]}
-        </Text>
-      </View>
+      <Header title={STATUS_LABEL[order.shippingStatus]} transparent />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + bottom }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 100 + bottom },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Status Stepper */}
         {!isCancelled && (
-        <View style={styles.sectionCard}>
-          <View style={styles.stepper}>
-            {STEPPER_STEPS.map((step, i) => {
-              const active = i <= currentStep;
-              const isLast = i === STEPPER_STEPS.length - 1;
-              return (
-                <View key={step.icon} style={styles.stepWrapper}>
-                  <View style={styles.stepItem}>
-                    <Image
-                      source={icons[step.icon]}
-                      style={[styles.stepIcon, { tintColor: active ? "#ee4d2d" : "#aaaaaa" }]}
-                    />
-                    <Text
-                      style={[
-                        styles.stepLabel,
-                        { color: active ? "#ee4d2d" : colors.neutral400, ...textPresets.fs11_400 },
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {step.label}
-                    </Text>
+          <View style={styles.sectionCard}>
+            <View style={styles.stepper}>
+              {STEPPER_STEPS.map((step, i) => {
+                const active = i <= currentStep;
+                const isLast = i === STEPPER_STEPS.length - 1;
+                return (
+                  <View key={step.icon} style={styles.stepWrapper}>
+                    <View style={styles.stepItem}>
+                      <Image
+                        source={icons[step.icon]}
+                        style={[
+                          styles.stepIcon,
+                          { tintColor: active ? "#ee4d2d" : "#aaaaaa" },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.stepLabel,
+                          {
+                            color: active ? "#ee4d2d" : colors.neutral400,
+                            ...textPresets.fs11_400,
+                          },
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {step.label}
+                      </Text>
+                    </View>
+                    {!isLast && (
+                      <View
+                        style={[
+                          styles.stepConnector,
+                          {
+                            backgroundColor:
+                              i < currentStep ? "#ee4d2d" : "#aaaaaa",
+                          },
+                        ]}
+                      />
+                    )}
                   </View>
-                  {!isLast && (
-                    <View style={[styles.stepConnector, { backgroundColor: i < currentStep ? "#ee4d2d" : "#aaaaaa" }]} />
-                  )}
-                </View>
-              );
-            })}
+                );
+              })}
+            </View>
           </View>
-        </View>
         )}
 
         {/* Order Summary */}
         <View style={styles.sectionCard}>
           <View style={styles.orderSummaryRow}>
             <View style={styles.orderCodeGroup}>
-              <Text style={[{ color: colors.neutral500, ...textPresets.fs14_400 }]}>Mã đơn hàng: </Text>
-              <Text style={[{ color: colors.text, ...textPresets.fs14_500 }]}>{displayCode}</Text>
+              <Text
+                style={[{ color: colors.neutral500, ...textPresets.fs14_400 }]}
+              >
+                Mã đơn hàng:{" "}
+              </Text>
+              <Text style={[{ color: colors.text, ...textPresets.fs14_500 }]}>
+                {displayCode}
+              </Text>
               <Pressable
-                onPress={() => { void Linking.openURL(""); }}
+                onPress={() => {
+                  void Linking.openURL("");
+                }}
                 hitSlop={8}
                 style={styles.copyBtn}
               >
-                <Ionicons name="copy-outline" size={14} color={colors.neutral500} />
+                <Ionicons
+                  name="copy-outline"
+                  size={14}
+                  color={colors.neutral500}
+                />
               </Pressable>
             </View>
             <Pressable
@@ -211,11 +266,27 @@ export default function ShippingDetailScreen() {
               disabled={navigated}
               onPress={() => {
                 setNavigated(true);
-                router.push({ pathname: "/order-detail" as never, params: { id: order.id } });
+                router.push({
+                  pathname: "/order-detail" as never,
+                  params: { id: order.id },
+                });
               }}
             >
-              <Text style={[{ color: isCancelled ? "#ff6b8a" : colors.primary, ...textPresets.fs14_500 }]}>Chi tiết</Text>
-              <Ionicons name="chevron-forward" size={14} color={isCancelled ? "#ff6b8a" : colors.primary} />
+              <Text
+                style={[
+                  {
+                    color: isCancelled ? "#ff6b8a" : colors.primary,
+                    ...textPresets.fs14_500,
+                  },
+                ]}
+              >
+                Chi tiết
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={14}
+                color={isCancelled ? "#ff6b8a" : colors.primary}
+              />
             </Pressable>
           </View>
         </View>
@@ -223,11 +294,27 @@ export default function ShippingDetailScreen() {
         {/* Route Info */}
         <View style={styles.sectionCard}>
           <View style={styles.routeRow}>
-            <Text style={[styles.routeText, { color: colors.text, ...textPresets.fs14_500 }]} numberOfLines={1}>
+            <Text
+              style={[
+                styles.routeText,
+                { color: colors.text, ...textPresets.fs14_500 },
+              ]}
+              numberOfLines={1}
+            >
               {senderDistrict}
             </Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.neutral400} />
-            <Text style={[styles.routeText, { color: colors.text, ...textPresets.fs14_500 }]} numberOfLines={1}>
+            <Ionicons
+              name="arrow-forward"
+              size={16}
+              color={colors.neutral400}
+            />
+            <Text
+              style={[
+                styles.routeText,
+                { color: colors.text, ...textPresets.fs14_500 },
+              ]}
+              numberOfLines={1}
+            >
               {receiverDistrict}
             </Text>
           </View>
@@ -240,30 +327,50 @@ export default function ShippingDetailScreen() {
               <Ionicons name="person" size={20} color="#fff" />
             </View>
             <View style={styles.recipientInfo}>
-              <Text style={[{ color: colors.neutral500, ...textPresets.fs12_400 }]}>Người Nhận</Text>
+              <Text
+                style={[{ color: colors.neutral500, ...textPresets.fs14_500 }]}
+              >
+                Người Nhận
+              </Text>
               <Text style={[{ color: colors.text, ...textPresets.fs14_500 }]}>
                 {order.customerName || "Khách hàng"}
+                {order.customerPhone ? (
+                  <Text
+                    style={{
+                      color: "#ff5c00",
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    {" "}
+                    {order.customerPhone}
+                  </Text>
+                ) : null}
               </Text>
-              {order.customerPhone ? (
-                <Text style={{ color: "#ff5c00", textDecorationLine: "underline", ...textPresets.fs12_400 }}>
-                  {order.customerPhone}
-                </Text>
-              ) : null}
             </View>
             {order.customerPhone ? (
-              <Pressable style={[styles.callBtn, { backgroundColor: colors.neutral50 }]} onPress={handleCall}>
+              <Pressable
+                style={[styles.callBtn, { backgroundColor: colors.neutral50 }]}
+                onPress={handleCall}
+              >
                 <Ionicons name="call-outline" size={20} color={colors.text} />
               </Pressable>
             ) : null}
           </View>
           {order.customerAddressData?.address ? (
-            <Text style={[styles.addressText, { color: colors.neutral500, ...textPresets.fs12_400 }]}>
+            <Text
+              style={[
+                styles.addressText,
+                { color: colors.neutral500, ...textPresets.fs12_400 },
+              ]}
+            >
               {[
                 order.customerAddressData.address,
                 order.customerAddressData.ward,
                 order.customerAddressData.district,
                 order.customerAddressData.province,
-              ].filter(Boolean).join(", ")}
+              ]
+                .filter(Boolean)
+                .join(", ")}
             </Text>
           ) : null}
         </View>
@@ -271,28 +378,49 @@ export default function ShippingDetailScreen() {
         {/* Journey */}
         <View style={styles.sectionCard}>
           <View style={styles.journeyHeader}>
-            <Text style={[{ color: colors.text, ...textPresets.fs16_600 }]}>Hành Trình Đơn Hàng</Text>
+            <Text style={[{ color: colors.text, ...textPresets.fs16_600 }]}>
+              Hành Trình Đơn Hàng
+            </Text>
             <Pressable style={styles.copyInfoBtn}>
               <Ionicons name="link-outline" size={14} color={colors.primary} />
-              <Text style={[{ color: colors.primary, ...textPresets.fs12_400 }]}>Sao chép thông tin</Text>
+              <Text
+                style={[{ color: colors.primary, ...textPresets.fs12_400 }]}
+              >
+                Sao chép thông tin
+              </Text>
             </Pressable>
           </View>
           <View style={styles.journeyItem}>
             <View style={styles.journeyDotCol}>
-              <View style={[styles.journeySquareDot, { borderColor: "#dadada", backgroundColor: "#f7f8fa" }]}>
+              <View
+                style={[
+                  styles.journeySquareDot,
+                  { borderColor: "#dadada", backgroundColor: "#f7f8fa" },
+                ]}
+              >
                 <View style={styles.journeyDotInner} />
               </View>
-              <View style={[styles.journeyVertLine, { backgroundColor: "#dadada" }]} />
+              <View
+                style={[styles.journeyVertLine, { backgroundColor: "#dadada" }]}
+              />
             </View>
             <View style={styles.journeyContent}>
               <View style={styles.journeyContentRow}>
-                <Ionicons name="document-text-outline" size={14} color={colors.neutral500} />
+                <Ionicons
+                  name="document-text-outline"
+                  size={14}
+                  color={colors.neutral500}
+                />
                 <Text style={[{ color: colors.text, ...textPresets.fs14_400 }]}>
                   {STATUS_LABEL[order.shippingStatus]}
                 </Text>
               </View>
               {order.trackingCode ? (
-                <Text style={[{ color: colors.neutral400, ...textPresets.fs12_400 }]}>
+                <Text
+                  style={[
+                    { color: colors.neutral400, ...textPresets.fs12_400 },
+                  ]}
+                >
                   {isManual ? "Mã đơn hàng" : "Mã SPX"}: {order.trackingCode}
                 </Text>
               ) : null}
@@ -314,13 +442,28 @@ export default function ShippingDetailScreen() {
       >
         <View style={styles.actionGrid}>
           {isCancelled ? (
-            <Pressable style={[styles.actionButton, { flex: 1, backgroundColor: colors.neutral50 }]}>
-              <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>{"Chăm sóc\nkhách hàng"}</Text>
+            <Pressable
+              style={[
+                styles.actionButton,
+                { flex: 1, backgroundColor: colors.neutral50 },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  { color: colors.text, ...textPresets.fs12_400 },
+                ]}
+              >
+                {"Chăm sóc\nkhách hàng"}
+              </Text>
             </Pressable>
           ) : (
             <>
               <Pressable
-                style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: colors.neutral50 },
+                ]}
                 onPress={() => {
                   if (isWaitingManual) {
                     router.push({
@@ -333,34 +476,71 @@ export default function ShippingDetailScreen() {
                 }}
                 disabled={printing}
               >
-                {printing
-                  ? <ActivityIndicator size="small" color={colors.text} />
-                  : <>
-                      <Ionicons name="print-outline" size={16} color={colors.text} />
-                      <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>
-                        {isWaitingManual ? "In Đơn Hàng" : "In Đơn SPX"}
-                      </Text>
-                    </>
-                }
+                {printing ? (
+                  <ActivityIndicator size="small" color={colors.text} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="print-outline"
+                      size={18}
+                      color={colors.text}
+                    />
+                    <Text
+                      style={[
+                        styles.actionButtonText,
+                        { color: colors.text, ...textPresets.fs12_400 },
+                      ]}
+                    >
+                      {isWaitingManual ? "In Đơn Hàng" : "In Đơn Hàng SPX"}
+                    </Text>
+                  </>
+                )}
               </Pressable>
               {isWaitingManual ? (
                 <Pressable
-                  style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
-                  onPress={() => router.push({ pathname: "/order-detail" as never, params: { id: order.id } })}
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: colors.neutral50 },
+                  ]}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/order-detail" as never,
+                      params: { id: order.id },
+                    })
+                  }
                 >
-                  <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>Sửa Đơn Hàng</Text>
+                  <Text
+                    style={[
+                      styles.actionButtonText,
+                      { color: colors.text, ...textPresets.fs12_400 },
+                    ]}
+                  >
+                    Sửa Đơn Hàng
+                  </Text>
                 </Pressable>
               ) : (
                 <Pressable
-                  style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
-                  onPress={() => { void handleToggleDeposit(); }}
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: colors.neutral50 },
+                  ]}
+                  onPress={() => {
+                    void handleToggleDeposit();
+                  }}
                   disabled={depositLoading}
                 >
                   {depositLoading ? (
                     <ActivityIndicator size="small" color={colors.text} />
                   ) : (
-                    <Text style={[styles.actionButtonText, { color: colors.text, ...textPresets.fs12_400 }]}>
-                      {depositStatus === "paid" || depositStatus === "deposited" ? "Đã Cọc" : "Chưa Cọc"}
+                    <Text
+                      style={[
+                        styles.actionButtonText,
+                        { color: colors.text, ...textPresets.fs12_400 },
+                      ]}
+                    >
+                      {depositStatus === "paid" || depositStatus === "deposited"
+                        ? "Đã Cọc"
+                        : "Chưa Cọc"}
                     </Text>
                   )}
                 </Pressable>
@@ -375,23 +555,13 @@ export default function ShippingDetailScreen() {
 
 const styles = createStyles(({ colors }) => ({
   root: { flex: 1, backgroundColor: colors.neutral100 },
-  headerBackground: { position: "absolute", top: 0, left: 0, right: 0, height: 290 },
-  header: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
+  headerBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 290,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  headerTitle: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
   sectionCard: {
     backgroundColor: colors.white,
@@ -412,12 +582,32 @@ const styles = createStyles(({ colors }) => ({
   stepLabel: { textAlign: "center", lineHeight: 16 },
   stepConnector: { width: 20, height: 2, marginTop: 17, flexShrink: 0 },
   // Order summary
-  orderSummaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  orderCodeGroup: { flexDirection: "row", alignItems: "center", flexShrink: 1, flexWrap: "nowrap", gap: 4 },
+  orderSummaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  orderCodeGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 1,
+    flexWrap: "nowrap",
+    gap: 4,
+  },
   copyBtn: { paddingHorizontal: 2 },
-  detailLink: { flexDirection: "row", alignItems: "center", gap: 2, flexShrink: 0 },
+  detailLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    flexShrink: 0,
+  },
   // Route
-  routeRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 },
+  routeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
   routeText: { flex: 1, textAlign: "center" },
   // Recipient
   recipientRow: { flexDirection: "row", alignItems: "center", gap: 12 },
@@ -430,10 +620,20 @@ const styles = createStyles(({ colors }) => ({
     justifyContent: "center",
   },
   recipientInfo: { flex: 1, gap: 2 },
-  callBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  callBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   addressText: { lineHeight: 18 },
   // Journey
-  journeyHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  journeyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   copyInfoBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   journeyItem: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   journeyDotCol: { alignItems: "center", width: 16 },
@@ -445,7 +645,12 @@ const styles = createStyles(({ colors }) => ({
     alignItems: "center",
     justifyContent: "center",
   },
-  journeyDotInner: { width: 8, height: 8, borderRadius: 2, backgroundColor: "#787878" },
+  journeyDotInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 2,
+    backgroundColor: "#787878",
+  },
   journeyVertLine: { flex: 1, width: 1, minHeight: 16, marginTop: 2 },
   journeyContent: { flex: 1, gap: 4, paddingBottom: 8 },
   journeyContentRow: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -462,14 +667,13 @@ const styles = createStyles(({ colors }) => ({
   actionGrid: { flexDirection: "row", gap: 8 },
   actionButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 40,
-    gap: 6,
+    minHeight: 44,
+    gap: 4,
   },
   actionButtonText: { textAlign: "center", lineHeight: 18 },
 }));

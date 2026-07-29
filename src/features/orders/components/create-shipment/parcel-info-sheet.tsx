@@ -40,7 +40,7 @@ type ParcelInfoSheetProps = {
   allowMutualCheck: 0 | 1;
   setAllowMutualCheck: (v: 0 | 1) => void;
   itemPicture?: string | null;
-  setItemPicture: (v: string | null) => void;
+  setItemPicture?: (v: string | null) => void;
   onClose: () => void;
 };
 
@@ -117,7 +117,7 @@ export function ParcelInfoSheet({
     setAllowTryOn(localTryOn);
     setAllowPartialDelivery(localPartial);
     setAllowMutualCheck(localMutual);
-    setItemPicture(localPicture);
+    setItemPicture?.(localPicture);
     onClose();
   };
 

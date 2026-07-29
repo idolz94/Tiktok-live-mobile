@@ -1,4 +1,4 @@
-import { icons } from "@assets/icons";
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { SpxConnectSheet } from "@features/settings/components/spx-connect-sheet";
 import { ShippingAddressSection } from "@features/settings/components/shipping-address-section";
@@ -10,11 +10,9 @@ import { useToast } from "@components/toast";
 import { createStyles } from "@utils/createStyles";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { Alert, Image, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
 
 export default function ShippingSettingsScreen() {
-  const { top } = useSafeAreaInsets();
   const s = useShippingSettings();
   const spx = useSpxAccount();
   const { show, hide } = useBottomSheet();
@@ -76,15 +74,12 @@ export default function ShippingSettingsScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
-          <Text style={styles.backButtonText}>‹</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Cấu hình vận chuyển</Text>
-        <Pressable style={styles.headerButton} hitSlop={8}>
-          <Image source={icons.settings} style={styles.headerIcon} resizeMode="contain" />
-        </Pressable>
-      </View>
+      <Header
+        title="Cấu hình vận chuyển"
+        onBackPress={handleBack}
+        rightIcon="settings-outline"
+        transparent
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -113,48 +108,9 @@ export default function ShippingSettingsScreen() {
   );
 }
 
-const styles = createStyles(({ colors }) => ({
+const styles = createStyles(() => ({
   root: { flex: 1 },
   bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  header: {
-    minHeight: 119,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  backButtonText: {
-    color: colors.text,
-    fontSize: 32,
-    lineHeight: 32,
-    fontWeight: "300",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
-  headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  headerIcon: { width: 20, height: 20, tintColor: colors.text },
   scrollContent: {
     paddingHorizontal: 16,
     paddingBottom: 24,

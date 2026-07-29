@@ -30,7 +30,7 @@ import { OrderDetailCustomerSection } from "@features/orders/components/order-de
 import {
   OrderDetailNoteSection,
 } from "@features/orders/components/order-detail/order-detail-info-sections";
-import { OrderDetailHeader } from "@features/orders/components/order-detail/order-detail-header";
+import { Header } from "@components/header";
 import { OrderDetailProductsSection } from "@features/orders/components/order-detail/order-detail-products-section";
 import { OrderDetailShipBar } from "@features/orders/components/order-detail/order-detail-ship-bar";
 import { OrderDetailShippingSection } from "@features/orders/components/order-detail/order-detail-shipping-section";
@@ -80,7 +80,7 @@ export const OrderDetail = memo(() => {
 
   const displayName = useMemo(() => {
     const order = detail.order;
-    return order?.customerName || "Khách hàng";
+    return order?.customerName || order?.username || "Khách hàng";
   }, [detail.order]);
 
   const hiddenCount = Math.max(
@@ -217,7 +217,7 @@ export const OrderDetail = memo(() => {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <OrderDetailHeader onBack={() => router.back()} />
+      <Header title="Tổng quan đơn hàng" transparent />
 
         {detail.loading ? (
           <View style={styles.loadingBox}>
