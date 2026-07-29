@@ -1,10 +1,4 @@
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useToast } from "@components/toast";
 import { LinearGradient } from "@components/linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +7,11 @@ import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { SectionBlock, ShipmentInput, OptionChip } from "@features/orders/components/create-shipment";
+import {
+  SectionBlock,
+  ShipmentInput,
+  OptionChip,
+} from "@features/orders/components/create-shipment";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
 export default function ShippingEditScreen() {
@@ -23,21 +21,35 @@ export default function ShippingEditScreen() {
   const { top, bottom } = useSafeAreaInsets();
 
   const order = orderParam
-    ? (() => { try { return JSON.parse(orderParam) as ShippingOrder; } catch { return null; } })()
+    ? (() => {
+        try {
+          return JSON.parse(orderParam) as ShippingOrder;
+        } catch {
+          return null;
+        }
+      })()
     : null;
 
   const [customerName, setCustomerName] = useState(order?.customerName ?? "");
-  const [customerPhone, setCustomerPhone] = useState(order?.customerPhone ?? "");
+  const [customerPhone, setCustomerPhone] = useState(
+    order?.customerPhone ?? "",
+  );
   const [address, setAddress] = useState(
     [
       order?.customerAddressData?.address,
       order?.customerAddressData?.ward,
       order?.customerAddressData?.district,
       order?.customerAddressData?.province,
-    ].filter(Boolean).join(", ") ?? ""
+    ]
+      .filter(Boolean)
+      .join(", ") ?? "",
   );
-  const [cod, setCod] = useState(order?.codAmount != null ? String(order.codAmount) : "");
-  const [shippingFee, setShippingFee] = useState(order?.shippingFee != null ? String(order.shippingFee) : "");
+  const [cod, setCod] = useState(
+    order?.codAmount != null ? String(order.codAmount) : "",
+  );
+  const [shippingFee, setShippingFee] = useState(
+    order?.shippingFee != null ? String(order.shippingFee) : "",
+  );
   const [note, setNote] = useState("");
   const [weight, setWeight] = useState("");
   const [dimL, setDimL] = useState("");
@@ -52,15 +64,25 @@ export default function ShippingEditScreen() {
 
   if (!order) {
     return (
-      <View style={[styles.root, { justifyContent: "center", alignItems: "center" }]}>
-        <Text style={{ color: colors.neutral500 }}>Không tìm thấy đơn hàng.</Text>
+      <View
+        style={[
+          styles.root,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text style={{ color: colors.neutral500 }}>
+          Không tìm thấy đơn hàng.
+        </Text>
       </View>
     );
   }
 
   const handleSave = () => {
     // ponytail: stub — wire to update API when backend endpoint available
-    toast.success({ title: "Đã lưu", description: "Thông tin vận đơn đã được cập nhật." });
+    toast.success({
+      title: "Đã lưu",
+      description: "Thông tin vận đơn đã được cập nhật.",
+    });
     router.back();
   };
 
@@ -69,16 +91,28 @@ export default function ShippingEditScreen() {
       <LinearGradient type="gra_background" style={StyleSheet.absoluteFill} />
       {/* Header */}
       <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          hitSlop={8}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.neutral900} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text, fontSize: 24, fontWeight: "600" }]}>
+        <Text
+          style={[
+            styles.headerTitle,
+            { color: colors.neutral900, fontSize: 24, fontWeight: "600" },
+          ]}
+        >
           Chỉnh sửa vận đơn
         </Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + bottom }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 100 + bottom },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -231,12 +265,26 @@ export default function ShippingEditScreen() {
       </ScrollView>
 
       {/* Submit bar */}
-      <View style={[styles.submitBar, { backgroundColor: colors.surface, borderTopColor: colors.border10, paddingBottom: Math.max(bottom, 16) }]}>
+      <View
+        style={[
+          styles.submitBar,
+          {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border10,
+            paddingBottom: Math.max(bottom, 16),
+          },
+        ]}
+      >
         <Pressable
           style={[styles.submitBtn, { backgroundColor: colors.primary }]}
           onPress={handleSave}
         >
-          <Text style={[styles.submitBtnText, { color: "#fff", ...textPresets.fs16_600 }]}>
+          <Text
+            style={[
+              styles.submitBtnText,
+              { color: "#fff", ...textPresets.fs16_600 },
+            ]}
+          >
             Lưu thay đổi
           </Text>
         </Pressable>
@@ -254,7 +302,14 @@ const styles = createStyles(({ colors }) => ({
     paddingBottom: 16,
     gap: 4,
   },
-  backBtn: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+  },
   headerTitle: { flex: 1 },
   scrollContent: { gap: 12, paddingTop: 12, paddingHorizontal: 16 },
   card: { borderRadius: 12, overflow: "hidden" },

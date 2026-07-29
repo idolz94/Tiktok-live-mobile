@@ -1,21 +1,12 @@
+import { images } from "@assets/images";
+import { Button } from "@components/button";
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { useEditProfile } from "@features/settings/hooks/use-edit-profile";
-import { createStyles } from "@utils/createStyles";
-import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemes } from "@hooks/use-theme";
-import { images } from "@assets/images";
-import { Header } from "@components/header";
+import { createStyles } from "@utils/createStyles";
+import { Image, ScrollView, Text, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function EditProfileScreen() {
   const { bottom } = useSafeAreaInsets();
@@ -271,31 +262,15 @@ export function EditProfileScreen() {
           },
         ]}
       >
-        <TouchableOpacity
+        <Button
+          type="gradient"
+          title="Lưu"
+          loading={isSubmitting}
+          disabled={!isDirty}
           onPress={() => {
             void save();
           }}
-          disabled={!isDirty || isSubmitting}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            type="gra_primary"
-            style={[
-              styles.saveButton,
-              (!isDirty || isSubmitting) && { opacity: 0.5 },
-            ]}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text
-                style={[{ color: colors.neutral900 }, textPresets.fs16_500]}
-              >
-                Lưu
-              </Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+        />
       </View>
     </View>
   );
@@ -333,12 +308,6 @@ const styles = createStyles(({ colors }) => ({
     borderTopWidth: 0.5,
     paddingHorizontal: 16,
     paddingTop: 8,
-  },
-  saveButton: {
-    height: 56,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
   },
   socialBrandIcon: { width: 22, height: 22 },
   youtubeBadge: {

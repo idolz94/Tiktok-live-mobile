@@ -180,23 +180,45 @@ New screens and screens being updated must follow this layout:
 **Header:**
 
 ```tsx
-<View style={{ paddingTop: top + 12, minHeight: 119, flexDirection: "row",
-  alignItems: "center", justifyContent: "space-between",
-  paddingHorizontal: 16, paddingBottom: 16 }}>
-  <Text style={{ color: colors.text, fontSize: 24, fontWeight: "600", lineHeight: 28 }}>
+<View
+  style={{
+    paddingTop: top + 12,
+    minHeight: 119,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  }}
+>
+  <Text
+    style={{
+      color: colors.neutral900,
+      fontSize: 24,
+      fontWeight: "600",
+      lineHeight: 28,
+    }}
+  >
     Tiêu đề màn
   </Text>
   {/* optional action button */}
-  <Pressable style={{ width: 44, height: 44, borderRadius: 999,
-    alignItems: "center", justifyContent: "center",
-    backgroundColor: colors.white }}>
+  <Pressable
+    style={{
+      width: 44,
+      height: 44,
+      borderRadius: 999,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.white,
+    }}
+  >
     <Icon name="..." size={20} />
   </Pressable>
 </View>
 ```
 
 - `top` comes from `useSafeAreaInsets().top`.
-- Title: `fontSize: 24`, `fontWeight: "600"`, `color: colors.text`.
+- Title: `fontSize: 24`, `fontWeight: "600"`, `color: colors.neutral900`.
 - Action button: `44×44`, `borderRadius: 999`, `backgroundColor: colors.white`.
 
 **List content:**
@@ -214,16 +236,44 @@ contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, rowGap: 12 }}
 **Empty state:**
 
 ```tsx
-<View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, rowGap: 8 }}>
-  <View style={{ width: 64, height: 64, borderRadius: 32,
-    backgroundColor: colors.neutral50,
-    alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+<View
+  style={{
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+    rowGap: 8,
+  }}
+>
+  <View
+    style={{
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: colors.neutral50,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 8,
+    }}
+  >
     <Icon name="..." size={32} tintColor="neutral300" />
   </View>
-  <Text style={{ color: colors.neutral500, ...textPresets.fs14_500, textAlign: "center" }}>
+  <Text
+    style={{
+      color: colors.neutral500,
+      ...textPresets.fs14_500,
+      textAlign: "center",
+    }}
+  >
     Tiêu đề trống
   </Text>
-  <Text style={{ color: colors.neutral300, ...textPresets.fs12_400, textAlign: "center" }}>
+  <Text
+    style={{
+      color: colors.neutral300,
+      ...textPresets.fs12_400,
+      textAlign: "center",
+    }}
+  >
     Mô tả phụ
   </Text>
 </View>
@@ -232,11 +282,21 @@ contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, rowGap: 12 }}
 **Filter badge (if applicable):**
 
 ```tsx
-<View style={{ flexDirection: "row", alignItems: "center", columnGap: 6,
-  paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99,
-  backgroundColor: colors.neutral50 }}>
+<View
+  style={{
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 99,
+    backgroundColor: colors.neutral50,
+  }}
+>
   <Icon name="..." size={12} tintColor="neutral400" />
-  <Text style={{ color: colors.neutral500, ...textPresets.fs12_500 }}>Label</Text>
+  <Text style={{ color: colors.neutral500, ...textPresets.fs12_500 }}>
+    Label
+  </Text>
   <Pressable onPress={onClear} hitSlop={8}>
     <Icon name="close" size={12} tintColor="neutral400" />
   </Pressable>
@@ -747,7 +807,7 @@ When modifying this repository:
 9. Do not create confirmed business actions from AI suggestions.
 10. Review high-risk flows before completion.
 11. State clearly what was changed and what was actually verified.
-Keep validation in schema files where practical rather than duplicating validation logic in components.
+    Keep validation in schema files where practical rather than duplicating validation logic in components.
 
 ## Development rules for Claude Code
 
@@ -779,6 +839,7 @@ Follow these rules when modifying this project:
 - `logoutApi()` exists, but the active logout behavior is local token/state cleanup only.
 
 <!-- gitnexus:start -->
+
 # GitNexus — Code Intelligence
 
 This project is indexed by GitNexus as **Tiktok-live-mobile** (3056 symbols, 7068 relationships, 247 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
@@ -803,22 +864,22 @@ This project is indexed by GitNexus as **Tiktok-live-mobile** (3056 symbols, 706
 
 ## Resources
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/Tiktok-live-mobile/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/Tiktok-live-mobile/clusters` | All functional areas |
-| `gitnexus://repo/Tiktok-live-mobile/processes` | All execution flows |
-| `gitnexus://repo/Tiktok-live-mobile/process/{name}` | Step-by-step execution trace |
+| Resource                                            | Use for                                  |
+| --------------------------------------------------- | ---------------------------------------- |
+| `gitnexus://repo/Tiktok-live-mobile/context`        | Codebase overview, check index freshness |
+| `gitnexus://repo/Tiktok-live-mobile/clusters`       | All functional areas                     |
+| `gitnexus://repo/Tiktok-live-mobile/processes`      | All execution flows                      |
+| `gitnexus://repo/Tiktok-live-mobile/process/{name}` | Step-by-step execution trace             |
 
 ## CLI
 
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| Task                                         | Read this skill file                                        |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md`       |
+| Blast radius / "What breaks if I change X?"  | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?"             | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md`       |
+| Rename / extract / split / refactor          | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md`     |
+| Tools, resources, schema reference           | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md`           |
+| Index, status, clean, wiki CLI commands      | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md`             |
 
 <!-- gitnexus:end -->

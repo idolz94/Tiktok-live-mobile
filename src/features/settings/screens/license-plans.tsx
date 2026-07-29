@@ -374,7 +374,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     backgroundColor: colors.white,
   },
   headerTitle: {
-    color: colors.text,
+    color: colors.neutral900,
     fontSize: 24,
     fontWeight: "600",
     lineHeight: 28,

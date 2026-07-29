@@ -159,7 +159,11 @@ export function PrinterSettingsScreen() {
         end={{ x: 0.5, y: 1 }}
       />
       <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          hitSlop={8}
+        >
           <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
         </Pressable>
         <Text style={styles.headerTitle}>Cài đặt máy in</Text>
@@ -269,10 +273,34 @@ export function PrinterSettingsScreen() {
 
 const styles = createStyles(({ colors }) => ({
   root: { flex: 1 },
-  headerBackground: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 16, columnGap: 12 },
-  backBtn: { width: 44, height: 44, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
-  headerTitle: { color: colors.text, fontSize: 24, fontWeight: "600", lineHeight: 28 },
+  headerBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    columnGap: 12,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+  },
+  headerTitle: {
+    color: colors.neutral900,
+    fontSize: 24,
+    fontWeight: "600",
+    lineHeight: 28,
+  },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,

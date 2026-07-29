@@ -244,7 +244,9 @@ export default function ShippingDetailScreen() {
               >
                 Mã đơn hàng:{" "}
               </Text>
-              <Text style={[{ color: colors.text, ...textPresets.fs14_500 }]}>
+              <Text
+                style={[{ color: colors.neutral900, ...textPresets.fs14_500 }]}
+              >
                 {displayCode}
               </Text>
               <Pressable
@@ -297,7 +299,7 @@ export default function ShippingDetailScreen() {
             <Text
               style={[
                 styles.routeText,
-                { color: colors.text, ...textPresets.fs14_500 },
+                { color: colors.neutral900, ...textPresets.fs14_500 },
               ]}
               numberOfLines={1}
             >
@@ -311,7 +313,7 @@ export default function ShippingDetailScreen() {
             <Text
               style={[
                 styles.routeText,
-                { color: colors.text, ...textPresets.fs14_500 },
+                { color: colors.neutral900, ...textPresets.fs14_500 },
               ]}
               numberOfLines={1}
             >
@@ -332,7 +334,9 @@ export default function ShippingDetailScreen() {
               >
                 Người Nhận
               </Text>
-              <Text style={[{ color: colors.text, ...textPresets.fs14_500 }]}>
+              <Text
+                style={[{ color: colors.neutral900, ...textPresets.fs14_500 }]}
+              >
                 {order.customerName || "Khách hàng"}
                 {order.customerPhone ? (
                   <Text
@@ -352,7 +356,11 @@ export default function ShippingDetailScreen() {
                 style={[styles.callBtn, { backgroundColor: colors.neutral50 }]}
                 onPress={handleCall}
               >
-                <Ionicons name="call-outline" size={20} color={colors.text} />
+                <Ionicons
+                  name="call-outline"
+                  size={20}
+                  color={colors.neutral900}
+                />
               </Pressable>
             ) : null}
           </View>
@@ -378,7 +386,9 @@ export default function ShippingDetailScreen() {
         {/* Journey */}
         <View style={styles.sectionCard}>
           <View style={styles.journeyHeader}>
-            <Text style={[{ color: colors.text, ...textPresets.fs16_600 }]}>
+            <Text
+              style={[{ color: colors.neutral900, ...textPresets.fs16_600 }]}
+            >
               Hành Trình Đơn Hàng
             </Text>
             <Pressable style={styles.copyInfoBtn}>
@@ -411,7 +421,11 @@ export default function ShippingDetailScreen() {
                   size={14}
                   color={colors.neutral500}
                 />
-                <Text style={[{ color: colors.text, ...textPresets.fs14_400 }]}>
+                <Text
+                  style={[
+                    { color: colors.neutral900, ...textPresets.fs14_400 },
+                  ]}
+                >
                   {STATUS_LABEL[order.shippingStatus]}
                 </Text>
               </View>
@@ -451,7 +465,7 @@ export default function ShippingDetailScreen() {
               <Text
                 style={[
                   styles.actionButtonText,
-                  { color: colors.text, ...textPresets.fs12_400 },
+                  { color: colors.neutral900, ...textPresets.fs12_400 },
                 ]}
               >
                 {"Chăm sóc\nkhách hàng"}
@@ -477,18 +491,18 @@ export default function ShippingDetailScreen() {
                 disabled={printing}
               >
                 {printing ? (
-                  <ActivityIndicator size="small" color={colors.text} />
+                  <ActivityIndicator size="small" color={colors.neutral900} />
                 ) : (
                   <>
                     <Ionicons
                       name="print-outline"
                       size={18}
-                      color={colors.text}
+                      color={colors.neutral900}
                     />
                     <Text
                       style={[
                         styles.actionButtonText,
-                        { color: colors.text, ...textPresets.fs12_400 },
+                        { color: colors.neutral900, ...textPresets.fs12_400 },
                       ]}
                     >
                       {isWaitingManual ? "In Đơn Hàng" : "In Đơn Hàng SPX"}
@@ -512,7 +526,7 @@ export default function ShippingDetailScreen() {
                   <Text
                     style={[
                       styles.actionButtonText,
-                      { color: colors.text, ...textPresets.fs12_400 },
+                      { color: colors.neutral900, ...textPresets.fs12_400 },
                     ]}
                   >
                     Sửa Đơn Hàng
@@ -530,12 +544,12 @@ export default function ShippingDetailScreen() {
                   disabled={depositLoading}
                 >
                   {depositLoading ? (
-                    <ActivityIndicator size="small" color={colors.text} />
+                    <ActivityIndicator size="small" color={colors.neutral900} />
                   ) : (
                     <Text
                       style={[
                         styles.actionButtonText,
-                        { color: colors.text, ...textPresets.fs12_400 },
+                        { color: colors.neutral900, ...textPresets.fs12_400 },
                       ]}
                     >
                       {depositStatus === "paid" || depositStatus === "deposited"

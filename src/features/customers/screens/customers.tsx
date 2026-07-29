@@ -16,13 +16,7 @@ import { createStyles } from "@utils/createStyles";
 import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import { memo, useCallback, useEffect, useRef } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import Animated, {
   useAnimatedScrollHandler,
@@ -321,7 +315,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     padding: 32,
   },
   emptyTitle: {
-    color: colors.text,
+    color: colors.neutral900,
     ...textPresets.fs18_900,
   },
   emptyText: {

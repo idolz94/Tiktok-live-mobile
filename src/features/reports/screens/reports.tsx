@@ -23,8 +23,10 @@ import { useCallback, useRef, useState } from "react";
 
 function splitCompact(value: number): { num: string; unit: string } {
   const n = Math.round(value || 0);
-  if (n >= 1_000_000_000) return { num: `${+(n / 1_000_000_000).toFixed(1)}`, unit: "tỉ" };
-  if (n >= 1_000_000) return { num: `${+(n / 1_000_000).toFixed(1)}`, unit: "tr" };
+  if (n >= 1_000_000_000)
+    return { num: `${+(n / 1_000_000_000).toFixed(1)}`, unit: "tỉ" };
+  if (n >= 1_000_000)
+    return { num: `${+(n / 1_000_000).toFixed(1)}`, unit: "tr" };
   return { num: n.toLocaleString("vi-VN"), unit: "đ" };
 }
 
@@ -64,8 +66,14 @@ function dateLabel(period: ReportPeriod, filter: ReportFilter): string {
   to.setHours(0, 0, 0, 0);
   if (period === "7d") from.setDate(from.getDate() - 6);
   else if (period === "1m") from.setDate(from.getDate() - 29);
-  else if (period === "6m") { from.setMonth(from.getMonth() - 5); from.setDate(1); }
-  else if (period === "1y") { from.setFullYear(from.getFullYear() - 1); from.setMonth(0); from.setDate(1); }
+  else if (period === "6m") {
+    from.setMonth(from.getMonth() - 5);
+    from.setDate(1);
+  } else if (period === "1y") {
+    from.setFullYear(from.getFullYear() - 1);
+    from.setMonth(0);
+    from.setDate(1);
+  }
   return period === "1d" ? "Hôm nay" : `${fmtShort(from)} - ${fmtShort(to)}`;
 }
 
@@ -75,7 +83,17 @@ export function ReportsScreen() {
   const { colors } = useThemes();
   const { top } = useSafeAreaInsets();
   const { show, hide } = useBottomSheet();
-  const { period, setPeriod, filter, setFilter, stats, loading, error, refresh, chartData } = useReports();
+  const {
+    period,
+    setPeriod,
+    filter,
+    setFilter,
+    stats,
+    loading,
+    error,
+    refresh,
+    chartData,
+  } = useReports();
 
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const filterSheetId = useRef<string | null>(null);
@@ -133,7 +151,9 @@ export function ReportsScreen() {
           style={[
             styles.filterBtn,
             {
-              backgroundColor: activeFilter ? colors.primaryLight : colors.neutral50,
+              backgroundColor: activeFilter
+                ? colors.primaryLight
+                : colors.neutral50,
               borderColor: activeFilter ? colors.primary : colors.border10,
             },
           ]}
@@ -143,7 +163,11 @@ export function ReportsScreen() {
             size={18}
             color={activeFilter ? colors.primary : colors.neutral400}
           />
-          {activeFilter && <View style={[styles.filterDot, { backgroundColor: colors.primary }]} />}
+          {activeFilter && (
+            <View
+              style={[styles.filterDot, { backgroundColor: colors.primary }]}
+            />
+          )}
         </Pressable>
       </View>
 
@@ -151,7 +175,11 @@ export function ReportsScreen() {
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={refresh}
+            tintColor={colors.primary}
+          />
         }
       >
         {/* Period tabs */}
@@ -172,7 +200,12 @@ export function ReportsScreen() {
               }}
               style={[styles.tab, period === p.id && styles.tabActive]}
             >
-              <Text style={[styles.tabText, period === p.id && styles.tabTextActive]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  period === p.id && styles.tabTextActive,
+                ]}
+              >
                 {p.id === "custom" && filter.customFrom && filter.customTo
                   ? `${fmtShort(filter.customFrom)}–${fmtShort(filter.customTo)}`
                   : p.label}
@@ -198,7 +231,9 @@ export function ReportsScreen() {
             <View style={styles.cardSection}>
               <View style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
-                  <Text style={styles.summaryDate}>{dateLabel(period, filter)}</Text>
+                  <Text style={styles.summaryDate}>
+                    {dateLabel(period, filter)}
+                  </Text>
                   <Pressable onPress={refresh} hitSlop={8}>
                     <Icon name="print" size={18} tintColor="neutral400" />
                   </Pressable>
@@ -215,7 +250,10 @@ export function ReportsScreen() {
                         </Text>
                         <Text style={styles.summaryUnit}>₫</Text>
                       </View>
-                      <PctBadge curr={stats.revenue.total} prev={stats.prev.revenue} />
+                      <PctBadge
+                        curr={stats.revenue.total}
+                        prev={stats.prev.revenue}
+                      />
                     </View>
                   </View>
                 </View>
@@ -223,13 +261,20 @@ export function ReportsScreen() {
                 <View style={styles.summaryDivider} />
 
                 <View style={styles.summaryBottomRow}>
-                  <View style={[styles.summarySubCol, styles.summarySubColBorder]}>
+                  <View
+                    style={[styles.summarySubCol, styles.summarySubColBorder]}
+                  >
                     <View style={[styles.dot, styles.dotGreen]} />
                     <View style={styles.summaryRevInfo}>
                       <Text style={styles.summarySubLabel}>Sản phẩm</Text>
                       <View style={styles.summaryValueRow}>
-                        <Text style={styles.summarySubAmount}>{stats.products.total}</Text>
-                        <PctBadge curr={stats.products.total} prev={stats.prev.products} />
+                        <Text style={styles.summarySubAmount}>
+                          {stats.products.total}
+                        </Text>
+                        <PctBadge
+                          curr={stats.products.total}
+                          prev={stats.prev.products}
+                        />
                       </View>
                     </View>
                   </View>
@@ -238,8 +283,13 @@ export function ReportsScreen() {
                     <View style={styles.summaryRevInfo}>
                       <Text style={styles.summarySubLabel}>Đơn hàng</Text>
                       <View style={styles.summaryValueRow}>
-                        <Text style={styles.summarySubAmount}>{stats.orders.total}</Text>
-                        <PctBadge curr={stats.orders.total} prev={stats.prev.orders} />
+                        <Text style={styles.summarySubAmount}>
+                          {stats.orders.total}
+                        </Text>
+                        <PctBadge
+                          curr={stats.orders.total}
+                          prev={stats.prev.orders}
+                        />
                       </View>
                     </View>
                   </View>
@@ -307,7 +357,11 @@ function PctBadge({ curr, prev }: { curr: number; prev: number }) {
     <View
       style={[
         styles.pctBadge,
-        { backgroundColor: positive ? colors.successLight : "rgba(255,232,232,1)" },
+        {
+          backgroundColor: positive
+            ? colors.successLight
+            : "rgba(255,232,232,1)",
+        },
       ]}
     >
       <Text
@@ -350,10 +404,20 @@ function Section({
       <View style={styles.sectionHeader}>
         <View style={styles.sectionTitleWrap}>
           <Text style={styles.sectionTitle}>{title}</Text>
-          <Ionicons name="information-circle-outline" size={18} color={colors.neutral400} />
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={colors.neutral400}
+          />
         </View>
         <View style={[styles.switcher, { backgroundColor: colors.neutral50 }]}>
-          <View style={[styles.switcherBtn, styles.switcherBtnActive, { backgroundColor: colors.neutral100 }]}>
+          <View
+            style={[
+              styles.switcherBtn,
+              styles.switcherBtnActive,
+              { backgroundColor: colors.neutral100 },
+            ]}
+          >
             <Icon name="chart_pie" size={16} tintColor="neutral900" />
           </View>
           <View style={styles.switcherBtn}>
@@ -397,15 +461,32 @@ function Section({
   );
 }
 
-function MetricCard({ label, value, isMoney }: { label: string; value: number; isMoney?: boolean }) {
+function MetricCard({
+  label,
+  value,
+  isMoney,
+}: {
+  label: string;
+  value: number;
+  isMoney?: boolean;
+}) {
   const { colors } = useThemes();
-  const parts = isMoney ? splitCompact(value) : { num: String(value), unit: "" };
+  const parts = isMoney
+    ? splitCompact(value)
+    : { num: String(value), unit: "" };
   return (
-    <View style={[styles.metricCard, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}>
+    <View
+      style={[
+        styles.metricCard,
+        { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+      ]}
+    >
       <Text style={styles.metricLabel}>{label}</Text>
       <View style={styles.metricValueRow}>
         <Text style={styles.metricValue}>{parts.num}</Text>
-        {parts.unit ? <Text style={styles.metricUnit}>{parts.unit}</Text> : null}
+        {parts.unit ? (
+          <Text style={styles.metricUnit}>{parts.unit}</Text>
+        ) : null}
       </View>
     </View>
   );
@@ -437,7 +518,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderRadius: 3,
   },
   headerTitle: {
-    color: colors.text,
+    color: colors.neutral900,
     fontSize: 24,
     fontWeight: "600",
     lineHeight: 28,
@@ -470,7 +551,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "center",
     justifyContent: "center",
   },
-  errorText: { ...textPresets.fs14_500, color: colors.error, textAlign: "center" },
+  errorText: {
+    ...textPresets.fs14_500,
+    color: colors.error,
+    textAlign: "center",
+  },
   retryBtn: {
     marginTop: 12,
     paddingHorizontal: 16,
@@ -512,11 +597,15 @@ const styles = createStyles(({ colors, textPresets }) => ({
     paddingVertical: 14,
   },
   summaryRevInfo: { flex: 1 },
-  summarySubLabel: { ...textPresets.fs12_400, color: colors.neutral400, marginBottom: 4 },
+  summarySubLabel: {
+    ...textPresets.fs12_400,
+    color: colors.neutral400,
+    marginBottom: 4,
+  },
   summaryValueRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   summaryAmountRow: { flexDirection: "row", alignItems: "baseline", gap: 2 },
-  summaryAmount: { fontSize: 18, fontWeight: "600", color: colors.text },
-  summaryUnit: { ...textPresets.fs14_500, color: colors.text },
+  summaryAmount: { fontSize: 18, fontWeight: "600", color: colors.neutral900 },
+  summaryUnit: { ...textPresets.fs14_500, color: colors.neutral900 },
   summaryDivider: { height: 0.5, backgroundColor: colors.border10 },
   summaryBottomRow: { flexDirection: "row" },
   summarySubCol: {
@@ -530,7 +619,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     borderRightWidth: 0.5,
     borderRightColor: colors.border10,
   },
-  summarySubAmount: { fontSize: 18, fontWeight: "600", color: colors.text },
+  summarySubAmount: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: colors.neutral900,
+  },
   dot: {
     width: 6,
     height: 6,
@@ -564,7 +657,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     alignItems: "center",
     gap: 6,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "600", color: colors.text },
+  sectionTitle: { fontSize: 18, fontWeight: "600", color: colors.neutral900 },
   sectionSubtitle: { ...textPresets.fs12_400, color: colors.neutral400 },
   switcher: {
     flexDirection: "row",
@@ -602,6 +695,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   metricLabel: { ...textPresets.fs12_400, color: colors.neutral400 },
   metricValueRow: { flexDirection: "row", alignItems: "baseline", gap: 2 },
-  metricValue: { fontSize: 18, fontWeight: "600", color: colors.text },
+  metricValue: { fontSize: 18, fontWeight: "600", color: colors.neutral900 },
   metricUnit: { ...textPresets.fs12_400, color: colors.neutral300 },
 }));

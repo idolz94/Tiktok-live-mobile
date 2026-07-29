@@ -21,7 +21,7 @@ export default function ShippingSettingsScreen() {
   useFocusEffect(
     useCallback(() => {
       s.loadAddresses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
 
@@ -41,7 +41,12 @@ export default function ShippingSettingsScreen() {
             if (ok) {
               close();
               toast.success("Đã kết nối tài khoản SPX");
-            } else toast.error({ title: "Lỗi", description: "Không thể kết nối tài khoản SPX. Vui lòng thử lại." });
+            } else
+              toast.error({
+                title: "Lỗi",
+                description:
+                  "Không thể kết nối tài khoản SPX. Vui lòng thử lại.",
+              });
           }}
           onClose={close}
         />
@@ -51,18 +56,26 @@ export default function ShippingSettingsScreen() {
   }, [show, hide, spx, toast]);
 
   const handleDisconnectSpx = useCallback(() => {
-    Alert.alert("Ngắt kết nối SPX", "Bạn có chắc muốn ngắt kết nối tài khoản SPX?", [
-      { text: "Huỷ" },
-      {
-        text: "Ngắt kết nối",
-        style: "destructive",
-        onPress: () => {
-          void spx.disconnect().then((ok) => {
-            if (!ok) toast.error({ title: "Lỗi", description: "Không thể ngắt kết nối. Vui lòng thử lại." });
-          });
+    Alert.alert(
+      "Ngắt kết nối SPX",
+      "Bạn có chắc muốn ngắt kết nối tài khoản SPX?",
+      [
+        { text: "Huỷ" },
+        {
+          text: "Ngắt kết nối",
+          style: "destructive",
+          onPress: () => {
+            void spx.disconnect().then((ok) => {
+              if (!ok)
+                toast.error({
+                  title: "Lỗi",
+                  description: "Không thể ngắt kết nối. Vui lòng thử lại.",
+                });
+            });
+          },
         },
-      },
-    ]);
+      ],
+    );
   }, [spx]);
 
   return (
@@ -95,7 +108,12 @@ export default function ShippingSettingsScreen() {
           address={s.defaultAddress}
           isLoading={s.isLoadingAddresses}
           onAdd={() => router.push("/shipping-address-form")}
-          onEdit={(address) => router.push({ pathname: "/shipping-address-form", params: { addressId: address.id } })}
+          onEdit={(address) =>
+            router.push({
+              pathname: "/shipping-address-form",
+              params: { addressId: address.id },
+            })
+          }
         />
 
         <ShippingPartnersSection

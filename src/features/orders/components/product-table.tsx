@@ -1,6 +1,10 @@
 import { OrderProduct } from "@app-types/index";
 import { createStyles } from "@utils/createStyles";
-import { formatMoneyFromK, getOrderTotal, getProductTotal } from "@features/orders/utils/order";
+import {
+  formatMoneyFromK,
+  getOrderTotal,
+  getProductTotal,
+} from "@features/orders/utils/order";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export const ProductTable = ({
@@ -81,11 +85,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   totalLabel: {
     ...textPresets.fs12_800,
-    color: colors.text,
+    color: colors.neutral900,
   },
   totalValue: {
     ...textPresets.fs12_800,
-    color: colors.text,
+    color: colors.neutral900,
   },
   addButton: { padding: 10, alignItems: "center" },
   addText: { color: colors.primary, ...textPresets.fs12_800 },
