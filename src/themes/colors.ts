@@ -56,7 +56,6 @@ export const colors = {
   surfaceAlt: "rgba(248, 248, 248, 1)",
   /** @deprecated use `surfaceAlt` */
   surfaceGray: "rgba(248, 248, 248, 1)",
-  text: "#000000",
   textMuted: "rgba(120, 120, 120, 1)",
   textDarkGray: "rgba(72, 72, 72, 1)",
   textDark: "rgba(0, 0, 0, 0.86)",

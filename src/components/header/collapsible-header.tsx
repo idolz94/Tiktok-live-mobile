@@ -115,7 +115,7 @@ const styles = createStyles(({ colors }) => ({
     bottom: 12,
   },
   title: {
-    color: colors.text,
+    color: colors.neutral900,
     fontSize: 24,
     fontWeight: "600",
     lineHeight: 28,

@@ -154,7 +154,7 @@ function SummaryCard({
         <Text
           style={[
             styles.summaryValue,
-            { color: colors.text, ...textPresets.fs16_600 },
+            { color: colors.neutral900, ...textPresets.fs16_600 },
           ]}
         >
           {formatMoney(value)}
@@ -168,7 +168,7 @@ function SummaryCard({
           {label}
         </Text>
       </View>
-      <Text style={[styles.chevron, { color: colors.text }]}>›</Text>
+      <Text style={[styles.chevron, { color: colors.neutral900 }]}>›</Text>
     </View>
   );
 }
@@ -336,7 +336,7 @@ function OrderCard({
           </View>
           <View style={styles.cardProviderInfo}>
             <Text
-              style={[{ color: colors.text, ...textPresets.fs14_500 }]}
+              style={[{ color: colors.neutral900, ...textPresets.fs14_500 }]}
               numberOfLines={1}
             >
               {label}
@@ -373,7 +373,7 @@ function OrderCard({
             <Text
               style={[
                 styles.cardInfoFlex,
-                { color: colors.text, ...textPresets.fs12_400 },
+                { color: colors.neutral900, ...textPresets.fs12_400 },
               ]}
               numberOfLines={1}
             >
@@ -395,11 +395,14 @@ function OrderCard({
               disabled={printing}
             >
               {printing ? (
-                <ActivityIndicator size="small" color={colors.text} />
+                <ActivityIndicator size="small" color={colors.neutral900} />
               ) : (
                 <Image
                   source={icons.print}
-                  style={[styles.cardPrintIcon, { tintColor: colors.text }]}
+                  style={[
+                    styles.cardPrintIcon,
+                    { tintColor: colors.neutral900 },
+                  ]}
                 />
               )}
             </Pressable>
@@ -429,7 +432,7 @@ function OrderCard({
             <Text
               style={[
                 styles.cardInfoFlex,
-                { color: colors.text, ...textPresets.fs12_400 },
+                { color: colors.neutral900, ...textPresets.fs12_400 },
               ]}
             >
               {item.customerPhone}
@@ -447,7 +450,9 @@ function OrderCard({
               style={{ marginTop: 1 }}
             />
             <View style={styles.cardAddressBlock}>
-              <Text style={{ color: colors.text, ...textPresets.fs12_400 }}>
+              <Text
+                style={{ color: colors.neutral900, ...textPresets.fs12_400 }}
+              >
                 {addressText}
               </Text>
               {(item.customerAddressData as any)?.isOld ? (
@@ -473,7 +478,7 @@ function OrderCard({
           <Text
             style={[
               styles.cardInfoFlex,
-              { color: colors.text, ...textPresets.fs12_400 },
+              { color: colors.neutral900, ...textPresets.fs12_400 },
             ]}
             numberOfLines={2}
           >
@@ -493,7 +498,7 @@ function OrderCard({
             <Text
               style={[
                 styles.cardInfoFlex,
-                { color: colors.text, ...textPresets.fs12_400 },
+                { color: colors.neutral900, ...textPresets.fs12_400 },
               ]}
               numberOfLines={2}
             >
@@ -513,7 +518,13 @@ function OrderCard({
           <Text style={{ color: colors.neutral400, ...textPresets.fs12_400 }}>
             Tiền thu hộ (COD)
           </Text>
-          <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700" }}>
+          <Text
+            style={{
+              color: colors.neutral900,
+              fontSize: 13,
+              fontWeight: "700",
+            }}
+          >
             {formatMoney(Number(item.codAmount || 0))}
           </Text>
         </View>
@@ -521,7 +532,7 @@ function OrderCard({
           <Text style={{ color: colors.neutral400, ...textPresets.fs12_400 }}>
             Phí vận chuyển
           </Text>
-          <Text style={{ color: colors.text, ...textPresets.fs12_400 }}>
+          <Text style={{ color: colors.neutral900, ...textPresets.fs12_400 }}>
             {formatMoney(Number(item.shippingFee || 0))}
           </Text>
         </View>
@@ -545,11 +556,11 @@ function OrderCard({
             })
           }
         >
-          <Ionicons name="list-outline" size={14} color={colors.text} />
+          <Ionicons name="list-outline" size={14} color={colors.neutral900} />
           <Text
             style={[
               styles.cardActionText,
-              { color: colors.text, ...textPresets.fs12_500 },
+              { color: colors.neutral900, ...textPresets.fs12_500 },
             ]}
           >
             Tổng quan
@@ -619,13 +630,15 @@ function FilterSheet({
         <Text
           style={[
             styles.sheetTitle,
-            { color: colors.text, ...textPresets.fs18_500 },
+            { color: colors.neutral900, ...textPresets.fs18_500 },
           ]}
         >
           Trạng thái đơn hàng
         </Text>
         <Pressable style={styles.sheetCloseButton} onPress={() => onClose()}>
-          <Text style={[styles.sheetCloseText, { color: colors.text }]}>×</Text>
+          <Text style={[styles.sheetCloseText, { color: colors.neutral900 }]}>
+            ×
+          </Text>
         </Pressable>
       </View>
       <View style={styles.sheetContent}>
@@ -641,13 +654,15 @@ function FilterSheet({
             <Text
               style={[
                 styles.sheetRowText,
-                { color: colors.text, ...textPresets.fs16_400 },
+                { color: colors.neutral900, ...textPresets.fs16_400 },
               ]}
             >
               {FILTER_LABELS[key]}
             </Text>
             {filter === key ? (
-              <Text style={[styles.sheetCheck, { color: colors.text }]}>✓</Text>
+              <Text style={[styles.sheetCheck, { color: colors.neutral900 }]}>
+                ✓
+              </Text>
             ) : null}
           </Pressable>
         ))}
@@ -759,10 +774,7 @@ export function ShippingTabScreen() {
             tintColor={colors.primary}
           />
         }
-        contentContainerStyle={[
-          styles.container,
-          { paddingTop: headerHeight },
-        ]}
+        contentContainerStyle={[styles.container, { paddingTop: headerHeight }]}
         ListHeaderComponent={
           <View>
             <View style={styles.summaryWrap}>
@@ -787,7 +799,7 @@ export function ShippingTabScreen() {
                 <Text
                   style={[
                     styles.countTitle,
-                    { color: colors.text, ...textPresets.fs20_600 },
+                    { color: colors.neutral900, ...textPresets.fs20_600 },
                   ]}
                 >
                   {summary.orderCount} đơn hàng
@@ -812,7 +824,7 @@ export function ShippingTabScreen() {
                 <Text
                   style={[
                     styles.filterText,
-                    { color: colors.text, ...textPresets.fs14_500 },
+                    { color: colors.neutral900, ...textPresets.fs14_500 },
                   ]}
                 >
                   Filter

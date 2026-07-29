@@ -1,6 +1,7 @@
-import { ShopAddress } from "@features/settings/service/shop-addresses-api";
-import { formatShopAddress } from "@features/settings/schemas/shipping-address-form-schema";
+import { Button } from "@components/button";
 import { Ionicons } from "@expo/vector-icons";
+import { formatShopAddress } from "@features/settings/schemas/shipping-address-form-schema";
+import { ShopAddress } from "@features/settings/service/shop-addresses-api";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { shippingSettingsStyles as styles } from "./shipping-settings.styles";
 
@@ -20,13 +21,13 @@ export function ShippingAddressSection({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Địa chỉ kho hàng</Text>
-
       <AddressContent address={address} isLoading={isLoading} onEdit={onEdit} />
-
-      <Pressable style={styles.addButton} onPress={onAdd}>
-        <Text style={styles.addIcon}>＋</Text>
-        <Text style={styles.addText}>Thêm mới</Text>
-      </Pressable>
+      <Button
+        onPress={onAdd}
+        type="outline-dashed"
+        title="Thêm mới"
+        icon={<Ionicons name="add" size={18} color={"black"} />}
+      />
     </View>
   );
 }
@@ -77,7 +78,11 @@ function AddressContent({
           {formatShopAddress(address)}
         </Text>
       </View>
-      <Pressable onPress={() => onEdit(address)} hitSlop={8} style={styles.warehouseEditButton}>
+      <Pressable
+        onPress={() => onEdit(address)}
+        hitSlop={8}
+        style={styles.warehouseEditButton}
+      >
         <Ionicons name="create-outline" size={20} color="#4B5563" />
         <Text style={styles.warehouseEditButtonText}>Sửa</Text>
       </Pressable>
