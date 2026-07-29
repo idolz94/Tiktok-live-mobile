@@ -4,11 +4,21 @@ import { createStyles } from "@utils/createStyles";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { usePrinterStore } from "@features/settings/stores/printer-store";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useManualLabelPrint } from "../hooks/use-manual-label-print";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
-import { formatMoneyFull, getOrderTotal, getProductTotal } from "../utils/order";
+import {
+  formatMoneyFull,
+  getOrderTotal,
+  getProductTotal,
+} from "../utils/order";
 
 export default function ManualLabelScreen() {
   const { order: orderParam } = useLocalSearchParams<{ order: string }>();
@@ -17,20 +27,36 @@ export default function ManualLabelScreen() {
   const { top, bottom } = useSafeAreaInsets();
 
   const order = orderParam
-    ? (() => { try { return JSON.parse(orderParam) as ShippingOrder; } catch { return null; } })()
+    ? (() => {
+        try {
+          return JSON.parse(orderParam) as ShippingOrder;
+        } catch {
+          return null;
+        }
+      })()
     : null;
 
-  const { printing, isPrinterConfigured, handlePrint } = useManualLabelPrint(order);
+  const { printing, isPrinterConfigured, handlePrint } =
+    useManualLabelPrint(order);
 
   if (!order) {
     return (
       <View style={styles.root}>
         <LinearGradient type="gra_background" style={styles.bg} />
         <View style={[styles.header, { paddingTop: top + 12 }]}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backBtn}
+            hitSlop={8}
+          >
+            <Ionicons name="chevron-back" size={24} color={colors.neutral900} />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: colors.text, ...textPresets.fs20_600 }]}>
+          <Text
+            style={[
+              styles.headerTitle,
+              { color: colors.neutral900, ...textPresets.fs20_600 },
+            ]}
+          >
             In Vận Đơn
           </Text>
         </View>
@@ -46,13 +72,17 @@ export default function ManualLabelScreen() {
   const recipientAddress = (() => {
     const d = order.customerAddressData;
     if (!d) return order.customerAddress || "";
-    return [d.address, d.ward, d.district, d.province].filter(Boolean).join(", ");
+    return [d.address, d.ward, d.district, d.province]
+      .filter(Boolean)
+      .join(", ");
   })();
 
   const subtotal = getOrderTotal(order.products ?? []);
   const shippingFee = order.shippingFee ?? 0;
-  const cod = order.codAmount != null && order.codAmount > 0 ? order.codAmount : subtotal;
-  const displayCode = order.trackingCode || order.orderCode || order.id.slice(0, 8);
+  const cod =
+    order.codAmount != null && order.codAmount > 0 ? order.codAmount : subtotal;
+  const displayCode =
+    order.trackingCode || order.orderCode || order.id.slice(0, 8);
 
   return (
     <View style={styles.root}>
@@ -60,10 +90,19 @@ export default function ManualLabelScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          hitSlop={8}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.neutral900} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text, ...textPresets.fs20_600 }]}>
+        <Text
+          style={[
+            styles.headerTitle,
+            { color: colors.neutral900, ...textPresets.fs20_600 },
+          ]}
+        >
           In Vận Đơn
         </Text>
       </View>
@@ -74,9 +113,27 @@ export default function ManualLabelScreen() {
       >
         {/* Printer status banner */}
         {!isPrinterConfigured && (
-          <View style={[styles.warningBanner, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}>
-            <Ionicons name="warning-outline" size={16} color={colors.neutral400} />
-            <Text style={{ flex: 1, color: colors.neutral500, ...textPresets.fs12_400 }}>
+          <View
+            style={[
+              styles.warningBanner,
+              {
+                backgroundColor: colors.neutral50,
+                borderColor: colors.border10,
+              },
+            ]}
+          >
+            <Ionicons
+              name="warning-outline"
+              size={16}
+              color={colors.neutral400}
+            />
+            <Text
+              style={{
+                flex: 1,
+                color: colors.neutral500,
+                ...textPresets.fs12_400,
+              }}
+            >
               Chưa cấu hình máy in nhiệt. Vào Cài đặt → Máy in để cấu hình.
             </Text>
           </View>
@@ -86,36 +143,65 @@ export default function ManualLabelScreen() {
         <View style={[styles.card, { borderColor: colors.border10 }]}>
           {/* Shop header */}
           <View style={styles.shopHeader}>
-            <Text style={[{ color: colors.text, ...textPresets.fs16_600, textAlign: "center" }]}>
+            <Text
+              style={[
+                {
+                  color: colors.neutral900,
+                  ...textPresets.fs16_600,
+                  textAlign: "center",
+                },
+              ]}
+            >
               {config.companyName || "CỬA HÀNG"}
             </Text>
           </View>
 
-          <View style={[styles.divider, { backgroundColor: colors.border10 }]} />
+          <View
+            style={[styles.divider, { backgroundColor: colors.border10 }]}
+          />
 
           {/* Order code */}
           <View style={styles.row}>
-            <Text style={{ color: colors.neutral500, ...textPresets.fs12_400 }}>Mã đơn</Text>
-            <Text style={{ color: colors.text, ...textPresets.fs14_500 }}>{displayCode}</Text>
+            <Text style={{ color: colors.neutral500, ...textPresets.fs12_400 }}>
+              Mã đơn
+            </Text>
+            <Text style={{ color: colors.neutral900, ...textPresets.fs14_500 }}>
+              {displayCode}
+            </Text>
           </View>
 
-          <View style={[styles.divider, { backgroundColor: colors.border10 }]} />
+          <View
+            style={[styles.divider, { backgroundColor: colors.border10 }]}
+          />
 
           {/* Recipient */}
           <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: colors.neutral400, ...textPresets.fs11_400 }]}>
+            <Text
+              style={[
+                styles.sectionLabel,
+                { color: colors.neutral400, ...textPresets.fs11_400 },
+              ]}
+            >
               NGƯỜI NHẬN
             </Text>
-            <Text style={{ color: colors.text, ...textPresets.fs14_500 }}>
+            <Text style={{ color: colors.neutral900, ...textPresets.fs14_500 }}>
               {order.customerName || "Khách hàng"}
             </Text>
             {order.customerPhone ? (
-              <Text style={{ color: colors.neutral500, ...textPresets.fs12_400 }}>
+              <Text
+                style={{ color: colors.neutral500, ...textPresets.fs12_400 }}
+              >
                 {order.customerPhone}
               </Text>
             ) : null}
             {recipientAddress ? (
-              <Text style={{ color: colors.neutral500, ...textPresets.fs12_400, lineHeight: 18 }}>
+              <Text
+                style={{
+                  color: colors.neutral500,
+                  ...textPresets.fs12_400,
+                  lineHeight: 18,
+                }}
+              >
                 {recipientAddress}
               </Text>
             ) : null}
@@ -123,21 +209,46 @@ export default function ManualLabelScreen() {
 
           {(order.products ?? []).length > 0 && (
             <>
-              <View style={[styles.divider, { backgroundColor: colors.border10 }]} />
+              <View
+                style={[styles.divider, { backgroundColor: colors.border10 }]}
+              />
               <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: colors.neutral400, ...textPresets.fs11_400 }]}>
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    { color: colors.neutral400, ...textPresets.fs11_400 },
+                  ]}
+                >
                   SẢN PHẨM
                 </Text>
                 {(order.products ?? []).map((p, i) => (
                   <View key={p.id ?? i} style={styles.productRow}>
-                    <Text style={{ flex: 1, color: colors.text, ...textPresets.fs12_400 }} numberOfLines={2}>
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: colors.neutral900,
+                        ...textPresets.fs12_400,
+                      }}
+                      numberOfLines={2}
+                    >
                       {p.name || p.code || "Sản phẩm"}
                       {p.variantName ? ` (${p.variantName})` : ""}
                     </Text>
-                    <Text style={{ color: colors.neutral400, ...textPresets.fs12_400, marginHorizontal: 8 }}>
+                    <Text
+                      style={{
+                        color: colors.neutral400,
+                        ...textPresets.fs12_400,
+                        marginHorizontal: 8,
+                      }}
+                    >
                       x{p.quantity}
                     </Text>
-                    <Text style={{ color: colors.text, ...textPresets.fs12_500 }}>
+                    <Text
+                      style={{
+                        color: colors.neutral900,
+                        ...textPresets.fs12_500,
+                      }}
+                    >
                       {formatMoneyFull(getProductTotal(p))}
                     </Text>
                   </View>
@@ -146,20 +257,32 @@ export default function ManualLabelScreen() {
             </>
           )}
 
-          <View style={[styles.divider, { backgroundColor: colors.border10 }]} />
+          <View
+            style={[styles.divider, { backgroundColor: colors.border10 }]}
+          />
 
           {/* Totals */}
           <View style={styles.section}>
             {shippingFee > 0 && (
               <View style={styles.inlineRow}>
-                <Text style={{ color: colors.neutral500, ...textPresets.fs12_400 }}>Phí vận chuyển</Text>
-                <Text style={{ color: colors.text, ...textPresets.fs12_400 }}>
+                <Text
+                  style={{ color: colors.neutral500, ...textPresets.fs12_400 }}
+                >
+                  Phí vận chuyển
+                </Text>
+                <Text
+                  style={{ color: colors.neutral900, ...textPresets.fs12_400 }}
+                >
                   {formatMoneyFull(shippingFee)}
                 </Text>
               </View>
             )}
             <View style={styles.inlineRow}>
-              <Text style={{ color: colors.text, ...textPresets.fs14_500 }}>Tiền thu hộ (COD)</Text>
+              <Text
+                style={{ color: colors.neutral900, ...textPresets.fs14_500 }}
+              >
+                Tiền thu hộ (COD)
+              </Text>
               <Text style={{ color: colors.primary, ...textPresets.fs14_500 }}>
                 {formatMoneyFull(cod)}
               </Text>
@@ -168,12 +291,25 @@ export default function ManualLabelScreen() {
 
           {order.note ? (
             <>
-              <View style={[styles.divider, { backgroundColor: colors.border10 }]} />
+              <View
+                style={[styles.divider, { backgroundColor: colors.border10 }]}
+              />
               <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: colors.neutral400, ...textPresets.fs11_400 }]}>
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    { color: colors.neutral400, ...textPresets.fs11_400 },
+                  ]}
+                >
                   GHI CHÚ
                 </Text>
-                <Text style={{ color: colors.neutral500, ...textPresets.fs12_400, lineHeight: 18 }}>
+                <Text
+                  style={{
+                    color: colors.neutral500,
+                    ...textPresets.fs12_400,
+                    lineHeight: 18,
+                  }}
+                >
                   {order.note}
                 </Text>
               </View>
@@ -194,16 +330,34 @@ export default function ManualLabelScreen() {
         ]}
       >
         <Pressable
-          style={[styles.printBtn, { backgroundColor: colors.neutral50, opacity: printing ? 0.7 : 1 }]}
-          onPress={() => { void handlePrint(); }}
+          style={[
+            styles.printBtn,
+            { backgroundColor: colors.neutral50, opacity: printing ? 0.7 : 1 },
+          ]}
+          onPress={() => {
+            void handlePrint();
+          }}
           disabled={printing}
         >
           {printing ? (
-            <ActivityIndicator color={colors.text} size="small" />
+            <ActivityIndicator color={colors.neutral900} size="small" />
           ) : (
             <>
-              <Ionicons name="print-outline" size={18} color={isPrinterConfigured ? colors.text : colors.neutral400} />
-              <Text style={{ color: isPrinterConfigured ? colors.text : colors.neutral400, ...textPresets.fs16_600 }}>
+              <Ionicons
+                name="print-outline"
+                size={18}
+                color={
+                  isPrinterConfigured ? colors.neutral900 : colors.neutral400
+                }
+              />
+              <Text
+                style={{
+                  color: isPrinterConfigured
+                    ? colors.neutral900
+                    : colors.neutral400,
+                  ...textPresets.fs16_600,
+                }}
+              >
                 In Vận Đơn
               </Text>
             </>
@@ -251,7 +405,12 @@ const styles = createStyles(({ colors, shadows }) => ({
     overflow: "hidden",
     ...shadows.sd2,
   },
-  shopHeader: { alignItems: "center", paddingVertical: 16, paddingHorizontal: 16, gap: 4 },
+  shopHeader: {
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    gap: 4,
+  },
   divider: { height: 0.5 },
   section: { paddingHorizontal: 16, paddingVertical: 12, gap: 4 },
   sectionLabel: { marginBottom: 4, letterSpacing: 0.4 },

@@ -43,7 +43,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     height: 96,
   },
   logoTitle: {
-    color: colors.text,
+    color: colors.neutral900,
     ...textPresets.fs18_500,
   },
 }));

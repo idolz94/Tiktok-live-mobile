@@ -19,7 +19,7 @@ type HeaderProps = {
 };
 
 const ICON_SIZE = 20;
-const BUTTON_SIZE = 40;
+const BUTTON_SIZE = 44;
 
 export const Header = memo(
   ({
@@ -52,24 +52,19 @@ export const Header = memo(
         ]}
       >
         <View style={styles.row}>
-          <View style={styles.side}>
-            {showBack && (
-              <Pressable
-                hitSlop={8}
-                onPress={handleBack}
-                style={[
-                  styles.iconButton,
-                  transparent && styles.iconButtonTransparent,
-                ]}
-              >
-                <Ionicons
-                  name="chevron-back"
-                  size={ICON_SIZE}
-                  color={colors.neutral900}
-                />
-              </Pressable>
-            )}
-          </View>
+          {showBack && (
+            <Pressable
+              hitSlop={8}
+              onPress={handleBack}
+              style={[styles.iconButton]}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={ICON_SIZE}
+                color={colors.neutral900}
+              />
+            </Pressable>
+          )}
 
           <View style={styles.center} pointerEvents="none">
             {!!title && (
@@ -79,24 +74,19 @@ export const Header = memo(
             )}
           </View>
 
-          <View style={[styles.side, styles.sideRight]}>
-            {!!rightIcon && (
-              <Pressable
-                hitSlop={8}
-                onPress={onRightPress}
-                style={[
-                  styles.iconButton,
-                  transparent && styles.iconButtonTransparent,
-                ]}
-              >
-                <Ionicons
-                  name={rightIcon}
-                  size={ICON_SIZE}
-                  color={colors.neutral900}
-                />
-              </Pressable>
-            )}
-          </View>
+          {!!rightIcon && (
+            <Pressable
+              hitSlop={8}
+              onPress={onRightPress}
+              style={[styles.iconButton]}
+            >
+              <Ionicons
+                name={rightIcon}
+                size={ICON_SIZE}
+                color={colors.neutral900}
+              />
+            </Pressable>
+          )}
         </View>
       </View>
     );
@@ -108,6 +98,7 @@ Header.displayName = "Header";
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     backgroundColor: colors.neutral100,
+    paddingBottom: 16,
   },
   containerTransparent: {
     backgroundColor: "transparent",
@@ -135,7 +126,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
   },
   title: {
-    ...textPresets.fs18_700,
+    ...textPresets.fs18_500,
+    lineHeight: 24,
     color: colors.neutral900,
   },
   iconButton: {

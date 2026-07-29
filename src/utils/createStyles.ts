@@ -17,7 +17,7 @@ import { theme, AppTheme } from "@themes";
  *   },
  *   text: {
  *     ...theme.textPresets.body,
- *     color: theme.colors.text,
+ *     color: theme.colors.neutral900,
  *   },
  * }));
  * ```

@@ -66,6 +66,18 @@ const settingGroups: {
       onPress: () => router.push("/change-password"),
     },
   ],
+  // DEV-only: nhóm công cụ phát triển, ẩn hoàn toàn trên bản release
+  ...(__DEV__
+    ? [
+        [
+          {
+            icon: icons.settings,
+            label: "Button Demo (DEV)",
+            onPress: () => router.push("/button-demo"),
+          },
+        ],
+      ]
+    : []),
 ];
 
 const socialLogins = [
@@ -165,7 +177,6 @@ export function SettingsTabScreen() {
           <View style={styles.settingsContainer}>
             {settingGroups.map((group, groupIndex) => (
               <View key={groupIndex}>
-                {groupIndex > 0 && <View style={styles.itemDivider} />}
                 <View style={styles.settingsGroup}>
                   {group.map((item) => (
                     <View key={item.label}>
@@ -179,7 +190,6 @@ export function SettingsTabScreen() {
                 </View>
               </View>
             ))}
-            <View style={styles.itemDivider} />
             <View style={styles.settingsGroup}>
               <Pressable
                 style={styles.settingItem}
@@ -328,11 +338,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: colors.neutral100,
-  },
-  itemDivider: {
-    height: 0.5,
-    backgroundColor: colors.border10,
-    marginLeft: 16 + 24 + 16,
   },
   settingItem: {
     flexDirection: "row",

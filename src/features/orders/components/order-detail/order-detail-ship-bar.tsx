@@ -48,7 +48,12 @@ export function OrderDetailShipBar({
       active: isPaid,
       loading: depositLoading,
     },
-    { key: "share", label: "Chia sẻ", icon: "receipt" as const, onPress: onShare },
+    {
+      key: "share",
+      label: "Chia sẻ",
+      icon: "receipt" as const,
+      onPress: onShare,
+    },
   ];
 
   if (section === "actions") {
@@ -57,7 +62,12 @@ export function OrderDetailShipBar({
         {actions.map((btn) => (
           <Pressable
             key={btn.key}
-            style={[styles.actionItem, btn.key === "deposit" && btn.active ? { opacity: 0.7 } : undefined]}
+            style={[
+              styles.actionItem,
+              btn.key === "deposit" && btn.active
+                ? { opacity: 0.7 }
+                : undefined,
+            ]}
             onPress={btn.onPress}
             disabled={btn.loading}
           >
@@ -90,25 +100,34 @@ export function OrderDetailShipBar({
                   styles.providerLogo,
                   {
                     backgroundColor:
-                      providerName === "spx" || providerName === "Shopee Express"
+                      providerName === "spx" ||
+                      providerName === "Shopee Express"
                         ? "#ff3911"
                         : "#2ca87b",
                   },
                 ]}
               >
                 <Text style={styles.providerLogoText}>
-                  {providerName === "spx" || providerName === "Shopee Express" ? "SPX" : "M"}
+                  {providerName === "spx" || providerName === "Shopee Express"
+                    ? "SPX"
+                    : "M"}
                 </Text>
               </View>
               <View style={styles.shipInfo}>
-                <Text style={[styles.providerLabel, { color: colors.text }]} numberOfLines={1}>
+                <Text
+                  style={[styles.providerLabel, { color: colors.neutral900 }]}
+                  numberOfLines={1}
+                >
                   {providerName === "spx" || providerName === "Shopee Express"
                     ? "Shopee Express"
                     : providerName === "manual"
                       ? "Vận chuyển thủ công"
                       : providerName || "SPX Express"}
                 </Text>
-                <Text style={[styles.trackingLabel, { color: colors.neutral400 }]} numberOfLines={1}>
+                <Text
+                  style={[styles.trackingLabel, { color: colors.neutral400 }]}
+                  numberOfLines={1}
+                >
                   {trackingCode}
                 </Text>
               </View>
@@ -117,9 +136,15 @@ export function OrderDetailShipBar({
                   style={styles.iconBtn}
                   onPress={
                     onCancel ??
-                    (() => Alert.alert("Huỷ vận đơn", `Huỷ vận đơn ${trackingCode}?`, [
-                      { text: "Không" }, { text: "Huỷ", style: "destructive" },
-                    ]))
+                    (() =>
+                      Alert.alert(
+                        "Huỷ vận đơn",
+                        `Huỷ vận đơn ${trackingCode}?`,
+                        [
+                          { text: "Không" },
+                          { text: "Huỷ", style: "destructive" },
+                        ],
+                      ))
                   }
                 >
                   <Icon name="circle_x" size={22} tintColor="neutral400" />
@@ -131,7 +156,9 @@ export function OrderDetailShipBar({
             </>
           ) : (
             <Pressable style={styles.shipBtn} onPress={onShip}>
-              <Text style={[styles.shipBtnText, { color: "#fff" }]}>Tạo vận đơn</Text>
+              <Text style={[styles.shipBtnText, { color: "#fff" }]}>
+                Tạo vận đơn
+              </Text>
             </Pressable>
           )}
         </View>
@@ -186,7 +213,12 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   shipInfo: { flex: 1, rowGap: 2 },
   providerLabel: { ...textPresets.fs14_500 },
   trackingLabel: { ...textPresets.fs12_400 },
-  iconBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   shipBtn: {
     flex: 1,
     backgroundColor: colors.primary,

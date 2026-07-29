@@ -608,7 +608,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     paddingBottom: 16,
   },
   headerTitle: {
-    color: colors.text,
+    color: colors.neutral900,
     fontSize: 24,
     fontWeight: "600",
     lineHeight: 28,
