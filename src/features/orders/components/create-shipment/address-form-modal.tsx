@@ -1,16 +1,11 @@
-import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Keyboard, Pressable, Text, TextInput, View } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { AnimatedErrorText } from "@components/animated-error-text";
+import { Button } from "@components/button";
 import { GeoPickerSheet } from "@components/geo-picker";
 import { Header } from "@components/header";
 import { Icon } from "@components/icon";
@@ -68,6 +63,7 @@ export function AddressFormModal({
   const [wardItems, setWardItems] = useState<VnGeoItem[]>([]);
   const [geoPicker, setGeoPicker] = useState<"province" | "ward" | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const phoneInputRef = useRef<TextInput>(null);
 
   const province = watch("province");
   const ward = watch("ward");
@@ -123,202 +119,202 @@ export function AddressFormModal({
         end={{ x: 0.5, y: 1 }}
       />
       <Header title={title} transparent />
-      <View style={formModalStyles.sheet}>
-        <KeyboardAwareScrollView
-          style={formModalStyles.scrollView}
-          contentContainerStyle={formModalStyles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+      <KeyboardAwareScrollView
+        style={formModalStyles.scrollView}
+        contentContainerStyle={formModalStyles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Controller
+          control={control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <FormField
+              label="Họ và tên"
+              error={fieldState.isDirty ? errors.name?.message : undefined}
+            >
+              <TextInput
+                style={[
+                  formModalStyles.input,
+                  fieldState.isDirty && errors.name
+                    ? formModalStyles.inputError
+                    : null,
+                ]}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder="Nhập họ và tên"
+                placeholderTextColor={colors.textMuted}
+                returnKeyType="next"
+                submitBehavior="submit"
+                onSubmitEditing={() => phoneInputRef.current?.focus()}
+              />
+            </FormField>
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field, fieldState }) => (
+            <FormField
+              label="Số điện thoại"
+              error={fieldState.isDirty ? errors.phone?.message : undefined}
+            >
+              <TextInput
+                ref={phoneInputRef}
+                style={[
+                  formModalStyles.input,
+                  fieldState.isDirty && errors.phone
+                    ? formModalStyles.inputError
+                    : null,
+                ]}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder="Nhập số điện thoại"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="phone-pad"
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+            </FormField>
+          )}
+        />
+
+        <FormField
+          label="Tỉnh/Thành phố"
+          error={dirtyFields.province ? errors.province?.message : undefined}
         >
-          <Controller
-            control={control}
-            name="name"
-            render={({ field, fieldState }) => (
-              <FormField
-                label="Họ và tên"
-                error={fieldState.isDirty ? errors.name?.message : undefined}
-              >
-                <TextInput
-                  style={[
-                    formModalStyles.input,
-                    fieldState.isDirty && errors.name
-                      ? formModalStyles.inputError
-                      : null,
-                  ]}
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder="Nhập họ và tên"
-                  placeholderTextColor={colors.textMuted}
-                />
-              </FormField>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="phone"
-            render={({ field, fieldState }) => (
-              <FormField
-                label="Số điện thoại"
-                error={fieldState.isDirty ? errors.phone?.message : undefined}
-              >
-                <TextInput
-                  style={[
-                    formModalStyles.input,
-                    fieldState.isDirty && errors.phone
-                      ? formModalStyles.inputError
-                      : null,
-                  ]}
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder="Nhập số điện thoại"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="phone-pad"
-                />
-              </FormField>
-            )}
-          />
-
-          <FormField
-            label="Tỉnh/Thành phố"
-            error={dirtyFields.province ? errors.province?.message : undefined}
-          >
-            <Pressable
-              onPress={openProvincePicker}
-              style={[
-                formModalStyles.pickerField,
-                dirtyFields.province && errors.province
-                  ? formModalStyles.inputError
-                  : null,
-              ]}
-            >
-              <Text
-                style={[
-                  formModalStyles.pickerText,
-                  !province && formModalStyles.pickerPlaceholder,
-                ]}
-              >
-                {province || "Chọn tỉnh/thành phố"}
-              </Text>
-              <Icon name="arrow_down" size={16} tintColor="neutral400" />
-            </Pressable>
-          </FormField>
-
-          <FormField
-            label="Phường/Xã"
-            error={dirtyFields.ward ? errors.ward?.message : undefined}
-          >
-            <Pressable
-              onPress={openWardPicker}
-              style={[
-                formModalStyles.pickerField,
-                dirtyFields.ward && errors.ward
-                  ? formModalStyles.inputError
-                  : null,
-                !province && formModalStyles.pickerDisabled,
-              ]}
-            >
-              <Text
-                style={[
-                  formModalStyles.pickerText,
-                  !ward && formModalStyles.pickerPlaceholder,
-                ]}
-              >
-                {ward || "Chọn phường/xã"}
-              </Text>
-              <Icon name="arrow_down" size={16} tintColor="neutral400" />
-            </Pressable>
-          </FormField>
-
-          <Controller
-            control={control}
-            name="address"
-            render={({ field, fieldState }) => (
-              <FormField
-                label="Địa chỉ chi tiết"
-                error={fieldState.isDirty ? errors.address?.message : undefined}
-              >
-                <TextInput
-                  style={formModalStyles.input}
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder="Nhập địa chỉ chi tiết (số nhà, đường...)"
-                  placeholderTextColor={colors.textMuted}
-                />
-              </FormField>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="isDefault"
-            render={({ field }) => (
-              <Pressable
-                onPress={() => {
-                  if (!disableDefaultToggle) field.onChange(!field.value);
-                }}
-                style={[
-                  formModalStyles.switchRow,
-                  disableDefaultToggle ? { opacity: 0.5 } : null,
-                ]}
-              >
-                <Text style={formModalStyles.switchLabel}>
-                  Đặt làm địa chỉ mặc định
-                </Text>
-                <View
-                  style={[
-                    formModalStyles.switchTrack,
-                    isDefault
-                      ? formModalStyles.switchTrackOn
-                      : formModalStyles.switchTrackOff,
-                  ]}
-                >
-                  <View
-                    style={[
-                      formModalStyles.switchThumb,
-                      isDefault
-                        ? formModalStyles.switchThumbOn
-                        : formModalStyles.switchThumbOff,
-                    ]}
-                  />
-                </View>
-              </Pressable>
-            )}
-          />
-
           <Pressable
-            onPress={handleSubmit(async (vals) => {
-              setIsSaving(true);
-              try {
-                await onSave(vals);
-              } finally {
-                setIsSaving(false);
-              }
-            })}
-            disabled={isSaving || !isValid}
+            onPress={openProvincePicker}
             style={[
-              formModalStyles.saveBtn,
-              (isSaving || !isValid) && formModalStyles.saveBtnDisabled,
+              formModalStyles.pickerField,
+              dirtyFields.province && errors.province
+                ? formModalStyles.inputError
+                : null,
             ]}
           >
-            {isSaving && (
-              <ActivityIndicator
-                size="small"
-                color="#fff"
-                style={{ marginRight: 8 }}
-              />
-            )}
-            <Text style={formModalStyles.saveBtnText}>
-              {title.toLowerCase().includes("sửa")
-                ? "CẬP NHẬT ĐỊA CHỈ"
-                : "+ THÊM ĐỊA CHỈ"}
+            <Text
+              style={[
+                formModalStyles.pickerText,
+                !province && formModalStyles.pickerPlaceholder,
+              ]}
+            >
+              {province || "Chọn tỉnh/thành phố"}
             </Text>
+            <Icon name="arrow_down" size={16} tintColor="neutral400" />
           </Pressable>
-        </KeyboardAwareScrollView>
-      </View>
+        </FormField>
+
+        <FormField
+          label="Phường/Xã"
+          error={dirtyFields.ward ? errors.ward?.message : undefined}
+        >
+          <Pressable
+            onPress={openWardPicker}
+            style={[
+              formModalStyles.pickerField,
+              dirtyFields.ward && errors.ward
+                ? formModalStyles.inputError
+                : null,
+              !province && formModalStyles.pickerDisabled,
+            ]}
+          >
+            <Text
+              style={[
+                formModalStyles.pickerText,
+                !ward && formModalStyles.pickerPlaceholder,
+              ]}
+            >
+              {ward || "Chọn phường/xã"}
+            </Text>
+            <Icon name="arrow_down" size={16} tintColor="neutral400" />
+          </Pressable>
+        </FormField>
+
+        <Controller
+          control={control}
+          name="address"
+          render={({ field, fieldState }) => (
+            <FormField
+              label="Địa chỉ chi tiết"
+              error={fieldState.isDirty ? errors.address?.message : undefined}
+            >
+              <TextInput
+                style={formModalStyles.input}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder="Nhập địa chỉ chi tiết (số nhà, đường...)"
+                placeholderTextColor={colors.textMuted}
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+            </FormField>
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="isDefault"
+          render={({ field }) => (
+            <Pressable
+              onPress={() => {
+                if (!disableDefaultToggle) field.onChange(!field.value);
+              }}
+              style={[
+                formModalStyles.switchRow,
+                disableDefaultToggle ? { opacity: 0.5 } : null,
+              ]}
+            >
+              <Text style={formModalStyles.switchLabel}>
+                Đặt làm địa chỉ mặc định
+              </Text>
+              <View
+                style={[
+                  formModalStyles.switchTrack,
+                  isDefault
+                    ? formModalStyles.switchTrackOn
+                    : formModalStyles.switchTrackOff,
+                ]}
+              >
+                <View
+                  style={[
+                    formModalStyles.switchThumb,
+                    isDefault
+                      ? formModalStyles.switchThumbOn
+                      : formModalStyles.switchThumbOff,
+                  ]}
+                />
+              </View>
+            </Pressable>
+          )}
+        />
+
+        <Button
+          onPress={handleSubmit(async (vals) => {
+            setIsSaving(true);
+            try {
+              await onSave(vals);
+            } finally {
+              setIsSaving(false);
+            }
+          })}
+          disabled={isSaving || !isValid}
+          loading={isSaving}
+          loadingColor="white"
+          containerStyle={formModalStyles.saveBtn}
+          txtBtnStyle={formModalStyles.saveBtnText}
+          title={
+            title.toLowerCase().includes("sửa")
+              ? "CẬP NHẬT ĐỊA CHỈ"
+              : "+ THÊM ĐỊA CHỈ"
+          }
+        />
+      </KeyboardAwareScrollView>
 
       {geoPicker !== null && (
         <View style={formModalStyles.geoModalWrapper}>
@@ -399,9 +395,7 @@ const formModalStyles = createStyles(({ colors }) => ({
   },
   scrollView: { flex: 1 },
   scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 16,
-    gap: 14,
+    padding: 16,
   },
   input: {
     minHeight: 44,
@@ -412,7 +406,6 @@ const formModalStyles = createStyles(({ colors }) => ({
     paddingHorizontal: 12,
     color: colors.neutral900,
     fontSize: 14,
-    lineHeight: 20,
   },
   inputError: {
     borderColor: colors.error,
@@ -425,8 +418,8 @@ const formModalStyles = createStyles(({ colors }) => ({
     borderColor: colors.border10,
     backgroundColor: colors.surfaceAlt,
     paddingHorizontal: 12,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   pickerText: {
@@ -481,7 +474,6 @@ const formModalStyles = createStyles(({ colors }) => ({
     justifyContent: "center" as const,
     marginTop: 8,
   },
-  saveBtnDisabled: { opacity: 0.5 },
   saveBtnText: {
     color: colors.white,
     fontSize: 15,

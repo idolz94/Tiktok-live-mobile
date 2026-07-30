@@ -1,9 +1,13 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
-import type { ShopAddress, CustomerAddress } from "../../service/create-shipment-api";
+import type {
+  ShopAddress,
+  CustomerAddress,
+} from "../../service/create-shipment-api";
 import { addressLine } from "../../utils/shipment";
 import { createStyles } from "@utils/createStyles";
 import { Ionicons } from "@expo/vector-icons";
+import { Button } from "@components/button";
 
 type FigmaAddressCardProps = {
   address: ShopAddress | CustomerAddress | null;
@@ -32,24 +36,12 @@ export function FigmaAddressCard({
 
   if (!address) {
     return (
-      <Pressable
+      <Button
         onPress={onAddPress}
-        style={[
-          styles.addAddressCard,
-          { borderColor: colors.border20 },
-        ]}
-      >
-        <View
-          style={[styles.addCircle, { borderColor: colors.primary }]}
-        >
-          <Text style={[{ color: colors.primary }, textPresets.fs18_700]}>
-            +
-          </Text>
-        </View>
-        <Text style={[{ color: colors.primary }, textPresets.fs16_500]}>
-          Thêm mới {type === "sender" ? "người gửi" : "người nhận"}
-        </Text>
-      </Pressable>
+        type="outline-dashed"
+        title={`Thêm mới ${type === "sender" ? "người gửi" : "người nhận"}`}
+        icon={<Ionicons name="add" size={18} color={"black"} />}
+      />
     );
   }
 
@@ -79,12 +71,7 @@ export function FigmaAddressCard({
       {/* Info Container */}
       <View style={styles.infoContainer}>
         <View style={styles.namePhoneRow}>
-          <Text
-            style={[
-              { color: colors.neutral900 },
-              textPresets.fs16_500,
-            ]}
-          >
+          <Text style={[{ color: colors.neutral900 }, textPresets.fs16_500]}>
             {address.name ?? "—"}
           </Text>
           <Text
@@ -112,14 +99,9 @@ export function FigmaAddressCard({
       </View>
 
       {/* Sổ địa chỉ Button */}
-      <Pressable
-        onPress={onChangePress}
-        style={styles.bookButton}
-      >
+      <Pressable onPress={onChangePress} style={styles.bookButton}>
         <Ionicons name="book-outline" size={20} color="#4B5563" />
-        <Text style={styles.bookButtonText}>
-          Sổ địa{"\n"}chỉ
-        </Text>
+        <Text style={styles.bookButtonText}>Sổ địa{"\n"}chỉ</Text>
       </Pressable>
     </View>
   );
@@ -199,4 +181,3 @@ const styles = createStyles(() => ({
     lineHeight: 14,
   },
 }));
-

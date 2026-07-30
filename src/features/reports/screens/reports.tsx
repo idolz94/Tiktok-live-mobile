@@ -1,4 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import {
+  CollapsibleHeader,
+  useCollapsibleHeaderHeight,
+} from "@components/header/collapsible-header";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
 import { createStyles } from "@utils/createStyles";
@@ -18,7 +22,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 import { useCallback, useRef, useState } from "react";
 
 function splitCompact(value: number): { num: string; unit: string } {
@@ -81,7 +88,15 @@ function dateLabel(period: ReportPeriod, filter: ReportFilter): string {
 // (PROJECT_GUIDE mục 4 & 8): route giờ chỉ là wrapper mỏng render screen này qua named export.
 export function ReportsScreen() {
   const { colors } = useThemes();
-  const { top } = useSafeAreaInsets();
+  const scrollY = useSharedValue(0);
+  const headerHeight = useCollapsibleHeaderHeight();
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
   const { show, hide } = useBottomSheet();
   const {
     period,
@@ -143,37 +158,42 @@ export function ReportsScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Text style={styles.headerTitle}>Báo cáo thống kê</Text>
-        <Pressable
-          onPress={openFilter}
-          hitSlop={8}
-          style={[
-            styles.filterBtn,
-            {
-              backgroundColor: activeFilter
-                ? colors.primaryLight
-                : colors.neutral50,
-              borderColor: activeFilter ? colors.primary : colors.border10,
-            },
-          ]}
-        >
-          <Ionicons
-            name="options-outline"
-            size={18}
-            color={activeFilter ? colors.primary : colors.neutral400}
-          />
-          {activeFilter && (
-            <View
-              style={[styles.filterDot, { backgroundColor: colors.primary }]}
+      <CollapsibleHeader
+        title="Báo cáo thống kê"
+        scrollY={scrollY}
+        rightContent={
+          <Pressable
+            onPress={openFilter}
+            hitSlop={8}
+            style={[
+              styles.filterBtn,
+              {
+                backgroundColor: activeFilter
+                  ? colors.primaryLight
+                  : colors.neutral50,
+                borderColor: activeFilter ? colors.primary : colors.border10,
+              },
+            ]}
+          >
+            <Ionicons
+              name="options-outline"
+              size={18}
+              color={activeFilter ? colors.primary : colors.neutral400}
             />
-          )}
-        </Pressable>
-      </View>
-
-      <ScrollView
+            {activeFilter && (
+              <View
+                style={[styles.filterDot, { backgroundColor: colors.primary }]}
+              />
+            )}
+          </Pressable>
+        }
+      />
+      <Animated.ScrollView
         style={styles.scroll}
+        contentContainerStyle={{ paddingTop: headerHeight }}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={loading}
@@ -336,7 +356,7 @@ export function ReportsScreen() {
             <View style={{ height: 32 }} />
           </>
         )}
-      </ScrollView>
+      </Animated.ScrollView>
 
       <DatePickerModal
         visible={datePickerOpen}
@@ -495,13 +515,6 @@ function MetricCard({
 const styles = createStyles(({ colors, textPresets }) => ({
   root: { flex: 1 },
   bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  header: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   filterBtn: {
     width: 44,
     height: 44,
@@ -516,12 +529,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     width: 6,
     height: 6,
     borderRadius: 3,
-  },
-  headerTitle: {
-    color: colors.neutral900,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
   },
   scroll: { flex: 1 },
   tabsRow: {

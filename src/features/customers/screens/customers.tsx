@@ -15,7 +15,7 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { createStyles } from "@utils/createStyles";
 import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import Animated, {
@@ -32,15 +32,12 @@ const CustomerRow = memo(
     customer: CustomerSummaryWithTikTok;
     onPress: (key: string) => void;
   }) => {
-    const tiktokUsername = customer.customerTikTokUsername || "";
+    const tiktokUsername = customer.customerTikTokUsername ?? "";
     const customerKey = tiktokUsername || customer.username;
-    const handlePress = useCallback(
-      () => onPress(customerKey),
-      [customerKey, onPress],
-    );
+    const customerTypeIcon = getCustomerTypeIcon(customer.customerType);
 
     return (
-      <Pressable onPress={handlePress} style={styles.row}>
+      <Pressable onPress={() => onPress(customerKey)} style={styles.row}>
         <Avatar uri={customer.avatar} username={customer.username} size={42} />
         <View style={styles.info}>
           <Text numberOfLines={1} style={styles.name}>
@@ -54,17 +51,14 @@ const CustomerRow = memo(
             </View>
           )}
           <View style={styles.metaLine}>
-            {(() => {
-              const icon = getCustomerTypeIcon(customer.customerType);
-              return icon ? (
-                <View style={styles.customerTypeBadge}>
-                  <Image source={icon} style={styles.customerTypeIcon} />
-                  <Text style={styles.customerTypeText}>
-                    {customer.customerType}
-                  </Text>
-                </View>
-              ) : null;
-            })()}
+            {customerTypeIcon ? (
+              <View style={styles.customerTypeBadge}>
+                <Image source={customerTypeIcon} style={styles.customerTypeIcon} />
+                <Text style={styles.customerTypeText}>
+                  {customer.customerType}
+                </Text>
+              </View>
+            ) : null}
             <Text style={styles.metaText}>{customer.totalOrders} đơn</Text>
           </View>
         </View>
@@ -134,15 +128,12 @@ export function CustomersScreen() {
   const customers: CustomerSummaryWithTikTok[] = orderManager.customers.filter(
     (c) => c.totalOrders >= 1,
   );
-  const handlePressCustomer = useCallback(
-    (key: string) =>
-      show({
-        content: <CustomerDetailSheet customerKey={key} />,
-        showDragIndicator: true,
-        snapPoints: ["96%"],
-      }),
-    [show],
-  );
+  const handlePressCustomer = (key: string) =>
+    show({
+      content: <CustomerDetailSheet customerKey={key} />,
+      showDragIndicator: true,
+      snapPoints: ["96%"],
+    });
 
   return (
     <View style={styles.root}>
