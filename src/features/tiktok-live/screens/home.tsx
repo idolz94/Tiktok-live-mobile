@@ -3,17 +3,17 @@
  * Di chuyển từ `src/app/(tabs)/index.tsx` sang feature theo cấu trúc route-mỏng/feature-dày.
  * (PROJECT_GUIDE mục 4 & 8)
  */
-import { useThemes } from "@hooks/use-theme";
-import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
+import { HomeHeader } from "@components/home/header";
+import { LinearGradient } from "@components/linear-gradient";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
+import { TiktokPage } from "@features/tiktok-live/components/tiktok-page";
+import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
 import { useRef, useState } from "react";
 import { Text, View } from "react-native";
-import { LinearGradient } from "@components/linear-gradient";
 import PagerView from "react-native-pager-view";
-import { createStyles } from "@utils/createStyles";
-import { HomeHeader } from "@components/home/header";
-import { TiktokPage } from "@features/tiktok-live/components/tiktok-page";
 
 export type TopTab = "connect" | "history";
 
@@ -55,39 +55,11 @@ export function HomeScreen() {
       >
         <TiktokPage key="tiktok" />
         <View style={styles.page} key="facebook">
-          <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>Facebook sắp ra mắt</Text>
+          <Text style={[{ color: colors.neutral400 }, textPresets.fs14_400]}>
+            Facebook sắp ra mắt
+          </Text>
         </View>
       </PagerView>
-
-      {/* <TopSegmentTabs activeTab={topTab} onChange={setTopTab} />
-      <Home
-        topTab={topTab}
-        liveTab={orderManager.liveTab}
-        comments={comments}
-        orders={orderManager.orders}
-        filteredOrders={orderManager.filteredOrders}
-        orderFilter={orderManager.orderFilter}
-        orderSearchText={orderManager.orderSearchText}
-        buyingCount={orderManager.buyingCount}
-        paidOrders={orderManager.paidOrders}
-        draftOrders={orderManager.draftOrders}
-        confirmedOrders={orderManager.confirmedOrders}
-        orderProductCount={orderManager.orderProductCount}
-        onChangeLiveTab={orderManager.setLiveTab}
-        onChangeOrderFilter={orderManager.setOrderFilter}
-        onChangeOrderSearchText={orderManager.setOrderSearchText}
-        onClearComments={clearComments}
-        onClearOrders={orderManager.clearOrders}
-        // onCreateOrderFromComment={orderManager.createOrderFromComment}
-        onCreateOrderFromComment={handleCreateOrder}
-        onUpdateOrder={orderManager.updateOrder}
-        onDeleteOrder={orderManager.deleteOrder}
-        onAddProductToOrder={orderManager.addProductToOrder}
-        onToggleDeposit={orderManager.toggleDepositStatus}
-        onConfirmOrder={orderManager.confirmOrder}
-        liveHistory={liveHistory}
-        onOpenOrderOverview={(id) => router.push(`/order-detail?id=${id}`)}
-      /> */}
     </View>
   );
 }
