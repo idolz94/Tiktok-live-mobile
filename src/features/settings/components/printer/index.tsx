@@ -1,12 +1,9 @@
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
-import { useThemes } from "@hooks/use-theme";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useCallback } from "react";
 import { ScrollView, Text, TextInput, Pressable, View } from "react-native";
 import { createStyles } from "@utils/createStyles";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type PrinterSheet } from "../../types/printer";
 import { usePrinterSettings } from "../../hooks/use-printer-settings";
 import { PrinterConnectionCard } from "./printer-connection-card";
@@ -59,8 +56,6 @@ function OptionList<T extends string>({
 }
 
 export function PrinterSettingsScreen() {
-  const { top } = useSafeAreaInsets();
-  const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
   const {
     config,
@@ -158,16 +153,7 @@ export function PrinterSettingsScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Cài đặt máy in</Text>
-      </View>
+      <Header title="Cài đặt máy in" transparent />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
