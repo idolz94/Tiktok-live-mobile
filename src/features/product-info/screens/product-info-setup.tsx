@@ -4,6 +4,7 @@ import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { useToast } from "@components/toast";
+import { useThemes } from "@hooks/use-theme";
 import {
   ActivityIndicator,
   ScrollView,
@@ -18,6 +19,7 @@ import {
   useProductInfoSetup,
 } from "@features/product-info/use-product-info-setup";
 import { useCallback, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createStyles } from "@utils/createStyles";
 import { ProductPreset } from "@features/settings/service/product-presets-api";
 
@@ -54,6 +56,7 @@ function ProductForm({
   onSave,
 }: ProductFormProps) {
   const toast = useToast();
+  const { colors } = useThemes();
   const [code, setCode] = useState(initialCode);
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
@@ -138,7 +141,7 @@ function ProductForm({
               if (errors.code) setErrors((e) => ({ ...e, code: undefined }));
             }}
             placeholder="VD: SP001"
-            placeholderTextColor="#BDBDBD"
+            placeholderTextColor={colors.neutral300}
             style={[styles.input, errors.code && styles.inputError]}
             autoCapitalize="none"
           />
@@ -151,7 +154,7 @@ function ProductForm({
             value={name}
             onChangeText={setName}
             placeholder="VD: Áo thun trắng"
-            placeholderTextColor="#BDBDBD"
+            placeholderTextColor={colors.neutral300}
             style={styles.input}
           />
         </View>
@@ -162,7 +165,7 @@ function ProductForm({
             value={color}
             onChangeText={setColor}
             placeholder="VD: Đỏ, Xanh..."
-            placeholderTextColor="#BDBDBD"
+            placeholderTextColor={colors.neutral300}
             style={styles.input}
           />
         </View>
@@ -178,7 +181,7 @@ function ProductForm({
               value={price}
               onChangeText={handlePriceChange}
               placeholder="0"
-              placeholderTextColor="#BDBDBD"
+              placeholderTextColor={colors.neutral300}
               keyboardType="number-pad"
               style={styles.priceInput}
             />
@@ -211,6 +214,8 @@ function ProductForm({
 // Di chuyển từ src/app/product-info-setup.tsx sang feature theo cấu trúc route-mỏng/feature-dày
 // (PROJECT_GUIDE mục 4 & 8): route giờ chỉ là wrapper mỏng render screen này qua named export.
 export function ProductInfoSetupScreen() {
+  const { bottom } = useSafeAreaInsets();
+  const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
   const {
     presets,
@@ -266,12 +271,7 @@ export function ProductInfoSetupScreen() {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <Header
-        title="Thông tin sản phẩm"
-        rightIcon="add-circle-outline"
-        onRightPress={() => showForm("add")}
-        transparent
-      />
+      <Header title="Thông tin sản phẩm" transparent />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -279,7 +279,7 @@ export function ProductInfoSetupScreen() {
       >
         {loading ? (
           <View style={styles.centerState}>
-            <ActivityIndicator color="#ff6b8a" />
+            <ActivityIndicator color={colors.primary} />
             <Text style={styles.stateText}>Đang tải danh sách sản phẩm...</Text>
           </View>
         ) : presets.length === 0 ? (
@@ -288,13 +288,11 @@ export function ProductInfoSetupScreen() {
             <Text style={styles.emptyDescription}>
               Thêm sản phẩm để tự động nhận diện từ comment LIVE
             </Text>
-            <TouchableOpacity
+            <Button
+              title="Thêm sản phẩm"
+              type="gradient"
               onPress={() => showForm("add")}
-              style={styles.emptyButton}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.emptyButtonText}>Thêm sản phẩm</Text>
-            </TouchableOpacity>
+            />
           </View>
         ) : (
           <View style={styles.list}>
@@ -333,6 +331,21 @@ export function ProductInfoSetupScreen() {
           </View>
         )}
       </ScrollView>
+
+      {!loading && presets.length > 0 && (
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: bottom + 8, borderTopColor: colors.border10 },
+          ]}
+        >
+          <Button
+            title="Thêm sản phẩm"
+            type="gradient"
+            onPress={() => showForm("add")}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -416,7 +429,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
     paddingVertical: 12,
   },
   emptyButtonText: { color: colors.neutral100, ...textPresets.fs14_500 },
-  list: { gap: 10 },
+  list: { flex: 1, gap: 10 },
   presetCard: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -448,4 +461,9 @@ const styles = createStyles(({ colors, textPresets }) => ({
   editIcon: { fontSize: 16, color: colors.neutral400 },
   deleteButton: { backgroundColor: colors.primaryLight },
   deleteIcon: { fontSize: 20, color: colors.primary },
+  footer: {
+    borderTopWidth: 0.5,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
 }));
