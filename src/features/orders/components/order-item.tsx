@@ -13,7 +13,14 @@ import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
 import { memo, useCallback, useState } from "react";
 import { Alert, Image as RNImage, Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
@@ -132,7 +139,9 @@ export const OrderItem = memo(
                 styles.typeCustomer,
                 {
                   backgroundColor:
-                    item.status === "confirmed" ? colors.success : colors.neutral50,
+                    item.status === "confirmed"
+                      ? colors.success
+                      : colors.neutral50,
                 },
               ]}
             >
@@ -148,11 +157,24 @@ export const OrderItem = memo(
           </View>
         </View>
 
-        <Animated.View style={styles.productList} layout={LinearTransition.duration(280)}>
+        <Animated.View
+          style={styles.productList}
+          layout={LinearTransition.duration(280)}
+        >
           {products.length > 0 ? (
             displayProducts.map((p, i) => (
-              <Animated.View key={p.id} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
-                {i > 0 ? <Separator type="horizontal" size={1} style={styles.productSep} /> : null}
+              <Animated.View
+                key={p.id}
+                entering={FadeIn.duration(200)}
+                exiting={FadeOut.duration(150)}
+              >
+                {i > 0 ? (
+                  <Separator
+                    type="horizontal"
+                    size={1}
+                    style={styles.productSep}
+                  />
+                ) : null}
                 <View style={styles.productRow}>
                   <View style={[styles.productName, styles.productInfo]}>
                     <Text numberOfLines={2} style={styles.txtProduct}>
@@ -164,7 +186,9 @@ export const OrderItem = memo(
                     </Text>
                   </View>
                   <Text style={styles.txtProductPrice}>
-                    {formatMoney(Number(p.price || 0) * Number(p.quantity || 1))}
+                    {formatMoney(
+                      Number(p.price || 0) * Number(p.quantity || 1),
+                    )}
                   </Text>
                 </View>
               </Animated.View>
