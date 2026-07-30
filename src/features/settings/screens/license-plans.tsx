@@ -1,9 +1,9 @@
+import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { router } from "expo-router";
-import { Dimensions, Pressable, Text, View } from "react-native";
+import { Dimensions, Text, View } from "react-native";
 import Animated, {
   type SharedValue,
   interpolate,
@@ -12,7 +12,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_WIDTH = SCREEN_WIDTH - 80;
@@ -125,8 +124,6 @@ const PLANS: Plan[] = [
 const AnimatedFlatList = Animated.FlatList<Plan>;
 
 export function LicensePlansScreen() {
-  const { top } = useSafeAreaInsets();
-  const { colors } = useThemes();
   const scrollX = useSharedValue((CARD_WIDTH + CARD_GAP) * 1);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -143,16 +140,7 @@ export function LicensePlansScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Chọn gói dịch vụ</Text>
-      </View>
+      <Header title="Chọn gói dịch vụ" transparent />
 
       {/* Plan cards */}
 
@@ -357,27 +345,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    columnGap: 12,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  headerTitle: {
-    color: colors.neutral900,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
   },
 
   // Cards
