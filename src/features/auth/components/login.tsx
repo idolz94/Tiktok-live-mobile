@@ -1,7 +1,7 @@
 import { images } from "@assets/images";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { Button } from "@components/button";
 import { Image } from "@components/image";
-import { LinearGradient } from "@components/linear-gradient";
 import { Separator } from "@components/separator";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { useAuth } from "@features/auth/hooks/use-auth";
@@ -15,13 +15,7 @@ import { createStyles } from "@utils/createStyles";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { ForgotPass } from "./forgot-pass";
 
 const socialLogins = [
@@ -96,7 +90,8 @@ export const Login = memo(({ switchToRegister }: Props) => {
           remember,
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Đã có lỗi xảy ra";
+        const message =
+          error instanceof Error ? error.message : "Đã có lỗi xảy ra";
         toast.error({ title: "Đăng nhập thất bại", description: message });
       } finally {
         setLoading(false);
@@ -173,9 +168,14 @@ export const Login = memo(({ switchToRegister }: Props) => {
                       style={styles.input}
                       testID="input-password"
                     />
-                    <Pressable onPress={() => setIsPasswordVisible((v) => !v)} hitSlop={8}>
+                    <Pressable
+                      onPress={() => setIsPasswordVisible((v) => !v)}
+                      hitSlop={8}
+                    >
                       <Ionicons
-                        name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+                        name={
+                          isPasswordVisible ? "eye-off-outline" : "eye-outline"
+                        }
                         size={20}
                         color={colors.neutral400}
                       />
@@ -210,20 +210,16 @@ export const Login = memo(({ switchToRegister }: Props) => {
             </Pressable>
           )}
         />
-        <Pressable
-          style={[
-            styles.submitButton,
-            (!formMethod.formState.isValid || loading) && { opacity: 0.5 },
-          ]}
+        <Button
+          title="Đăng nhập"
+          type="gradient"
           onPress={submit}
           disabled={!formMethod.formState.isValid || loading}
-          testID="btn-login"
-        >
-          <LinearGradient type="gra_primary" style={StyleSheet.absoluteFill} />
-          <Text style={styles.submitText}>
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-          </Text>
-        </Pressable>
+          loading={loading}
+          loadingType="center"
+          containerStyle={styles.submitButton}
+          txtBtnStyle={styles.submitText}
+        />
         <View style={styles.dividerRow}>
           <Separator type="horizontal" size={1} containerStyle={styles.flex} />
           <Text style={styles.dividerText}>Tư vấn</Text>

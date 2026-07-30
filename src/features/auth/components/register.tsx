@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "@components/linear-gradient";
+import { Button } from "@components/button";
 import { AnimatedErrorText } from "@components/animated-error-text";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@components/toast";
@@ -9,13 +9,7 @@ import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { useCallback, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { RegisterForm, RegisterSchema } from "@features/auth/schemas";
 
 export const Register = () => {
@@ -241,19 +235,16 @@ export const Register = () => {
           )}
         />
 
-        <Pressable
-          style={[
-            styles.submitButton,
-            (!formMethod.formState.isValid || isLoading) && { opacity: 0.5 },
-          ]}
+        <Button
+          title="Đăng ký"
+          type="gradient"
           onPress={submit}
-          disabled={!formMethod.formState.isValid || isLoading}
-        >
-          <LinearGradient type="gra_primary" style={StyleSheet.absoluteFill} />
-          <Text style={styles.submitText}>
-            {isLoading ? "Đang xử lý..." : "Đăng ký"}
-          </Text>
-        </Pressable>
+          disabled={!formMethod.formState.isValid}
+          loading={isLoading}
+          loadingType="center"
+          containerStyle={styles.submitButton}
+          txtBtnStyle={styles.submitText}
+        />
       </View>
     </FormProvider>
   );

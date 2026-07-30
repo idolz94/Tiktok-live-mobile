@@ -4,6 +4,7 @@ import { createStyles } from "@utils/createStyles";
 import { memo } from "react";
 import { Dimensions, Text, View } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PathLine } from "./path";
 
 const flows = [
@@ -25,8 +26,10 @@ const flows = [
 ] as const;
 
 export const Header = memo(() => {
+  const { top } = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: top }]}>
       <Text style={styles.title}>{`3 bước đơn giản,\nchốt đơn dễ dàng`}</Text>
       <View style={styles.flowContainer}>
         <PathLine containerStyle={styles.dashLine} />
@@ -54,7 +57,6 @@ export const Header = memo(() => {
 
 const styles = createStyles(({ colors, textPresets, shadows }) => ({
   container: {
-    paddingTop: 12,
     rowGap: 24,
   },
   title: {
