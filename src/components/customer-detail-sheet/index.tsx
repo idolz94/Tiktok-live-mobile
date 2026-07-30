@@ -1,5 +1,6 @@
 import type { Order, OrderProduct } from "@app-types/index";
 import { Avatar } from "@components/avatar";
+import { Button } from "@components/button";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Popover } from "@components/popover";
 import { Skeleton } from "@components/skeleton";
@@ -37,7 +38,6 @@ import {
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import {
@@ -598,14 +598,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     color: colors.neutral400,
     ...textPresets.fs12_400,
   },
-  saveButtonWrapper: {
-    borderRadius: 40,
-    overflow: "hidden",
-    marginTop: 16,
-  },
-  saveButtonDisabled: {
-    opacity: 0.65,
-  },
   fieldError: {
     marginTop: 4,
     color: colors.error,
@@ -1046,16 +1038,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   addressLineText: {
     lineHeight: 20,
   },
-  addAddressCard: {
-    height: 72,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderRadius: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
+
   addAddressCircle: {
     width: 24,
     height: 24,
@@ -1427,62 +1410,25 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                       </Text>
                     </View>
                   ) : (
-                    <Pressable
+                    <Button
                       onPress={openAddressPicker}
-                      style={[
-                        styles.addAddressCard,
-                        { borderColor: colors.border20 },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.addAddressCircle,
-                          { borderColor: colors.primary },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            { color: colors.primary },
-                            textPresets.fs18_700,
-                          ]}
-                        >
-                          +
-                        </Text>
-                      </View>
-                      <Text
-                        style={[
-                          { color: colors.primary },
-                          textPresets.fs16_500,
-                        ]}
-                      >
-                        Thêm mới
-                      </Text>
-                    </Pressable>
+                      type="outline-dashed"
+                      title="Thêm mới"
+                      icon={<Ionicons name="add" size={18} color={"black"} />}
+                    />
                   )}
                 </View>
-                <TouchableOpacity
-                  style={[
-                    styles.saveButtonWrapper,
-                    (isSaving || !customer?.customerId) &&
-                      styles.saveButtonDisabled,
-                  ]}
-                  activeOpacity={0.8}
+                <Button
                   onPress={handleSave}
                   disabled={isSaving || !customer?.customerId}
-                >
-                  <LinearGradient
-                    colors={["#ff6b8a", "#ffa66d", "#ffc86a"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.saveButton}
-                  >
-                    {isSaving ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Text style={styles.saveButtonText}>Lưu</Text>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
+                  loading={isSaving}
+                  type="gradient"
+                  title="Lưu"
+                  gradientType="gra_primary"
+                  containerStyle={styles.saveButton}
+                  txtBtnStyle={styles.saveButtonText}
+                  loadingColor="white"
+                />
               </View>
             </ScrollView>
           ) : (

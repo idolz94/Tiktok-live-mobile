@@ -3,6 +3,10 @@
  * Di chuyển từ `tiktok-live/components/live-history-screen.tsx` sang `screens/`
  * theo cấu trúc feature (PROJECT_GUIDE mục 4.1). Hành vi giữ nguyên.
  */
+import {
+  CollapsibleHeader,
+  useCollapsibleHeaderHeight,
+} from "@components/header/collapsible-header";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
@@ -14,15 +18,11 @@ import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
-import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 
 // --- date helpers ---
 
@@ -423,8 +423,15 @@ const DayCard = memo(
 // --- main ---
 
 export const LiveHistoryScreen = memo(() => {
-  const { top } = useSafeAreaInsets();
   const { colors } = useThemes();
+  const scrollY = useSharedValue(0);
+  const headerHeight = useCollapsibleHeaderHeight();
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
   const { liveHistory, reloadLiveHistory } = useTikTokLiveSocketContext();
   const { show, hide } = useBottomSheet();
 
@@ -522,25 +529,27 @@ export const LiveHistoryScreen = memo(() => {
         end={{ x: 0.5, y: 1 }}
       />
 
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Text style={styles.headerTitle}>Lịch Sử Live</Text>
-        <Pressable
-          style={[
-            styles.headerButton,
-            hasFilter && { backgroundColor: colors.primary },
-          ]}
-          onPress={openFilter}
-        >
-          <Icon
-            name="filter"
-            size={20}
-            tintColor={hasFilter ? "#ffffff" : "#000000"}
-          />
-        </Pressable>
-      </View>
-
+      <CollapsibleHeader
+        title="Lịch Sử Live"
+        scrollY={scrollY}
+        rightContent={
+          <Pressable
+            style={[
+              styles.headerButton,
+              hasFilter && { backgroundColor: colors.primary },
+            ]}
+            onPress={openFilter}
+          >
+            <Icon
+              name="filter"
+              size={20}
+              tintColor={hasFilter ? "white" : "neutral900"}
+            />
+          </Pressable>
+        }
+      />
       {hasFilter && (
-        <View style={styles.filterBadgeRow}>
+        <View style={[styles.filterBadgeRow, { paddingTop: headerHeight }]}>
           <View
             style={[styles.filterBadge, { backgroundColor: colors.neutral50 }]}
           >
@@ -557,8 +566,7 @@ export const LiveHistoryScreen = memo(() => {
       )}
 
       {listEmpty ? (
-        <View style={styles.empty}>
-          <View style={styles.emptyIconWrap}>
+        <View style={[styles.empty, { paddingTop: headerHeight }]}>          <View style={styles.emptyIconWrap}>
             <Icon name="clock" size={32} tintColor="neutral300" />
           </View>
           <Text style={styles.emptyTitle}>
@@ -573,12 +581,17 @@ export const LiveHistoryScreen = memo(() => {
           </Text>
         </View>
       ) : (
-        <FlatList
+        <Animated.FlatList
           ref={scrollRef}
           data={groups}
           renderItem={renderDayCard}
           keyExtractor={keyExtractor}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            !hasFilter && { paddingTop: headerHeight },
+          ]}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -598,20 +611,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  header: {
-    minHeight: 119,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    color: colors.neutral900,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
   },
   headerButton: {
     width: 44,
