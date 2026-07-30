@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -13,17 +12,17 @@ import * as WebBrowser from "expo-web-browser";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
+import { Button } from "@components/button";
 import { LinearGradient } from "@components/linear-gradient";
 import { Header } from "@components/header";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import {
   SectionBlock,
   FigmaAddressCard,
-  MoneyField,
   ShipmentInput,
   ShippingOptions,
   SpxOptions,
-  SummaryRow,
+  FeeDetailSheet,
 } from "@features/orders/components/create-shipment";
 import { PackageDimModal } from "@features/orders/components/create-shipment/package-dim-modal";
 import { ParcelInfoSheet } from "@features/orders/components/create-shipment/parcel-info-sheet";
@@ -85,13 +84,13 @@ export default function CreateShipmentScreen() {
     autoScale,
     setAutoScale,
     shippingFee,
-    codAmountDisplay,
+    codAmount,
     totalCollected,
+    voucherAmount,
     manualShippingFee,
     setManualShippingFee,
     manualNote,
     setManualNote,
-    setManualCodAmount,
     note,
     setNote,
     isSubmitting,
@@ -302,6 +301,28 @@ export default function CreateShipmentScreen() {
     });
   };
 
+  const openFeeDetailSheet = () => {
+    let id: string;
+    const close = () => hide(id);
+    id = show({
+      content: (
+        <FeeDetailSheet
+          codAmount={codAmount}
+          shippingFee={shippingFee}
+          voucherAmount={voucherAmount}
+          totalCollected={totalCollected}
+          isSubmitting={isSubmitting}
+          isSubmitDisabled={submitDisabled}
+          onSubmit={() => {
+            close();
+            handleSubmitShipment();
+          }}
+          onClose={close}
+        />
+      ),
+    });
+  };
+
   const openServicePoint = () => {
     void WebBrowser.openBrowserAsync(
       "https://spx.vn/service-point?service_type=support_sending_non_shopee_parcel&hide_header=true",
@@ -420,12 +441,6 @@ export default function CreateShipmentScreen() {
         ) : null}
         <SectionBlock title="Thông tin vận chuyển" noPaddingHorizontal>
           <View style={styles.card}>
-            <MoneyField
-              label="Tiền thu hộ (COD)"
-              value={codAmountDisplay}
-              onChangeText={setManualCodAmount}
-              editable={isManualProvider}
-            />
             {!isSpxProvider && (
               <>
                 <Text
@@ -623,65 +638,23 @@ export default function CreateShipmentScreen() {
           },
         ]}
       >
-        <View style={styles.footerSummary}>
-          <SummaryRow
-            label="Tiền hàng"
-            value={`${declaredValue.toLocaleString("vi-VN")}đ`}
-          />
-          <View style={styles.summaryRow}>
-            <Text style={[textPresets.fs12_400, { color: colors.neutral500 }]}>
-              Phí vận chuyển
-            </Text>
-            {feeLoading ? (
-              <Text
-                style={[textPresets.fs14_500, { color: colors.neutral400 }]}
-              >
-                Đang tính...
-              </Text>
-            ) : feeError ? (
-              <Text style={[textPresets.fs12_400, { color: colors.error }]}>
-                {feeError}
-              </Text>
-            ) : (
-              <Text
-                style={[textPresets.fs14_500, { color: colors.neutral900 }]}
-              >
-                {shippingFee.toLocaleString("vi-VN")}đ
-              </Text>
-            )}
-          </View>
-          <View style={[styles.summaryRow, styles.summaryRowTotal]}>
-            <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
-              Shipper thu
-            </Text>
-            <Text style={[textPresets.fs14_500, { color: colors.primary }]}>
-              {totalCollected.toLocaleString("vi-VN")}đ
-            </Text>
-          </View>
-        </View>
         <Pressable
-          onPress={handleSubmitShipment}
-          disabled={submitDisabled}
-          style={[
-            styles.submitButton,
-            {
-              backgroundColor: submitDisabled
-                ? colors.neutral300
-                : colors.primary,
-            },
-          ]}
+          onPress={openFeeDetailSheet}
+          style={styles.footerRow}
         >
-          <View style={styles.submitButtonContent}>
-            {isSubmitting ? (
-              <ActivityIndicator color={colors.white} size="small" />
-            ) : (
-              <Icon name="truck" size={18} tintColor="white" />
-            )}
-            <Text style={[{ color: colors.white }, textPresets.fs16_500]}>
-              Tạo vận đơn
-            </Text>
-          </View>
+          <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
+            Shipper thu {totalCollected.toLocaleString("vi-VN")}đ
+          </Text>
+          <Text style={[textPresets.fs14_500, { color: colors.neutral500 }]}>Chi tiết ▲</Text>
         </Pressable>
+        <Button
+          title="Tạo vận đơn"
+          type="gradient"
+          loading={isSubmitting}
+          disabled={submitDisabled}
+          onPress={handleSubmitShipment}
+          containerStyle={styles.footerButton}
+        />
       </View>
     </View>
   );
@@ -729,31 +702,18 @@ const styles = createStyles(({ colors }) => ({
     borderRadius: 10,
     borderWidth: 1,
   },
-  submitButton: {
-    height: 50,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  submitButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  footerSummary: {
-    gap: 8,
-    marginBottom: 12,
-  },
-  summaryRow: {
+  footerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  summaryRowTotal: {
-    marginTop: 4,
-    paddingTop: 8,
-    borderTopWidth: 0.5,
-    borderTopColor: "#E5E7EB",
+  footerButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    height: 50,
+    borderRadius: 14,
   },
   dimCard: { borderRadius: 16, borderWidth: 0.5, padding: 16, gap: 8 },
   dimRow: {

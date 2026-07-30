@@ -1,7 +1,8 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { Icon } from "@components/icon";
+import { Button } from "@components/button";
 
 type Props = {
   codAmount: number;
@@ -86,23 +87,15 @@ export function FeeDetailSheet({ codAmount, shippingFee, voucherAmount, totalCol
           {totalCollected.toLocaleString("vi-VN")}đ
         </Text>
       </View>
-      <Pressable
-        onPress={onSubmit}
+      <Button
+        title="Tạo vận đơn"
+        type="gradient"
+        loading={isSubmitting}
         disabled={isSubmitting || isSubmitDisabled}
-        style={[
-          fStyles.submitButton,
-          { backgroundColor: isSubmitting || isSubmitDisabled ? colors.neutral300 : colors.primary },
-        ]}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Icon name="truck" size={18} tintColor="white" />
-          )}
-          <Text style={[{ color: "#fff" }, textPresets.fs16_500]}>Tạo vận đơn</Text>
-        </View>
-      </Pressable>
+        icon={<Icon name="truck" size={18} tintColor="white" />}
+        onPress={onSubmit}
+        containerStyle={fStyles.submitButton}
+      />
     </View>
   );
 }

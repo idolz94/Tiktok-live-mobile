@@ -150,6 +150,7 @@ Use React Native components appropriately:
 
 Rules:
 
+- **Button rule:** always use the shared `Button` component from `@components/button` for all button elements. Do not use raw `Pressable`, `TouchableOpacity`, or `TouchableHighlight` as standalone buttons — wrap them in `Button` or extend `Button` props instead.
 - Prefer `FlatList` or `FlashList` for large or frequently updated collections.
 - Avoid `.map()` for long realtime lists.
 - Use stable keys.

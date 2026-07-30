@@ -41,10 +41,9 @@ export const ConnectedLive = memo(
       <View style={styles.container}>
         <FlashList
           ref={listRef}
-          data={comments}
+          data={[...comments].reverse()}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          inverted
           contentContainerStyle={styles.listContent}
         />
       </View>
