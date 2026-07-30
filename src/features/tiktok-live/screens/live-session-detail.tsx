@@ -128,7 +128,11 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
       <>
         {/* Header */}
         <View style={[styles.header, { paddingTop: top + 12 }]}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backBtn}
+            hitSlop={8}
+          >
             <Ionicons name="chevron-back" size={22} color={colors.neutral900} />
           </Pressable>
           <View style={styles.headerTitles}>
@@ -239,7 +243,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
     paddingBottom: 16,
     columnGap: 12,
   },
@@ -278,7 +281,6 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   grid: {
     rowGap: 8,
     marginTop: 16,
-    paddingHorizontal: 16,
   },
   columnWrapper: {
     flexDirection: "row",
@@ -305,6 +307,7 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   },
   listContent: {
     paddingBottom: 24,
+    paddingHorizontal: 16,
   },
   notFound: {
     flex: 1,
