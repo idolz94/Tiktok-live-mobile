@@ -1,4 +1,5 @@
 import type { ShippingStatus } from "@app-types/index";
+import { Button } from "@components/button";
 import { Header } from "@components/header";
 import { LinearGradient } from "@components/linear-gradient";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
@@ -7,6 +8,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useState, useCallback } from "react";
 import {
   ActivityIndicator,
+  Clipboard,
   Image,
   Linking,
   Pressable,
@@ -244,14 +246,21 @@ export default function ShippingDetailScreen() {
               >
                 Mã đơn hàng:{" "}
               </Text>
-              <Text
-                style={[{ color: colors.neutral900, ...textPresets.fs14_500 }]}
-              >
-                {displayCode}
-              </Text>
+              <View style={{ flexShrink: 1 }}>
+                <Text
+                  style={[
+                    { color: colors.neutral900, ...textPresets.fs14_500 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {displayCode}
+                </Text>
+              </View>
               <Pressable
-                onPress={() => {
-                  void Linking.openURL("");
+                onPress={async () => {
+                  // void Linking.openURL("");
+                  await Clipboard.setString(displayCode);
+                  toast.success({ title: "Đã sao chép" });
                 }}
                 hitSlop={8}
                 style={styles.copyBtn}
@@ -456,28 +465,24 @@ export default function ShippingDetailScreen() {
       >
         <View style={styles.actionGrid}>
           {isCancelled ? (
-            <Pressable
-              style={[
+            <Button
+              title="Chăm sóc khách hàng"
+              containerStyle={[
                 styles.actionButton,
                 { flex: 1, backgroundColor: colors.neutral50 },
               ]}
-            >
-              <Text
-                style={[
-                  styles.actionButtonText,
-                  { color: colors.neutral900, ...textPresets.fs12_400 },
-                ]}
-              >
-                {"Chăm sóc\nkhách hàng"}
-              </Text>
-            </Pressable>
+              txtBtnStyle={[
+                styles.actionButtonText,
+                { color: colors.neutral900, ...textPresets.fs12_400 },
+              ]}
+            />
+
           ) : (
             <>
-              <Pressable
-                style={[
-                  styles.actionButton,
-                  { backgroundColor: colors.neutral50 },
-                ]}
+              <Button
+                title={isWaitingManual ? "In Đơn Hàng" : "In Đơn Hàng SPX"}
+                loading={printing}
+                loadingType="center"
                 onPress={() => {
                   if (isWaitingManual) {
                     router.push({
@@ -489,32 +494,26 @@ export default function ShippingDetailScreen() {
                   }
                 }}
                 disabled={printing}
-              >
-                {printing ? (
-                  <ActivityIndicator size="small" color={colors.neutral900} />
-                ) : (
-                  <>
-                    <Ionicons
-                      name="print-outline"
-                      size={18}
-                      color={colors.neutral900}
-                    />
-                    <Text
-                      style={[
-                        styles.actionButtonText,
-                        { color: colors.neutral900, ...textPresets.fs12_400 },
-                      ]}
-                    >
-                      {isWaitingManual ? "In Đơn Hàng" : "In Đơn Hàng SPX"}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
+                containerStyle={[
+                  styles.actionButton,
+                  { backgroundColor: colors.neutral50 },
+                ]}
+                txtBtnStyle={[
+                  styles.actionButtonText,
+                  { color: colors.neutral900, ...textPresets.fs12_400 },
+                ]}
+              />
+
               {isWaitingManual ? (
-                <Pressable
-                  style={[
+                <Button
+                  title="Sửa Đơn Hàng"
+                  containerStyle={[
                     styles.actionButton,
                     { backgroundColor: colors.neutral50 },
+                  ]}
+                  txtBtnStyle={[
+                    styles.actionButtonText,
+                    { color: colors.neutral900, ...textPresets.fs12_400 },
                   ]}
                   onPress={() =>
                     router.push({
@@ -522,42 +521,29 @@ export default function ShippingDetailScreen() {
                       params: { id: order.id },
                     })
                   }
-                >
-                  <Text
-                    style={[
-                      styles.actionButtonText,
-                      { color: colors.neutral900, ...textPresets.fs12_400 },
-                    ]}
-                  >
-                    Sửa Đơn Hàng
-                  </Text>
-                </Pressable>
+                />
               ) : (
-                <Pressable
-                  style={[
+                <Button
+                  title={
+                    depositStatus === "paid" || depositStatus === "deposited"
+                      ? "Đã Cọc"
+                      : "Chưa Cọc"
+                  }
+                  containerStyle={[
                     styles.actionButton,
                     { backgroundColor: colors.neutral50 },
+                  ]}
+                  txtBtnStyle={[
+                    styles.actionButtonText,
+                    { color: colors.neutral900, ...textPresets.fs12_400 },
                   ]}
                   onPress={() => {
                     void handleToggleDeposit();
                   }}
+                  loading={depositLoading}
+                  loadingType="center"
                   disabled={depositLoading}
-                >
-                  {depositLoading ? (
-                    <ActivityIndicator size="small" color={colors.neutral900} />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.actionButtonText,
-                        { color: colors.neutral900, ...textPresets.fs12_400 },
-                      ]}
-                    >
-                      {depositStatus === "paid" || depositStatus === "deposited"
-                        ? "Đã Cọc"
-                        : "Chưa Cọc"}
-                    </Text>
-                  )}
-                </Pressable>
+                />
               )}
             </>
           )}

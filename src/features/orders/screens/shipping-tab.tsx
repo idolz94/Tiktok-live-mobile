@@ -16,7 +16,7 @@ import { router } from "expo-router";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { icons } from "@assets/icons";
 import {
   ActivityIndicator,
@@ -750,6 +750,20 @@ export function ShippingTabScreen() {
     },
   });
 
+  const handleOpenFilter = useCallback(() => {
+    show({
+      showDragIndicator: true,
+      backgroundStyle: { backgroundColor: colors.white },
+      content: (
+        <FilterSheet
+          filter={filter}
+          onClose={() => hide()}
+          onSelect={setFilter}
+        />
+      ),
+    });
+  }, [colors.white, filter, hide, setFilter, show]);
+
   if (loading) return <ShippingSkeleton />;
 
   return (
@@ -807,19 +821,7 @@ export function ShippingTabScreen() {
               </View>
               <Pressable
                 style={[styles.filterTrigger, { borderColor: colors.border10 }]}
-                onPress={() => {
-                  show({
-                    showDragIndicator: true,
-                    backgroundStyle: { backgroundColor: colors.white },
-                    content: (
-                      <FilterSheet
-                        filter={filter}
-                        onClose={() => hide()}
-                        onSelect={setFilter}
-                      />
-                    ),
-                  });
-                }}
+                onPress={handleOpenFilter}
               >
                 <Text
                   style={[
