@@ -1,95 +1,156 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { useCallback, useMemo, useState } from "react";
-import {
-  Dimensions,
-  LayoutChangeEvent,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { BlurView } from "expo-blur";
+import { router } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   type SharedValue,
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const DEFAULT_SCROLL_DISTANCE = 80;
+const ICON_SIZE = 20;
 
 type CollapsibleHeaderProps = {
   title: string;
   scrollY: SharedValue<number>;
   scrollDistance?: number;
   rightContent?: React.ReactNode;
+  showBack?: boolean;
+  onBackPress?: () => void;
 };
 
 export function CollapsibleHeader({
   title,
   scrollY,
-  scrollDistance = DEFAULT_SCROLL_DISTANCE,
+  scrollDistance,
   rightContent,
+  showBack = false,
+  onBackPress,
 }: CollapsibleHeaderProps) {
   const { top } = useSafeAreaInsets();
-  const [titleWidth, setTitleWidth] = useState(130);
+  const { colors } = useThemes();
 
   const headerMaxHeight = top + 76;
   const headerMinHeight = top + 50;
+  const collapseRange = scrollDistance ?? headerMaxHeight - headerMinHeight;
 
-  const onTitleLayout = useCallback((e: LayoutChangeEvent) => {
-    setTitleWidth(e.nativeEvent.layout.width);
-  }, []);
-
-  const centerTranslateX = useMemo(() => {
-    return SCREEN_WIDTH / 2 - 16 - titleWidth / 2;
-  }, [titleWidth]);
+  const handleBack = () => {
+    if (onBackPress) {
+      onBackPress();
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+    }
+  };
 
   const headerAnimatedStyle = useAnimatedStyle(() => ({
     height: interpolate(
       scrollY.value,
-      [0, scrollDistance],
+      [0, collapseRange],
       [headerMaxHeight, headerMinHeight],
       "clamp",
     ),
   }));
 
   const blurAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, scrollDistance], [0, 1], "clamp"),
+    opacity: interpolate(scrollY.value, [0, collapseRange], [0, 1], "clamp"),
   }));
 
-  const titleAnimatedStyle = useAnimatedStyle(() => {
-    const transX = interpolate(
+  const borderAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, collapseRange], [0, 1], "clamp"),
+  }));
+
+  const largeTitleAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
       scrollY.value,
-      [0, scrollDistance],
-      [0, centerTranslateX],
+      [0, collapseRange * 0.8],
+      [1, 0],
       "clamp",
-    );
-    const scale = interpolate(
+    ),
+    transform: [
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, collapseRange],
+          [0, -10],
+          "clamp",
+        ),
+      },
+    ],
+  }));
+
+  const smallTitleAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
       scrollY.value,
-      [0, scrollDistance],
-      [1, 0.8],
+      [collapseRange * 0.4, collapseRange],
+      [0, 1],
       "clamp",
-    );
-    return {
-      transform: [{ translateX: transX }, { scale }],
-    };
-  });
+    ),
+    transform: [
+      {
+        translateY: interpolate(
+          scrollY.value,
+          [0, collapseRange],
+          [10, 0],
+          "clamp",
+        ),
+      },
+    ],
+  }));
 
   return (
     <Animated.View style={[styles.header, headerAnimatedStyle]}>
+      {/* Translucent background */}
       <Animated.View style={[StyleSheet.absoluteFill, blurAnimatedStyle]}>
-        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
       </Animated.View>
-      <Animated.View
-        onLayout={onTitleLayout}
-        style={[styles.titleContainer, titleAnimatedStyle]}
-      >
-        <Text style={styles.title}>{title}</Text>
-      </Animated.View>
-      {rightContent && (
-        <View style={styles.rightContainer}>{rightContent}</View>
+
+      {/* Fixed top back button */}
+      {showBack && (
+        <Pressable
+          hitSlop={8}
+          onPress={handleBack}
+          style={[styles.backButton, { top }]}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={ICON_SIZE}
+            color={colors.neutral900}
+          />
+        </Pressable>
       )}
+
+      {/* Fixed top small title */}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.smallTitleContainer, { top }, smallTitleAnimatedStyle]}
+      >
+        <Text style={styles.smallTitle} numberOfLines={1}>
+          {title}
+        </Text>
+      </Animated.View>
+
+      {/* Content Row containing Large Title (left) and Right Content (right) */}
+      <View style={styles.contentRow}>
+        <Animated.View
+          style={[styles.largeTitleContainer, largeTitleAnimatedStyle]}
+        >
+          <Text style={styles.largeTitle} numberOfLines={1}>
+            {title}
+          </Text>
+        </Animated.View>
+
+        {rightContent && (
+          <View style={styles.rightContainer}>{rightContent}</View>
+        )}
+      </View>
+
+      {/* Subtle bottom border line */}
+      <Animated.View style={[styles.border, borderAnimatedStyle]} />
     </Animated.View>
   );
 }
@@ -107,22 +168,64 @@ const styles = createStyles(({ colors }) => ({
     right: 0,
     zIndex: 10,
     overflow: "hidden",
-    borderBottomColor: "rgba(0,0,0,0.05)",
   },
-  titleContainer: {
+  backButton: {
     position: "absolute",
     left: 16,
-    bottom: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 99,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.neutral50,
+    zIndex: 20,
   },
-  title: {
+  smallTitleContainer: {
+    position: "absolute",
+    left: 60,
+    right: 60,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 15,
+  },
+  smallTitle: {
+    color: colors.neutral900,
+    fontSize: 17,
+    fontWeight: "600",
+    letterSpacing: -0.41,
+    lineHeight: 22,
+  },
+  contentRow: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  largeTitleContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  largeTitle: {
     color: colors.neutral900,
     fontSize: 24,
     fontWeight: "600",
+    letterSpacing: 0.41,
     lineHeight: 28,
   },
   rightContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20,
+  },
+  border: {
     position: "absolute",
-    right: 16,
-    bottom: 12,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 0.5,
+    backgroundColor: "rgba(0,0,0,0.12)",
   },
 }));
