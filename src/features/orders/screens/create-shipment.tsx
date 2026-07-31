@@ -352,7 +352,12 @@ export default function CreateShipmentScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient type="gra_background" style={StyleSheet.absoluteFill} />
+      <LinearGradient
+        type="gra_background"
+        style={styles.bg}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <Header title="Tạo đơn hàng" rightIcon="settings-outline" transparent />
 
       <ScrollView
@@ -638,14 +643,13 @@ export default function CreateShipmentScreen() {
           },
         ]}
       >
-        <Pressable
-          onPress={openFeeDetailSheet}
-          style={styles.footerRow}
-        >
+        <Pressable onPress={openFeeDetailSheet} style={styles.footerRow}>
           <Text style={[textPresets.fs14_500, { color: colors.neutral900 }]}>
             Shipper thu {totalCollected.toLocaleString("vi-VN")}đ
           </Text>
-          <Text style={[textPresets.fs14_500, { color: colors.neutral500 }]}>Chi tiết ▲</Text>
+          <Text style={[textPresets.fs14_500, { color: colors.neutral500 }]}>
+            Chi tiết ▲
+          </Text>
         </Pressable>
         <Button
           title="Tạo vận đơn"
@@ -762,4 +766,5 @@ const styles = createStyles(({ colors }) => ({
     justifyContent: "center",
   },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
+  bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
 }));
