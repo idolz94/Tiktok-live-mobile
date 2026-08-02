@@ -88,6 +88,7 @@ function makeHookReturn(overrides: Partial<ReturnType<typeof useCreateShipment>>
     order: ORDER,
     isManualProvider: false,
     isSpxProvider: true,
+    isEditMode: false,
     primaryProduct: undefined as any,
     displayQuantity: 1,
     orderTotal: 150000,

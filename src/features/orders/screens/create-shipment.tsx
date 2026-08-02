@@ -52,6 +52,7 @@ export default function CreateShipmentScreen() {
     order,
     isManualProvider,
     isSpxProvider,
+    isEditMode,
     displayQuantity,
     shopAddresses,
     customerAddresses,
@@ -358,7 +359,11 @@ export default function CreateShipmentScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <Header title="Tạo đơn hàng" rightIcon="settings-outline" transparent />
+      <Header
+        title={isEditMode ? "Chỉnh sửa đơn hàng" : "Tạo đơn hàng"}
+        rightIcon="settings-outline"
+        transparent
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -652,7 +657,7 @@ export default function CreateShipmentScreen() {
           </Text>
         </Pressable>
         <Button
-          title="Tạo vận đơn"
+          title={isEditMode ? "Lưu chỉnh sửa" : "Tạo vận đơn"}
           type="gradient"
           loading={isSubmitting}
           disabled={submitDisabled}

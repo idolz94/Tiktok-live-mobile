@@ -174,6 +174,16 @@ export async function submitSpxApi(
   );
 }
 
+export async function updateSpxApi(
+  orderId: string,
+  payload: SubmitSpxPayload,
+) {
+  return patchRequest<{ shipping: unknown }>(
+    `/orders/${orderId}/shipping/spx`,
+    payload,
+  );
+}
+
 export async function getSpxTimeslotsApi(serviceType: number) {
   return getRequest<{ timeslots: SpxTimeslot[] }>(`/orders/spx/timeslots?serviceType=${serviceType}`);
 }

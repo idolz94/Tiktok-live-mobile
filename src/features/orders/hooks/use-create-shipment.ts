@@ -10,7 +10,7 @@ import { useSpxShipping } from "./use-spx-shipping";
 import { parseLocaleNumber, formatLocaleInput } from "../utils/shipment";
 
 export function useCreateShipment() {
-  const params = useLocalSearchParams<{ order?: string; shippingFee?: string; provider?: string; prepaid?: string }>();
+  const params = useLocalSearchParams<{ order?: string; shippingFee?: string; provider?: string; prepaid?: string; mode?: string }>();
 
   const [order, setOrder] = useState<OrderWithTikTok | null>(() => {
     if (!params.order) return null;
@@ -19,6 +19,7 @@ export function useCreateShipment() {
 
   const isManualProvider = params.provider === "manual";
   const isSpxProvider = params.provider === "spx";
+  const isEditMode = params.mode === "edit";
   const orderProducts = order?.products ?? [];
   const primaryProduct = orderProducts[0];
   const displayQuantity = orderProducts.reduce((sum, p) => sum + (p.quantity || 0), 0) || order?.quantity || 1;
@@ -102,7 +103,7 @@ export function useCreateShipment() {
   }, [isSpxProvider, spx.timeslots, form.pickupTimeRangeId]);
 
   const { isSubmitting, submitState, handleSubmitShipment, handleRetryOutcomeUnknown } = useSubmitShipment({
-    order, isManualProvider, isSpxProvider, selectedSender, selectedRecipient,
+    order, isManualProvider, isSpxProvider, isEditMode, selectedSender, selectedRecipient,
     paymentSide: form.paymentSide, transport: form.transport, pickupOption: form.pickupOption, note: form.note,
     manualShippingFee: form.manualShippingFee, manualCodAmount: form.manualCodAmount, manualNote: form.manualNote, manualFee,
     senderAddressId: selectedSender?.id,
@@ -134,6 +135,7 @@ export function useCreateShipment() {
     order,
     isManualProvider,
     isSpxProvider,
+    isEditMode,
     primaryProduct,
     displayQuantity,
     orderTotal,

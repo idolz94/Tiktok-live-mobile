@@ -5,7 +5,7 @@ import { LinearGradient } from "@components/linear-gradient";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { icons } from "@assets/icons";
 import { useLocalSearchParams, router } from "expo-router";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Clipboard,
@@ -22,7 +22,6 @@ import { useToast } from "@components/toast";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";
 import { getShipmentLabelApi } from "../service/create-shipment-api";
-import { updateOrderDepositStatusApi } from "../service/api";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
@@ -69,10 +68,6 @@ export default function ShippingDetailScreen() {
   const toast = useToast();
   const [printing, setPrinting] = useState(false);
   const [navigated, setNavigated] = useState(false);
-  const [depositStatus, setDepositStatus] = useState<string>(
-    () => (order as ShippingOrder | null)?.depositStatus ?? "unpaid",
-  );
-  const [depositLoading, setDepositLoading] = useState(false);
 
   const order = orderParam
     ? (() => {
@@ -104,24 +99,6 @@ export default function ShippingDetailScreen() {
       setPrinting(false);
     }
   }, [order?.id, printing]);
-
-  const handleToggleDeposit = useCallback(async () => {
-    if (!order?.id || depositLoading) return;
-    const isPaid = depositStatus === "paid" || depositStatus === "deposited";
-    const nextStatus = isPaid ? "unpaid" : "paid";
-    setDepositLoading(true);
-    setDepositStatus(nextStatus);
-    try {
-      await updateOrderDepositStatusApi({
-        orderId: order.id,
-        depositStatus: nextStatus,
-      });
-    } catch {
-      setDepositStatus(depositStatus);
-    } finally {
-      setDepositLoading(false);
-    }
-  }, [order?.id, depositStatus, depositLoading]);
 
   const handleCall = useCallback(() => {
     const phone = order?.customerPhone?.trim();
@@ -452,7 +429,7 @@ export default function ShippingDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Action Bar — text-only buttons, no icons */}
+      {/* Action Bar */}
       <View
         style={[
           styles.actionBar,
@@ -464,89 +441,103 @@ export default function ShippingDetailScreen() {
         ]}
       >
         <View style={styles.actionGrid}>
-          {isCancelled ? (
-            <Button
-              title="Chăm sóc khách hàng"
-              containerStyle={[
-                styles.actionButton,
-                { flex: 1, backgroundColor: colors.neutral50 },
-              ]}
-              txtBtnStyle={[
+          <Pressable
+            style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+            onPress={() => {
+              if (isWaitingManual) {
+                router.push({
+                  pathname: "/shipping-label" as never,
+                  params: { id: order.id, order: orderParam },
+                });
+              } else {
+                void handlePrintLabel();
+              }
+            }}
+            disabled={printing}
+          >
+            {printing ? (
+              <ActivityIndicator size="small" color={colors.neutral900} />
+            ) : (
+              <>
+                <Ionicons
+                  name="print-outline"
+                  size={18}
+                  color={colors.neutral900}
+                />
+                <Text
+                  style={[
+                    styles.actionButtonText,
+                    { color: colors.neutral900, ...textPresets.fs12_400 },
+                  ]}
+                >
+                  In vận đơn
+                </Text>
+              </>
+            )}
+          </Pressable>
+          <Pressable
+            style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+          >
+            <Ionicons
+              name="headset-outline"
+              size={18}
+              color={colors.neutral900}
+            />
+            <Text
+              style={[
                 styles.actionButtonText,
                 { color: colors.neutral900, ...textPresets.fs12_400 },
               ]}
+            >
+              {"Chăm sóc\nkhách hàng"}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+            onPress={() =>
+              router.push({
+                pathname: "/order-detail/create-shipment" as never,
+                params: {
+                  order: orderParam,
+                  provider: isManual ? "manual" : "spx",
+                  mode: "edit",
+                },
+              })
+            }
+          >
+            <Ionicons
+              name="pencil-outline"
+              size={18}
+              color={colors.neutral900}
             />
-
-          ) : (
-            <>
-              <Button
-                title={isWaitingManual ? "In Đơn Hàng" : "In Đơn Hàng SPX"}
-                loading={printing}
-                loadingType="center"
-                onPress={() => {
-                  if (isWaitingManual) {
-                    router.push({
-                      pathname: "/shipping-label" as never,
-                      params: { id: order.id, order: orderParam },
-                    });
-                  } else {
-                    void handlePrintLabel();
-                  }
-                }}
-                disabled={printing}
-                containerStyle={[
-                  styles.actionButton,
-                  { backgroundColor: colors.neutral50 },
-                ]}
-                txtBtnStyle={[
-                  styles.actionButtonText,
-                  { color: colors.neutral900, ...textPresets.fs12_400 },
-                ]}
+            <Text
+              style={[
+                styles.actionButtonText,
+                { color: colors.neutral900, ...textPresets.fs12_400 },
+              ]}
+            >
+              Chỉnh sửa
+            </Text>
+          </Pressable>
+          {!isCancelled ? (
+            <Pressable
+              style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
+            >
+              <Ionicons
+                name="close-circle-outline"
+                size={18}
+                color="#ff4d4f"
               />
-
-              {isWaitingManual ? (
-                <Button
-                  title="Sửa Đơn Hàng"
-                  containerStyle={[
-                    styles.actionButton,
-                    { backgroundColor: colors.neutral50 },
-                  ]}
-                  txtBtnStyle={[
-                    styles.actionButtonText,
-                    { color: colors.neutral900, ...textPresets.fs12_400 },
-                  ]}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/order-detail" as never,
-                      params: { id: order.id },
-                    })
-                  }
-                />
-              ) : (
-                <Button
-                  title={
-                    depositStatus === "paid" || depositStatus === "deposited"
-                      ? "Đã Cọc"
-                      : "Chưa Cọc"
-                  }
-                  containerStyle={[
-                    styles.actionButton,
-                    { backgroundColor: colors.neutral50 },
-                  ]}
-                  txtBtnStyle={[
-                    styles.actionButtonText,
-                    { color: colors.neutral900, ...textPresets.fs12_400 },
-                  ]}
-                  onPress={() => {
-                    void handleToggleDeposit();
-                  }}
-                  loading={depositLoading}
-                  loadingType="center"
-                  disabled={depositLoading}
-                />
-              )}
-            </>
-          )}
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  { color: "#ff4d4f", ...textPresets.fs12_400 },
+                ]}
+              >
+                {"Huỷ Đơn\nHàng"}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </View>

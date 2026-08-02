@@ -7,6 +7,7 @@ import {
   ShopAddress,
   submitManualShippingApi,
   submitSpxApi,
+  updateSpxApi,
 } from "../service/create-shipment-api";
 import { PaymentSide, PickupOption, Transport, ServiceType, CollectType } from "../types/shipment";
 
@@ -14,6 +15,7 @@ type Deps = {
   order: OrderWithTikTok | null;
   isManualProvider: boolean;
   isSpxProvider: boolean;
+  isEditMode: boolean;
   selectedSender: ShopAddress | null;
   selectedRecipient: CustomerAddress | null;
   paymentSide: PaymentSide;
@@ -63,6 +65,7 @@ export function useSubmitShipment(deps: Deps) {
       order,
       isManualProvider,
       isSpxProvider,
+      isEditMode,
       selectedSender,
       selectedRecipient,
       paymentSide,
@@ -141,8 +144,8 @@ export function useSubmitShipment(deps: Deps) {
           toast.warning({ title: "Thiếu thông tin", description: "Vui lòng chọn khung giờ lấy hàng." });
           return;
         }
-        await submitSpxApi(order.id, {
-          providerCode: "spx",
+        const spxPayload = {
+          providerCode: "spx" as const,
           senderAddressId,
           serviceType,
           collectType,
@@ -153,7 +156,7 @@ export function useSubmitShipment(deps: Deps) {
           parcelWidthCm: dimWidth,
           parcelHeightCm: dimHeight,
           parcelItemName,
-          declaredValue,
+          ...(isEditMode ? {} : { declaredValue }),
           note,
           idempotencyKey,
           voucherCode,
@@ -163,7 +166,8 @@ export function useSubmitShipment(deps: Deps) {
           allowTryOn,
           allowPartialDelivery,
           codCollection,
-        });
+        };
+        await (isEditMode ? updateSpxApi : submitSpxApi)(order.id, spxPayload);
         setSubmitState("success");
         router.replace({
           pathname: "/order-detail/create-shipment/success" as never,

@@ -12,13 +12,23 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.idolz94.tiktoklivetools"
+      "bundleIdentifier": "com.idolz94.tiktoklivetools",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.idolz94.tiktoklivetools"
+      "package": "com.idolz94.tiktoklivetools",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "extra": {
-      "apiUrl": "http://localhost:8765"
+      "apiUrl": "http://localhost:8765",
+      "router": {},
+      "eas": {
+        "projectId": "c44ddee3-2cad-48c1-9881-d2322501c5c9"
+      }
     },
     "plugins": [
       "expo-asset",

@@ -82,19 +82,23 @@ function TikTokMark() {
   );
 }
 
+type ActionTone = "TikTok" | "Zalo" | "Phone";
+
 function ActionPill({
   label,
   onPress,
   icon,
+  tone,
 }: {
   label: string;
   onPress: () => void;
-  icon?: React.ReactNode;
+  icon: React.ReactNode;
+  tone: ActionTone;
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.actionPill}>
-      {icon ?? <TikTokMark />}
-      <Text style={styles.actionPillText}>{label}</Text>
+    <Pressable onPress={onPress} style={[styles.actionPill, styles[`btn${tone}`]]}>
+      {icon}
+      <Text style={[styles.actionPillText, styles[`btn${tone}Text`]]}>{label}</Text>
     </Pressable>
   );
 }
@@ -537,24 +541,42 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    columnGap: 12,
+    marginHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border10,
   },
   actionPill: {
     flex: 1,
-    height: 40,
-    borderRadius: 999,
+    height: 32,
+    borderRadius: 8,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    backgroundColor: colors.neutral50,
+    columnGap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  btnTikTok: { backgroundColor: "rgba(0,0,0,0.08)" },
+  btnZalo: { backgroundColor: "rgba(0,106,255,0.1)" },
+  btnPhone: { backgroundColor: "rgba(82,196,26,0.1)" },
+  actionIcon: {
+    width: 16,
+    height: 16,
   },
   actionPillText: {
-    color: colors.neutral500,
-    fontSize: 13,
-    fontWeight: "600",
+    ...textPresets.fs12_500,
+  },
+  btnTikTokText: {
+    color: "#000000",
+  },
+  btnZaloText: {
+    color: "#006aff",
+  },
+  btnPhoneText: {
+    color: "#52c41a",
   },
   tabBar: {
     height: 48,
@@ -1229,35 +1251,29 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
         <>
           <View style={styles.actionsRow}>
             <ActionPill
-              label="TikTok"
+              label="Tiktok"
+              tone="TikTok"
               onPress={() => openTikTokProfile(tiktokUsername)}
+              icon={<Image source={images.logo_tiktok} style={styles.actionIcon} />}
             />
             <ActionPill
               label="Zalo"
+              tone="Zalo"
               onPress={() => {
                 if (phone)
                   Linking.openURL(
                     `zalo://chat?phone=${phone.replace(/^0/, "84")}`,
                   );
               }}
-              icon={
-                <Image
-                  source={images.logo_zalo}
-                  style={{ width: 18, height: 18 }}
-                />
-              }
+              icon={<Image source={images.logo_zalo} style={styles.actionIcon} />}
             />
             <ActionPill
               label="Điện thoại"
+              tone="Phone"
               onPress={() => {
                 if (phone) Linking.openURL(`tel:${phone}`);
               }}
-              icon={
-                <Image
-                  source={images.logo_phone}
-                  style={{ width: 18, height: 18 }}
-                />
-              }
+              icon={<Image source={images.logo_phone} style={styles.actionIcon} />}
             />
           </View>
 

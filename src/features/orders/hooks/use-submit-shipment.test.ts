@@ -1,16 +1,24 @@
 import { renderHook, act } from "@testing-library/react-native";
-import { Alert } from "react-native";
 import { router } from "expo-router";
 import { useSubmitShipment } from "./use-submit-shipment";
-import { submitSpxApi, submitManualShippingApi } from "../service/create-shipment-api";
+import { submitSpxApi, submitManualShippingApi, updateSpxApi } from "../service/create-shipment-api";
 
 jest.mock("expo-router", () => ({ router: { replace: jest.fn() } }));
 jest.mock("../service/create-shipment-api", () => ({
   submitSpxApi: jest.fn(),
+  updateSpxApi: jest.fn(),
   submitManualShippingApi: jest.fn(),
 }));
 
+const mockToastWarning = jest.fn();
+const mockToastError = jest.fn();
+
+jest.mock("@components/toast", () => ({
+  useToast: () => ({ warning: mockToastWarning, error: mockToastError }),
+}));
+
 const mockSubmitSpx = submitSpxApi as jest.MockedFunction<typeof submitSpxApi>;
+const mockUpdateSpx = updateSpxApi as jest.MockedFunction<typeof updateSpxApi>;
 const mockSubmitManual = submitManualShippingApi as jest.MockedFunction<typeof submitManualShippingApi>;
 const mockRouterReplace = router.replace as jest.Mock;
 
@@ -29,7 +37,7 @@ const RECIPIENT = {
 const ORDER = { id: "order-abc", codAmount: 150000, totalAmount: 150000 } as any;
 
 const spxDeps = (overrides = {}) => ({
-  order: ORDER, isManualProvider: false, isSpxProvider: true,
+  order: ORDER, isManualProvider: false, isSpxProvider: true, isEditMode: false,
   selectedSender: SENDER, selectedRecipient: RECIPIENT,
   paymentSide: 0 as const, transport: "road" as const, pickupOption: "cod" as const,
   note: "", manualShippingFee: "", manualCodAmount: "", manualNote: "", manualFee: 0,
@@ -47,7 +55,6 @@ async function hook(deps: ReturnType<typeof spxDeps>) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.spyOn(Alert, "alert").mockImplementation(() => {});
 });
 
 describe("useSubmitShipment — SPX flow", () => {
@@ -73,7 +80,7 @@ describe("useSubmitShipment — SPX flow", () => {
     await act(async () => { await result.current.handleSubmitShipment(); });
 
     expect(mockSubmitSpx).not.toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith("Thiếu thông tin", expect.any(String));
+    expect(mockToastWarning).toHaveBeenCalledWith({ title: "Thiếu thông tin", description: expect.any(String) });
     expect(result.current.submitState).toBe("idle");
   });
 
@@ -82,7 +89,7 @@ describe("useSubmitShipment — SPX flow", () => {
     await act(async () => { await result.current.handleSubmitShipment(); });
 
     expect(mockSubmitSpx).not.toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith("Thiếu thông tin", "Vui lòng chọn khung giờ lấy hàng.");
+    expect(mockToastWarning).toHaveBeenCalledWith({ title: "Thiếu thông tin", description: "Vui lòng chọn khung giờ lấy hàng." });
   });
 
   it("collectType=2 (gửi điểm) không cần pickupTimeRangeId: submit thành công", async () => {
@@ -94,12 +101,25 @@ describe("useSubmitShipment — SPX flow", () => {
     expect(mockSubmitSpx).toHaveBeenCalledTimes(1);
   });
 
+  it("edit mode: gọi update SPX và không gửi declaredValue", async () => {
+    mockUpdateSpx.mockResolvedValueOnce({ shipping: {} } as any);
+
+    const result = await hook(spxDeps({ isEditMode: true, declaredValue: 150000 }));
+    await act(async () => { await result.current.handleSubmitShipment(); });
+
+    expect(mockSubmitSpx).not.toHaveBeenCalled();
+    expect(mockUpdateSpx).toHaveBeenCalledWith(
+      "order-abc",
+      expect.not.objectContaining({ declaredValue: expect.anything() }),
+    );
+  });
+
   it("không có sender: block, Alert thiếu thông tin", async () => {
     const result = await hook(spxDeps({ selectedSender: null }));
     await act(async () => { await result.current.handleSubmitShipment(); });
 
     expect(mockSubmitSpx).not.toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith("Thiếu thông tin", expect.any(String));
+    expect(mockToastWarning).toHaveBeenCalledWith({ title: "Thiếu thông tin", description: expect.any(String) });
   });
 
   it("API lỗi network: state = outcome_unknown", async () => {
@@ -121,7 +141,7 @@ describe("useSubmitShipment — SPX flow", () => {
     await act(async () => { await result.current.handleSubmitShipment(); });
 
     expect(result.current.submitState).toBe("idle");
-    expect(Alert.alert).toHaveBeenCalledWith("Tạo vận đơn thất bại", expect.any(String));
+    expect(mockToastError).toHaveBeenCalledWith({ title: "Tạo vận đơn thất bại", description: expect.any(String) });
   });
 });
 
