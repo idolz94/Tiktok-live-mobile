@@ -25,6 +25,7 @@ jest.mock("@hooks/use-theme", () => ({
       neutral100: "#f2f4f7",
       neutral50: "#f9fafb",
       white: "#ffffff",
+      error: "#d92d20",
       text: "#101828",
       border10: "rgba(0,0,0,0.1)",
     },
@@ -212,6 +213,24 @@ describe("CreateShipmentScreen — integration", () => {
   it("hiển thị nút 'Tạo vận đơn'", async () => {
     await renderScreen();
     expect(screen.getByText("Tạo vận đơn")).toBeTruthy();
+  });
+
+  it("hiển thị nút 'Chỉnh Sửa Đơn Hàng' khi edit mode", async () => {
+    await renderScreen(makeHookReturn({ isEditMode: true }));
+    expect(screen.getByText("Chỉnh Sửa Đơn Hàng")).toBeTruthy();
+  });
+
+  it("hiển thị số lần sửa SPX còn lại khi edit mode", async () => {
+    await renderScreen(makeHookReturn({ isEditMode: true, order: { ...ORDER, spxEditCount: 1, spxEditLimit: 3, spxEditRemaining: 2 } }));
+    expect(screen.getByText("Mỗi đơn hàng được chỉnh sửa tối đa 2 lần.")).toBeTruthy();
+  });
+
+  it("disable submit khi SPX edit đã hết lượt", async () => {
+    const handleSubmitShipment = jest.fn();
+    await renderScreen(makeHookReturn({ isEditMode: true, order: { ...ORDER, spxEditCount: 3, spxEditLimit: 3, spxEditRemaining: 0 }, handleSubmitShipment }));
+    fireEvent.press(screen.getByText("Chỉnh Sửa Đơn Hàng"));
+    expect(handleSubmitShipment).not.toHaveBeenCalled();
+    expect(screen.getByText("Đơn hàng SPX đã đạt giới hạn chỉnh sửa 3 lần.")).toBeTruthy();
   });
 
   it("nút enabled khi có sender, recipient, parcelItemName, weight", async () => {

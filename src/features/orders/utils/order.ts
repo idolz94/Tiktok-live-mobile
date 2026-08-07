@@ -177,6 +177,8 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
   const computedCodAmount = Math.max(0, totalAmount - depositAmount);
   const rawCodAmount = Number(order?.codAmount ?? order?.cod_amount ?? 0);
   const codAmount = rawCodAmount > 0 ? rawCodAmount : computedCodAmount;
+  const spxEditCount = Number(order?.spxEditCount ?? order?.spx_edit_count ?? order?.shipment?.spxEditCount ?? order?.shipment?.spx_edit_count ?? 0);
+  const spxEditLimit = Number(order?.spxEditLimit ?? order?.spx_edit_limit ?? order?.shipment?.spxEditLimit ?? order?.shipment?.spx_edit_limit ?? 3);
 
   return {
     id: String(order?.id || createId()),
@@ -258,6 +260,9 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
       order?.shipment?.providerCode ||
       order?.shipment?.provider_code ||
       null,
+    spxEditCount,
+    spxEditLimit,
+    spxEditRemaining: Math.max(0, spxEditLimit - spxEditCount),
     subtotalAmount,
     shippingFee,
     discountAmount,

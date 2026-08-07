@@ -9,8 +9,11 @@ import { useAuthStore } from "@features/auth/stores";
 import { refreshAccessToken } from "./auth-session";
 import { secureStorage } from "@utils/storage";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { sessionExpiredEmitter } from "./session-event";
+import { licenseExpiredEmitter, sessionExpiredEmitter } from "./session-event";
 import { ApiError } from "./api-error";
+
+// ponytail: match by message, not code — backend reuses generic "FORBIDDEN" code for every 403
+const LICENSE_EXPIRED_MESSAGE = "Shop đã hết hạn dùng thử hoặc chưa có license.";
 
 // ponytail: pure-JS HMAC-SHA256, needed because Hermes lacks crypto.subtle
 function sha256Bytes(data: number[]): number[] {
@@ -86,6 +89,11 @@ function shouldSkipRefresh(url?: string) {
 async function clearSessionAndNotify() {
   await useAuthStore.getState().logout();
   sessionExpiredEmitter.emit();
+}
+
+async function clearLicenseAndNotify() {
+  await useAuthStore.getState().logout();
+  licenseExpiredEmitter.emit();
 }
 
 // START 401 retry interceptor
@@ -184,6 +192,13 @@ apiClient.interceptors.response.use(
       console.log("STATUS:", error.response?.status);
       console.log("RESPONSE:", JSON.stringify(error.response?.data, null, 2));
       console.log("=====================");
+    }
+
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.message === LICENSE_EXPIRED_MESSAGE
+    ) {
+      void clearLicenseAndNotify();
     }
 
     if (error.response) {

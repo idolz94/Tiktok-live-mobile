@@ -10,6 +10,7 @@ import { Separator } from "@components/separator";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { getOrderTikTokUsername, openTikTokProfile } from "@utils/tiktok";
 import { router } from "expo-router";
 import { memo, useCallback, useState } from "react";
 import { Alert, Image as RNImage, Pressable, Text, View } from "react-native";
@@ -48,6 +49,7 @@ export const OrderItem = memo(
     const products = item.products?.length ? item.products : [];
     const total = item.subtotalAmount || getOrderTotal(products);
     const displayName = item.customerName || item.username || "Khách live";
+    const tiktokUsername = getOrderTikTokUsername(item) || item.username;
     const isPaid =
       item.depositStatus === "paid" || item.depositStatus === "deposited";
 
@@ -69,6 +71,10 @@ export const OrderItem = memo(
         params: { id: item.id },
       });
     }, [item.id]);
+
+    const handleOpenTikTok = useCallback(() => {
+      openTikTokProfile(tiktokUsername);
+    }, [tiktokUsername]);
 
     const handleRemove = useCallback(() => {
       Alert.alert("Xoá đơn hàng", "Bạn có chắc muốn xoá đơn này không?", [
@@ -111,10 +117,12 @@ export const OrderItem = memo(
               <Text style={styles.displayName}>{displayName}</Text>
             </View>
             <View style={styles.actions}>
-              <Image
-                source={images.logo_tiktok}
-                style={{ width: 24, height: 24 }}
-              />
+              <Pressable onPress={handleOpenTikTok} hitSlop={8}>
+                <Image
+                  source={images.logo_tiktok}
+                  style={{ width: 24, height: 24 }}
+                />
+              </Pressable>
               <Icon name="print" size={24} tintColor="neutral900" />
               <Pressable onPress={handleRemove} hitSlop={8}>
                 <Icon name="close" size={20} tintColor="neutral900" />

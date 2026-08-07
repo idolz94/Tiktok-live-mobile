@@ -182,6 +182,9 @@ export type Order = {
   trackingCode?: string | null;
   trackingLink?: string | null;
   providerName?: string | null;
+  spxEditCount?: number;
+  spxEditLimit?: number;
+  spxEditRemaining?: number;
   subtotalAmount?: number;
   shippingFee?: number;
   discountAmount?: number;

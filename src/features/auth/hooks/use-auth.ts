@@ -10,14 +10,18 @@ import {
   refreshAccessToken,
 } from "@utils/http/auth-session";
 import { useAuthStore } from "@features/auth/stores";
-import { mapBootstrapToAuthUser } from "@features/auth/stores/auth-utils";
+import {
+  mapBootstrapToAuthUser,
+  normalizeMeBootstrap,
+} from "@features/auth/stores/auth-utils";
+import { AuthUser } from "@app-types/index";
 import { secureStorage } from "@utils/storage";
 import { AppState } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type BootstrapOptions = {
   background?: boolean;
-  setUserFromBootstrap: (user: any) => void;
+  setUserFromBootstrap: (user: AuthUser | null) => void;
   setError: (error: string | null) => void;
 };
 
@@ -38,12 +42,13 @@ async function bootstrapAuth({
   background = false,
   setUserFromBootstrap,
   setError,
-}: BootstrapOptions): Promise<void> {
+}: BootstrapOptions): Promise<AuthUser | null> {
   try {
     setError(null);
     const response = await getMeBootstrapApi();
     const authUser = mapBootstrapToAuthUser(response);
     setUserFromBootstrap(authUser);
+    return authUser;
   } catch (error) {
     if (!background) {
       setUserFromBootstrap(null);
@@ -51,6 +56,7 @@ async function bootstrapAuth({
     setError(
       error instanceof Error ? error.message : "Không thể tải thông tin tài khoản",
     );
+    return null;
   }
 }
 
@@ -201,19 +207,14 @@ export const useAuth = () => {
           await secureStorage.setRefreshToken(refreshToken);
         }
 
+        const authUser = mapBootstrapToAuthUser(
+          normalizeMeBootstrap(response.data?.data ?? response.data),
+        );
+
         setLoginState(username.trim(), remember);
-        resetBootstrapGuard();
-        beginAuthResume();
-        try {
-          await bootstrapAuth({
-            background: false,
-            setUserFromBootstrap,
-            setError,
-          });
-          bootstrapDone = true;
-        } finally {
-          endAuthResume();
-        }
+        setUserFromBootstrap(authUser);
+        bootstrapDone = true;
+        return authUser;
       } finally {
         setIsBootstrapping(false);
       }

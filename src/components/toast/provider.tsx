@@ -8,6 +8,11 @@ interface ToastProviderProps {
   children: ReactNode;
 }
 
+function normalizeErrorToast(options: ToastOptions | string): ToastOptions {
+  if (typeof options === "string") return { title: options };
+  return options.description ? { ...options, title: options.description, description: undefined } : options;
+}
+
 export function ToastProvider({ children }: ToastProviderProps) {
   const addToast = useToastStore((state) => state.addToast);
   const updateToast = useToastStore((state) => state.updateToast);
@@ -32,8 +37,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
   const error = useCallback(
     (options: ToastOptions | string) => {
-      const parsedOptions = typeof options === "string" ? { title: options } : options;
-      return addToast({ ...parsedOptions, variant: "error" });
+      return addToast({ ...normalizeErrorToast(options), variant: "error" });
     },
     [addToast]
   );
@@ -101,7 +105,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
             : config.error;
 
         updateToast(id, {
-          ...errorOpts,
+          ...normalizeErrorToast(errorOpts),
           variant: "error",
           persistent: false, // Allow auto-dismissal now
         });

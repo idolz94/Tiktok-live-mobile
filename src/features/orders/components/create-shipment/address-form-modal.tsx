@@ -348,10 +348,12 @@ function FormField({
   label,
   error,
   children,
+  required = true,
 }: {
   label: string;
   error?: string;
   children: React.ReactNode;
+  required?: boolean;
 }) {
   const { colors, textPresets } = useThemes();
   return (
@@ -364,6 +366,7 @@ function FormField({
         ]}
       >
         {label}
+        {required ? <Text style={{ color: colors.error }}> *</Text> : null}
       </Text>
       {children}
       <AnimatedErrorText message={error} />

@@ -314,6 +314,7 @@ export default function CreateShipmentScreen() {
           totalCollected={totalCollected}
           isSubmitting={isSubmitting}
           isSubmitDisabled={submitDisabled}
+          hideSubmit={isEditMode}
           onSubmit={() => {
             close();
             handleSubmitShipment();
@@ -330,8 +331,14 @@ export default function CreateShipmentScreen() {
     );
   };
 
+  const spxEditLimit = order?.spxEditLimit ?? 3;
+  const spxEditCount = order?.spxEditCount ?? 0;
+  const spxEditRemaining = order?.spxEditRemaining ?? Math.max(0, spxEditLimit - spxEditCount);
+  const isSpxEditLimitReached = isEditMode && isSpxProvider && spxEditRemaining <= 0;
+
   const submitDisabled =
     isSubmitting ||
+    isSpxEditLimitReached ||
     !selectedSender ||
     !selectedRecipient ||
     (isSpxProvider &&
@@ -370,6 +377,16 @@ export default function CreateShipmentScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
+        {isEditMode ? (
+          <View style={styles.editNotice}>
+            <Text style={[{ color: colors.error }, textPresets.fs14_500]}>
+              {isSpxEditLimitReached
+                ? `Đơn hàng SPX đã đạt giới hạn chỉnh sửa ${spxEditLimit} lần.`
+                : `Mỗi đơn hàng được chỉnh sửa tối đa ${spxEditRemaining} lần.`}
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.card}>
           <FigmaAddressCard
             type="sender"
@@ -657,7 +674,7 @@ export default function CreateShipmentScreen() {
           </Text>
         </Pressable>
         <Button
-          title={isEditMode ? "Lưu chỉnh sửa" : "Tạo vận đơn"}
+          title={isEditMode ? "Chỉnh Sửa Đơn Hàng" : "Tạo vận đơn"}
           type="gradient"
           loading={isSubmitting}
           disabled={submitDisabled}
@@ -688,6 +705,13 @@ const styles = createStyles(({ colors }) => ({
     height: 0.5,
     backgroundColor: colors.border10,
     marginLeft: 56,
+  },
+  editNotice: {
+    backgroundColor: colors.neutral100,
+    borderRadius: 16,
+    borderWidth: 0.5,
+    borderColor: colors.border10,
+    padding: 12,
   },
   scroll: { flex: 1 },
   scrollContent: {

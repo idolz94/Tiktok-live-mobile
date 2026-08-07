@@ -12,11 +12,11 @@ import { useToast } from "@components/toast";
 import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
+import { ApiError } from "@utils/http/api-error";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { ForgotPass } from "./forgot-pass";
 
 const socialLogins = [
   {
@@ -39,12 +39,24 @@ const socialLogins = [
 
 type Props = {
   switchToRegister: () => void;
+  switchToForgot: () => void;
 };
 
-export const Login = memo(({ switchToRegister }: Props) => {
+function LicenseExpiredSheet() {
+  return (
+    <View style={styles.licenseSheet}>
+      <Text style={styles.licenseTitle}>Tài khoản hết hạn</Text>
+      <Text style={styles.licenseDescription}>
+        Tài khoản của bạn đã hết hạn.{"\n"}Vui lòng liên hệ hỗ trợ để gian hạn.
+      </Text>
+    </View>
+  );
+}
+
+export const Login = memo(({ switchToRegister, switchToForgot }: Props) => {
   const { login } = useAuth();
   const { colors } = useThemes();
-  const { show, hide } = useBottomSheet();
+  const { show } = useBottomSheet();
   const toast = useToast();
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -74,12 +86,6 @@ export const Login = memo(({ switchToRegister }: Props) => {
     _type: "phone" | "facebook" | "tiktok" | "zalo",
   ) => {};
 
-  const forgotPass = () =>
-    show({
-      content: <ForgotPass onClose={hide} />,
-      showDragIndicator: false,
-    });
-
   const submit = useCallback(() => {
     formMethod.handleSubmit(async ({ username, password, remember }) => {
       setLoading(true);
@@ -92,12 +98,22 @@ export const Login = memo(({ switchToRegister }: Props) => {
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Đã có lỗi xảy ra";
+
+        if (error instanceof ApiError && error.data?.code === "LICENSE_UNUSABLE") {
+          show({
+            content: <LicenseExpiredSheet />,
+            showDragIndicator: true,
+            snapPoints: ["25%"],
+          });
+          return;
+        }
+
         toast.error({ title: "Đăng nhập thất bại", description: message });
       } finally {
         setLoading(false);
       }
     })();
-  }, [formMethod, login, toast]);
+  }, [formMethod, login, show, toast]);
 
   return (
     <FormProvider {...formMethod}>
@@ -147,7 +163,7 @@ export const Login = memo(({ switchToRegister }: Props) => {
             }}
           >
             <Text style={styles.label}>Mật khẩu</Text>
-            <Pressable onPress={forgotPass}>
+            <Pressable onPress={switchToForgot}>
               <Text style={styles.forgotPass}>Quên mật khẩu?</Text>
             </Pressable>
           </View>
@@ -337,5 +353,22 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   registerTextNav: {
     color: colors.primary,
+  },
+  licenseSheet: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 32,
+    rowGap: 16,
+  },
+  licenseTitle: {
+    color: colors.neutral900,
+    textAlign: "center",
+    ...textPresets.fs18_500,
+  },
+  licenseDescription: {
+    color: colors.neutral400,
+    textAlign: "center",
+    lineHeight: 22,
+    ...textPresets.fs14_400,
   },
 }));

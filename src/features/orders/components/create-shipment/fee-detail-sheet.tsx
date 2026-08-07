@@ -11,6 +11,7 @@ type Props = {
   totalCollected: number;
   isSubmitting?: boolean;
   isSubmitDisabled?: boolean;
+  hideSubmit?: boolean;
   onSubmit: () => void;
   onClose: () => void;
 };
@@ -19,7 +20,7 @@ function fmt(n: number) {
   return n.toLocaleString("vi-VN");
 }
 
-export function FeeDetailSheet({ codAmount, shippingFee, voucherAmount, totalCollected, isSubmitting, isSubmitDisabled, onSubmit, onClose }: Props) {
+export function FeeDetailSheet({ codAmount, shippingFee, voucherAmount, totalCollected, isSubmitting, isSubmitDisabled, hideSubmit, onSubmit, onClose }: Props) {
   const { colors, textPresets } = useThemes();
   const totalDiscount = voucherAmount;
 
@@ -87,15 +88,17 @@ export function FeeDetailSheet({ codAmount, shippingFee, voucherAmount, totalCol
           {totalCollected.toLocaleString("vi-VN")}đ
         </Text>
       </View>
-      <Button
-        title="Tạo vận đơn"
-        type="gradient"
-        loading={isSubmitting}
-        disabled={isSubmitting || isSubmitDisabled}
-        icon={<Icon name="truck" size={18} tintColor="white" />}
-        onPress={onSubmit}
-        containerStyle={fStyles.submitButton}
-      />
+      {!hideSubmit && (
+        <Button
+          title="Tạo vận đơn"
+          type="gradient"
+          loading={isSubmitting}
+          disabled={isSubmitting || isSubmitDisabled}
+          icon={<Icon name="truck" size={18} tintColor="white" />}
+          onPress={onSubmit}
+          containerStyle={fStyles.submitButton}
+        />
+      )}
     </View>
   );
 }
@@ -130,6 +133,8 @@ const fStyles = createStyles(({ colors }) => ({
     alignItems: "center",
     justifyContent: "space-between",
     paddingTop: 12,
+    borderTopWidth: 0.5,
+    borderTopColor: colors.border10,
   },
   submitButton: {
     height: 50,

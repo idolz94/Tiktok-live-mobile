@@ -5,7 +5,7 @@ import { LinearGradient } from "@components/linear-gradient";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { icons } from "@assets/icons";
 import { useLocalSearchParams, router } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Clipboard,
@@ -21,7 +21,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useToast } from "@components/toast";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";
-import { getShipmentLabelApi } from "../service/create-shipment-api";
+import {
+  getShipmentLabelApi,
+  refreshShippingStatusApi,
+} from "../service/create-shipment-api";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
@@ -106,6 +109,18 @@ export default function ShippingDetailScreen() {
     void Linking.openURL(`tel:${phone}`);
   }, [order?.customerPhone]);
 
+  const isManual = !/ghn|ghtk|vtp|viettel|spx|shopee/i.test(
+    order?.providerName ?? "",
+  );
+
+  // Refresh tracking status khi vào detail đơn có courier thật (không phải manual)
+  useEffect(() => {
+    if (!order || isManual) return;
+    refreshShippingStatusApi(order.id).catch(() => {
+      /* bỏ qua — giữ status cũ nếu refresh lỗi */
+    });
+  }, [order?.id, isManual]);
+
   if (!order) {
     return (
       <View
@@ -122,9 +137,6 @@ export default function ShippingDetailScreen() {
   }
 
   const isCancelled = order.shippingStatus === "cancelled";
-  const isManual = !/ghn|ghtk|vtp|viettel|spx|shopee/i.test(
-    order.providerName ?? "",
-  );
   const isWaitingManual = isManual && order.shippingStatus === "submitted";
   const currentStep = statusToStep(order.shippingStatus);
   const displayCode =

@@ -17,7 +17,11 @@ import {
   updateOrderItemApi,
   updateOrderStatusApi,
 } from "../service/api";
-import { listCustomerAddressesApi, type CustomerAddress } from "@features/orders/service/create-shipment-api";
+import {
+  listCustomerAddressesApi,
+  refreshShippingStatusApi,
+  type CustomerAddress,
+} from "@features/orders/service/create-shipment-api";
 
 // START: Stable fallback để tránh tạo array/object mới mỗi render khi order null
 const EMPTY_PRODUCTS: OrderProduct[] = [];
@@ -163,6 +167,16 @@ export function useOrderDetail(orderId: string) {
       .catch(() => { /* bỏ qua — fallback hiển thị customerAddress từ order */ });
     return () => { cancelled = true; };
   }, [order?.customerId]);
+
+  // Refresh tracking status khi vào detail đơn SPX
+  useEffect(() => {
+    if (!order || order.providerName !== "spx") return;
+    let cancelled = false;
+    refreshShippingStatusApi(order.id)
+      .then(() => { if (!cancelled) void silentRefetch(); })
+      .catch(() => { /* bỏ qua — giữ status cũ nếu refresh lỗi */ });
+    return () => { cancelled = true; };
+  }, [order?.id, order?.providerName, silentRefetch]);
 
   // START: Stable products — EMPTY_PRODUCTS tránh tạo [] mới mỗi render khi order null
   const products = order?.products ?? EMPTY_PRODUCTS;

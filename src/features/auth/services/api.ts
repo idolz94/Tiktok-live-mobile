@@ -23,6 +23,12 @@ export type AuthRegisterPayload = {
   tiktokId?: string;
 };
 
+export type ResetPasswordPayload = {
+  username: string;
+  tiktokId: string;
+  newPassword: string;
+};
+
 const EMPTY_ME: MeBootstrapResponse = {
   user: null,
   profile: null,
@@ -36,7 +42,8 @@ const EMPTY_ME: MeBootstrapResponse = {
   hasHistory: false,
 };
 
-export const loginApi = async (payload: AuthLoginPayload) => {  return apiClient.post("/auth/login", payload);
+export const loginApi = async (payload: AuthLoginPayload) => {
+  return apiClient.post("/auth/login", payload);
 };
 
 export const registerApi = async (payload: AuthRegisterPayload) => {
@@ -45,6 +52,10 @@ export const registerApi = async (payload: AuthRegisterPayload) => {
 
 export const logoutApi = async () => {
   return apiClient.post("/auth/logout");
+};
+
+export const resetPasswordApi = async (payload: ResetPasswordPayload) => {
+  return apiClient.post("/auth/reset-password", payload);
 };
 
 export const getMeBootstrapApi = async (): Promise<MeBootstrapResponse> => {

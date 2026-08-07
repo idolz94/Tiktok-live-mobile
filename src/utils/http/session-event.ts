@@ -30,3 +30,26 @@ export const sessionExpiredEmitter = {
     hasEmittedSessionExpired = false;
   },
 };
+
+const licenseExpiredListeners = new Set<Listener>();
+let hasEmittedLicenseExpired = false;
+
+// ponytail: mirrors sessionExpiredEmitter above, for the "shop hết hạn license" API error
+export const licenseExpiredEmitter = {
+  subscribe(listener: Listener) {
+    licenseExpiredListeners.add(listener);
+    return () => {
+      licenseExpiredListeners.delete(listener);
+    };
+  },
+
+  emit() {
+    if (hasEmittedLicenseExpired) return;
+    hasEmittedLicenseExpired = true;
+    licenseExpiredListeners.forEach((listener) => listener());
+  },
+
+  reset() {
+    hasEmittedLicenseExpired = false;
+  },
+};

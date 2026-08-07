@@ -11,6 +11,7 @@ import {
 import {
   getShipmentLabelApi,
   cancelShipmentApi,
+  refreshShippingStatusApi,
 } from "@features/orders/service/create-shipment-api";
 import { router } from "expo-router";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
@@ -299,7 +300,13 @@ function OrderCard({
         {trackingUrl ? (
           <Pressable
             style={styles.cardTrackingLink}
-            onPress={() => void Linking.openURL(trackingUrl)}
+            onPress={() => {
+              refreshShippingStatusApi(item.id)
+                .then(onCancelled)
+                // ponytail: bỏ qua lỗi refresh — vẫn mở link tracking cũ
+                .catch(() => {})
+                .finally(() => void Linking.openURL(trackingUrl));
+            }}
           >
             <Text style={{ color: "#c6a84d", fontSize: 12, fontWeight: "600" }}>
               Theo dõi
@@ -536,6 +543,16 @@ function OrderCard({
             {formatMoney(Number(item.shippingFee || 0))}
           </Text>
         </View>
+        {abbr === "SPX" && Number(item.discountAmount || 0) > 0 ? (
+          <View style={styles.cardMoneyRow}>
+            <Text style={{ color: colors.neutral400, ...textPresets.fs12_400 }}>
+              Voucher
+            </Text>
+            <Text style={{ color: colors.primary, ...textPresets.fs12_400 }}>
+              -{formatMoney(Number(item.discountAmount || 0))}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View

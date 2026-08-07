@@ -11,7 +11,7 @@ import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tikto
 import { normalizeTikTokUsername } from "@features/tiktok-live/utils/comment";
 import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 import { useToast } from "@components/toast";
 import { listProductPresetsApi } from "@features/settings/service/product-presets-api";
@@ -51,13 +51,15 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     refreshOrders?: string;
   }>();
   const handledRefreshOrdersRef = useRef<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const ordersTabEnabled = activeIndex === 1;
   const orderManager = useOrderManager({
     comments,
     liveSessionId: currentLiveSessionId,
     hasOrders: user?.hasOrders ?? false,
+    enabled: ordersTabEnabled,
   });
 
-  const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -66,14 +68,8 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     handledRefreshOrdersRef.current = refreshOrders;
     setActiveIndex(1);
     pagerRef.current?.setPage(1);
-    void orderManager.reloadOrders();
-  }, [orderManager, ordersTab, pagerRef, refreshOrders]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void orderManager.reloadOrders();
-    }, [orderManager.reloadOrders]),
-  );
+    if (ordersTabEnabled) void orderManager.reloadOrders();
+  }, [orderManager, ordersTab, ordersTabEnabled, pagerRef, refreshOrders]);
 
   const [localChannels, setLocalChannels] = useState<TikTokLiveChannel[]>(() =>
     (user?.tiktokChannels ?? []).map((c) => ({

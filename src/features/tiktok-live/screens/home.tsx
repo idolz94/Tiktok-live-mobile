@@ -5,10 +5,7 @@
  */
 import { HomeHeader } from "@components/home/header";
 import { LinearGradient } from "@components/linear-gradient";
-import { useAuth } from "@features/auth/hooks/use-auth";
-import { useOrderManager } from "@features/orders/hooks/use-order-manager";
 import { TiktokPage } from "@features/tiktok-live/components/tiktok-page";
-import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { useRef, useState } from "react";
@@ -21,16 +18,7 @@ export function HomeScreen() {
   const pagerRef = useRef<PagerView>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const { currentLiveSessionId } = useTikTokLiveSocketContext();
-  const { user } = useAuth();
   const { colors, textPresets } = useThemes();
-
-  useOrderManager({
-    comments: [],
-    liveSessionId: currentLiveSessionId,
-    onAfterCreateOrder: () => setActiveIndex(1),
-    hasOrders: user?.hasOrders ?? false,
-  });
 
   const onTabPress = (i: number) => {
     setActiveIndex(i);

@@ -74,14 +74,6 @@ function getOrderProducts(order: Order) {
   return Array.isArray(order.products) ? order.products : [];
 }
 
-function TikTokMark() {
-  return (
-    <View style={styles.tiktokMark}>
-      <Text style={styles.tiktokMarkText}>♪</Text>
-    </View>
-  );
-}
-
 type ActionTone = "TikTok" | "Zalo" | "Phone";
 
 function ActionPill({
@@ -512,24 +504,9 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     alignItems: "center",
   },
   headerTikTokText: {
-    marginLeft: 5,
     flex: 1,
     color: colors.neutral400,
     ...textPresets.fs12_400,
-  },
-  tiktokMark: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.neutral50,
-  },
-  tiktokMarkText: {
-    color: colors.neutral500,
-    fontSize: 11,
-    fontWeight: "900",
-    lineHeight: 14,
   },
   scroll: {
     flex: 1,
@@ -1165,7 +1142,6 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
           </Text>
           {!!tiktokUsername && (
             <View style={styles.headerTikTokLine}>
-              <TikTokMark />
               <Text numberOfLines={1} style={styles.headerTikTokText}>
                 {tiktokUsername}
               </Text>

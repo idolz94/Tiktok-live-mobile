@@ -4,7 +4,7 @@ import { ToastProvider } from "@components/toast";
 import { PopoverProvider } from "@components/popover";
 import { useAuth } from "@features/auth/hooks/use-auth";
 import { TikTokLiveSocketProvider } from "@features/tiktok-live/contexts/tiktok-live-socket";
-import { sessionExpiredEmitter } from "@utils/http/session-event";
+import { licenseExpiredEmitter, sessionExpiredEmitter } from "@utils/http/session-event";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -58,6 +58,27 @@ function RootContent() {
     return unsubscribe;
   }, [logout]);
 
+  useEffect(() => {
+    const unsubscribe = licenseExpiredEmitter.subscribe(() => {
+      Alert.alert(
+        "Hết hạn license",
+        "Shop của bạn đã hết hạn dùng thử hoặc chưa có license, vui lòng liên hệ để được hỗ trợ.",
+        [
+          {
+            text: "OK",
+            onPress: async () => {
+              await logout();
+              licenseExpiredEmitter.reset();
+            },
+          },
+        ],
+        { cancelable: false },
+      );
+    });
+
+    return unsubscribe;
+  }, [logout]);
+
   const handleRootLayout = useCallback(() => {
     if (splashHiddenRef.current) return;
     if (!isStackReady || isLoading) return;
@@ -91,7 +112,7 @@ function RootContent() {
                     {shouldRenderStack && (
                       <View style={{ flex: 1 }} onLayout={handleRootLayout}>
                         {/* --- Live provider ở root: không unmount khi navigate order-detail/browser --- */}
-                        <TikTokLiveSocketProvider hasHistory={user?.hasHistory}>
+                        <TikTokLiveSocketProvider>
                         <Stack screenOptions={{ headerShown: false }}>
                           <Stack.Screen name="index" />
                           <Stack.Screen name="(auth)" />

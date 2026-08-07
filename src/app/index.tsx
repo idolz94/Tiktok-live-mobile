@@ -11,11 +11,7 @@ export default function Index() {
     return null;
   }
 
-  // START: Block toàn bộ app khi user tồn tại nhưng license không hợp lệ
-  if (user && !user.canUseApp) return <Redirect href="./license-expired" />;
-  // END: Block toàn bộ app khi user tồn tại nhưng license không hợp lệ
-
-  if (!!user) return <Redirect href="./(tabs)" />;
+  if (user?.canUseApp) return <Redirect href="./(tabs)" />;
 
   if (!onboardingCompleted) return <Redirect href={"./onboarding"} />;
 

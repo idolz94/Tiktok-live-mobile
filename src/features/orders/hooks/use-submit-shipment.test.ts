@@ -92,6 +92,18 @@ describe("useSubmitShipment — SPX flow", () => {
     expect(mockToastWarning).toHaveBeenCalledWith({ title: "Thiếu thông tin", description: "Vui lòng chọn khung giờ lấy hàng." });
   });
 
+  it("SPX thiếu địa chỉ chi tiết người nhận: block trước khi gọi API", async () => {
+    const result = await hook(spxDeps({ selectedRecipient: { ...RECIPIENT, address: "  " } }));
+    await act(async () => { await result.current.handleSubmitShipment(); });
+
+    expect(mockSubmitSpx).not.toHaveBeenCalled();
+    expect(mockUpdateSpx).not.toHaveBeenCalled();
+    expect(mockToastWarning).toHaveBeenCalledWith({
+      title: "Thiếu địa chỉ chi tiết",
+      description: "Vui lòng bổ sung số nhà, tên đường hoặc địa chỉ chi tiết của người nhận.",
+    });
+  });
+
   it("collectType=2 (gửi điểm) không cần pickupTimeRangeId: submit thành công", async () => {
     mockSubmitSpx.mockResolvedValueOnce({ shipping: {} } as any);
 

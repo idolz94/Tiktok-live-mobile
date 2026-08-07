@@ -4,7 +4,7 @@ const fullNamePattern = /^[\p{L}\s]+$/u;
 const usernamePattern = /^[\p{L}\p{N}]+$/u;
 const tiktokIdPattern = /^[A-Za-z0-9._]+$/;
 
-export type Mode = "login" | "register";
+export type Mode = "login" | "register" | "forgot";
 
 export const LoginSchema = z.object({
   username: z.string().trim().min(3, "Tài khoản phải có ít nhất 3 ký tự"),
@@ -37,3 +37,23 @@ export const RegisterSchema = z.object({
 });
 
 export type RegisterForm = z.infer<typeof RegisterSchema>;
+
+export const ForgotPasswordSchema = z
+  .object({
+    username: z.string().trim().min(3, "Tên đăng nhập phải có ít nhất 3 ký tự"),
+    tiktokId: z
+      .string()
+      .trim()
+      .min(1, "Vui lòng nhập TikTok ID")
+      .refine((value) => tiktokIdPattern.test(value.replace(/^@+/, "")), {
+        message: "ID Tiktok chỉ có thể chứa chữ không dấu, số, dấu gạch dưới và dấu chấm.",
+      }),
+    newPassword: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
+  })
+  .refine((value) => value.newPassword === value.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Mật khẩu xác nhận không khớp",
+  });
+
+export type ForgotPasswordForm = z.infer<typeof ForgotPasswordSchema>;

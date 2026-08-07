@@ -27,6 +27,7 @@ type UseOrderManagerParams = {
   onAfterCreateOrder?: () => void;
   hasOrders?: boolean;
   allStatuses?: boolean;
+  enabled?: boolean;
 };
 
 export type CustomerSummaryWithTikTok = CustomerSummary & {
@@ -79,6 +80,7 @@ export function useOrderManager({
   onAfterCreateOrder,
   hasOrders = false,
   allStatuses = false,
+  enabled = true,
 }: UseOrderManagerParams) {
   const [orders, setOrders] = useState<OrderWithTikTok[]>([]);
   const [orderLoading, setOrderLoading] = useState(false);
@@ -106,13 +108,13 @@ export function useOrderManager({
     } finally {
       setOrderLoading(false);
     }
-  }, []);
+  }, [allStatuses]);
 
   useEffect(() => {
-    if (!hasOrders) return;
+    if (!enabled || !hasOrders) return;
     const timer = setTimeout(() => void reloadOrders(), 0);
     return () => clearTimeout(timer);
-  }, [reloadOrders, hasOrders]);
+  }, [enabled, reloadOrders, hasOrders]);
 
   const buyingCount = useMemo(
     () =>

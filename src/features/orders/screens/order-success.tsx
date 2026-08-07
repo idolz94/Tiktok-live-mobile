@@ -20,6 +20,7 @@ type Params = {
   voucherAmount?: string;
   paymentSide?: string;
   note?: string;
+  mode?: string;
 };
 
 const SERVICE_LABEL: Record<string, string> = {
@@ -40,6 +41,7 @@ export default function OrderSuccessScreen() {
   const params = useLocalSearchParams<Params>();
   const { top, bottom } = useSafeAreaInsets();
   const isSpx = params.provider === "spx";
+  const isEditMode = params.mode === "edit";
   const codAmount = params.codAmount ?? "0";
   const shippingFee = params.shippingFee ?? "0";
   const voucherAmount = params.voucherAmount ?? "0";
@@ -75,7 +77,9 @@ export default function OrderSuccessScreen() {
 
       {/* header */}
       <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Text style={styles.headerTitle}>Tạo đơn hàng thành công</Text>
+        <Text style={styles.headerTitle}>
+          {isEditMode ? "Chỉnh sửa đơn hàng thành công" : "Tạo đơn hàng thành công"}
+        </Text>
       </View>
 
       <ScrollView
@@ -87,8 +91,12 @@ export default function OrderSuccessScreen() {
           <View style={styles.checkCircle}>
             <Text style={styles.checkMark}>✓</Text>
           </View>
-          <Text style={styles.successTitle}>Tạo Đơn Hàng Thành Công!</Text>
-          <Text style={styles.successSubtitle}>Mã vận đơn của bạn đã sẵn sàng xử lý</Text>
+          <Text style={styles.successTitle}>
+            {isEditMode ? "Chỉnh Sửa Đơn Hàng Thành Công!" : "Tạo Đơn Hàng Thành Công!"}
+          </Text>
+          <Text style={styles.successSubtitle}>
+            {isEditMode ? "Thông tin vận đơn đã được cập nhật" : "Mã vận đơn của bạn đã sẵn sàng xử lý"}
+          </Text>
         </View>
 
         {/* fulfillment card */}

@@ -15,7 +15,7 @@ import { LiveHistoryItem } from "@features/tiktok-live/types/types";
 import { formatDuration, removeAt } from "@features/tiktok-live/utils/comment";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useTabScrollToTop } from "@hooks/use-tab-scroll-to-top";
 import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
@@ -473,6 +473,12 @@ export const LiveHistoryScreen = memo(() => {
   const handlePressSession = useCallback((id: string) => {
     router.push({ pathname: "/live-session-detail", params: { id } });
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reloadLiveHistory();
+    }, [reloadLiveHistory]),
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

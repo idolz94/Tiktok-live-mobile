@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@components/button";
 import { createStyles } from "@utils/createStyles";
 
 const schema = z.object({
@@ -85,17 +86,15 @@ export function SpxConnectSheet({ submitting, onSubmit, onClose }: Props) {
         <Pressable style={styles.cancelBtn} onPress={onClose} disabled={submitting}>
           <Text style={styles.cancelText}>Huỷ</Text>
         </Pressable>
-        <Pressable
-          style={[styles.submitBtn, (!isDirty || submitting) && styles.submitBtnDisabled]}
-          onPress={() => { void submit(); }}
+        <Button
+          title="Kết nối"
+          loading={submitting}
+          loadingType="center"
           disabled={!isDirty || submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.submitText}>Kết nối</Text>
-          )}
-        </Pressable>
+          onPress={() => { void submit(); }}
+          containerStyle={styles.submitBtn}
+          txtBtnStyle={styles.submitText}
+        />
       </View>
     </View>
   );
@@ -122,6 +121,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
   cancelBtn: {
     flex: 1,
     height: 44,
+    borderWidth: 1,
+    borderColor: colors.border10,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
@@ -136,6 +137,5 @@ const styles = createStyles(({ colors, textPresets }) => ({
     justifyContent: "center",
     backgroundColor: "#ff3911",
   },
-  submitBtnDisabled: { opacity: 0.4 },
   submitText: { color: "#fff", ...textPresets.fs14_500 },
 }));

@@ -98,6 +98,10 @@ export function useSubmitShipment(deps: Deps) {
       toast.warning({ title: "Thiếu thông tin", description: "Vui lòng chọn đầy đủ địa chỉ người gửi và người nhận." });
       return;
     }
+    if (isSpxProvider && !selectedRecipient.address?.trim()) {
+      toast.warning({ title: "Thiếu địa chỉ chi tiết", description: "Vui lòng bổ sung số nhà, tên đường hoặc địa chỉ chi tiết của người nhận." });
+      return;
+    }
 
     setSubmitState("submitting");
     setLastError(null);
@@ -174,6 +178,7 @@ export function useSubmitShipment(deps: Deps) {
           params: {
             orderId: order.id,
             provider: "spx",
+            mode: isEditMode ? "edit" : "create",
             serviceType: String(serviceType ?? ""),
             collectType: String(collectType ?? ""),
             pickupTimeLabel: deps.pickupTimeLabel ?? "",
@@ -206,7 +211,7 @@ export function useSubmitShipment(deps: Deps) {
             : "Tạo vận đơn thất bại. Vui lòng kiểm tra thông tin và thử lại.";
         setSubmitState("idle");
         setLastError(msg);
-        toast.error({ title: "Tạo vận đơn thất bại", description: msg });
+        toast.error({ title: isEditMode ? "Chỉnh sửa đơn hàng thất bại" : "Tạo vận đơn thất bại", description: msg });
       }
     }
   }, [deps, toast]);

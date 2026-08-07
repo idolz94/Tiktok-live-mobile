@@ -1,4 +1,5 @@
 import { Header } from "@features/auth/components/header";
+import { ForgotPass } from "@features/auth/components/forgot-pass";
 import { Login } from "@features/auth/components/login";
 import { Register } from "@features/auth/components/register";
 import { LinearGradient } from "@components/linear-gradient";
@@ -16,9 +17,11 @@ export default function AuthScreen() {
   const [mode, setMode] = useState<Mode>(initialMode);
 
   const isLogin = mode === "login";
+  const isRegister = mode === "register";
 
   const switchToRegister = () => setMode("register");
   const switchToLogin = () => setMode("login");
+  const switchToForgot = () => setMode("forgot");
 
   return (
     <View style={styles.root}>
@@ -28,13 +31,24 @@ export default function AuthScreen() {
         <View style={styles.mainContent}>
           <View style={{ rowGap: 8 }}>
             <Text style={styles.title}>
-              {isLogin ? "Đăng nhập" : "Đăng ký"}
+              {isLogin ? "Đăng nhập" : isRegister ? "Đăng ký" : "Quên mật khẩu?"}
             </Text>
-            {!isLogin && (
+            {isRegister && (
               <View style={styles.titleContent}>
                 <Text style={styles.registerText}>Bạn đã có tài khoản?</Text>
                 <Pressable onPress={switchToLogin}>
                   <Text style={styles.loginTextNav}>{` Đăng nhập ngay!`}</Text>
+                </Pressable>
+              </View>
+            )}
+            {!isLogin && !isRegister && (
+              <View style={styles.titleContent}>
+                <Pressable onPress={switchToLogin}>
+                  <Text style={styles.loginTextNav}>Đăng nhập</Text>
+                </Pressable>
+                <Text style={styles.registerText}>{` / `}</Text>
+                <Pressable onPress={switchToRegister}>
+                  <Text style={styles.loginTextNav}>Đăng ký</Text>
                 </Pressable>
               </View>
             )}
@@ -44,9 +58,11 @@ export default function AuthScreen() {
             keyboardShouldPersistTaps="handled"
           >
             {isLogin ? (
-              <Login switchToRegister={switchToRegister} />
-            ) : (
+              <Login switchToRegister={switchToRegister} switchToForgot={switchToForgot} />
+            ) : isRegister ? (
               <Register />
+            ) : (
+              <ForgotPass onClose={switchToLogin} />
             )}
           </KeyboardAwareScrollView>
         </View>
