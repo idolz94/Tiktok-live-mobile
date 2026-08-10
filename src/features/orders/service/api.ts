@@ -65,10 +65,18 @@ export async function getOrdersApi(status: string | null = "draft"): Promise<Ord
 }
 
 export async function getShippingOrdersApi(): Promise<OrderWithTikTok[]> {
-  const data = await getRequest<any>("/orders");
+  const data = await getRequest<any>("/orders?shippingStatus=submitted,in_transit,delivered,returning");
   const rows = pickArrayResponse(data, ["orders", "items", "data"]);
 
   return rows.map((order: any) => normalizeApiOrderForUi(order));
+}
+
+export async function getCustomersApi() {
+  return getRequest<{ customers: Array<{ id: string; displayName: string | null }> }>("/customers");
+}
+
+export async function getCustomerOrdersApi(customerId: string) {
+  return getRequest<{ orders: Array<{ id: string; orderCode: string | null }> }>(`/customers/${customerId}/orders`);
 }
 
 export async function getOrderByIdApi(orderId: string): Promise<OrderWithTikTok | null> {

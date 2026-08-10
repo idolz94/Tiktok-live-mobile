@@ -1,16 +1,18 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useToast } from "@components/toast";
 import { LinearGradient } from "@components/linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
+import { Header } from "@components/header";
+import { Button } from "@components/button";
 import {
   SectionBlock,
   ShipmentInput,
   OptionChip,
+  FigmaAddressCard,
 } from "@features/orders/components/create-shipment";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
@@ -18,7 +20,7 @@ export default function ShippingEditScreen() {
   const toast = useToast();
   const { order: orderParam } = useLocalSearchParams<{ order: string }>();
   const { colors, textPresets } = useThemes();
-  const { top, bottom } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
 
   const order = orderParam
     ? (() => {
@@ -30,20 +32,6 @@ export default function ShippingEditScreen() {
       })()
     : null;
 
-  const [customerName, setCustomerName] = useState(order?.customerName ?? "");
-  const [customerPhone, setCustomerPhone] = useState(
-    order?.customerPhone ?? "",
-  );
-  const [address, setAddress] = useState(
-    [
-      order?.customerAddressData?.address,
-      order?.customerAddressData?.ward,
-      order?.customerAddressData?.district,
-      order?.customerAddressData?.province,
-    ]
-      .filter(Boolean)
-      .join(", ") ?? "",
-  );
   const [cod, setCod] = useState(
     order?.codAmount != null ? String(order.codAmount) : "",
   );
@@ -86,27 +74,27 @@ export default function ShippingEditScreen() {
     router.back();
   };
 
+  const recipientAddress = order.customerAddressData
+    ? {
+        id: order.customerAddressData.id,
+        customerId: order.customerId ?? "",
+        name: order.customerName ?? null,
+        phone: order.customerPhone ?? null,
+        address: order.customerAddressData.address ?? null,
+        province: order.customerAddressData.province ?? null,
+        district: order.customerAddressData.district ?? null,
+        ward: order.customerAddressData.ward ?? null,
+        label: null,
+        isDefault: false,
+        createdAt: "",
+        updatedAt: "",
+      }
+    : null;
+
   return (
     <View style={styles.root}>
-      <LinearGradient type="gra_background" style={StyleSheet.absoluteFill} />
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: top + 12 }]}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.neutral900} />
-        </Pressable>
-        <Text
-          style={[
-            styles.headerTitle,
-            { color: colors.neutral900, fontSize: 24, fontWeight: "600" },
-          ]}
-        >
-          Chỉnh sửa vận đơn
-        </Text>
-      </View>
+      <LinearGradient type="gra_background" style={styles.bg} />
+      <Header title="Chỉnh sửa đơn hàng" transparent />
 
       <ScrollView
         contentContainerStyle={[
@@ -117,35 +105,18 @@ export default function ShippingEditScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Người nhận */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <SectionBlock title="Thông tin người nhận">
-            <ShipmentInput
-              label="Họ và tên"
-              value={customerName}
-              onChangeText={setCustomerName}
-              placeholder="Nhập tên người nhận"
-              required
-            />
-            <ShipmentInput
-              label="Số điện thoại"
-              value={customerPhone}
-              onChangeText={setCustomerPhone}
-              placeholder="Nhập số điện thoại"
-              keyboardType="numeric"
-              required
-            />
-            <ShipmentInput
-              label="Địa chỉ"
-              value={address}
-              onChangeText={setAddress}
-              placeholder="Nhập địa chỉ giao hàng"
-              multiline
-            />
-          </SectionBlock>
+        <View style={[styles.card, { backgroundColor: colors.neutral100, borderColor: colors.border10 }]}>
+          <FigmaAddressCard
+            type="recipient"
+            address={recipientAddress}
+            loading={false}
+            onChangePress={() => {}}
+            onAddPress={() => {}}
+          />
         </View>
 
         {/* Thông tin đơn hàng */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: colors.neutral100, borderColor: colors.border10 }]}>
           <SectionBlock title="Thông tin đơn hàng">
             <ShipmentInput
               label="Tiền thu hộ (COD)"
@@ -174,7 +145,7 @@ export default function ShippingEditScreen() {
         </View>
 
         {/* Kích thước */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: colors.neutral100, borderColor: colors.border10 }]}>
           <SectionBlock title="Kích thước kiện hàng">
             <View style={styles.dimRow}>
               <View style={styles.dimField}>
@@ -216,7 +187,7 @@ export default function ShippingEditScreen() {
         </View>
 
         {/* Loại dịch vụ */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: colors.neutral100, borderColor: colors.border10 }]}>
           <SectionBlock title="Loại dịch vụ">
             <OptionChip
               label="Giao hàng Tiêu Chuẩn"
@@ -232,7 +203,7 @@ export default function ShippingEditScreen() {
         </View>
 
         {/* Hình thức lấy hàng */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: colors.neutral100, borderColor: colors.border10 }]}>
           <SectionBlock title="Hình thức lấy hàng">
             <OptionChip
               label="Lấy hàng tại shop"
@@ -248,7 +219,7 @@ export default function ShippingEditScreen() {
         </View>
 
         {/* Người thanh toán */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: colors.neutral100, borderColor: colors.border10 }]}>
           <SectionBlock title="Người thanh toán">
             <OptionChip
               label="Người gửi"
@@ -264,10 +235,10 @@ export default function ShippingEditScreen() {
         </View>
       </ScrollView>
 
-      {/* Submit bar */}
+      {/* Footer */}
       <View
         style={[
-          styles.submitBar,
+          styles.footer,
           {
             backgroundColor: colors.surface,
             borderTopColor: colors.border10,
@@ -275,19 +246,12 @@ export default function ShippingEditScreen() {
           },
         ]}
       >
-        <Pressable
-          style={[styles.submitBtn, { backgroundColor: colors.primary }]}
+        <Button
+          title="Chỉnh Sửa Đơn Hàng"
+          type="gradient"
           onPress={handleSave}
-        >
-          <Text
-            style={[
-              styles.submitBtnText,
-              { color: "#fff", ...textPresets.fs16_600 },
-            ]}
-          >
-            Lưu thay đổi
-          </Text>
-        </Pressable>
+          containerStyle={styles.footerButton}
+        />
       </View>
     </View>
   );
@@ -295,36 +259,24 @@ export default function ShippingEditScreen() {
 
 const styles = createStyles(({ colors }) => ({
   root: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 4,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.white,
-  },
-  headerTitle: { flex: 1 },
+  bg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   scrollContent: { gap: 12, paddingTop: 12, paddingHorizontal: 16 },
-  card: { borderRadius: 12, overflow: "hidden" },
+  card: {
+    borderRadius: 16,
+    borderWidth: 0.5,
+    padding: 16,
+    gap: 12,
+    overflow: "hidden",
+  },
   dimRow: { flexDirection: "row", gap: 8 },
   dimField: { flex: 1 },
-  submitBar: {
+  footer: {
     paddingHorizontal: 16,
     paddingTop: 12,
     borderTopWidth: 0.5,
   },
-  submitBtn: {
-    height: 52,
+  footerButton: {
+    height: 50,
     borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
   },
-  submitBtnText: {},
 }));

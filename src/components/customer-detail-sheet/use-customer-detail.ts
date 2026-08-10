@@ -1,8 +1,6 @@
 import type { Order, OrderProduct } from "@app-types/index";
-import { useAuth } from "@features/auth/hooks/use-auth";
-import { getCustomerApi, updateCustomerApi } from "@features/customers/service/api";
+import { getCustomerApi, getCustomerOrdersApi, updateCustomerApi } from "@features/customers/service/api";
 import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
-import { useOrderManager, type CustomerSummaryWithTikTok } from "@features/orders/hooks/use-order-manager";
 import { cancelShipmentApi, refreshShippingStatusApi, listCustomerAddressesApi, type CustomerAddress } from "@features/orders/service/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
 import { usePhoneField } from "@hooks/use-phone-field";
@@ -35,19 +33,6 @@ function pickAddress(list: CustomerAddress[], cur: CustomerAddress | null): Cust
 }
 
 export { type CustomerAddress };
-
-function getCustomerKey(customer: CustomerSummaryWithTikTok) {
-  return customer.customerTikTokUsername || customer.username;
-}
-
-function matchesCustomer(order: Order, customerKey: string, customer?: CustomerSummaryWithTikTok) {
-  if (!customerKey) return false;
-  const orderTikTokUsername = getOrderTikTokUsername(order);
-  const customerTikTokUsername = customer?.customerTikTokUsername || "";
-  const customerUsername = customer?.username || "";
-  if (customerTikTokUsername) return orderTikTokUsername === customerTikTokUsername;
-  return order.username === customerKey || order.username === customerUsername;
-}
 
 function getOrderProducts(order: Order) {
   return Array.isArray(order.products) ? order.products : [];
@@ -87,22 +72,43 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
   const [isSaving, setIsSaving] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  const { user } = useAuth();
-  const orderManager = useOrderManager({ comments: [], hasOrders: user?.hasOrders ?? false, allStatuses: true });
+  const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const toast = useToast();
 
   const customer = useMemo(
-    () => orderManager.customers.find((item) => getCustomerKey(item) === customerKey),
-    [customerKey, orderManager.customers],
+    () => {
+      const latestOrder = customerOrders[0];
+      if (!latestOrder) return null;
+      return {
+        username: latestOrder.customerName || latestOrder.username || "Khách hàng",
+        avatar: latestOrder.avatar || latestOrder.avatarUrl || "",
+        customerId: latestOrder.customerId ?? customerKey,
+        customerTikTokUsername: getOrderTikTokUsername(latestOrder),
+        customerType: latestOrder.customerType ?? null,
+        totalComments: 0,
+        totalOrders: customerOrders.length,
+        latestComment: latestOrder.comment,
+      };
+    },
+    [customerKey, customerOrders],
   );
 
-  const customerOrders = useMemo(
-    () =>
-      orderManager.orders
-        .filter((order) => matchesCustomer(order, customerKey, customer))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [customer, customerKey, orderManager.orders],
-  );
+  useEffect(() => {
+    if (!customerKey) return;
+    setOrdersLoading(true);
+    getCustomerOrdersApi(customerKey)
+      .then((res) => {
+        if (!mountedRef.current) return;
+        setCustomerOrders(
+          res.orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        );
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (mountedRef.current) setOrdersLoading(false);
+      });
+  }, [customerKey]);
 
   const latestOrder = customerOrders[0];
   const displayName = customer?.username || latestOrder?.customerName || latestOrder?.username || "Khách hàng";
@@ -210,7 +216,7 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
     return () => { cancelled = true; };
   }, [customer?.customerId]);
 
-  const loading = orderManager.orderLoading && !customer && customerOrders.length === 0;
+  const loading = ordersLoading && !customer && customerOrders.length === 0;
   const notFound = !loading && !customer && customerOrders.length === 0;
 
   const invalidateCustomers = useCustomerRefreshStore((s) => s.invalidate);
@@ -244,12 +250,15 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
       try {
         await cancelShipmentApi(order.id, { trackingId: order.trackingCode });
         await refreshShippingStatusApi(order.id);
-        await orderManager.reloadOrders();
+        const res = await getCustomerOrdersApi(customerKey);
+        setCustomerOrders(
+          res.orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        );
       } finally {
         setCancellingId(null);
       }
     },
-    [cancellingId, orderManager],
+    [cancellingId, customerKey],
   );
 
   return {

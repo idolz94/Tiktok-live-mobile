@@ -12,6 +12,7 @@ import {
   updateShopAddressApi,
 } from "@features/settings/service/shop-addresses-api";
 import type { PaymentSide, ServiceType, CollectType, SpxTimeslot } from "../types/shipment";
+import type { ShippingStatus } from "@app-types/index";
 
 export {
   createShopAddressApi,
@@ -160,6 +161,7 @@ type SubmitSpxPayload = {
   allowTryOn?: 0 | 1;
   allowPartialDelivery?: 0 | 1;
   voucherCode?: string;
+  voucherAmount?: number;
   customerAddressId?: string;
   codCollection?: 0 | 1;
 };
@@ -214,6 +216,18 @@ export async function getShipmentLabelApi(orderId: string) {
   return getRequest<{ labelUrl?: string }>(`/orders/${orderId}/shipping/label`);
 }
 
+interface TrackingData {
+  providerCode: string;
+  trackingCode: string;
+  trackingLink: string | null;
+  status: ShippingStatus;
+  statusCode: string;
+  statusText: string;
+  message: string | null;
+  routes?: Array<{ status: string; statusCode: string; message: string; timestamp: number }> | null;
+  raw: unknown;
+}
+
 export async function refreshShippingStatusApi(orderId: string) {
-  return postRequest<{ tracking: unknown }>(`/orders/${orderId}/shipping/refresh`, {});
+  return postRequest<{ tracking: TrackingData }>(`/orders/${orderId}/shipping/refresh`, {});
 }

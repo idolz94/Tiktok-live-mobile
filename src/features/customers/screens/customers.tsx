@@ -6,16 +6,10 @@ import {
   useCollapsibleHeaderHeight,
 } from "@components/header/collapsible-header";
 import { LinearGradient } from "@components/linear-gradient";
-import { useAuth } from "@features/auth/hooks/use-auth";
-import {
-  CustomerSummaryWithTikTok,
-  useOrderManager,
-} from "@features/orders/hooks/use-order-manager";
-import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { createStyles } from "@utils/createStyles";
-import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import { getCustomerTypeIcon } from "@features/customers/customer-type-icon";
-import { memo, useEffect, useRef } from "react";
+import { getCustomersApi, type CustomerListItem } from "@features/customers/service/api";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import Animated, {
@@ -29,19 +23,19 @@ const CustomerRow = memo(
     customer,
     onPress,
   }: {
-    customer: CustomerSummaryWithTikTok;
-    onPress: (key: string) => void;
+    customer: CustomerListItem;
+    onPress: (id: string) => void;
   }) => {
-    const tiktokUsername = customer.customerTikTokUsername ?? "";
-    const customerKey = tiktokUsername || customer.username;
+    const username = customer.displayName || customer.tiktokUsername || "Khách hàng";
+    const tiktokUsername = customer.tiktokUsername ? `@${customer.tiktokUsername}` : "";
     const customerTypeIcon = getCustomerTypeIcon(customer.customerType);
 
     return (
-      <Pressable onPress={() => onPress(customerKey)} style={styles.row}>
-        <Avatar uri={customer.avatar} username={customer.username} size={42} />
+      <Pressable onPress={() => onPress(customer.id)} style={styles.row}>
+        <Avatar uri={customer.avatarUrl || ""} username={username} size={42} />
         <View style={styles.info}>
           <Text numberOfLines={1} style={styles.name}>
-            {customer.username}
+            {username}
           </Text>
           {!!tiktokUsername && (
             <View style={styles.tiktokLine}>
@@ -59,7 +53,7 @@ const CustomerRow = memo(
                 </Text>
               </View>
             ) : null}
-            <Text style={styles.metaText}>{customer.totalOrders} đơn</Text>
+            <Text style={styles.metaText}>{customer.totalOrders || 0} đơn</Text>
           </View>
         </View>
         <Text style={styles.chevron}>›</Text>
@@ -73,21 +67,17 @@ const CustomerListCard = memo(
     customers,
     onPress,
   }: {
-    customers: CustomerSummaryWithTikTok[];
-    onPress: (key: string) => void;
+    customers: CustomerListItem[];
+    onPress: (id: string) => void;
   }) => {
     const { shadows } = useThemes();
     return (
       <View style={styles.cardList}>
-        {customers.map((customer) => {
-          const tiktokUsername = customer.customerTikTokUsername || "";
-          const key = tiktokUsername || customer.username;
-          return (
-            <View key={key} style={[styles.card, shadows.sd2]}>
-              <CustomerRow customer={customer} onPress={onPress} />
-            </View>
-          );
-        })}
+        {customers.map((customer) => (
+          <View key={customer.id} style={[styles.card, shadows.sd2]}>
+            <CustomerRow customer={customer} onPress={onPress} />
+          </View>
+        ))}
       </View>
     );
   },
@@ -100,8 +90,9 @@ export function CustomersScreen() {
   useTabScrollToTop("customers", scrollRef);
 
   const { show } = useBottomSheet();
-  const { comments, currentLiveSessionId } = useTikTokLiveSocketContext();
-  const { user } = useAuth();
+  const [customers, setCustomers] = useState<CustomerListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const scrollY = useSharedValue(0);
   const headerHeight = useCollapsibleHeaderHeight();
@@ -112,25 +103,30 @@ export function CustomersScreen() {
     },
   });
 
-  const orderManager = useOrderManager({
-    comments,
-    liveSessionId: currentLiveSessionId,
-    hasOrders: user?.hasOrders ?? false,
-    allStatuses: true,
-  });
+  const loadCustomers = async (force = false) => {
+    try {
+      setLoading(true);
+      setError("");
+      setCustomers(await getCustomersApi(force));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không tải được khách hàng.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const refreshTick = useCustomerRefreshStore((s) => s.tick);
   useEffect(() => {
-    if (refreshTick === 0) return;
-    void orderManager.reloadOrders();
-  }, [refreshTick]);
+    void loadCustomers();
+  }, []);
 
-  const customers: CustomerSummaryWithTikTok[] = orderManager.customers.filter(
-    (c) => c.totalOrders >= 1,
+  const visibleCustomers = useMemo(
+    () => customers.filter((customer) => Number(customer.totalOrders || 0) >= 1),
+    [customers],
   );
-  const handlePressCustomer = (key: string) =>
+
+  const handlePressCustomer = (id: string) =>
     show({
-      content: <CustomerDetailSheet customerKey={key} />,
+      content: <CustomerDetailSheet customerKey={id} />,
       showDragIndicator: true,
       snapPoints: ["96%"],
     });
@@ -146,17 +142,17 @@ export function CustomersScreen() {
 
       <CollapsibleHeader title="Khách hàng" scrollY={scrollY} />
 
-      {orderManager.orderLoading ? (
+      {loading ? (
         <View style={[styles.statusBox, { paddingTop: headerHeight }]}>
           <ActivityIndicator color="#FF6B8A" />
           <Text style={styles.statusText}>Đang tải khách hàng...</Text>
         </View>
-      ) : orderManager.orderError ? (
+      ) : error ? (
         <View style={[styles.statusBox, { paddingTop: headerHeight }]}>
-          <Text style={styles.errorText}>{orderManager.orderError}</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <Pressable
             style={styles.retryButton}
-            onPress={orderManager.reloadOrders}
+            onPress={() => void loadCustomers(true)}
           >
             <Text style={styles.retryText}>Tải lại</Text>
           </Pressable>
@@ -167,13 +163,13 @@ export function CustomersScreen() {
           contentContainerStyle={[
             styles.listContent,
             { paddingTop: headerHeight },
-            customers.length === 0 && styles.listContentEmpty,
+            visibleCustomers.length === 0 && styles.listContentEmpty,
           ]}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
-          {customers.length === 0 ? (
+          {visibleCustomers.length === 0 ? (
             <View style={styles.empty}>
               <Text style={styles.emptyTitle}>Chưa có khách hàng</Text>
               <Text style={styles.emptyText}>
@@ -183,7 +179,7 @@ export function CustomersScreen() {
             </View>
           ) : (
             <CustomerListCard
-              customers={customers}
+              customers={visibleCustomers}
               onPress={handlePressCustomer}
             />
           )}

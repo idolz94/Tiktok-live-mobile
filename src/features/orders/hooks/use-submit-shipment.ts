@@ -164,6 +164,7 @@ export function useSubmitShipment(deps: Deps) {
           note,
           idempotencyKey,
           voucherCode,
+          voucherAmount: deps.voucherAmount,
           customerAddressId,
           paymentRole,
           allowMutualCheck,

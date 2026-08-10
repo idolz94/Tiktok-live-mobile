@@ -202,16 +202,18 @@ function OrderCard({
   const { colors, textPresets } = useThemes();
   const [printing, setPrinting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<ShippingStatus | null>(null);
   const toast = useToast();
   const name = item.customerName || item.username || "Khách hàng";
   const abbr = providerAbbr(item.providerName);
   const trackingUrl = abbr === "TC" ? null : getTrackingUrl(item);
   const label = providerLabel(item.providerName);
-  const sColor = statusColor(item.shippingStatus, colors);
+  const displayStatus = liveStatus ?? item.shippingStatus;
+  const sColor = statusColor(displayStatus, colors);
   const statusLabel =
-    abbr === "TC" && item.shippingStatus === "submitted"
+    abbr === "TC" && displayStatus === "submitted"
       ? "Chờ lấy hàng"
-      : STATUS_LABEL[item.shippingStatus];
+      : STATUS_LABEL[displayStatus];
 
   const addressText =
     [
@@ -272,10 +274,13 @@ function OrderCard({
           try {
             await cancelShipmentApi(item.id, { trackingId: item.trackingCode });
             onCancelled();
-          } catch {
+          } catch (err) {
             toast.error({
-              title: "Lỗi",
-              description: "Không thể huỷ vận đơn. Vui lòng thử lại.",
+              title: "Không huỷ được vận đơn",
+              description:
+                err instanceof Error
+                  ? err.message
+                  : "SPX từ chối huỷ vận đơn. Vui lòng thử lại.",
             });
           } finally {
             setCancelling(false);
@@ -302,7 +307,7 @@ function OrderCard({
             style={styles.cardTrackingLink}
             onPress={() => {
               refreshShippingStatusApi(item.id)
-                .then(onCancelled)
+                .then(res => setLiveStatus(res.tracking.status))
                 // ponytail: bỏ qua lỗi refresh — vẫn mở link tracking cũ
                 .catch(() => {})
                 .finally(() => void Linking.openURL(trackingUrl));
@@ -546,7 +551,7 @@ function OrderCard({
         {abbr === "SPX" && Number(item.discountAmount || 0) > 0 ? (
           <View style={styles.cardMoneyRow}>
             <Text style={{ color: colors.neutral400, ...textPresets.fs12_400 }}>
-              Voucher
+              Voucher đã áp dụng
             </Text>
             <Text style={{ color: colors.primary, ...textPresets.fs12_400 }}>
               -{formatMoney(Number(item.discountAmount || 0))}

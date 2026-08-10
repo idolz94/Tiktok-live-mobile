@@ -133,6 +133,11 @@ export const OrderItem = memo(
             <Text
               style={styles.orderId}
             >{`OrderID: ${createDisplayCode(item.orderCode || item.id)}`}</Text>
+            {item.trackingCode ? (
+              <Text style={styles.orderId} numberOfLines={1}>
+                {`Vận đơn: ${item.trackingCode}`}
+              </Text>
+            ) : null}
             {(() => {
               const icon = getCustomerTypeIcon(item.customerType);
               return icon ? (

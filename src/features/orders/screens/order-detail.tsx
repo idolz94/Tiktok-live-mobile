@@ -152,12 +152,15 @@ export const OrderDetail = memo(() => {
           void cancelShipmentApi(order.id, { trackingId: order.trackingCode })
             .then(() => refreshShippingStatusApi(order.id))
             .then(() => detail.fetchOrder())
-            .then(() => Alert.alert("Thành công", "Đã huỷ vận đơn."))
+            .then(() => toast.success({ title: "Thành công", description: "Đã huỷ vận đơn." }))
             .catch((err) => {
-              Alert.alert(
-                "Không huỷ được vận đơn",
-                err instanceof Error ? err.message : "Vui lòng thử lại.",
-              );
+              toast.error({
+                title: "Không huỷ được vận đơn",
+                description:
+                  err instanceof Error
+                    ? err.message
+                    : "SPX từ chối huỷ vận đơn. Vui lòng thử lại.",
+              });
             });
         },
       },
@@ -268,10 +271,10 @@ export const OrderDetail = memo(() => {
                   showProviderSheet();
                   toast.success("Đã kết nối tài khoản SPX");
                 } else {
-                  Alert.alert(
-                    "Lỗi",
-                    "Không thể kết nối tài khoản SPX. Vui lòng thử lại.",
-                  );
+                  toast.error({
+                    title: "Lỗi",
+                    description: "Không thể kết nối tài khoản SPX. Vui lòng thử lại.",
+                  });
                 }
               }}
               onClose={showProviderSheet}

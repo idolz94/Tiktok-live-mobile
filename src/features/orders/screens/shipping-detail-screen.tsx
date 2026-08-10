@@ -8,9 +8,11 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Clipboard,
   Image,
   Linking,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -22,9 +24,11 @@ import { useToast } from "@components/toast";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";
 import {
+  cancelShipmentApi,
   getShipmentLabelApi,
   refreshShippingStatusApi,
 } from "../service/create-shipment-api";
+import { updateOrderStatusApi } from "../service/api";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
@@ -45,6 +49,22 @@ const STATUS_LABEL: Record<ShippingStatus, string> = {
   return_failed: "Hoàn thất bại",
   returned: "Đã hoàn hàng",
   cancelled: "Đã hủy",
+};
+
+// Bản dịch tiếng Việt cho statusText từ provider (ví dụ: "Pending Pickup" → "Chờ lấy hàng")
+const STATUS_TEXT_VI: Record<string, string> = {
+  "Pending Pickup": "Chờ lấy hàng",
+  "Pickup On Hold": "Tạm giữ - chưa lấy",
+  "Picked Up": "Đã lấy hàng",
+  "In Transit": "Đang vận chuyển",
+  "Out For Delivery": "Đang giao hàng",
+  "Delivered": "Đã giao hàng",
+  "Delivery Failed": "Giao thất bại",
+  "Cancelled": "Đã hủy",
+  "Returning": "Đang hoàn hàng",
+  "Returned": "Đã hoàn hàng",
+  "Lost": "Mất hàng",
+  "Damaged": "Hàng hỏng",
 };
 
 const STEPPER_STEPS: { label: string; icon: keyof typeof icons }[] = [
@@ -71,6 +91,9 @@ export default function ShippingDetailScreen() {
   const toast = useToast();
   const [printing, setPrinting] = useState(false);
   const [navigated, setNavigated] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState(false);
+  const [xemThemVisible, setXemThemVisible] = useState(false);
 
   const order = orderParam
     ? (() => {
@@ -109,16 +132,98 @@ export default function ShippingDetailScreen() {
     void Linking.openURL(`tel:${phone}`);
   }, [order?.customerPhone]);
 
+  const handleCancel = useCallback(() => {
+    if (!order?.id || cancelling) return;
+    Alert.alert(
+      "Huỷ đơn hàng",
+      "Bạn có chắc muốn huỷ vận đơn này không?",
+      [
+        { text: "Không", style: "cancel" },
+        {
+          text: "Huỷ đơn",
+          style: "destructive",
+          onPress: async () => {
+            setCancelling(true);
+            try {
+              await cancelShipmentApi(order.id, {
+                trackingId: order.trackingCode ?? undefined,
+              });
+              toast.success({ title: "Đã huỷ vận đơn" });
+              router.back();
+            } catch (err) {
+              toast.error({
+                title: "Không huỷ được vận đơn",
+                description:
+                  err instanceof Error
+                    ? err.message
+                    : "SPX từ chối huỷ vận đơn. Vui lòng thử lại.",
+              });
+            } finally {
+              setCancelling(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [order?.id, order?.trackingCode, cancelling]);
+
+  const handleCancelOrder = useCallback(() => {
+    if (!order?.id || cancellingOrder) return;
+    Alert.alert(
+      "Huỷ đơn hàng",
+      "Bạn có chắc muốn huỷ đơn hàng này không?",
+      [
+        { text: "Không", style: "cancel" },
+        {
+          text: "Huỷ đơn",
+          style: "destructive",
+          onPress: async () => {
+            setCancellingOrder(true);
+            try {
+              await updateOrderStatusApi({ orderId: order.id, status: "canceled" });
+              toast.success({ title: "Đã huỷ đơn hàng" });
+              router.back();
+            } catch (err) {
+              toast.error({
+                title: "Không huỷ được đơn hàng",
+                description:
+                  err instanceof Error ? err.message : "Vui lòng thử lại.",
+              });
+            } finally {
+              setCancellingOrder(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [order?.id, cancellingOrder]);
+
   const isManual = !/ghn|ghtk|vtp|viettel|spx|shopee/i.test(
     order?.providerName ?? "",
   );
 
+  const [liveTracking, setLiveTracking] = useState<{
+    providerCode: string;
+    trackingCode: string;
+    trackingLink: string | null;
+    status: ShippingStatus;
+    statusCode: string;
+    statusText: string;
+    message: string | null;
+    routes?: Array<{ status: string; statusCode: string; message: string; timestamp: number }> | null;
+  } | null>(null);
+  const [refreshingTracking, setRefreshingTracking] = useState(false);
+
   // Refresh tracking status khi vào detail đơn có courier thật (không phải manual)
   useEffect(() => {
     if (!order || isManual) return;
-    refreshShippingStatusApi(order.id).catch(() => {
-      /* bỏ qua — giữ status cũ nếu refresh lỗi */
-    });
+    setRefreshingTracking(true);
+    refreshShippingStatusApi(order.id)
+      .then(res => setLiveTracking(res.tracking))
+      .catch(() => {
+        /* ponytail: giữ stale order data nếu refresh lỗi */
+      })
+      .finally(() => setRefreshingTracking(false));
   }, [order?.id, isManual]);
 
   if (!order) {
@@ -138,14 +243,22 @@ export default function ShippingDetailScreen() {
 
   const isCancelled = order.shippingStatus === "cancelled";
   const isWaitingManual = isManual && order.shippingStatus === "submitted";
-  const currentStep = statusToStep(order.shippingStatus);
+  const displayStatus = liveTracking?.status ?? order.shippingStatus;
+  const displayStatusText = liveTracking
+    ? (STATUS_TEXT_VI[liveTracking.statusText] ?? liveTracking.statusText)
+    : STATUS_LABEL[displayStatus];
+  const currentStep = statusToStep(displayStatus);
   const displayCode =
-    order.trackingCode ?? order.orderCode ?? order.id.slice(0, 8);
-  const senderDistrict = "Cửa hàng";
+    liveTracking?.trackingCode ?? order.trackingCode ?? order.orderCode ?? order.id.slice(0, 8);
+  const hasMultipleTrackingRoutes =
+    Array.isArray(liveTracking?.routes) && liveTracking.routes.length > 1;
+  const senderName = order.customerAddressData?.name ?? "Nguyen minh hoang";
+  const senderDistrict = order.customerAddressData?.district ?? "Huyện Trung Khánh";
+  const receiverName = order.customerName ?? order.customerAddressData?.name ?? "Hoang van nguyen";
   const receiverDistrict =
     order.customerAddressData?.district ??
     order.customerAddressData?.province ??
-    "Người nhận";
+    "Huyện Quế Võ";
 
   return (
     <View style={styles.root}>
@@ -169,7 +282,7 @@ export default function ShippingDetailScreen() {
         />
       )}
 
-      <Header title={STATUS_LABEL[order.shippingStatus]} transparent />
+      <Header title={displayStatusText} transparent />
 
       <ScrollView
         contentContainerStyle={[
@@ -294,29 +407,49 @@ export default function ShippingDetailScreen() {
         {/* Route Info */}
         <View style={styles.sectionCard}>
           <View style={styles.routeRow}>
-            <Text
-              style={[
-                styles.routeText,
-                { color: colors.neutral900, ...textPresets.fs14_500 },
-              ]}
-              numberOfLines={1}
-            >
-              {senderDistrict}
-            </Text>
-            <Ionicons
-              name="arrow-forward"
-              size={16}
-              color={colors.neutral400}
-            />
-            <Text
-              style={[
-                styles.routeText,
-                { color: colors.neutral900, ...textPresets.fs14_500 },
-              ]}
-              numberOfLines={1}
-            >
-              {receiverDistrict}
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[
+                  { color: colors.neutral900, ...textPresets.fs14_500 },
+                ]}
+                numberOfLines={1}
+              >
+                {senderDistrict}
+              </Text>
+              <Text
+                style={[
+                  { color: colors.neutral500, ...textPresets.fs12_400, marginTop: 4 },
+                ]}
+                numberOfLines={1}
+              >
+                {senderName}
+              </Text>
+            </View>
+            <View style={{ marginHorizontal: 12 }}>
+              <Ionicons
+                name="arrow-forward"
+                size={16}
+                color={colors.neutral400}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[
+                  { color: colors.neutral900, ...textPresets.fs14_500 },
+                ]}
+                numberOfLines={1}
+              >
+                {receiverDistrict}
+              </Text>
+              <Text
+                style={[
+                  { color: colors.neutral500, ...textPresets.fs12_400, marginTop: 4 },
+                ]}
+                numberOfLines={1}
+              >
+                {receiverName}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -389,55 +522,161 @@ export default function ShippingDetailScreen() {
             >
               Hành Trình Đơn Hàng
             </Text>
-            <Pressable style={styles.copyInfoBtn}>
-              <Ionicons name="link-outline" size={14} color={colors.primary} />
+            <Pressable
+              style={styles.copyInfoBtn}
+              onPress={async () => {
+                const info = [
+                  `Mã vận đơn: ${displayCode}`,
+                  `Trạng thái: ${displayStatusText}`,
+                ].join("\n");
+                await Clipboard.setString(info);
+                toast.success({ title: "Đã sao chép thông tin" });
+                const link = liveTracking?.trackingLink ?? order.trackingLink ?? null;
+                if (link) void Linking.openURL(link);
+              }}
+            >
               <Text
-                style={[{ color: colors.primary, ...textPresets.fs12_400 }]}
+                style={[{ color: colors.primary, ...textPresets.fs14_500 }]}
               >
-                Sao chép thông tin
+                Chi tiết
               </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={14}
+                color={colors.primary}
+              />
             </Pressable>
           </View>
-          <View style={styles.journeyItem}>
-            <View style={styles.journeyDotCol}>
-              <View
+          {refreshingTracking ? (
+            <View style={{ paddingVertical: 24, alignItems: "center" }}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text
                 style={[
-                  styles.journeySquareDot,
-                  { borderColor: "#dadada", backgroundColor: "#f7f8fa" },
+                  {
+                    color: colors.neutral400,
+                    ...textPresets.fs12_400,
+                    marginTop: 8,
+                  },
                 ]}
               >
-                <View style={styles.journeyDotInner} />
-              </View>
-              <View
-                style={[styles.journeyVertLine, { backgroundColor: "#dadada" }]}
-              />
+                Đang tải thông tin vận chuyển...
+              </Text>
             </View>
-            <View style={styles.journeyContent}>
-              <View style={styles.journeyContentRow}>
-                <Ionicons
-                  name="document-text-outline"
-                  size={14}
-                  color={colors.neutral500}
+          ) : liveTracking?.routes && liveTracking.routes.length > 0 ? (
+            liveTracking.routes
+              .slice()
+              .sort((a, b) => b.timestamp - a.timestamp)
+              .map((route, idx) => {
+                const isFirst = idx === 0;
+                const dotColor = isFirst ? "#ee4d2d" : "#dadada";
+                const timestamp = new Date(route.timestamp * 1000);
+                const pad = (n: number) => String(n).padStart(2, "0");
+                const timeStr = `${pad(timestamp.getHours())}:${pad(timestamp.getMinutes())}:${pad(timestamp.getSeconds())}`;
+                const dateStr = `${pad(timestamp.getDate())} ${timestamp.toLocaleString("vi-VN", { month: "short" })} ${timestamp.getFullYear()}`;
+                return (
+                  <View key={idx} style={styles.journeyItem}>
+                    <View style={styles.journeyDotCol}>
+                      <View
+                        style={[
+                          styles.journeySquareDot,
+                          {
+                            borderColor: dotColor,
+                            backgroundColor: isFirst ? "#fff5f3" : "#f7f8fa",
+                          },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.journeyDotInner,
+                            { backgroundColor: dotColor },
+                          ]}
+                        />
+                      </View>
+                      {idx < liveTracking.routes!.length - 1 && (
+                        <View
+                          style={[
+                            styles.journeyVertLine,
+                            { backgroundColor: dotColor },
+                          ]}
+                        />
+                      )}
+                    </View>
+                    <View style={styles.journeyContent}>
+                      <Text
+                        style={[
+                          {
+                            color: isFirst ? colors.neutral900 : colors.neutral500,
+                            ...textPresets.fs14_400,
+                          },
+                        ]}
+                      >
+                        {route.message}
+                      </Text>
+                      <Text
+                        style={[
+                          {
+                            color: colors.neutral400,
+                            ...textPresets.fs12_400,
+                          },
+                        ]}
+                      >
+                        {`${dateStr} ${timeStr}`}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })
+          ) : (
+            <View style={styles.journeyItem}>
+              <View style={styles.journeyDotCol}>
+                <View
+                  style={[
+                    styles.journeySquareDot,
+                    { borderColor: "#dadada", backgroundColor: "#f7f8fa" },
+                  ]}
+                >
+                  <View style={styles.journeyDotInner} />
+                </View>
+                <View
+                  style={[styles.journeyVertLine, { backgroundColor: "#dadada" }]}
                 />
-                <Text
-                  style={[
-                    { color: colors.neutral900, ...textPresets.fs14_400 },
-                  ]}
-                >
-                  {STATUS_LABEL[order.shippingStatus]}
-                </Text>
               </View>
-              {order.trackingCode ? (
-                <Text
-                  style={[
-                    { color: colors.neutral400, ...textPresets.fs12_400 },
-                  ]}
-                >
-                  {isManual ? "Mã đơn hàng" : "Mã SPX"}: {order.trackingCode}
-                </Text>
-              ) : null}
+              <View style={styles.journeyContent}>
+                <View style={styles.journeyContentRow}>
+                  <Ionicons
+                    name="document-text-outline"
+                    size={14}
+                    color={colors.neutral500}
+                  />
+                  <Text
+                    style={[
+                      { color: colors.neutral900, ...textPresets.fs14_400 },
+                    ]}
+                  >
+                    {displayStatusText}
+                  </Text>
+                </View>
+                {displayCode ? (
+                  <Text
+                    style={[
+                      { color: colors.neutral400, ...textPresets.fs12_400 },
+                    ]}
+                  >
+                    {isManual ? "Mã đơn hàng" : "Mã vận đơn"}: {displayCode}
+                  </Text>
+                ) : null}
+                {liveTracking?.message ? (
+                  <Text
+                    style={[
+                      { color: colors.neutral400, ...textPresets.fs12_400, marginTop: 4 },
+                    ]}
+                  >
+                    Lý do: {liveTracking.message}
+                  </Text>
+                ) : null}
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </ScrollView>
 
@@ -452,106 +691,109 @@ export default function ShippingDetailScreen() {
           },
         ]}
       >
-        <View style={styles.actionGrid}>
-          <Pressable
-            style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
-            onPress={() => {
-              if (isWaitingManual) {
-                router.push({
-                  pathname: "/shipping-label" as never,
-                  params: { id: order.id, order: orderParam },
-                });
-              } else {
-                void handlePrintLabel();
-              }
-            }}
-            disabled={printing}
-          >
-            {printing ? (
-              <ActivityIndicator size="small" color={colors.neutral900} />
-            ) : (
-              <>
-                <Ionicons
-                  name="print-outline"
-                  size={18}
-                  color={colors.neutral900}
-                />
-                <Text
-                  style={[
-                    styles.actionButtonText,
-                    { color: colors.neutral900, ...textPresets.fs12_400 },
-                  ]}
-                >
-                  In vận đơn
-                </Text>
-              </>
-            )}
-          </Pressable>
+        <View style={styles.actionRow}>
           <Pressable
             style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
           >
             <Ionicons
-              name="headset-outline"
-              size={18}
+              name="print-outline"
+              size={20}
               color={colors.neutral900}
             />
             <Text
               style={[
                 styles.actionButtonText,
-                { color: colors.neutral900, ...textPresets.fs12_400 },
+                { color: colors.neutral900, ...textPresets.fs14_400 },
               ]}
             >
-              {"Chăm sóc\nkhách hàng"}
+              In vận đơn
             </Text>
           </Pressable>
           <Pressable
             style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
-            onPress={() =>
-              router.push({
-                pathname: "/order-detail/create-shipment" as never,
-                params: {
-                  order: orderParam,
-                  provider: isManual ? "manual" : "spx",
-                  mode: "edit",
-                },
-              })
-            }
+            onPress={() => setXemThemVisible(true)}
           >
             <Ionicons
-              name="pencil-outline"
-              size={18}
+              name="ellipsis-horizontal-outline"
+              size={20}
               color={colors.neutral900}
             />
             <Text
               style={[
                 styles.actionButtonText,
-                { color: colors.neutral900, ...textPresets.fs12_400 },
+                { color: colors.neutral900, ...textPresets.fs14_400 },
               ]}
             >
-              Chỉnh sửa
+              Xem thêm
             </Text>
           </Pressable>
-          {!isCancelled ? (
-            <Pressable
-              style={[styles.actionButton, { backgroundColor: colors.neutral50 }]}
-            >
-              <Ionicons
-                name="close-circle-outline"
-                size={18}
-                color="#ff4d4f"
-              />
-              <Text
-                style={[
-                  styles.actionButtonText,
-                  { color: "#ff4d4f", ...textPresets.fs12_400 },
-                ]}
-              >
-                {"Huỷ Đơn\nHàng"}
-              </Text>
-            </Pressable>
-          ) : null}
         </View>
       </View>
+
+      {/* Xem thêm bottom sheet */}
+      <Modal
+        visible={xemThemVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setXemThemVisible(false)}
+      >
+        <Pressable
+          style={styles.sheetOverlay}
+          onPress={() => setXemThemVisible(false)}
+        />
+        <View
+          style={[
+            styles.sheetContainer,
+            { backgroundColor: colors.white, paddingBottom: Math.max(bottom, 16) },
+          ]}
+        >
+          <View style={styles.sheetHandle} />
+
+          {!hasMultipleTrackingRoutes && (
+            <>
+              <Pressable
+                style={styles.sheetRow}
+                onPress={() => {
+                  setXemThemVisible(false);
+                  router.push({
+                    pathname: "/shipping-detail/edit",
+                    params: {
+                      order: JSON.stringify(order),
+                      mode: "edit",
+                      provider: isManual ? "manual" : "spx",
+                      shippingFee: String(order.shippingFee ?? 0),
+                      prepaid: String(order.depositAmount ?? 0),
+                    },
+                  });
+                }}
+              >
+                <Ionicons name="create-outline" size={20} color={colors.neutral900} />
+                <Text style={[styles.sheetRowText, { color: colors.neutral900, ...textPresets.fs14_400 }]}>
+                  Chỉnh Sửa
+                </Text>
+              </Pressable>
+
+              <View style={[styles.sheetDivider, { backgroundColor: colors.border10 }]} />
+            </>
+          )}
+
+          <Pressable style={styles.sheetRow} onPress={() => { setXemThemVisible(false); handleCancelOrder(); }}>
+            <Ionicons name="close-circle-outline" size={20} color={colors.error} />
+            <Text style={[styles.sheetRowText, { color: colors.error, ...textPresets.fs14_400 }]}>
+              Huỷ Đơn Hàng
+            </Text>
+          </Pressable>
+
+          <View style={[styles.sheetDivider, { backgroundColor: colors.border10 }]} />
+
+          <Pressable style={styles.sheetCloseRow} onPress={() => setXemThemVisible(false)}>
+            <Ionicons name="close" size={20} color={colors.neutral500} />
+            <Text style={[styles.sheetRowText, { color: colors.neutral500, ...textPresets.fs14_400 }]}>
+              Tắt
+            </Text>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -667,16 +909,51 @@ const styles = createStyles(({ colors }) => ({
     paddingTop: 12,
     paddingHorizontal: 16,
   },
-  actionGrid: { flexDirection: "row", gap: 8 },
+  actionRow: { flexDirection: "row", gap: 12 },
   actionButton: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 44,
-    gap: 4,
+    flexDirection: "row",
+    gap: 8,
   },
-  actionButtonText: { textAlign: "center", lineHeight: 18 },
+  actionButtonText: { textAlign: "center" },
+  sheetOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
+  sheetContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingTop: 8,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.neutral300,
+    alignSelf: "center",
+    marginBottom: 8,
+  },
+  sheetRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  sheetRowText: { flex: 1 },
+  sheetDivider: { height: 0.5, marginHorizontal: 20 },
+  sheetCloseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
 }));

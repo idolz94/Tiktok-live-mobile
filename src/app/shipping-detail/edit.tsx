@@ -1,3 +1,3 @@
-import ShippingEditScreen from "@features/orders/screens/shipping-edit-screen";
+import CreateShipmentScreen from "@features/orders/screens/create-shipment";
 
-export default ShippingEditScreen;
+export default CreateShipmentScreen;

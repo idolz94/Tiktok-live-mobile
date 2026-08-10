@@ -1,6 +1,7 @@
 import { OrderFilter } from "@app-types/index";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { Icon } from "@components/icon";
+import { EmptyState } from "@components/empty-state";
 import { useThemes } from "@hooks/use-theme";
 import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { createStyles } from "@utils/createStyles";
@@ -134,33 +135,40 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [orderFilter]);
 
+  useEffect(() => {
+    if (orderFilter !== "all" && orders.length > 0 && filteredOrders.length === 0) {
+      setOrderFilter("all");
+    }
+  }, [filteredOrders.length, orderFilter, orders.length, setOrderFilter]);
+
   const listHeader = useMemo(
-    () => (
-      <>
-        <Text style={styles.txtCurrentLive}>Phiên live hiện tại</Text>
-        <View style={styles.grid}>
-          {Array.from({ length: Math.ceil(cards.length / 2) }, (_, row) => (
-            <View key={row} style={styles.columnWrapper}>
-              {cards.slice(row * 2, row * 2 + 2).map((card) => (
-                <OrderStatCard
-                  key={card.filterKey}
-                  {...card}
-                  isActive={orderFilter === card.filterKey}
-                  onPressCard={handlePressCard}
-                />
-              ))}
-            </View>
-          ))}
-        </View>
-        <View style={styles.footerRow}>
-          <Text style={styles.txtCount}>{orderProductCount} sản phẩm</Text>
-          <Pressable style={styles.filterButton} onPress={handlePressFilter}>
-            <Icon name="filter" size={24} tintColor={colors.neutral900} />
-            <Text>{activeFilterLabel}</Text>
-          </Pressable>
-        </View>
-      </>
-    ),
+    () =>
+      orders.length === 0 ? null : (
+        <>
+          <Text style={styles.txtCurrentLive}>Phiên live hiện tại</Text>
+          <View style={styles.grid}>
+            {Array.from({ length: Math.ceil(cards.length / 2) }, (_, row) => (
+              <View key={row} style={styles.columnWrapper}>
+                {cards.slice(row * 2, row * 2 + 2).map((card) => (
+                  <OrderStatCard
+                    key={card.filterKey}
+                    {...card}
+                    isActive={orderFilter === card.filterKey}
+                    onPressCard={handlePressCard}
+                  />
+                ))}
+              </View>
+            ))}
+          </View>
+          <View style={styles.footerRow}>
+            <Text style={styles.txtCount}>{orderProductCount} sản phẩm</Text>
+            <Pressable style={styles.filterButton} onPress={handlePressFilter}>
+              <Icon name="filter" size={24} tintColor={colors.neutral900} />
+              <Text>{activeFilterLabel}</Text>
+            </Pressable>
+          </View>
+        </>
+      ),
     [
       activeFilterLabel,
       cards,
@@ -169,6 +177,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
       handlePressFilter,
       orderFilter,
       orderProductCount,
+      orders.length,
     ],
   );
 
@@ -182,6 +191,11 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
         keyExtractor={keyExtractor}
         extraData={listExtraData}
         ListHeaderComponent={listHeader}
+        ListEmptyComponent={
+          orders.length === 0 ? (
+            <EmptyState image="order" title="Chưa có đơn nào được tạo" />
+          ) : null
+        }
         // START: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
         refreshing={orderLoading}
         onRefresh={reloadOrders}
