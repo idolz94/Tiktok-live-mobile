@@ -19,14 +19,19 @@ export const OrderStatCard = memo(
     isActive: boolean;
     onPressCard: (filterKey: OrderFilter) => void;
   }) => {
+    const disabled = value === 0;
     const handlePress = useCallback(() => {
-      onPressCard(filterKey);
-    }, [onPressCard, filterKey]);
+      if (!disabled) onPressCard(filterKey);
+    }, [disabled, onPressCard, filterKey]);
 
     return (
       <Pressable
+        disabled={disabled}
         style={[
           styles.infoCard,
+          !disabled && styles.enabledCard,
+          isActive && styles.activeCard,
+          disabled && styles.disabledCard,
           {
             backgroundColor: bgColor,
             borderColor: isActive ? "red" : "transparent",
@@ -44,7 +49,7 @@ export const OrderStatCard = memo(
   },
 );
 
-const styles = createStyles(({ colors, textPresets, shadows }) => ({
+const styles = createStyles(({ colors, textPresets }) => ({
   infoCard: {
     flex: 1,
     borderRadius: 12,
@@ -54,8 +59,23 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     alignItems: "flex-start",
     borderWidth: HairlineWidth * 3,
     borderColor: colors.border10,
-    overflow: "hidden",
-    ...shadows.sd1,
+  },
+  enabledCard: {
+    shadowColor: colors.neutral900,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
+    elevation: 5,
+  },
+  activeCard: {
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.32,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  disabledCard: {
+    opacity: 0.55,
   },
   infoCardIcon: {
     width: 32,

@@ -90,7 +90,6 @@ export default function ShippingSettingsScreen() {
       <Header
         title="Cấu hình vận chuyển"
         onBackPress={handleBack}
-        rightIcon="settings-outline"
         transparent
       />
 

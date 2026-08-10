@@ -1,7 +1,10 @@
 import { OrderFilter } from "@app-types/index";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { useToast } from "@components/toast";
 import { Icon } from "@components/icon";
 import { EmptyState } from "@components/empty-state";
+import { Skeleton } from "@components/skeleton";
+import { HairlineWidth } from "@themes/index";
 import { useThemes } from "@hooks/use-theme";
 import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { createStyles } from "@utils/createStyles";
@@ -16,6 +19,102 @@ import {
 import { OrderFilterBar } from "../components/order-filter";
 import { OrderItem } from "../components/order-item";
 import { OrderStatCard } from "../components/order-stat-card";
+
+function StatCardSkeleton() {
+  return (
+    <View style={skeletonStyles.card}>
+      <Skeleton width={32} height={32} borderRadius={8} />
+      <View style={skeletonStyles.cardText}>
+        <Skeleton width={40} height={22} borderRadius={6} />
+        <Skeleton width={60} height={14} borderRadius={4} style={{ marginTop: 4 }} />
+      </View>
+    </View>
+  );
+}
+
+function OrderRowSkeleton() {
+  return (
+    <View style={skeletonStyles.row}>
+      <Skeleton width={42} height={42} borderRadius={21} />
+      <View style={skeletonStyles.rowBody}>
+        <Skeleton width="60%" height={15} borderRadius={4} />
+        <Skeleton width="40%" height={13} borderRadius={4} style={{ marginTop: 6 }} />
+        <Skeleton width="80%" height={13} borderRadius={4} style={{ marginTop: 4 }} />
+      </View>
+      <Skeleton width={64} height={28} borderRadius={8} />
+    </View>
+  );
+}
+
+function OrdersSkeleton() {
+  return (
+    <View style={skeletonStyles.root}>
+      <Skeleton width={160} height={24} borderRadius={6} style={{ marginBottom: 12 }} />
+      <View style={skeletonStyles.grid}>
+        <View style={skeletonStyles.row2}>
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </View>
+        <View style={skeletonStyles.row2}>
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </View>
+      </View>
+      <View style={skeletonStyles.footerRow}>
+        <Skeleton width={100} height={20} borderRadius={4} />
+        <Skeleton width={80} height={20} borderRadius={4} />
+      </View>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <OrderRowSkeleton key={i} />
+      ))}
+    </View>
+  );
+}
+
+const skeletonStyles = createStyles(({ colors }) => ({
+  root: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  card: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    columnGap: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: HairlineWidth * 3,
+    borderColor: colors.border10,
+  },
+  cardText: {
+    flex: 1,
+  },
+  grid: {
+    rowGap: 8,
+  },
+  row2: {
+    flexDirection: "row",
+    columnGap: 8,
+  },
+  footerRow: {
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 12,
+    paddingVertical: 14,
+    borderBottomWidth: HairlineWidth,
+    borderBottomColor: colors.border10,
+  },
+  rowBody: {
+    flex: 1,
+  },
+}));
 
 export const Orders = memo(({ orderManager }: OrdersProps) => {
   const {
@@ -36,6 +135,7 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
 
   const { colors } = useThemes();
   const { show, hide } = useBottomSheet();
+  const toast = useToast();
 
   const listRef = useRef<FlashListRef<OrderWithTikTok>>(null);
   useTabScrollToTop("index", listRef, { isFlatList: true });
@@ -125,21 +225,18 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
         item={item}
         depositLoading={depositLoadingIds.has(item.id)}
         onToggleDeposit={toggleDepositStatus}
-        onRemove={deleteOrder}
+        onRemove={async (id) => {
+          await deleteOrder(id);
+          toast.success({ title: "Đã xoá đơn hàng" });
+        }}
       />
     ),
-    [depositLoadingIds, toggleDepositStatus, deleteOrder],
+    [depositLoadingIds, toggleDepositStatus, deleteOrder, toast],
   );
 
   useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [orderFilter]);
-
-  useEffect(() => {
-    if (orderFilter !== "all" && orders.length > 0 && filteredOrders.length === 0) {
-      setOrderFilter("all");
-    }
-  }, [filteredOrders.length, orderFilter, orders.length, setOrderFilter]);
 
   const listHeader = useMemo(
     () =>
@@ -183,26 +280,26 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
 
   return (
     <View style={styles.root}>
-      {/* START: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter */}
-      <FlashList
-        ref={listRef}
-        data={filteredOrders}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        extraData={listExtraData}
-        ListHeaderComponent={listHeader}
-        ListEmptyComponent={
-          orders.length === 0 ? (
-            <EmptyState image="order" title="Chưa có đơn nào được tạo" />
-          ) : null
-        }
-        // START: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
-        refreshing={orderLoading}
-        onRefresh={reloadOrders}
-        // END: Pull to refresh gọi lại API lấy danh sách đơn hàng mới nhất
-        contentContainerStyle={styles.container}
-      />
-      {/* END: FlashList làm list gốc để tránh nested VirtualizedList trong ScrollView bị mất item khi filter */}
+      {orderLoading && orders.length === 0 ? (
+        <OrdersSkeleton />
+      ) : (
+        <FlashList
+          ref={listRef}
+          data={filteredOrders}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          extraData={listExtraData}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={
+            !orderLoading && filteredOrders.length === 0 ? (
+              <EmptyState image="order" title="Chưa có đơn nào được tạo" />
+            ) : null
+          }
+          refreshing={orderLoading}
+          onRefresh={reloadOrders}
+          contentContainerStyle={styles.container}
+        />
+      )}
     </View>
   );
 });

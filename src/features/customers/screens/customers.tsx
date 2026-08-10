@@ -215,6 +215,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
   card: {
     borderRadius: 16,
     backgroundColor: colors.white,
+    shadowColor: colors.neutral900,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   },
   row: {
     flexDirection: "row",

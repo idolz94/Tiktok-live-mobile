@@ -369,6 +369,7 @@ export default function CreateShipmentScreen() {
       <Header
         title={isEditMode ? "Chỉnh sửa đơn hàng" : "Tạo đơn hàng"}
         rightIcon="settings-outline"
+        onRightPress={() => router.push("/shipping-settings")}
         transparent
       />
 
