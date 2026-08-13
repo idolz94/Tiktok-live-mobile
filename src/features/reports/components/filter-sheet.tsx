@@ -2,14 +2,13 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
-import type { ReportFilter } from "../types";
+import { REPORT_PERIODS, type ReportFilter, type ReportPeriod } from "../types";
 
-const PRESETS: { id: "7d" | "1m" | "6m" | "1y"; label: string }[] = [
-  { id: "7d", label: "7 ngày qua" },
-  { id: "1m", label: "30 ngày qua" },
-  { id: "6m", label: "6 tháng qua" },
-  { id: "1y", label: "1 năm qua" },
-];
+type PresetPeriod = Exclude<ReportPeriod, "custom">;
+
+const PRESETS = REPORT_PERIODS.filter(
+  (p): p is { id: PresetPeriod; label: string } => p.id !== "custom",
+);
 
 const DEPOSIT_OPTIONS: { id: ReportFilter["depositStatus"]; label: string }[] = [
   { id: null, label: "Tất cả" },
@@ -31,11 +30,12 @@ const ORDER_STATUS_OPTIONS: { id: ReportFilter["status"]; label: string }[] = [
 
 type Props = {
   filter: ReportFilter;
-  onApply: (f: ReportFilter, preset?: "7d" | "1m" | "6m" | "1y") => void;
+  period: ReportPeriod;
+  onApply: (f: ReportFilter, preset?: PresetPeriod) => void;
   onCustomDate: () => void;
 };
 
-export function FilterSheet({ filter, onApply, onCustomDate }: Props) {
+export function FilterSheet({ filter, period, onApply, onCustomDate }: Props) {
   const { colors } = useThemes();
   const [draft, setDraft] = useState<ReportFilter>(filter);
 
@@ -51,15 +51,25 @@ export function FilterSheet({ filter, onApply, onCustomDate }: Props) {
 
       <Text style={[styles.sectionLabel, { color: colors.neutral400 }]}>Khoảng thời gian nhanh</Text>
       <View style={styles.chipRow}>
-        {PRESETS.map((p) => (
-          <Pressable
-            key={p.id}
-            onPress={() => onApply(draft, p.id)}
-            style={[styles.chip, { backgroundColor: colors.neutral50, borderColor: colors.border10 }]}
-          >
-            <Text style={[styles.chipText, { color: colors.neutral900 }]}>{p.label}</Text>
-          </Pressable>
-        ))}
+        {PRESETS.map((p) => {
+          const active = p.id === period;
+          return (
+            <Pressable
+              key={p.id}
+              onPress={() => onApply(draft, p.id)}
+              style={[
+                styles.chip,
+                active
+                  ? { backgroundColor: colors.primaryLight, borderColor: colors.primary }
+                  : { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+              ]}
+            >
+              <Text style={[styles.chipText, { color: active ? colors.primary : colors.neutral900 }]}>
+                {p.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <Pressable

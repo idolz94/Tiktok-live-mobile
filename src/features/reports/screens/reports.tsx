@@ -1,19 +1,23 @@
-import { Ionicons } from "@expo/vector-icons";
+import { useBottomSheet } from "@components/bottom-sheet/hook";
 import {
   CollapsibleHeader,
   useCollapsibleHeaderHeight,
 } from "@components/header/collapsible-header";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
-import { createStyles } from "@utils/createStyles";
-import { useThemes } from "@hooks/use-theme";
-import { useBottomSheet } from "@components/bottom-sheet/hook";
-import { useReports } from "@features/reports/hooks/use-reports";
-import { FilterSheet } from "@features/reports/components/filter-sheet";
-import { DatePickerModal } from "@features/reports/components/date-picker-modal";
-import type { ReportPeriod, ReportFilter } from "@features/reports/types";
+import { Ionicons } from "@expo/vector-icons";
 import type { StatSectionData } from "@features/orders/service/api";
-import { BarChart as GiftedBarChart } from "react-native-gifted-charts";
+import { DatePickerSheet } from "@features/reports/components/date-picker-modal";
+import { FilterSheet } from "@features/reports/components/filter-sheet";
+import { useReports } from "@features/reports/hooks/use-reports";
+import {
+  REPORT_PERIODS,
+  type ReportFilter,
+  type ReportPeriod,
+} from "@features/reports/types";
+import { useThemes } from "@hooks/use-theme";
+import { createStyles } from "@utils/createStyles";
+import { useCallback, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -22,11 +26,11 @@ import {
   Text,
   View,
 } from "react-native";
+import { BarChart as GiftedBarChart } from "react-native-gifted-charts";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
-import { useCallback, useRef, useState } from "react";
 
 function splitCompact(value: number): { num: string; unit: string } {
   const n = Math.round(value || 0);
@@ -37,14 +41,11 @@ function splitCompact(value: number): { num: string; unit: string } {
   return { num: n.toLocaleString("vi-VN"), unit: "đ" };
 }
 
-const PERIODS: { id: ReportPeriod; label: string }[] = [
-  { id: "1d", label: "1 ngày" },
-  { id: "7d", label: "7 ngày" },
-  { id: "1m", label: "1 tháng" },
-  { id: "6m", label: "6 tháng" },
-  { id: "1y", label: "1 năm" },
-  { id: "custom", label: "Tuỳ chỉnh" },
-];
+function formatMoneyYLabel(label: string): string {
+  const v = Number(label);
+  if (!Number.isFinite(v)) return label;
+  return `${+(v / 1_000_000).toFixed(1)}`;
+}
 
 function pctValue(curr: number, prev: number): number {
   if (prev === 0) return curr > 0 ? 100 : 0;
@@ -97,7 +98,7 @@ export function ReportsScreen() {
     },
   });
 
-  const { show, hide } = useBottomSheet();
+  const { show, hide, replace } = useBottomSheet();
   const {
     period,
     setPeriod,
@@ -105,19 +106,40 @@ export function ReportsScreen() {
     setFilter,
     stats,
     loading,
+    refreshing,
     error,
     refresh,
     chartData,
   } = useReports();
 
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const filterSheetId = useRef<string | null>(null);
+  const datePickerSheetId = useRef<string | null>(null);
+
+  const openDatePicker = useCallback(() => {
+    datePickerSheetId.current = show({
+      content: (
+        <DatePickerSheet
+          initialFrom={filter.customFrom}
+          initialTo={filter.customTo}
+          onConfirm={(from, to) => {
+            setFilter((prev) => ({ ...prev, customFrom: from, customTo: to }));
+            setPeriod("custom");
+            hide(datePickerSheetId.current ?? undefined);
+          }}
+          onClose={() => hide(datePickerSheetId.current ?? undefined)}
+        />
+      ),
+      enablePanDownToClose: true,
+      showDragIndicator: false,
+    });
+  }, [show, hide, filter.customFrom, filter.customTo, setFilter, setPeriod]);
 
   const openFilter = useCallback(() => {
     filterSheetId.current = show({
       content: (
         <FilterSheet
           filter={filter}
+          period={period}
           onApply={(f, preset) => {
             if (preset) {
               setPeriod(preset);
@@ -128,24 +150,37 @@ export function ReportsScreen() {
             hide(filterSheetId.current ?? undefined);
           }}
           onCustomDate={() => {
-            hide(filterSheetId.current ?? undefined);
-            setDatePickerOpen(true);
+            replace(
+              {
+                content: (
+                  <DatePickerSheet
+                    initialFrom={filter.customFrom}
+                    initialTo={filter.customTo}
+                    onConfirm={(from, to) => {
+                      setFilter((prev) => ({
+                        ...prev,
+                        customFrom: from,
+                        customTo: to,
+                      }));
+                      setPeriod("custom");
+                      hide(filterSheetId.current ?? undefined);
+                    }}
+                    onClose={() => hide(filterSheetId.current ?? undefined)}
+                  />
+                ),
+                enablePanDownToClose: true,
+                showDragIndicator: false,
+              },
+              filterSheetId.current ?? undefined,
+            );
           }}
         />
       ),
       snapPoints: ["75%"],
       enablePanDownToClose: true,
+      showDragIndicator: false,
     });
-  }, [show, hide, filter, setFilter, setPeriod]);
-
-  const handleDateConfirm = useCallback(
-    (from: Date, to: Date) => {
-      setFilter((prev) => ({ ...prev, customFrom: from, customTo: to }));
-      setPeriod("custom");
-      setDatePickerOpen(false);
-    },
-    [setFilter, setPeriod],
-  );
+  }, [show, hide, replace, filter, period, setFilter, setPeriod]);
 
   const activeFilter = filter.depositStatus !== null || filter.status !== null;
 
@@ -196,7 +231,7 @@ export function ReportsScreen() {
         scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
-            refreshing={loading}
+            refreshing={false}
             onRefresh={refresh}
             tintColor={colors.primary}
           />
@@ -208,12 +243,12 @@ export function ReportsScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsRow}
         >
-          {PERIODS.map((p) => (
+          {REPORT_PERIODS.map((p) => (
             <Pressable
               key={p.id}
               onPress={() => {
                 if (p.id === "custom") {
-                  setDatePickerOpen(true);
+                  openDatePicker();
                 } else {
                   setPeriod(p.id);
                 }
@@ -241,7 +276,7 @@ export function ReportsScreen() {
               <Text style={styles.retryBtnText}>Thử lại</Text>
             </Pressable>
           </View>
-        ) : !stats ? (
+        ) : loading || !stats ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.primary} />
           </View>
@@ -358,13 +393,11 @@ export function ReportsScreen() {
         )}
       </Animated.ScrollView>
 
-      <DatePickerModal
-        visible={datePickerOpen}
-        initialFrom={filter.customFrom}
-        initialTo={filter.customTo}
-        onConfirm={handleDateConfirm}
-        onClose={() => setDatePickerOpen(false)}
-      />
+      {refreshing ? (
+        <View style={styles.refreshIndicator} pointerEvents="none">
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -448,29 +481,28 @@ function Section({
       {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
 
       {/* Bar chart via gifted-charts */}
-      <View style={styles.chartWrap}>
-        <GiftedBarChart
-          data={barData}
-          barWidth={chart.length <= 7 ? 28 : 18}
-          spacing={chart.length <= 7 ? 12 : 6}
-          roundedTop
-          roundedBottom
-          hideRules={false}
-          rulesColor={colors.neutral50}
-          rulesType="solid"
-          noOfSections={3}
-          maxValue={Math.max(...chart.map((d) => d.value), 1)}
-          yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
-          xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 10 }}
-          yAxisColor="transparent"
-          xAxisColor={colors.border10}
-          hideYAxisText={false}
-          isAnimated
-          width={undefined}
-          height={148}
-          barBorderRadius={3}
-        />
-      </View>
+      <GiftedBarChart
+        data={barData}
+        barWidth={chart.length <= 7 ? 28 : 18}
+        spacing={chart.length <= 7 ? 12 : 6}
+        roundedTop
+        // roundedBottom
+        hideRules={false}
+        rulesColor={colors.neutral50}
+        rulesType="solid"
+        noOfSections={3}
+        maxValue={Math.max(...chart.map((d) => d.value), 1)}
+        yAxisTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+        xAxisLabelTextStyle={{ color: colors.textMuted, fontSize: 10 }}
+        formatYLabel={isMoney ? formatMoneyYLabel : undefined}
+        yAxisColor="transparent"
+        xAxisColor={colors.border10}
+        hideYAxisText={false}
+        isAnimated
+        width={undefined}
+        height={148}
+        barBorderRadius={3}
+      />
 
       {/* Metric cards */}
       <View style={styles.metricRow}>
@@ -557,6 +589,13 @@ const styles = createStyles(({ colors, textPresets }) => ({
     padding: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  refreshIndicator: {
+    position: "absolute",
+    top: 30,
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
   errorText: {
     ...textPresets.fs14_500,
@@ -687,10 +726,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-  },
-  chartWrap: {
-    marginHorizontal: -4,
-    overflow: "hidden",
   },
   metricRow: { flexDirection: "row", gap: 8 },
   metricCard: {

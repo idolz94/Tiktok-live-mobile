@@ -77,11 +77,13 @@ export function useReports() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [stats, setStats] = useState<OrderStatsData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const fetch = useCallback(async (isRefresh?: boolean) => {
     try {
-      setLoading(true);
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
       setError(null);
       const { dateFrom, dateTo } = getPeriodDates(period, filter.customFrom, filter.customTo);
       const data = await getOrderStatsApi({
@@ -95,6 +97,7 @@ export function useReports() {
       setError((err as Error)?.message || "Lỗi tải dữ liệu");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [period, filter]);
 
@@ -103,7 +106,7 @@ export function useReports() {
   }, [fetch]);
 
   const refresh = useCallback(async () => {
-    await fetch();
+    await fetch(true);
   }, [fetch]);
 
   return {
@@ -115,6 +118,7 @@ export function useReports() {
     setFilterSheetOpen,
     stats,
     loading,
+    refreshing,
     error,
     refresh,
     chartData: {
