@@ -13,8 +13,10 @@ import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import {
   cancelShipmentApi,
+  getShipmentLabelApi,
   refreshShippingStatusApi,
 } from "@features/orders/service/create-shipment-api";
+import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
 import {
@@ -152,7 +154,12 @@ export const OrderDetail = memo(() => {
           void cancelShipmentApi(order.id, { trackingId: order.trackingCode })
             .then(() => refreshShippingStatusApi(order.id))
             .then(() => detail.fetchOrder())
-            .then(() => toast.success({ title: "Thành công", description: "Đã huỷ vận đơn." }))
+            .then(() =>
+              toast.success({
+                title: "Thành công",
+                description: "Đã huỷ vận đơn.",
+              }),
+            )
             .catch((err) => {
               toast.error({
                 title: "Không huỷ được vận đơn",
@@ -166,6 +173,33 @@ export const OrderDetail = memo(() => {
       },
     ]);
   }, [detail]);
+
+  const [printing, setPrinting] = useState(false);
+
+  const handlePrintLabel = useCallback(async () => {
+    const order = detail.order;
+    if (!order?.id || printing) return;
+    if (!order.trackingCode) {
+      toast.error({
+        title: "Chưa thể in",
+        description: "Đơn hàng chưa có vận đơn.",
+      });
+      return;
+    }
+    setPrinting(true);
+    try {
+      const res = await getShipmentLabelApi(order.id);
+      if (res.labelUrl) await WebBrowser.openBrowserAsync(res.labelUrl);
+    } catch (err) {
+      toast.error({
+        title: "Không lấy được nhãn vận đơn",
+        description:
+          err instanceof Error ? err.message : "Vui lòng thử lại.",
+      });
+    } finally {
+      setPrinting(false);
+    }
+  }, [detail.order, printing, toast]);
 
   const handleSaveNewProduct = useCallback(
     (data: {
@@ -273,7 +307,8 @@ export const OrderDetail = memo(() => {
                 } else {
                   toast.error({
                     title: "Lỗi",
-                    description: "Không thể kết nối tài khoản SPX. Vui lòng thử lại.",
+                    description:
+                      "Không thể kết nối tài khoản SPX. Vui lòng thử lại.",
                   });
                 }
               }}
@@ -420,7 +455,7 @@ export const OrderDetail = memo(() => {
               hasShipment={!!detail.order.trackingCode}
               shippingStatus={detail.order.shippingStatus}
               onCancel={handleCancelShipment}
-              onPrint={() => {}}
+              onPrint={() => void handlePrintLabel()}
               onShare={handleShare}
               onDeposit={() => {
                 void detail.handleToggleDeposit();
