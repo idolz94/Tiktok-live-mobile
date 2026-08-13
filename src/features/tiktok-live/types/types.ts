@@ -29,6 +29,35 @@ export type LiveHistoryItem = {
   updatedAt?: string;
 };
 
+export type InsightLevel = "good" | "warning" | "info";
+
+export type LiveSessionInsight = {
+  code: string;
+  level: InsightLevel;
+  title: string;
+  detail: string;
+  action?: string;
+};
+
+export type LiveSessionPace = {
+  durationSeconds: number;
+  commentsPerMinute: number;
+  ordersPerHour: number;
+  averageOrderValue: number;
+};
+
+export type LiveSessionInsights = {
+  summary: string;
+  pace: LiveSessionPace;
+  highlights: LiveSessionInsight[];
+  recommendations: string[];
+};
+
+export type LiveSessionMetricsReport = {
+  metrics: unknown;
+  insights: LiveSessionInsights;
+};
+
 export interface CommentItemProps {
   item: LiveComment;
   onCreateOrder: (

@@ -65,7 +65,7 @@ export async function getOrdersApi(status: string | null = "draft"): Promise<Ord
 }
 
 export async function getShippingOrdersApi(): Promise<OrderWithTikTok[]> {
-  const data = await getRequest<any>("/orders?shippingStatus=submitted,in_transit,delivered,returning");
+  const data = await getRequest<any>("/orders/shipping");
   const rows = pickArrayResponse(data, ["orders", "items", "data"]);
 
   return rows.map((order: any) => normalizeApiOrderForUi(order));
@@ -137,14 +137,7 @@ export async function updateOrderStatusApi({
   status,
 }: {
   orderId: string;
-  status:
-    | "draft"
-    | "confirmed"
-    | "packed"
-    | "shipping"
-    | "completed"
-    | "canceled"
-    | "returned";
+  status: "draft" | "confirmed" | "success";
 }) {
   const data = await patchRequest<any>(`/orders/${orderId}/status`, {
     status,

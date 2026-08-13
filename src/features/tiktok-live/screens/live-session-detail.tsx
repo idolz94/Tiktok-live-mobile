@@ -18,9 +18,9 @@ import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 
@@ -45,6 +45,7 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
 
   const {
     session,
+    insights,
     filteredOrders,
     orderFilter,
     setOrderFilter,
@@ -55,6 +56,26 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
     draftOrders,
     productCount,
   } = useLiveSessionDetail(sessionId);
+
+  // ponytail: insights ẩn sau icon info bên phải, mở dạng tooltip overlay thay vì expand inline
+  const insightsData =
+    insights && (insights.summary || insights.highlights.length > 0)
+      ? insights
+      : null;
+  const [insightsTipOpen, setInsightsTipOpen] = useState(false);
+  const [tipTop, setTipTop] = useState(0);
+  const tipAnchorRef = useRef<View>(null);
+
+  const handleToggleInsightsTip = useCallback(() => {
+    if (insightsTipOpen) {
+      setInsightsTipOpen(false);
+      return;
+    }
+    tipAnchorRef.current?.measureInWindow((_x, y, _w, h) => {
+      setTipTop(y + h + 8);
+      setInsightsTipOpen(true);
+    });
+  }, [insightsTipOpen]);
 
   const cards: OrderStatCardData[] = useMemo(
     () => [
@@ -173,6 +194,24 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
           ))}
         </View>
 
+        {/* Insights — nội dung hiện dạng tooltip sau icon sparkles bên phải */}
+        {insightsData && (
+          <View style={styles.insightsHeader}>
+            <Text style={styles.insightsHeading}>Nhận xét phiên live</Text>
+            <Pressable
+              ref={tipAnchorRef}
+              onPress={handleToggleInsightsTip}
+              hitSlop={8}
+            >
+              <Ionicons
+                name="sparkles-outline"
+                size={20}
+                color={colors.neutral900}
+              />
+            </Pressable>
+          </View>
+        )}
+
         {/* Order list header */}
         <View style={styles.listHeaderRow}>
           <Text style={styles.txtProductCount}>{productCount} sản phẩm</Text>
@@ -192,7 +231,13 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
       productCount,
       activeFilterLabel,
       handlePressFilter,
+      insightsData,
+      handleToggleInsightsTip,
       colors.neutral900,
+      colors.neutral400,
+      colors.successLight,
+      colors.warningLight,
+      colors.infoLight,
     ],
   );
 
@@ -225,6 +270,50 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
         }
         contentContainerStyle={styles.listContent}
       />
+      {insightsData && insightsTipOpen && (
+        <View style={styles.tipOverlay} pointerEvents="box-none">
+          <Pressable
+            style={styles.tipBackdrop}
+            onPress={() => setInsightsTipOpen(false)}
+          />
+          <View style={[styles.tipBubble, { top: tipTop }]}>
+            <ScrollView
+              bounces={false}
+              contentContainerStyle={styles.tipContent}
+            >
+              {insightsData.summary && (
+                <Text style={styles.insightsSummary}>
+                  {insightsData.summary}
+                </Text>
+              )}
+              {insightsData.highlights.map((highlight, idx) => (
+                <View
+                  key={`${highlight.code}-${idx}`}
+                  style={[
+                    styles.insightCard,
+                    {
+                      backgroundColor:
+                        highlight.level === "good"
+                          ? colors.successLight
+                          : highlight.level === "warning"
+                            ? colors.warningLight
+                            : colors.infoLight,
+                    },
+                  ]}
+                >
+                  <Text style={styles.insightTitle}>{highlight.title}</Text>
+                  <Text style={styles.insightDetail}>{highlight.detail}</Text>
+                  {highlight.action && (
+                    <Text style={styles.insightAction}>
+                      {highlight.action}
+                    </Text>
+                  )}
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </View>
   );
 });
@@ -286,8 +375,69 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     flexDirection: "row",
     columnGap: 8,
   },
+  insightsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    columnGap: 6,
+    marginTop: 16,
+  },
+  insightsHeading: {
+    color: colors.neutral900,
+    ...textPresets.fs16_600,
+  },
+  insightsSummary: {
+    color: colors.neutral500,
+    ...textPresets.fs14_400,
+  },
+  insightCard: {
+    padding: 12,
+    borderRadius: 16,
+    rowGap: 4,
+  },
+  insightTitle: {
+    color: colors.neutral900,
+    ...textPresets.fs14_500,
+  },
+  insightDetail: {
+    color: colors.neutral500,
+    ...textPresets.fs12_400,
+  },
+  insightAction: {
+    color: colors.neutral500,
+    ...textPresets.fs12_500,
+  },
+  tipOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+  },
+  tipBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  tipBubble: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    maxHeight: "70%",
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 12,
+    ...shadows.sd2,
+    elevation: 10,
+  },
+  tipContent: {
+    rowGap: 8,
+  },
   listHeaderRow: {
-    padding: 16,
+    paddingVertical: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

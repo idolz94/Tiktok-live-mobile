@@ -28,21 +28,16 @@ import {
   getShipmentLabelApi,
   refreshShippingStatusApi,
 } from "../service/create-shipment-api";
-import { updateOrderStatusApi } from "../service/api";
 import type { ShippingOrder } from "../hooks/use-shipping-tab";
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
   not_shipped: "Chưa giao",
-  submitted: "Chờ lấy hàng",
   pending_pickup: "Chờ lấy hàng",
-  waiting_pickup: "Chờ lấy hàng",
   in_transit: "Đang vận chuyển",
-  shipping: "Đang giao hàng",
   delivering: "Đang giao hàng",
   delivered: "Đã giao hàng",
   on_hold: "Tạm giữ",
   pickup_failed: "Lấy hàng thất bại",
-  failed: "Giao thất bại",
   damaged: "Hàng hỏng",
   lost: "Mất hàng",
   returning: "Đang hoàn hàng",
@@ -76,7 +71,7 @@ const STEPPER_STEPS: { label: string; icon: keyof typeof icons }[] = [
 
 function statusToStep(status: ShippingStatus): number {
   if (status === "delivered") return 3;
-  if (status === "shipping" || status === "delivering") return 2;
+  if (status === "delivering") return 2;
   if (status === "in_transit") return 1;
   return 0;
 }
@@ -92,7 +87,6 @@ export default function ShippingDetailScreen() {
   const [printing, setPrinting] = useState(false);
   const [navigated, setNavigated] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [cancellingOrder, setCancellingOrder] = useState(false);
   const [xemThemVisible, setXemThemVisible] = useState(false);
 
   const order = orderParam
@@ -149,7 +143,7 @@ export default function ShippingDetailScreen() {
                 trackingId: order.trackingCode ?? undefined,
               });
               toast.success({ title: "Đã huỷ vận đơn" });
-              router.back();
+              router.replace({ pathname: "/(tabs)/shipping", params: { refreshShipping: Date.now().toString() } });
             } catch (err) {
               toast.error({
                 title: "Không huỷ được vận đơn",
@@ -167,36 +161,6 @@ export default function ShippingDetailScreen() {
     );
   }, [order?.id, order?.trackingCode, cancelling]);
 
-  const handleCancelOrder = useCallback(() => {
-    if (!order?.id || cancellingOrder) return;
-    Alert.alert(
-      "Huỷ đơn hàng",
-      "Bạn có chắc muốn huỷ đơn hàng này không?",
-      [
-        { text: "Không", style: "cancel" },
-        {
-          text: "Huỷ đơn",
-          style: "destructive",
-          onPress: async () => {
-            setCancellingOrder(true);
-            try {
-              await updateOrderStatusApi({ orderId: order.id, status: "canceled" });
-              toast.success({ title: "Đã huỷ đơn hàng" });
-              router.back();
-            } catch (err) {
-              toast.error({
-                title: "Không huỷ được đơn hàng",
-                description:
-                  err instanceof Error ? err.message : "Vui lòng thử lại.",
-              });
-            } finally {
-              setCancellingOrder(false);
-            }
-          },
-        },
-      ],
-    );
-  }, [order?.id, cancellingOrder]);
 
   const isManual = !/ghn|ghtk|vtp|viettel|spx|shopee/i.test(
     order?.providerName ?? "",
@@ -242,7 +206,7 @@ export default function ShippingDetailScreen() {
   }
 
   const isCancelled = order.shippingStatus === "cancelled";
-  const isWaitingManual = isManual && order.shippingStatus === "submitted";
+  const isWaitingManual = isManual && order.shippingStatus === "pending_pickup";
   const displayStatus = liveTracking?.status ?? order.shippingStatus;
   const displayStatusText = liveTracking
     ? (STATUS_TEXT_VI[liveTracking.statusText] ?? liveTracking.statusText)
@@ -777,7 +741,7 @@ export default function ShippingDetailScreen() {
             </>
           )}
 
-          <Pressable style={styles.sheetRow} onPress={() => { setXemThemVisible(false); handleCancelOrder(); }}>
+          <Pressable style={styles.sheetRow} onPress={() => { setXemThemVisible(false); handleCancel(); }}>
             <Ionicons name="close-circle-outline" size={20} color={colors.error} />
             <Text style={[styles.sheetRowText, { color: colors.error, ...textPresets.fs14_400 }]}>
               Huỷ Đơn Hàng

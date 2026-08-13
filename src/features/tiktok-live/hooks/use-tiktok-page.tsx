@@ -58,7 +58,6 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     liveSessionId: currentLiveSessionId,
     hasOrders: user?.hasOrders ?? false,
     enabled: ordersTabEnabled,
-    allStatuses: true,
   });
 
   const [visible, setVisible] = useState(false);

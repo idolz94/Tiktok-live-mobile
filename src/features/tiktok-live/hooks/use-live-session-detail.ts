@@ -1,10 +1,13 @@
 import { OrderFilter } from "@app-types/index";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
-import { useCallback, useMemo, useState } from "react";
+import { getLiveSessionMetricsApi } from "@features/tiktok-live/service/live-history-api";
+import { LiveSessionInsights } from "@features/tiktok-live/types/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export function useLiveSessionDetail(sessionId: string) {
   const { liveHistory } = useTikTokLiveSocketContext();
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
+  const [insights, setInsights] = useState<LiveSessionInsights | null>(null);
 
   const session = useMemo(
     () => liveHistory.find((s) => s.id === sessionId) ?? null,
@@ -70,8 +73,23 @@ export function useLiveSessionDetail(sessionId: string) {
     [],
   );
 
+  useEffect(() => {
+    let cancelled = false;
+
+    setInsights(null);
+
+    getLiveSessionMetricsApi(sessionId).then((nextInsights) => {
+      if (!cancelled) setInsights(nextInsights);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
   return {
     session,
+    insights,
     orders,
     filteredOrders,
     orderFilter,

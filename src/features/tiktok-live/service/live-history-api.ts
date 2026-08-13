@@ -3,7 +3,11 @@ import {
   SaveLiveEndedPayload,
   SaveLiveStartedPayload,
 } from "@app-types/index";
-import { LiveHistoryItem } from "@features/tiktok-live/types/types";
+import {
+  LiveHistoryItem,
+  LiveSessionInsights,
+  LiveSessionMetricsReport,
+} from "@features/tiktok-live/types/types";
 import { normalizeApiOrderForUi } from "@features/orders/utils/order";
 import { getRequest, postRequest } from "@utils/http/request-sse";
 import { normalizeAtUsername } from "@utils/tiktok";
@@ -221,4 +225,20 @@ export async function saveLiveSessionEndedApi({
   return mapDbLiveSession(
     pickObjectResponse(data, ["session", "liveSession", "item"]),
   );
+}
+
+export async function getLiveSessionMetricsApi(
+  sessionId: string,
+): Promise<LiveSessionInsights | null> {
+  const trimmed = String(sessionId || "").trim();
+  if (!trimmed) return null;
+
+  try {
+    const data = await getRequest<LiveSessionMetricsReport>(`/live-sessions/${trimmed}/metrics`);
+    const report = pickObjectResponse(data, ["data", "report"]);
+    return report?.insights || null;
+  } catch (error) {
+    if (__DEV__) console.error("getLiveSessionMetricsApi error:", error);
+    return null;
+  }
 }

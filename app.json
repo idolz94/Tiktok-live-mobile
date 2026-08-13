@@ -12,7 +12,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.idolz94.tiktoklivetools",
+      "bundleIdentifier": "app.com.tool.tiktok",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

@@ -48,6 +48,8 @@ export function useCreateShipment() {
     weightInput: form.weightInput,
     selectedVoucherCode: form.selectedVoucherCode,
     setSelectedVoucherCode: form.setSelectedVoucherCode,
+    initialDiscountAmount: isEditMode ? (order?.discountAmount ?? null) : null,
+    initialShippingFee: isEditMode ? (order?.shippingFee ?? null) : null,
   });
 
   const addrForm = useAddressForm({
@@ -69,7 +71,25 @@ export function useCreateShipment() {
   const codAmountDisplay = useMemo(() => isManualProvider ? form.manualCodAmount : formatLocaleInput(String(codAmount)), [codAmount, isManualProvider, form.manualCodAmount]);
   const goodsValueDisplay = useMemo(() => formatLocaleInput(String(orderTotal)), [orderTotal]);
   const selectedVoucher = spx.vouchers.find(v => v.voucherCode === form.selectedVoucherCode);
-  const voucherAmount = selectedVoucher ? Math.round(parseFloat(selectedVoucher.voucherAmount)) : 0;
+  const voucherAmount = (() => {
+    if (selectedVoucher) {
+      const n = parseFloat(selectedVoucher.voucherAmount);
+      if (isNaN(n) || n === 0) return 0;
+      if (selectedVoucher.discountBy === 1) {
+        // ponytail: fallback to order shippingFee when estimatedFee hasn't arrived yet (edit mode)
+        const fee = spx.estimatedFee ?? (isEditMode ? (order?.shippingFee ?? 0) : 0);
+        const cap = parseFloat(selectedVoucher.voucherCap) || Infinity;
+        return Math.round(Math.min(fee * n / 100, cap));
+      }
+      return Math.round(n);
+    }
+    // ponytail: in edit mode, fall back to order.discountAmount when no voucher is selected
+    // (covers both: vouchers still loading AND restore failed to find a match)
+    if (isEditMode && !form.selectedVoucherCode && order?.discountAmount && order.discountAmount > 0) {
+      return order.discountAmount;
+    }
+    return 0;
+  })();
 
   const totalCollected = isSpxProvider
     ? form.paymentSide === 0

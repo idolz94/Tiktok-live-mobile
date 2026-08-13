@@ -29,6 +29,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Button } from "@components/button";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   CollapsibleHeader,
@@ -41,16 +42,12 @@ import Animated, {
 
 const STATUS_LABEL: Record<ShippingStatus, string> = {
   not_shipped: "Chưa giao",
-  submitted: "Đã gửi",
   pending_pickup: "Chờ lấy hàng",
-  waiting_pickup: "Chờ lấy hàng",
   in_transit: "Đang vận chuyển",
-  shipping: "Đang giao",
   delivering: "Đang giao",
   delivered: "Đã giao hàng",
   on_hold: "Tạm giữ",
   pickup_failed: "Lấy hàng thất bại",
-  failed: "Giao thất bại",
   damaged: "Hàng hỏng",
   lost: "Mất hàng",
   returning: "Đang hoàn",
@@ -90,12 +87,10 @@ function statusColor(
   if (status === "delivered") return colors.success;
   if (
     status === "in_transit" ||
-    status === "shipping" ||
     status === "delivering"
   )
     return colors.info;
   if (
-    status === "failed" ||
     status === "damaged" ||
     status === "lost" ||
     status === "return_failed" ||
@@ -210,10 +205,7 @@ function OrderCard({
   const label = providerLabel(item.providerName);
   const displayStatus = liveStatus ?? item.shippingStatus;
   const sColor = statusColor(displayStatus, colors);
-  const statusLabel =
-    abbr === "TC" && displayStatus === "submitted"
-      ? "Chờ lấy hàng"
-      : STATUS_LABEL[displayStatus];
+  const statusLabel = STATUS_LABEL[displayStatus];
 
   const addressText =
     [
@@ -589,27 +581,18 @@ function OrderCard({
           </Text>
         </Pressable>
         {item.shippingStatus !== "cancelled" && (
-          <Pressable
-            style={[
+          <Button
+            title="Huỷ đơn"
+            onPress={handleCancel}
+            loading={cancelling}
+            icon={<Ionicons name="close-circle-outline" size={14} color={colors.error} />}
+            type="outline"
+            containerStyle={[
               styles.cardActionBtn,
               { borderColor: "#ffcdd2", backgroundColor: "#fff5f5" },
             ]}
-            onPress={handleCancel}
-          >
-            <Ionicons
-              name="close-circle-outline"
-              size={14}
-              color={colors.error}
-            />
-            <Text
-              style={[
-                styles.cardActionText,
-                { color: colors.error, ...textPresets.fs12_500 },
-              ]}
-            >
-              Huỷ đơn
-            </Text>
-          </Pressable>
+            txtBtnStyle={{ color: colors.error, ...textPresets.fs12_500 }}
+          />
         )}
       </View>
     </View>

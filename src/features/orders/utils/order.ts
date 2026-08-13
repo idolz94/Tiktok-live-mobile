@@ -168,8 +168,20 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
   const productTotal = rawProducts.length ? getOrderTotal(products) : 0;
   const rawSubtotalAmount = Number(order?.subtotalAmount ?? order?.subtotal_amount ?? 0);
   const subtotalAmount = rawSubtotalAmount > 0 ? rawSubtotalAmount : productTotal;
-  const shippingFee = Number(order?.shippingFee ?? order?.shipping_fee ?? 0);
-  const discountAmount = Number(order?.discountAmount ?? order?.discount_amount ?? 0);
+  const shippingFee = Number(
+    order?.shippingFee ??
+      order?.shipping_fee ??
+      order?.shipment?.shippingFee ??
+      order?.shipment?.shipping_fee ??
+      0,
+  );
+  const discountAmount = Number(
+    order?.discountAmount ??
+      order?.discount_amount ??
+      order?.shipment?.discountAmount ??
+      order?.shipment?.discount_amount ??
+      0,
+  );
   const depositAmount = Number(order?.depositAmount ?? order?.deposit_amount ?? 0);
   const computedTotalAmount = Math.max(0, subtotalAmount + shippingFee - discountAmount);
   const rawTotalAmount = Number(order?.totalAmount ?? order?.total_amount ?? 0);
@@ -257,6 +269,8 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
     providerName:
       order?.providerName ||
       order?.provider_name ||
+      order?.providerCode ||
+      order?.provider_code ||
       order?.shipment?.providerCode ||
       order?.shipment?.provider_code ||
       null,
@@ -278,10 +292,6 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
 
 export function statusLabel(status: Order["status"]) {
   if (status === "confirmed") return "Đã chốt";
-  if (status === "packed") return "Đã đóng gói";
-  if (status === "shipping") return "Đang giao";
-  if (status === "completed") return "Hoàn tất";
-  if (status === "canceled") return "Đã hủy";
-  if (status === "returned") return "Hoàn trả";
+  if (status === "success") return "Hoàn tất";
   return "Đơn nháp";
 }

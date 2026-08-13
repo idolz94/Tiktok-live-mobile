@@ -9,6 +9,7 @@ import {
 } from "@components/header/collapsible-header";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
+import { Skeleton } from "@components/skeleton";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { useTikTokLiveSocketContext } from "@features/tiktok-live/contexts/tiktok-live-socket";
 import { LiveHistoryItem } from "@features/tiktok-live/types/types";
@@ -420,6 +421,31 @@ const DayCard = memo(
   },
 );
 
+function LiveHistorySkeleton() {
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+      {[0, 1, 2].map((dayIndex) => (
+        <View key={dayIndex} style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+            <Skeleton width={80} height={14} borderRadius={4} />
+            <Skeleton width={60} height={12} borderRadius={4} style={{ marginLeft: 12 }} />
+          </View>
+          {[0, 1].map((si) => (
+            <View key={si} style={{ flexDirection: "row", paddingVertical: 10, paddingHorizontal: 12 }}>
+              <Skeleton width={42} height={42} borderRadius={21} />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Skeleton width="60%" height={15} borderRadius={4} />
+                <Skeleton width="40%" height={13} borderRadius={4} style={{ marginTop: 6 }} />
+                <Skeleton width="80%" height={13} borderRadius={4} style={{ marginTop: 4 }} />
+              </View>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 // --- main ---
 
 export const LiveHistoryScreen = memo(() => {
@@ -444,6 +470,7 @@ export const LiveHistoryScreen = memo(() => {
     from: null,
     to: null,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   const hasFilter = !!dateRange.from || !!dateRange.to;
 
@@ -476,7 +503,8 @@ export const LiveHistoryScreen = memo(() => {
 
   useFocusEffect(
     useCallback(() => {
-      void reloadLiveHistory();
+      setIsLoading(true);
+      reloadLiveHistory().finally(() => setIsLoading(false));
     }, [reloadLiveHistory]),
   );
 
@@ -571,8 +599,13 @@ export const LiveHistoryScreen = memo(() => {
         </View>
       )}
 
-      {listEmpty ? (
-        <View style={[styles.empty, { paddingTop: headerHeight }]}>          <View style={styles.emptyIconWrap}>
+      {isLoading && groups.length === 0 ? (
+        <View style={{ paddingTop: headerHeight }}>
+          <LiveHistorySkeleton />
+        </View>
+      ) : listEmpty ? (
+        <View style={[styles.empty, { paddingTop: headerHeight }]}>
+          <View style={styles.emptyIconWrap}>
             <Icon name="clock" size={32} tintColor="neutral300" />
           </View>
           <Text style={styles.emptyTitle}>

@@ -107,35 +107,39 @@ export type OrderProduct = {
   rawCommentText?: string;
 };
 
-export type OrderStatus =
-  | "draft"
-  | "confirmed"
-  | "packed"
-  | "shipping"
-  | "completed"
-  | "canceled"
-  | "returned";
+export type OrderStatus = "draft" | "confirmed" | "success";
 
-export type DepositStatus = "unpaid" | "paid" | "deposited" | "refunded";
-export type PaymentStatus = "unpaid" | "partial" | "paid" | "refunded";
 export type ShippingStatus =
   | "not_shipped"
-  | "waiting_pickup"
-  | "shipping"
-  | "delivered"
-  | "failed"
-  | "returned"
-  | "submitted"
   | "pending_pickup"
   | "in_transit"
   | "delivering"
   | "on_hold"
+  | "delivered"
   | "pickup_failed"
   | "damaged"
   | "lost"
   | "returning"
   | "return_failed"
+  | "returned"
   | "cancelled";
+
+export type SpxShippingStatusCode =
+  | 1001
+  | 2001
+  | 2006
+  | 3001
+  | 4001
+  | 5001
+  | 5002
+  | 5003
+  | 6001
+  | 6002
+  | 6003
+  | 7001;
+
+export type DepositStatus = "unpaid" | "paid" | "deposited" | "refunded";
+export type PaymentStatus = "unpaid" | "partial" | "paid" | "refunded";
 
 export type OrderAddressData = {
   id: string;

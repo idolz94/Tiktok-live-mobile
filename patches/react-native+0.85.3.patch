@@ -1,0 +1,26 @@
+diff --git a/node_modules/react-native/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm b/node_modules/react-native/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm
+index 1c8a584..dfb84cc 100644
+--- a/node_modules/react-native/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm
++++ b/node_modules/react-native/React/Inspector/RCTCxxInspectorWebSocketAdapter.mm
+@@ -26,7 +26,10 @@ NSString *NSStringFromUTF8StringView(std::string_view view)
+   NSString *result = [[NSString alloc] initWithBytes:(const char *)view.data()
+                                               length:view.size()
+                                             encoding:NSUTF8StringEncoding];
+-  RCTAssert(result != nil, @"string_view contains invalid UTF-8 bytes");
++  if (result == nil) {
++    NSLog(@"[Inspector] string_view contains invalid UTF-8 bytes, skipping message");
++    return nil;
++  }
+   return result;
+ }
+ } // namespace
+@@ -55,6 +58,9 @@ NSString *NSStringFromUTF8StringView(std::string_view view)
+ {
+   __weak RCTCxxInspectorWebSocketAdapter *weakSelf = self;
+   NSString *messageStr = NSStringFromUTF8StringView(message);
++  if (messageStr == nil) {
++    return;
++  }
+   dispatch_async(dispatch_get_main_queue(), ^{
+     RCTCxxInspectorWebSocketAdapter *strongSelf = weakSelf;
+     if (strongSelf != nullptr) {

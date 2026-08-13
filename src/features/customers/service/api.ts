@@ -1,5 +1,6 @@
 import type { Order } from "@app-types/index";
 import { getRequest, patchRequest } from "@utils/http/request-sse";
+import type { CustomerAddress, CustomerDetail } from "../types/customer-detail";
 
 type UpdateCustomerPayload = {
   customerType?: string | null;
@@ -36,13 +37,17 @@ export function getCustomersApi(force = false) {
 }
 
 export function getCustomerApi(customerId: string) {
-  return getRequest<{ customer: { customerType?: string | null; phone?: string | null; referenceInfo?: string | null } }>(
-    `/customers/${customerId}`,
-  );
+  return getRequest<{ customer: CustomerDetail }>(`/customers/${customerId}`);
 }
 
 export function getCustomerOrdersApi(customerId: string) {
   return getRequest<{ orders: Order[] }>(`/customers/${customerId}/orders`);
+}
+
+export function getCustomerAddressesApi(customerId: string) {
+  return getRequest<{ addresses: CustomerAddress[] }>(
+    `/customers/${customerId}/addresses`,
+  );
 }
 
 export function updateCustomerApi(customerId: string, payload: UpdateCustomerPayload) {

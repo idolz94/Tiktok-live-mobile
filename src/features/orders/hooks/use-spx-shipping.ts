@@ -21,6 +21,8 @@ type UseSpxShippingParams = {
   weightInput: string;
   selectedVoucherCode: string | null;
   setSelectedVoucherCode: (value: string | null) => void;
+  initialDiscountAmount?: number | null;
+  initialShippingFee?: number | null;
 };
 
 export function useSpxShipping({
@@ -35,6 +37,8 @@ export function useSpxShipping({
   weightInput,
   selectedVoucherCode,
   setSelectedVoucherCode,
+  initialDiscountAmount,
+  initialShippingFee,
 }: UseSpxShippingParams) {
   const [timeslots, setTimeslots] = useState<SpxTimeslot[]>([]);
   const [timeslotsLoading, setTimeslotsLoading] = useState(false);
@@ -51,7 +55,8 @@ export function useSpxShipping({
     if (!enabled || !selectedSender || !selectedRecipient) {
       setVouchers([]);
       setVouchersError(null);
-      setSelectedVoucherCode(null);
+      // don't clear a voucher the user has already picked
+      if (!selectedVoucherCode) setSelectedVoucherCode(null);
       return;
     }
     let cancelled = false;
@@ -60,9 +65,24 @@ export function useSpxShipping({
     getSpxVouchersApi()
       .then((res) => {
         if (cancelled) return;
-        setVouchers(res.vouchers ?? []);
-        if (!selectedVoucherCode && res.vouchers?.length) {
-          setSelectedVoucherCode(res.vouchers[0].voucherCode);
+        const list = res.vouchers ?? [];
+        setVouchers(list);
+        if (!selectedVoucherCode && list.length) {
+          // edit mode: try to restore by matching discount amount
+          let picked = list[0].voucherCode;
+          if (initialDiscountAmount && initialDiscountAmount > 0 && initialShippingFee && initialShippingFee > 0) {
+            const match = list.find(v => {
+              const n = parseFloat(v.voucherAmount);
+              if (v.discountBy === 1) {
+                // percent voucher: estimate = fee * pct / 100, capped by voucherCap
+                const cap = parseFloat(v.voucherCap) || Infinity;
+                return Math.round(Math.min(initialShippingFee * n / 100, cap)) === initialDiscountAmount;
+              }
+              return Math.round(n) === initialDiscountAmount;
+            });
+            if (match) picked = match.voucherCode;
+          }
+          setSelectedVoucherCode(picked);
         }
         setVouchersLoading(false);
       })

@@ -12,11 +12,11 @@ export type ShippingOrder = OrderWithTikTok & {
 
 const FILTER_STATUSES: Record<ShippingFilterKey, ShippingStatus[]> = {
   all: [],
-  waiting: ["pending_pickup", "waiting_pickup", "submitted"],
-  transit: ["in_transit", "shipping", "delivering", "on_hold"],
+  waiting: ["pending_pickup"],
+  transit: ["in_transit", "delivering", "on_hold"],
   delivered: ["delivered"],
   returning: ["returning", "return_failed", "returned"],
-  other: ["pickup_failed", "damaged", "lost", "cancelled", "failed"],
+  other: ["pickup_failed", "damaged", "lost", "cancelled"],
 };
 
 export function useShippingTab() {
@@ -35,9 +35,9 @@ export function useShippingTab() {
       setError(null);
       try {
         const all = await getShippingOrdersApi();
-        // ponytail: only show orders that have an active shipment
+        // ponytail: only show orders that have an active shipment (trackingCode can be null for submitted orders)
         const withShipment = all
-          .filter((o) => o.trackingCode && o.shippingStatus !== "not_shipped")
+          .filter((o) => o.shippingStatus && o.shippingStatus !== "not_shipped")
           .sort((a, b) => {
             const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
             const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
