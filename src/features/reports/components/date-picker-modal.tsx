@@ -1,10 +1,9 @@
 import { useCallback, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { createStyles } from "@utils/createStyles";
 import { useThemes } from "@hooks/use-theme";
 
 type Props = {
-  visible: boolean;
   initialFrom: Date | null;
   initialTo: Date | null;
   onConfirm: (from: Date, to: Date) => void;
@@ -79,7 +78,7 @@ function WheelColumn({
   );
 }
 
-export function DatePickerModal({ visible, initialFrom, initialTo, onConfirm, onClose }: Props) {
+export function DatePickerSheet({ initialFrom, initialTo, onConfirm, onClose }: Props) {
   const { colors } = useThemes();
   const [tab, setTab] = useState<"from" | "to">("from");
 
@@ -100,85 +99,76 @@ export function DatePickerModal({ visible, initialFrom, initialTo, onConfirm, on
   }, [from, to, onConfirm]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose} />
-      <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
-        <View style={styles.handle} />
+    <View style={styles.sheet}>
+      <View style={styles.handle} />
 
-        <Text style={[styles.title, { color: colors.neutral900 }]}>Chọn ngày tuỳ chỉnh</Text>
+      <Text style={[styles.title, { color: colors.neutral900 }]}>Chọn ngày tuỳ chỉnh</Text>
 
-        {/* Tab */}
-        <View style={[styles.tabs, { borderColor: colors.border10 }]}>
-          <Pressable
-            onPress={() => setTab("from")}
-            style={[styles.tabBtn, tab === "from" && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
-          >
-            <Text style={[styles.tabText, { color: tab === "from" ? colors.primary : colors.neutral400 }]}>
-              Từ ngày
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setTab("to")}
-            style={[styles.tabBtn, tab === "to" && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
-          >
-            <Text style={[styles.tabText, { color: tab === "to" ? colors.primary : colors.neutral400 }]}>
-              Đến ngày
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Wheels */}
-        <View style={styles.wheels}>
-          <View style={[styles.wheelHighlight, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]} />
-          <WheelColumn
-            items={range(1, active.maxDay)}
-            selected={active.day}
-            onSelect={active.setDay}
-          />
-          <WheelColumn
-            items={range(1, 12)}
-            selected={active.month}
-            onSelect={active.setMonth}
-            display={(v) => MONTHS[v - 1] ?? String(v)}
-          />
-          <WheelColumn
-            items={years}
-            selected={active.year}
-            onSelect={active.setYear}
-            display={(v) => String(v)}
-          />
-        </View>
-
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Pressable
-            onPress={onClose}
-            style={[styles.btnOutline, { borderColor: colors.border10 }]}
-          >
-            <Text style={[styles.btnText, { color: colors.neutral500 }]}>Huỷ</Text>
-          </Pressable>
-          <Pressable
-            onPress={handleConfirm}
-            style={[styles.btnPrimary, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.btnText, { color: "#fff" }]}>Xác nhận</Text>
-          </Pressable>
-        </View>
+      {/* Tab */}
+      <View style={[styles.tabs, { borderColor: colors.border10 }]}>
+        <Pressable
+          onPress={() => setTab("from")}
+          style={[styles.tabBtn, tab === "from" && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+        >
+          <Text style={[styles.tabText, { color: tab === "from" ? colors.primary : colors.neutral400 }]}>
+            Từ ngày
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setTab("to")}
+          style={[styles.tabBtn, tab === "to" && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+        >
+          <Text style={[styles.tabText, { color: tab === "to" ? colors.primary : colors.neutral400 }]}>
+            Đến ngày
+          </Text>
+        </Pressable>
       </View>
-    </Modal>
+
+      {/* Wheels */}
+      <View style={styles.wheels}>
+        <View style={[styles.wheelHighlight, { borderColor: colors.border10, backgroundColor: colors.neutral50 }]} />
+        <WheelColumn
+          items={range(1, active.maxDay)}
+          selected={active.day}
+          onSelect={active.setDay}
+        />
+        <WheelColumn
+          items={range(1, 12)}
+          selected={active.month}
+          onSelect={active.setMonth}
+          display={(v) => MONTHS[v - 1] ?? String(v)}
+        />
+        <WheelColumn
+          items={years}
+          selected={active.year}
+          onSelect={active.setYear}
+          display={(v) => String(v)}
+        />
+      </View>
+
+      {/* Actions */}
+      <View style={styles.actions}>
+        <Pressable
+          onPress={onClose}
+          style={[styles.btnOutline, { borderColor: colors.border10 }]}
+        >
+          <Text style={[styles.btnText, { color: colors.neutral500 }]}>Huỷ</Text>
+        </Pressable>
+        <Pressable
+          onPress={handleConfirm}
+          style={[styles.btnPrimary, { backgroundColor: colors.primary }]}
+        >
+          <Text style={[styles.btnText, { color: "#fff" }]}>Xác nhận</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
 const styles = createStyles(({ textPresets }) => ({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
   sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   handle: {
     alignSelf: "center",
