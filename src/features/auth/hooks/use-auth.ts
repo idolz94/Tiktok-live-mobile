@@ -213,7 +213,22 @@ export const useAuth = () => {
 
         setLoginState(username.trim(), remember);
         setUserFromBootstrap(authUser);
-        bootstrapDone = true;
+
+        // Login response chỉ có token + user tối thiểu, không có license/canUseApp.
+        // Phải enrich qua /me/bootstrap để guard redirect (user?.canUseApp) pass.
+        // background: true để bootstrap lỗi tạm thời không xoá user vừa login.
+        resetBootstrapGuard();
+        beginAuthResume();
+        try {
+          await bootstrapAuth({
+            background: true,
+            setUserFromBootstrap,
+            setError,
+          });
+          bootstrapDone = true;
+        } finally {
+          endAuthResume();
+        }
         return authUser;
       } finally {
         setIsBootstrapping(false);
