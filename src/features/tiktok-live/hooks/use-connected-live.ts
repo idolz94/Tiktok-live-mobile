@@ -65,7 +65,7 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
           createdCommentKeysRef.current.set(commentKey, result.orderId);
         }
 
-        showToast("Tạo đơn thành công", "success");
+        showToast(result?.message || "Tạo đơn thành công", "success");
 
         return { success: true, orderId: result?.orderId ?? "" };
       } catch (error) {

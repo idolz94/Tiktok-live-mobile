@@ -13,6 +13,17 @@ import { router } from "expo-router";
 import { memo } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 
+function formatOrderDate(raw: string) {
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+}
+
 const OrderRow = memo(
   ({
     order,
@@ -21,20 +32,36 @@ const OrderRow = memo(
     order: CustomerOrderItem;
     onPress: (id: string) => void;
   }) => (
-    <Pressable style={styles.orderRow} onPress={() => onPress(order.id)}>
-      <View style={styles.orderRowTop}>
+    <View style={styles.orderCard}>
+      <View style={styles.orderCardHeader}>
         <Text numberOfLines={1} style={styles.orderCode}>
           {order.orderCode || order.id}
         </Text>
         <Text style={styles.orderStatus}>{getOrderStatusLabel(order.status)}</Text>
       </View>
-      <View style={styles.orderRowBottom}>
-        <Text style={styles.orderAmount}>{formatMoney(order.totalAmount)}</Text>
+      <View style={styles.orderCardBody}>
+        <View style={styles.orderInfoRow}>
+          <Text style={styles.orderLabel}>Ngày tạo</Text>
+          <Text style={styles.orderValue}>{formatOrderDate(order.createdAt)}</Text>
+        </View>
+        <View style={styles.orderInfoRow}>
+          <Text style={styles.orderLabel}>Tổng đơn</Text>
+          <Text style={styles.orderAmount}>{formatMoney(order.totalAmount)}</Text>
+        </View>
         {!!order.codAmount && order.codAmount > 0 && (
-          <Text style={styles.orderCod}>COD: {formatMoney(order.codAmount)}</Text>
+          <View style={styles.orderInfoRow}>
+            <Text style={styles.orderLabel}>COD</Text>
+            <Text style={styles.orderCod}>{formatMoney(order.codAmount)}</Text>
+          </View>
         )}
       </View>
-    </Pressable>
+      <Pressable
+        style={styles.viewDetailBtn}
+        onPress={() => onPress(order.id)}
+      >
+        <Text style={styles.viewDetailBtnText}>Xem chi tiết</Text>
+      </Pressable>
+    </View>
   ),
 );
 
@@ -271,12 +298,12 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.textMuted,
     ...textPresets.fs14_800,
   },
-  orderRow: {
+  orderCard: {
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral100,
   },
-  orderRowTop: {
+  orderCardHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -291,11 +318,22 @@ const styles = createStyles(({ colors, textPresets }) => ({
     color: colors.textMuted,
     ...textPresets.fs12_400,
   },
-  orderRowBottom: {
-    marginTop: 6,
+  orderCardBody: {
+    marginTop: 8,
+    rowGap: 4,
+  },
+  orderInfoRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  orderLabel: {
+    color: colors.textMuted,
+    ...textPresets.fs12_400,
+  },
+  orderValue: {
+    color: colors.neutral900,
+    ...textPresets.fs12_400,
   },
   orderAmount: {
     color: colors.neutral900,
@@ -304,6 +342,18 @@ const styles = createStyles(({ colors, textPresets }) => ({
   orderCod: {
     color: colors.textMuted,
     ...textPresets.fs12_400,
+  },
+  viewDetailBtn: {
+    marginTop: 10,
+    alignSelf: "flex-end",
+    borderRadius: 999,
+    backgroundColor: colors.neutral100,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  viewDetailBtnText: {
+    color: colors.primary,
+    ...textPresets.fs12_800,
   },
   addressRow: {
     paddingVertical: 12,
