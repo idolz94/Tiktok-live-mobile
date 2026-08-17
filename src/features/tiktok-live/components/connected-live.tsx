@@ -5,6 +5,7 @@ import { memo, useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { ConnectedLiveProps } from "../types/types";
 import { CommentCardItem } from "./comment-card-item";
+import { DevTipsPreview } from "./dev-tips-preview";
 import { useConnectedLive } from "../hooks/use-connected-live";
 import { BuyingIntentQueue } from "./buying-intent-queue";
 
@@ -114,6 +115,7 @@ export const ConnectedLive = memo(
             <BuyingIntentQueue />
           </>
         )}
+        <DevTipsPreview />
       </View>
     );
   },
