@@ -5,6 +5,7 @@ import {
 } from "@components/header/collapsible-header";
 import { Icon } from "@components/icon";
 import { LinearGradient } from "@components/linear-gradient";
+import { Skeleton } from "@components/skeleton";
 import { Ionicons } from "@expo/vector-icons";
 import type { StatSectionData } from "@features/orders/service/api";
 import { DatePickerSheet } from "@features/reports/components/date-picker-modal";
@@ -277,9 +278,7 @@ export function ReportsScreen() {
             </Pressable>
           </View>
         ) : loading || !stats ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={colors.primary} />
-          </View>
+          <ReportsSkeleton />
         ) : (
           <>
             {/* Summary card */}
@@ -463,7 +462,7 @@ function Section({
             color={colors.neutral400}
           />
         </View>
-        <View style={[styles.switcher, { backgroundColor: colors.neutral50 }]}>
+        {/* <View style={[styles.switcher, { backgroundColor: colors.neutral50 }]}>
           <View
             style={[
               styles.switcherBtn,
@@ -476,7 +475,7 @@ function Section({
           <View style={styles.switcherBtn}>
             <Icon name="more" size={16} tintColor="neutral400" />
           </View>
-        </View>
+        </View> */}
       </View>
       {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
 
@@ -508,6 +507,197 @@ function Section({
       <View style={styles.metricRow}>
         <MetricCard label="Trung bình" value={stats.avg} isMoney={isMoney} />
         <MetricCard label="Cao nhất" value={stats.max} isMoney={isMoney} />
+      </View>
+    </View>
+  );
+}
+
+function ReportsSkeleton() {
+  const { colors } = useThemes();
+  return (
+    <>
+      {/* Summary card skeleton */}
+      <View style={styles.cardSection}>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryHeader}>
+            <Skeleton width={120} height={16} borderRadius={4} />
+            <Icon name="print" size={18} tintColor="neutral400" />
+          </View>
+
+          <View style={styles.summaryRevRow}>
+            <View style={[styles.dot, styles.dotBlue]} />
+            <View style={styles.summaryRevInfo}>
+              <Text style={styles.summarySubLabel}>Tổng doanh thu</Text>
+              <View style={styles.summaryValueRow}>
+                <View style={styles.summaryAmountRow}>
+                  <Skeleton
+                    width={140}
+                    height={28}
+                    borderRadius={6}
+                    style={{ marginTop: 4 }}
+                  />
+                </View>
+                <Skeleton
+                  width={50}
+                  height={20}
+                  borderRadius={4}
+                  style={{ marginLeft: 8 }}
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.summaryDivider} />
+
+          <View style={styles.summaryBottomRow}>
+            <View style={[styles.summarySubCol, styles.summarySubColBorder]}>
+              <View style={[styles.dot, styles.dotGreen]} />
+              <View style={styles.summaryRevInfo}>
+                <Text style={styles.summarySubLabel}>Sản phẩm</Text>
+                <View style={styles.summaryValueRow}>
+                  <Skeleton
+                    width={60}
+                    height={20}
+                    borderRadius={4}
+                    style={{ marginTop: 4 }}
+                  />
+                  <Skeleton
+                    width={45}
+                    height={16}
+                    borderRadius={4}
+                    style={{ marginLeft: 8 }}
+                  />
+                </View>
+              </View>
+            </View>
+            <View style={styles.summarySubCol}>
+              <View style={[styles.dot, styles.dotOrange]} />
+              <View style={styles.summaryRevInfo}>
+                <Text style={styles.summarySubLabel}>Đơn hàng</Text>
+                <View style={styles.summaryValueRow}>
+                  <Skeleton
+                    width={60}
+                    height={20}
+                    borderRadius={4}
+                    style={{ marginTop: 4 }}
+                  />
+                  <Skeleton
+                    width={45}
+                    height={16}
+                    borderRadius={4}
+                    style={{ marginLeft: 8 }}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <SectionSkeleton
+        title="Phân tích doanh thu"
+        subtitle="Đơn vị tính: triệu đồng"
+      />
+      <View style={styles.sectionDivider} />
+      <SectionSkeleton title="Phân tích sản phẩm" />
+      <View style={styles.sectionDivider} />
+      <SectionSkeleton title="Phân tích đơn hàng" />
+      <View style={styles.sectionDivider} />
+      <SectionSkeleton title="Phân tích khách hàng" />
+      <View style={{ height: 32 }} />
+    </>
+  );
+}
+
+function SectionSkeleton({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) {
+  const { colors } = useThemes();
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionTitleWrap}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={colors.neutral400}
+          />
+        </View>
+        <View style={[styles.switcher, { backgroundColor: colors.neutral50 }]}>
+          <View
+            style={[
+              styles.switcherBtn,
+              styles.switcherBtnActive,
+              { backgroundColor: colors.neutral100 },
+            ]}
+          >
+            <Icon name="chart_pie" size={16} tintColor="neutral900" />
+          </View>
+          <View style={styles.switcherBtn}>
+            <Icon name="more" size={16} tintColor="neutral400" />
+          </View>
+        </View>
+      </View>
+      {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
+
+      {/* Bar chart placeholder */}
+      <View
+        style={{
+          height: 148,
+          justifyContent: "flex-end",
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            height: 100,
+          }}
+        >
+          <Skeleton width={18} height={40} borderRadius={3} />
+          <Skeleton width={18} height={60} borderRadius={3} />
+          <Skeleton width={18} height={80} borderRadius={3} />
+          <Skeleton width={18} height={50} borderRadius={3} />
+          <Skeleton width={18} height={70} borderRadius={3} />
+          <Skeleton width={18} height={90} borderRadius={3} />
+          <Skeleton width={18} height={65} borderRadius={3} />
+        </View>
+      </View>
+
+      {/* Metric cards skeleton */}
+      <View style={styles.metricRow}>
+        <MetricCardSkeleton label="Trung bình" />
+        <MetricCardSkeleton label="Cao nhất" />
+      </View>
+    </View>
+  );
+}
+
+function MetricCardSkeleton({ label }: { label: string }) {
+  const { colors } = useThemes();
+  return (
+    <View
+      style={[
+        styles.metricCard,
+        { backgroundColor: colors.neutral50, borderColor: colors.border10 },
+      ]}
+    >
+      <Text style={styles.metricLabel}>{label}</Text>
+      <View style={styles.metricValueRow}>
+        <Skeleton
+          width={60}
+          height={18}
+          borderRadius={4}
+          style={{ marginTop: 4 }}
+        />
       </View>
     </View>
   );
