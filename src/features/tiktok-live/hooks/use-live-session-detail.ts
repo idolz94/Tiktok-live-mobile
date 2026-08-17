@@ -41,7 +41,8 @@ export function useLiveSessionDetail(sessionId: string) {
 
   const filteredOrders = useMemo(() => {
     if (orderFilter === "all") return orders;
-    if (orderFilter === "confirmed") return orders.filter((o) => o.status === "confirmed");
+    if (orderFilter === "confirmed")
+      return orders.filter((o) => o.status === "confirmed");
     if (orderFilter === "paid")
       return orders.filter(
         (o) => o.depositStatus === "paid" || o.depositStatus === "deposited",
@@ -50,7 +51,8 @@ export function useLiveSessionDetail(sessionId: string) {
       return orders.filter(
         (o) => o.depositStatus !== "paid" && o.depositStatus !== "deposited",
       );
-    if (orderFilter === "draft") return orders.filter((o) => o.status === "draft");
+    if (orderFilter === "draft")
+      return orders.filter((o) => o.status === "draft");
     return orders;
   }, [orders, orderFilter]);
 
@@ -68,28 +70,43 @@ export function useLiveSessionDetail(sessionId: string) {
   );
 
   const toggleFilter = useCallback(
-    (key: OrderFilter) =>
-      setOrderFilter((cur) => (cur === key ? "all" : key)),
+    (key: OrderFilter) => setOrderFilter((cur) => (cur === key ? "all" : key)),
     [],
   );
 
   useEffect(() => {
+    setInsights(null);
+  }, [sessionId]);
+
+  useEffect(() => {
     let cancelled = false;
 
-    setInsights(null);
-
-    getLiveSessionMetricsApi(sessionId).then((nextInsights) => {
-      if (!cancelled) setInsights(nextInsights);
-    });
+    getLiveSessionMetricsApi(sessionId)
+      .then((nextInsights) => {
+        if (!cancelled) setInsights(nextInsights);
+      })
+      .catch((error) => {
+        if (__DEV__) console.error("LIVE SESSION METRICS ERROR:", error);
+        if (!cancelled) setInsights(null);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, session?.endedAt, session?.status]);
+
+  const isSessionFinished = useMemo(
+    () =>
+      !!session?.endedAt ||
+      session?.status === "ended" ||
+      session?.status === "error",
+    [session?.endedAt, session?.status],
+  );
 
   return {
     session,
     insights,
+    isSessionFinished,
     orders,
     filteredOrders,
     orderFilter,

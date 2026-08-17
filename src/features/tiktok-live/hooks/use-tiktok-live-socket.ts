@@ -115,6 +115,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const RETRY_DELAYS = [1000, 2000, 5000, 10000, 30000];
+  const FIRST_COMMENT_TIMEOUT_MS = 30_000;
+  const firstCommentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasReceivedFirstCommentRef = useRef(false);
 
   const initialUsername =
     options.initialUsername || (hasAuthUser ? "" : TIKTOK_USERNAME);
@@ -129,6 +132,14 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     initialUsername || TIKTOK_USERNAME,
   );
   const [liveError, setLiveError] = useState<string | null>(null);
+  // Lưu id của session vừa kết thúc/lỗi để Alert có thể dẫn sang màn chi tiết.
+  // Tại thời điểm alert hiện, currentLiveSessionId đã bị set null nên không dùng trực tiếp được.
+  const [lastEndedSessionId, setLastEndedSessionId] = useState<string | null>(null);
+  // Ref mirror luôn mới nhất cho alert effect (tránh stale closure trong handleServerEvent).
+  const lastEndedSessionIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    lastEndedSessionIdRef.current = lastEndedSessionId;
+  }, [lastEndedSessionId]);
   const [viewersCount, setViewersCount] = useState(0);
   const [buyingIntentQueueItems, setBuyingIntentQueueItems] = useState<BuyingIntentQueueItem[]>([]);
   const [latestOrderRecommendation, setLatestOrderRecommendation] = useState<OrderRecommendationItem | null>(null);
@@ -216,6 +227,19 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         setStatus(
           `Đã subscribe LIVE ${username}, đang chờ comment đầu tiên...`,
         );
+        hasReceivedFirstCommentRef.current = false;
+        if (firstCommentTimerRef.current) clearTimeout(firstCommentTimerRef.current);
+        firstCommentTimerRef.current = setTimeout(() => {
+          if (!hasReceivedFirstCommentRef.current && !isManualCloseRef.current) {
+            debugLiveLifecycle("FIRST_COMMENT_TIMEOUT", {
+              currentUsername: tiktokUsernameRef.current,
+              timeoutMs: FIRST_COMMENT_TIMEOUT_MS,
+            });
+            setStatus(
+              `Chưa nhận được comment sau ${FIRST_COMMENT_TIMEOUT_MS / 1000}s. Kiểm tra lại kết nối hoặc collector phía Backend.`,
+            );
+          }
+        }, FIRST_COMMENT_TIMEOUT_MS);
         return;
       }
 
@@ -233,6 +257,11 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       if (type === "UNSUBSCRIBED") {
         finalizeCurrentSessionLocally("unsubscribed");
         clearResumeUsername();
+        hasReceivedFirstCommentRef.current = false;
+        if (firstCommentTimerRef.current) {
+          clearTimeout(firstCommentTimerRef.current);
+          firstCommentTimerRef.current = null;
+        }
         setComments([]);
         setBuyingIntentQueueItems([]);
         setStatus(`Đã rời LIVE: ${getPayloadUsername(payload)}`);
@@ -290,6 +319,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           return;
         }
 
+        const endedSessionId =
+          currentLiveSession?.id ?? currentLiveSessionId ?? null;
+        if (endedSessionId) {
+          lastEndedSessionIdRef.current = endedSessionId;
+          setLastEndedSessionId(endedSessionId);
+        }
         if (type === "LIVE_ERROR" || type === "COLLECTOR_STOPPED") {
           finalizeCurrentSessionLocally(
             type === "LIVE_ERROR" ? "live_error" : "collector_stopped",
@@ -305,6 +340,11 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           isResuming: isResumingRef.current,
         });
         clearResumeUsername();
+        hasReceivedFirstCommentRef.current = false;
+        if (firstCommentTimerRef.current) {
+          clearTimeout(firstCommentTimerRef.current);
+          firstCommentTimerRef.current = null;
+        }
 
         // LIVE_ERROR means start succeeded but collector failed later, so cleanup backend collector explicitly.
         if (type === "LIVE_ERROR") {
@@ -384,6 +424,11 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       }
 
       if (type === "COMMENT" || type === "COMMENT_SAVED") {
+        hasReceivedFirstCommentRef.current = true;
+        if (firstCommentTimerRef.current) {
+          clearTimeout(firstCommentTimerRef.current);
+          firstCommentTimerRef.current = null;
+        }
         startSessionFromPayload(payload);
         pendingCommentsRef.current.push(unwrapSseCommentPayload(payload));
       }
@@ -526,6 +571,11 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           clearTimeout(retryTimerRef.current);
           retryTimerRef.current = null;
         }
+        hasReceivedFirstCommentRef.current = false;
+        if (firstCommentTimerRef.current) {
+          clearTimeout(firstCommentTimerRef.current);
+          firstCommentTimerRef.current = null;
+        }
         retryCountRef.current = 0;
         stopTikTokLiveApi({
           clientId: clientIdRef.current,
@@ -537,6 +587,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       tiktokUsernameRef.current = nextUsername;
       setTiktokUsername(nextUsername);
       setLiveError(null);
+      lastEndedSessionIdRef.current = null;
+      setLastEndedSessionId(null);
       setComments([]);
       setBuyingIntentQueueItems([]);
       setStatus(
@@ -610,11 +662,19 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     setBuyingIntentQueueItems([]);
     setStatus("Đã dừng nhận comment");
 
+    hasReceivedFirstCommentRef.current = false;
+    if (firstCommentTimerRef.current) {
+      clearTimeout(firstCommentTimerRef.current);
+      firstCommentTimerRef.current = null;
+    }
+
     return true;
   }, [finalizeCurrentSessionLocally]);
 
   const clearLiveError = useCallback(() => {
     setLiveError(null);
+    lastEndedSessionIdRef.current = null;
+    setLastEndedSessionId(null);
   }, []);
 
   const reconnect = useCallback(() => {
@@ -622,6 +682,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
     isManualCloseRef.current = false;
     isAuthFailedRef.current = false;
+    lastEndedSessionIdRef.current = null;
+    setLastEndedSessionId(null);
     setLiveError(null);
 
     abortControllerRef.current?.abort();
@@ -714,6 +776,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     clearResumeUsername();
 
     isManualCloseRef.current = true;
+
+    hasReceivedFirstCommentRef.current = false;
+    if (firstCommentTimerRef.current) {
+      clearTimeout(firstCommentTimerRef.current);
+      firstCommentTimerRef.current = null;
+    }
 
     try {
       await stopTikTokLiveApi({
@@ -877,6 +945,11 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         clearTimeout(retryTimerRef.current);
         retryTimerRef.current = null;
       }
+      hasReceivedFirstCommentRef.current = false;
+      if (firstCommentTimerRef.current) {
+        clearTimeout(firstCommentTimerRef.current);
+        firstCommentTimerRef.current = null;
+      }
       appStateSub.remove();
     };
   }, []);
@@ -916,6 +989,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       retryTimerRef.current = null;
     }
 
+    hasReceivedFirstCommentRef.current = false;
+    if (firstCommentTimerRef.current) {
+      clearTimeout(firstCommentTimerRef.current);
+      firstCommentTimerRef.current = null;
+    }
+
     hasEverConnectedRef.current = false;
     isAuthFailedRef.current = false;
     retryCountRef.current = 0;
@@ -925,6 +1004,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     setIsConnected(false);
     setIsConnecting(false);
     setLiveError(null);
+    lastEndedSessionIdRef.current = null;
+    setLastEndedSessionId(null);
     setViewersCount(0);
     setBuyingIntentQueueItems([]);
     setLatestOrderRecommendation(null);
@@ -938,6 +1019,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     comments,
     tiktokUsername,
     liveError,
+    lastEndedSessionId,
     viewersCount,
     buyingIntentQueueItems,
     setBuyingIntentQueueItems,
