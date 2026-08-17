@@ -8,7 +8,7 @@ import { FlashList } from "@shopify/flash-list";
 import type { ConnectedLiveProps } from "../types/types";
 
 export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLiveProps) {
-  const { comments, isConnected } = useTikTokLiveSocketContext();
+  const { comments, isConnected, latestOrderRecommendation } = useTikTokLiveSocketContext();
   const showToast = useToast();
 
   const listRef = useRef<ComponentRef<typeof FlashList<LiveComment>>>(null);
@@ -95,5 +95,13 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
     [onPrintOrder, orderManager.orders],
   );
 
-  return { comments, isConnected, listRef, isCommentOrderCreated, handleCreateOrder, handlePrintOrder };
+  return {
+    comments,
+    isConnected,
+    latestOrderRecommendation,
+    listRef,
+    isCommentOrderCreated,
+    handleCreateOrder,
+    handlePrintOrder,
+  };
 }

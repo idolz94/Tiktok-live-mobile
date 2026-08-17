@@ -22,6 +22,8 @@ import { useAuthStore } from "@features/auth/stores";
 import { getAuthToken } from "@utils/http/request-sse";
 import { loadString, saveString, remove, STORAGE_KEYS } from "@utils/storage";
 import { fetchSse } from "@utils/http/fetch-sse";
+import type { BuyingIntentQueueItem, OrderRecommendationItem } from "../types/types";
+import { getBuyingIntentQueueApi } from "../service/buying-intent-queue-api";
 
 export function createClientId() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
@@ -52,6 +54,7 @@ type UseTikTokLiveSocketOptions = {
   initialUsername?: string | null;
   hasHistory?: boolean;
   onOrderShippingUpdated?: (payload: Record<string, unknown>) => void;
+  onOrderRecommended?: (payload: Record<string, unknown>) => void;
 };
 
 function getPayloadUsername(payload: Record<string, any>) {
@@ -102,6 +105,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const isAppActiveRef = useRef(true);
   const ignoreTransientDisconnectRef = useRef(false);
   const onOrderShippingUpdatedRef = useRef(options.onOrderShippingUpdated);
+  const onOrderRecommendedRef = useRef(options.onOrderRecommended);
 
   const pendingCommentsRef = useRef<any[]>([]);
   const batchFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(
@@ -126,6 +130,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   );
   const [liveError, setLiveError] = useState<string | null>(null);
   const [viewersCount, setViewersCount] = useState(0);
+  const [buyingIntentQueueItems, setBuyingIntentQueueItems] = useState<BuyingIntentQueueItem[]>([]);
+  const [latestOrderRecommendation, setLatestOrderRecommendation] = useState<OrderRecommendationItem | null>(null);
 
   const {
     comments,
@@ -154,6 +160,18 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     restoreCurrentSession,
     clearCurrentSession,
   } = useTikTokLiveSession({ hasHistory: options.hasHistory });
+
+  const upsertBuyingIntentQueueItem = useCallback((item: BuyingIntentQueueItem) => {
+    setBuyingIntentQueueItems((current) => {
+      const existingIndex = current.findIndex((entry) => entry.id === item.id);
+      if (existingIndex === -1) return [item, ...current];
+      const next = [...current];
+      next[existingIndex] = item;
+      return next.sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+      );
+    });
+  }, []);
 
   const handleServerEvent = useCallback(
     (type: string, payload: Record<string, any>) => {
@@ -216,6 +234,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         finalizeCurrentSessionLocally("unsubscribed");
         clearResumeUsername();
         setComments([]);
+        setBuyingIntentQueueItems([]);
         setStatus(`Đã rời LIVE: ${getPayloadUsername(payload)}`);
         return;
       }
@@ -304,6 +323,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         setIsConnecting(false);
         setIsConnected(false);
         setComments([]);
+        setBuyingIntentQueueItems([]);
+        setLatestOrderRecommendation(null);
         const errorMsg =
           type === "LIVE_ERROR" && payload.message
             ? String(payload.message)
@@ -367,6 +388,17 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         pendingCommentsRef.current.push(unwrapSseCommentPayload(payload));
       }
 
+      if (type === "BUYING_INTENT_UPDATED" && payload.item) {
+        upsertBuyingIntentQueueItem(payload.item as BuyingIntentQueueItem);
+        return;
+      }
+
+      if (type === "ORDER_RECOMMENDED") {
+        setLatestOrderRecommendation(payload as OrderRecommendationItem);
+        onOrderRecommendedRef.current?.(payload);
+        return;
+      }
+
       if (type === "ORDER_SHIPPING_UPDATED") {
         onOrderShippingUpdatedRef.current?.(payload);
       }
@@ -381,6 +413,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       setComments,
       startSessionFromPayload,
       updateSessionStatusFromPayload,
+      upsertBuyingIntentQueueItem,
     ],
   );
 
@@ -505,6 +538,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       setTiktokUsername(nextUsername);
       setLiveError(null);
       setComments([]);
+      setBuyingIntentQueueItems([]);
       setStatus(
         `Đang yêu cầu Backend start Python collector: ${nextUsername}...`,
       );
@@ -573,6 +607,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     abortControllerRef.current = null;
     setIsConnected(false);
     setIsConnecting(false);
+    setBuyingIntentQueueItems([]);
     setStatus("Đã dừng nhận comment");
 
     return true;
@@ -694,6 +729,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
 
     setIsConnected(false);
     setIsConnecting(false);
+    setBuyingIntentQueueItems([]);
+    setLatestOrderRecommendation(null);
     setStatus("Đã ngắt kết nối");
   }, [finalizeCurrentSessionLocally]);
 
@@ -704,6 +741,10 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   useEffect(() => {
     onOrderShippingUpdatedRef.current = options.onOrderShippingUpdated;
   }, [options.onOrderShippingUpdated]);
+
+  useEffect(() => {
+    onOrderRecommendedRef.current = options.onOrderRecommended;
+  }, [options.onOrderRecommended]);
 
   // ---start: connectSseRef — prevent connectSse in effect deps causing teardown/remount---
   const connectSseRef = useRef(connectSse);
@@ -841,6 +882,27 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   }, []);
   // ---end: setup effect---
 
+
+  useEffect(() => {
+    if (!currentLiveSessionId) {
+      setBuyingIntentQueueItems([]);
+      return;
+    }
+
+    let cancelled = false;
+    getBuyingIntentQueueApi({ liveSessionId: currentLiveSessionId })
+      .then((result) => {
+        if (!cancelled) setBuyingIntentQueueItems(result?.items ?? []);
+      })
+      .catch((error) => {
+        if (__DEV__) console.error("BUYING INTENT QUEUE ERROR:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLiveSessionId]);
+
   // ---start: logout cleanup — clear live state khi user logout---
   useEffect(() => {
     if (hasAuthUser) return;
@@ -864,6 +926,8 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     setIsConnecting(false);
     setLiveError(null);
     setViewersCount(0);
+    setBuyingIntentQueueItems([]);
+    setLatestOrderRecommendation(null);
   }, [hasAuthUser, clearComments, clearLiveHistory]);
   // ---end: logout cleanup---
 
@@ -875,6 +939,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     tiktokUsername,
     liveError,
     viewersCount,
+    buyingIntentQueueItems,
+    setBuyingIntentQueueItems,
+    latestOrderRecommendation,
 
     currentLiveSession,
     currentLiveSessionId,

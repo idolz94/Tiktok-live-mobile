@@ -67,6 +67,56 @@ export interface CommentItemProps {
   isCommentOrderCreated: (item: LiveComment) => boolean;
 }
 
+export type BuyingIntentQueueStatus = "pending" | "handled" | "ignored";
+
+export type ParsedCommentData = {
+  productCode: string | null;
+  color: string | null;
+  size: string | null;
+  quantity: number | null;
+};
+
+export type OrderRecommendationItem = {
+  shopId: string;
+  liveSessionId: string;
+  commentId: string;
+  tiktokUsername: string;
+  displayName: string | null;
+  matchedPreset: {
+    code: string;
+    name: string | null;
+    color: string | null;
+    price: number | null;
+  };
+  confidence: number;
+  commentText: string | null;
+  createdAt: string;
+};
+
+export type BuyingIntentQueueItem = {
+  id: string;
+  shopId: string;
+  liveSessionId: string;
+  tiktokUsername: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  intent: string;
+  priorityLevel: string;
+  finalScore: number | null;
+  commentCount: number | null;
+  latestCommentId: string | null;
+  latestCommentText: string | null;
+  latestCommentAt: string | null;
+  parsedData?: ParsedCommentData | null;
+  suggestedReply?: string | null;
+  missingFields?: string[] | null;
+  canCreateDraftOrder?: boolean | null;
+  status: BuyingIntentQueueStatus;
+  handledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ConnectedLiveProps = {
   orderManager: OrderManager;
   onNavigateToOrders?: () => void;

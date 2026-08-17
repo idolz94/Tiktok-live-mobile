@@ -196,16 +196,20 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
     id: String(order?.id || createId()),
     orderCode,
     source: order?.source || undefined,
+    // ponytail: không đưa TikTok username vào username — UI hiển thị tên người mua, không phải handle TikTok
     username: String(
       order?.username ||
         order?.customerName ||
         order?.customer_name ||
-        customerTikTokUsername ||
         "Khách live",
     ),
     customerId: order?.customerId || order?.customer_id || null,
     customerName: String(
-      order?.customerName || order?.customer_name || "",
+      order?.customerName ||
+        order?.customer_name ||
+        order?.customerAddressData?.name ||
+        order?.customer_address_data?.name ||
+        "",
     ),
     customerPhone: String(order?.customerPhone || order?.customer_phone || ""),
     customerAddress: String(
@@ -292,6 +296,6 @@ export function normalizeApiOrderForUi(order: any): OrderWithTikTok {
 
 export function statusLabel(status: Order["status"]) {
   if (status === "confirmed") return "Đã chốt";
-  if (status === "success") return "Hoàn tất";
+  if ((status as string) === "packed") return "Hoàn tất";
   return "Đơn nháp";
 }
