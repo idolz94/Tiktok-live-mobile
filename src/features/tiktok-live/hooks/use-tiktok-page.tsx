@@ -39,8 +39,10 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     stopLiveSession,
     liveError,
     clearLiveError,
+    lastEndedSessionId,
     comments,
     currentLiveSessionId,
+    liveHistory,
   } = useTikTokLiveSocketContext();
 
   const { show, hide } = useBottomSheet();
@@ -105,17 +107,46 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
   useEffect(() => {
     if (!liveError || alertShownRef.current) return;
     alertShownRef.current = true;
-    Alert.alert("Phiên live kết thúc", liveError, [
-      {
-        text: "OK",
-        onPress: () => {
-          alertShownRef.current = false;
-          clearLiveError();
-          hideConnectedView();
-        },
-      },
-    ]);
-  }, [liveError, clearLiveError, hideConnectedView]);
+    const canViewDetail =
+      !!lastEndedSessionId &&
+      liveHistory.some((session) => session.id === lastEndedSessionId);
+    const alertButtons = canViewDetail
+      ? [
+          {
+            text: "Xem nhận xét",
+            onPress: () => {
+              const sessionId = lastEndedSessionId;
+              alertShownRef.current = false;
+              clearLiveError();
+              hideConnectedView();
+              router.push({
+                pathname: "/live-session-detail",
+                params: { id: sessionId! },
+              });
+            },
+          },
+          {
+            text: "OK",
+            style: "cancel" as const,
+            onPress: () => {
+              alertShownRef.current = false;
+              clearLiveError();
+              hideConnectedView();
+            },
+          },
+        ]
+      : [
+          {
+            text: "OK",
+            onPress: () => {
+              alertShownRef.current = false;
+              clearLiveError();
+              hideConnectedView();
+            },
+          },
+        ];
+    Alert.alert("Phiên live kết thúc", liveError, alertButtons);
+  }, [liveError, clearLiveError, hideConnectedView, lastEndedSessionId, liveHistory]);
 
   const fetchChannels = useCallback(async (): Promise<TikTokLiveChannel[]> => {
     const requestId = ++fetchRequestIdRef.current;

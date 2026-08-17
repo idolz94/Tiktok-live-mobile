@@ -18,7 +18,7 @@ import { useThemes } from "@hooks/use-theme";
 import { HairlineWidth } from "@themes/index";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,6 +46,7 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
   const {
     session,
     insights,
+    isSessionFinished,
     filteredOrders,
     orderFilter,
     setOrderFilter,
@@ -76,6 +77,33 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
       setInsightsTipOpen(true);
     });
   }, [insightsTipOpen]);
+
+  // Auto mở tip nhận xét khi xem phiên đã kết thúc/lỗi và insights đã tải xong.
+  // hasAutoOpenedRef chỉ set sau khi đo vị trí anchor thành công để tránh mất lượt mở
+  // khi effect cleanup chạy trước khi timer fire.
+  const autoOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasAutoOpenedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasAutoOpenedRef.current || !insightsData || !isSessionFinished) {
+      return;
+    }
+    autoOpenTimerRef.current = setTimeout(() => {
+      tipAnchorRef.current?.measureInWindow((_x, y, _w, h) => {
+        if (y > 0) {
+          hasAutoOpenedRef.current = true;
+          setTipTop(y + h + 8);
+          setInsightsTipOpen(true);
+        }
+      });
+    }, 500);
+    return () => {
+      if (autoOpenTimerRef.current) {
+        clearTimeout(autoOpenTimerRef.current);
+        autoOpenTimerRef.current = null;
+      }
+    };
+  }, [insightsData, isSessionFinished]);
 
   const cards: OrderStatCardData[] = useMemo(
     () => [
@@ -304,9 +332,7 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
                   <Text style={styles.insightTitle}>{highlight.title}</Text>
                   <Text style={styles.insightDetail}>{highlight.detail}</Text>
                   {highlight.action && (
-                    <Text style={styles.insightAction}>
-                      {highlight.action}
-                    </Text>
+                    <Text style={styles.insightAction}>{highlight.action}</Text>
                   )}
                 </View>
               ))}
