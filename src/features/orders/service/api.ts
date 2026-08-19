@@ -194,3 +194,54 @@ export async function getOrderStatsApi(params: {
 export async function deleteOrderApi(orderId: string) {
   return deleteRequest<{ ok: boolean }>(`/orders/${orderId}`);
 }
+
+export type MergeDraftsPayload = {
+  targetOrderId: string;
+  sourceOrderIds: string[];
+};
+
+export type MergeDraftsResult = {
+  targetOrderId: string;
+  mergedOrderIds: string[];
+  deletedOrderIds: string[];
+  mergedItemCount: number;
+  order: OrderWithTikTok;
+};
+
+export async function mergeDraftOrdersApi(
+  payload: MergeDraftsPayload,
+): Promise<MergeDraftsResult> {
+  const raw = await postRequest<any>("/orders/merge-drafts", payload);
+  const merge =
+    raw?.merge ??
+    raw?.data?.merge ??
+    raw?.data?.data?.merge ??
+    raw;
+
+  if (!merge || !merge.order) {
+    throw new Error("Phản hồi gộp đơn không hợp lệ.");
+  }
+
+  const rawOrder = merge.order;
+  if (
+    (rawOrder.remainingAmount != null || rawOrder.remaining_amount != null) &&
+    (rawOrder.codAmount == null && rawOrder.cod_amount == null)
+  ) {
+    rawOrder.codAmount =
+      rawOrder.remainingAmount ?? rawOrder.remaining_amount;
+  }
+
+  const order = normalizeApiOrderForUi(rawOrder);
+
+  return {
+    targetOrderId: String(merge.targetOrderId ?? merge.target_order_id ?? payload.targetOrderId),
+    mergedOrderIds: Array.isArray(merge.mergedOrderIds ?? merge.merged_order_ids)
+      ? (merge.mergedOrderIds ?? merge.merged_order_ids).map(String)
+      : [],
+    deletedOrderIds: Array.isArray(merge.deletedOrderIds ?? merge.deleted_order_ids)
+      ? (merge.deletedOrderIds ?? merge.deleted_order_ids).map(String)
+      : [],
+    mergedItemCount: Number(merge.mergedItemCount ?? merge.merged_item_count ?? 0),
+    order,
+  };
+}
