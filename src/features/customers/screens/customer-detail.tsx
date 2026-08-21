@@ -111,6 +111,8 @@ export function CustomerDetailScreen({ id }: { id: string }) {
     ordersError,
     addresses,
     isLoadingAddresses,
+    analytics,
+    isLoadingAnalytics,
     handleSelectAddress,
   } = useCustomerDetail(id);
 
@@ -171,7 +173,47 @@ export function CustomerDetailScreen({ id }: { id: string }) {
               <Text style={styles.statLabel}>Tổng chi tiêu</Text>
               <Text style={styles.statValue}>{formatMoney(customer.totalSpent)}</Text>
             </View>
+            {!isLoadingAnalytics && analytics && (
+              <>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Trung bình đơn</Text>
+                  <Text style={styles.statValue}>{formatMoney(analytics.avgOrderValue)}</Text>
+                </View>
+                {!!analytics.lastOrderAt && (
+                  <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Đơn gần nhất</Text>
+                    <Text style={styles.statValue}>{formatOrderDate(analytics.lastOrderAt)}</Text>
+                  </View>
+                )}
+              </>
+            )}
           </View>
+
+          {!isLoadingAnalytics && analytics && Object.keys(analytics.byStatus).length > 0 && (
+            <View style={[styles.card, shadows.sd2]}>
+              <Text style={styles.sectionTitleInline}>Trạng thái đơn</Text>
+              {Object.entries(analytics.byStatus).map(([s, c]) => (
+                <View key={s} style={styles.statRow}>
+                  <Text style={styles.statLabel}>{getOrderStatusLabel(s as any)}</Text>
+                  <Text style={styles.statValue}>{c}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {!isLoadingAnalytics && analytics?.topProducts && analytics.topProducts.length > 0 && (
+            <View style={[styles.card, shadows.sd2]}>
+              <Text style={styles.sectionTitleInline}>Sản phẩm ưa thích</Text>
+              {analytics.topProducts.map((p, idx) => (
+                <View key={`${p.productCode ?? ""}-${p.productName ?? ""}-${idx}`} style={styles.statRow}>
+                  <Text style={styles.statLabel} numberOfLines={1}>
+                    {p.productName || p.productCode || "—"}
+                  </Text>
+                  <Text style={styles.statValue}>x{p.quantity}</Text>
+                </View>
+              ))}
+            </View>
+          )}
 
           <Text style={styles.sectionTitle}>Đơn hàng</Text>
           {isLoadingOrders ? (
@@ -289,6 +331,11 @@ const styles = createStyles(({ colors, textPresets }) => ({
     marginTop: 4,
     color: colors.neutral900,
     ...textPresets.fs15_900,
+  },
+  sectionTitleInline: {
+    marginBottom: 8,
+    color: colors.neutral900,
+    ...textPresets.fs14_800,
   },
   sectionStatus: {
     alignItems: "center",

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   getCustomerAddressesApi,
+  getCustomerAnalyticsApi,
   getCustomerApi,
   getCustomerOrdersApi,
 } from "../service/api";
+import type { CustomerAnalytics } from "../service/api";
 import type {
   CustomerAddress,
   CustomerDetail,
@@ -22,6 +24,9 @@ export function useCustomerDetail(customerId: string) {
 
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+
+  const [analytics, setAnalytics] = useState<CustomerAnalytics | null>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true);
 
   const loadCustomer = useCallback(async () => {
     try {
@@ -75,18 +80,32 @@ export function useCustomerDetail(customerId: string) {
     }
   }, [customerId]);
 
+  const loadAnalytics = useCallback(async () => {
+    try {
+      setIsLoadingAnalytics(true);
+      const res = await getCustomerAnalyticsApi(customerId);
+      setAnalytics(res.analytics);
+    } catch {
+      setAnalytics(null);
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  }, [customerId]);
+
   useEffect(() => {
     if (!customerId) return;
     void loadCustomer();
     void loadOrders();
     void loadAddresses();
-  }, [customerId, loadCustomer, loadOrders, loadAddresses]);
+    void loadAnalytics();
+  }, [customerId, loadCustomer, loadOrders, loadAddresses, loadAnalytics]);
 
   const refetch = useCallback(() => {
     void loadCustomer();
     void loadOrders();
     void loadAddresses();
-  }, [loadCustomer, loadOrders, loadAddresses]);
+    void loadAnalytics();
+  }, [loadCustomer, loadOrders, loadAddresses, loadAnalytics]);
 
   const handleSelectAddress = useCallback((_address: CustomerAddress) => {
     // ponytail: chưa có màn tạo đơn hàng — khi có create-order thì navigate kèm addressId
@@ -102,6 +121,8 @@ export function useCustomerDetail(customerId: string) {
     ordersError,
     addresses,
     isLoadingAddresses,
+    analytics,
+    isLoadingAnalytics,
     handleSelectAddress,
   };
 }

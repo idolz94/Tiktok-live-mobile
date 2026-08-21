@@ -34,8 +34,6 @@ export function TikTokLiveSocketProvider({
       socketRest.tiktokUsername,
       socketRest.liveError,
       socketRest.viewersCount,
-      socketRest.buyingIntentQueueItems,
-      socketRest.setBuyingIntentQueueItems,
       socketRest.latestOrderRecommendation,
       socketRest.currentLiveSession,
       socketRest.currentLiveSessionId,

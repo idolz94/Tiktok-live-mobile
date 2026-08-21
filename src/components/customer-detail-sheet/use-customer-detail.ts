@@ -1,5 +1,5 @@
 import type { Order, OrderProduct } from "@app-types/index";
-import { getCustomerApi, getCustomerOrdersApi, updateCustomerApi } from "@features/customers/service/api";
+import { getCustomerAnalyticsApi, getCustomerApi, getCustomerOrdersApi, updateCustomerApi, type CustomerAnalytics } from "@features/customers/service/api";
 import { useCustomerRefreshStore } from "@features/customers/stores/customer-refresh-store";
 import { cancelShipmentApi, refreshShippingStatusApi, listCustomerAddressesApi, type CustomerAddress } from "@features/orders/service/create-shipment-api";
 import { getOrderTikTokUsername } from "@utils/tiktok";
@@ -7,7 +7,7 @@ import { usePhoneField } from "@hooks/use-phone-field";
 import { useToast } from "@components/toast";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 
-export type DetailTab = "info" | "orders";
+export type DetailTab = "info" | "orders" | "analytics";
 export type OrderStatFilter = "all" | "confirmed" | "deposited" | "unpaid" | "draft";
 
 // ponytail: per-customerId cache map, cleared on explicit reload
@@ -74,6 +74,8 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
 
   const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<CustomerAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const toast = useToast();
 
   const customer = useMemo(
@@ -109,6 +111,25 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
         if (mountedRef.current) setOrdersLoading(false);
       });
   }, [customerKey]);
+
+  useEffect(() => {
+    const cid = customer?.customerId;
+    if (!cid) return;
+    let cancelled = false;
+    setAnalyticsLoading(true);
+    getCustomerAnalyticsApi(String(cid))
+      .then((res) => {
+        if (cancelled || !mountedRef.current) return;
+        setAnalytics(res.analytics);
+      })
+      .catch(() => {
+        if (!cancelled && mountedRef.current) setAnalytics(null);
+      })
+      .finally(() => {
+        if (!cancelled && mountedRef.current) setAnalyticsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [customer?.customerId]);
 
   const latestOrder = customerOrders[0];
   const displayName = customer?.username || latestOrder?.customerName || latestOrder?.username || "Khách hàng";
@@ -275,6 +296,7 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
     productCount, confirmedCount, depositedCount, unpaidCount, draftCount,
     statFilter, setStatFilter,
     loading, notFound,
+    analytics, analyticsLoading,
     handleSave,
     handleCancelShipment,
     cancellingId,

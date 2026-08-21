@@ -14,8 +14,10 @@ import {
 } from "@features/orders/service/create-shipment-api";
 import { useAddressPageStore } from "@features/orders/stores/address-page-store";
 import type { AddrFormValues } from "@features/orders/types/shipment";
+import { getOrderStatusLabel } from "@features/customers/components/order-status-label";
 import {
   formatMoney,
+  formatMoneyCompact,
   getOrderTotal,
   statusLabel,
 } from "@features/orders/utils/order";
@@ -28,7 +30,7 @@ import { createStyles } from "@utils/createStyles";
 import { openTikTokProfile } from "@utils/tiktok";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -68,7 +70,20 @@ type FieldProps = {
 const TABS: { key: DetailTab; label: string }[] = [
   { key: "info", label: "Thông tin" },
   { key: "orders", label: "Đơn hàng" },
+  { key: "analytics", label: "Phân tích" },
 ];
+
+function formatAnalyticsDate(raw: string | null | undefined) {
+  if (!raw) return "—";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return String(raw);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+}
 
 function getOrderProducts(order: Order) {
   return Array.isArray(order.products) ? order.products : [];
@@ -1038,6 +1053,37 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     lineHeight: 20,
   },
 
+  analyticsContent: {
+    paddingTop: 16,
+    gap: 12,
+  },
+  analyticsCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    gap: 2,
+  },
+  analyticsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 5,
+    gap: 12,
+  },
+  analyticsLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  analyticsValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "right",
+  },
+  analyticsSectionTitle: {
+    marginBottom: 6,
+    fontSize: 14,
+    fontWeight: "700",
+  },
   addAddressCircle: {
     width: 24,
     height: 24,
@@ -1046,12 +1092,46 @@ const styles = createStyles(({ colors, textPresets, shadows }) => ({
     alignItems: "center",
     justifyContent: "center",
   },
+  revenueBarsRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 6,
+    paddingTop: 4,
+  },
+  revenueBarCol: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  revenueBarTrack: {
+    width: "100%",
+    height: 72,
+    borderRadius: 8,
+    backgroundColor: "#F2F4F7",
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  revenueBarFill: {
+    width: "100%",
+    borderRadius: 8,
+    minHeight: 4,
+  },
+  revenueBarLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  revenueBarValue: {
+    fontSize: 10,
+    fontWeight: "600",
+    textAlign: "center",
+  },
 }));
 
 type Props = { customerKey: string; initialTab?: DetailTab };
 
 export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
-  const { colors, textPresets } = useThemes();
+  const { colors, textPresets, shadows } = useThemes();
   const { hide } = useBottomSheet();
   const { setPicker, setForm } = useAddressPageStore();
   const {
@@ -1074,6 +1154,7 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
     avatar,
     tiktokUsername,
     customer,
+    customerOrders,
     groupedOrders,
     productCount,
     confirmedCount,
@@ -1084,6 +1165,8 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
     setStatFilter,
     loading,
     notFound,
+    analytics,
+    analyticsLoading,
     handleSave,
     handleCancelShipment,
     cancellingId,
@@ -1091,6 +1174,29 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
 
   const onPressStatCard = (key: OrderStatFilter) =>
     setStatFilter((current) => (current === key ? "all" : key));
+
+  // ponytail: client-computed revenue by month (last 6) from existing orders — no backend field needed
+  const revenueByMonth = useMemo(() => {
+    const now = new Date();
+    const buckets: { label: string; key: string; total: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      buckets.push({ label: `T${d.getMonth() + 1}`, key, total: 0 });
+    }
+    const map = new Map(buckets.map((b) => [b.key, b]));
+    for (const o of customerOrders as any[]) {
+      const raw = o?.createdAt ?? o?.created_at;
+      const d = raw ? new Date(raw) : null;
+      if (!d || isNaN(d.getTime())) continue;
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const b = map.get(k);
+      if (!b) continue;
+      const amt = Number(o?.totalAmount ?? o?.total_amount ?? o?.codAmount ?? 0) || 0;
+      b.total += amt;
+    }
+    return buckets;
+  }, [customerOrders]);
 
   const openAddressForm = (addr?: CustomerAddress) => {
     const cid = customer?.customerId;
@@ -1423,7 +1529,7 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                 />
               </View>
             </ScrollView>
-          ) : (
+          ) : activeTab === "orders" ? (
             <ScrollView
               style={styles.scroll}
               contentContainerStyle={styles.scrollContent}
@@ -1500,6 +1606,108 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                       ))}
                     </View>
                   ))
+                )}
+              </View>
+            </ScrollView>
+          ) : (
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.analyticsContent}>
+                {analyticsLoading ? (
+                  <>
+                    <Skeleton height={96} borderRadius={16} />
+                    <Skeleton height={96} borderRadius={16} />
+                    <Skeleton height={96} borderRadius={16} />
+                  </>
+                ) : !analytics ? (
+                  <View style={styles.emptyOrders}>
+                    <Text style={styles.stateTitle}>Chưa có dữ liệu phân tích</Text>
+                    <Text style={styles.stateText}>Khách này chưa có đơn hàng để phân tích.</Text>
+                  </View>
+                ) : (
+                  <>
+                    <View style={[styles.analyticsCard, { borderColor: colors.border10, backgroundColor: colors.white }, shadows.sd1]}>
+                      <View style={styles.analyticsRow}>
+                        <Text style={[styles.analyticsLabel, { color: colors.neutral400 }]}>Tổng đơn</Text>
+                        <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{analytics.totalOrders}</Text>
+                      </View>
+                      <View style={styles.analyticsRow}>
+                        <Text style={[styles.analyticsLabel, { color: colors.neutral400 }]}>Tổng chi tiêu</Text>
+                        <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{formatMoney(analytics.totalSpent)}</Text>
+                      </View>
+                      <View style={styles.analyticsRow}>
+                        <Text style={[styles.analyticsLabel, { color: colors.neutral400 }]}>Trung bình đơn</Text>
+                        <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{formatMoney(analytics.avgOrderValue)}</Text>
+                      </View>
+                      {!!analytics.lastOrderAt && (
+                        <View style={styles.analyticsRow}>
+                          <Text style={[styles.analyticsLabel, { color: colors.neutral400 }]}>Đơn gần nhất</Text>
+                          <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{formatAnalyticsDate(analytics.lastOrderAt)}</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {Object.keys(analytics.byStatus).length > 0 && (
+                      <View style={[styles.analyticsCard, { borderColor: colors.border10, backgroundColor: colors.white }, shadows.sd1]}>
+                        <Text style={[styles.analyticsSectionTitle, { color: colors.neutral900 }]}>Trạng thái đơn</Text>
+                        {Object.entries(analytics.byStatus).map(([s, c]) => (
+                          <View key={s} style={styles.analyticsRow}>
+                            <Text style={[styles.analyticsLabel, { color: colors.neutral400 }]}>{getOrderStatusLabel(s as any)}</Text>
+                            <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{c as number}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {analytics.topProducts.length > 0 && (
+                      <View style={[styles.analyticsCard, { borderColor: colors.border10, backgroundColor: colors.white }, shadows.sd1]}>
+                        <Text style={[styles.analyticsSectionTitle, { color: colors.neutral900 }]}>Sản phẩm ưa thích</Text>
+                        {analytics.topProducts.map((p, idx) => (
+                          <View key={`${p.productCode ?? ""}-${p.productName ?? ""}-${idx}`} style={styles.analyticsRow}>
+                            <Text style={[styles.analyticsLabel, { color: colors.neutral400 }, { flex: 1, marginRight: 12 }]} numberOfLines={1}>
+                              {p.productName || p.productCode || "—"}
+                            </Text>
+                            <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>x{p.quantity}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {/* Doanh thu theo thời gian — 6 tháng gần nhất, từ customerOrders (không đổi API) */}
+                    {(() => {
+                      const max = Math.max(...revenueByMonth.map((b) => b.total), 1);
+                      const hasAny = revenueByMonth.some((b) => b.total > 0);
+                      if (!hasAny && customerOrders.length === 0) return null;
+                      return (
+                        <View style={[styles.analyticsCard, { borderColor: colors.border10, backgroundColor: colors.white }, shadows.sd1]}>
+                          <Text style={[styles.analyticsSectionTitle, { color: colors.neutral900 }]}>Doanh thu theo thời gian</Text>
+                          <Text style={[styles.analyticsLabel, { color: colors.neutral400, marginBottom: 8 }]}>
+                            6 tháng gần nhất (từ đơn hàng hiện có)
+                          </Text>
+                          <View style={styles.revenueBarsRow}>
+                            {revenueByMonth.map((b) => (
+                              <View key={b.key} style={styles.revenueBarCol}>
+                                <View style={styles.revenueBarTrack}>
+                                  <View
+                                    style={[
+                                      styles.revenueBarFill,
+                                      { height: `${Math.max(4, Math.round((b.total / max) * 100))}%`, backgroundColor: colors.primary },
+                                    ]}
+                                  />
+                                </View>
+                                <Text style={[styles.revenueBarLabel, { color: colors.neutral400 }]}>{b.label}</Text>
+                                <Text style={[styles.revenueBarValue, { color: colors.neutral900 }]} numberOfLines={1}>
+                                  {b.total > 0 ? formatMoneyCompact(b.total) : "—"}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      );
+                    })()}
+                  </>
                 )}
               </View>
             </ScrollView>

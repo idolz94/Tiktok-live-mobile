@@ -5,6 +5,7 @@ import { createOrderCommentKey } from "@features/tiktok-live/utils/comment";
 import { useCallback, useEffect, useRef } from "react";
 import type { ComponentRef } from "react";
 import { FlashList } from "@shopify/flash-list";
+import { useFocusEffect } from "expo-router";
 import type { ConnectedLiveProps } from "../types/types";
 
 export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLiveProps) {
@@ -16,14 +17,40 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
   const createdCommentKeysRef = useRef<Map<string, string>>(new Map());
   const rafRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
 
-  useEffect(() => {
-    if (comments.length === 0) return;
+  const scrollToBottom = useCallback((animated = true) => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
-      listRef.current?.scrollToOffset({ offset: 0, animated: true });
-      rafRef.current = null;
+      rafRef.current = requestAnimationFrame(() => {
+        const ref = listRef.current as unknown as {
+          scrollToEnd?: (p: { animated?: boolean }) => void;
+          scrollToOffset?: (p: { offset: number; animated?: boolean }) => void;
+        } | null;
+        if (ref?.scrollToEnd) ref.scrollToEnd({ animated });
+        else ref?.scrollToOffset?.({ offset: 999999, animated });
+        rafRef.current = null;
+      });
     });
-  }, [comments.length]);
+  }, []);
+
+  useEffect(() => {
+    if (comments.length === 0) return;
+    scrollToBottom(true);
+  }, [comments.length, scrollToBottom]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isConnected || comments.length === 0) return;
+      scrollToBottom(false);
+      const t = setTimeout(() => scrollToBottom(false), 80);
+      return () => clearTimeout(t);
+    }, [comments.length, isConnected, scrollToBottom]),
+  );
 
   // Khi orders list thay đổi, remove comment keys của các order đã bị xoá
   const { orders } = orderManager;

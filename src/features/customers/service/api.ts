@@ -15,6 +15,9 @@ export type CustomerListItem = {
   avatarUrl: string | null;
   customerType: string | null;
   totalOrders: number | null;
+  totalSpent: number | null;
+  lastOrderAt: string | null;
+  createdAt: string | null;
 };
 
 let customersCache: CustomerListItem[] | null = null;
@@ -48,6 +51,37 @@ export function getCustomerAddressesApi(customerId: string) {
   return getRequest<{ addresses: CustomerAddress[] }>(
     `/customers/${customerId}/addresses`,
   );
+}
+
+export type CustomerOverview = {
+  totalCustomers: number;
+  byType: Record<string, number>;
+  topSpenders: {
+    id: string;
+    displayName: string | null;
+    tiktokUsername: string | null;
+    avatarUrl: string | null;
+    totalOrders: number | null;
+    totalSpent: number | null;
+  }[];
+};
+
+export function getCustomerOverviewApi() {
+  return getRequest<CustomerOverview>("/customers/overview");
+}
+
+export type CustomerAnalytics = {
+  totalOrders: number;
+  totalSpent: number;
+  avgOrderValue: number;
+  lastOrderAmount: number | null;
+  lastOrderAt: string | null;
+  byStatus: Record<string, number>;
+  topProducts: { productCode: string | null; productName: string | null; quantity: number }[];
+};
+
+export function getCustomerAnalyticsApi(customerId: string) {
+  return getRequest<{ analytics: CustomerAnalytics }>(`/customers/${customerId}/analytics`);
 }
 
 export function updateCustomerApi(customerId: string, payload: UpdateCustomerPayload) {
