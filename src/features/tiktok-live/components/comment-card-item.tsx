@@ -3,7 +3,6 @@ import { createStyles } from "@utils/createStyles";
 import { memo, useEffect, useState, type ReactNode } from "react";
 import { Text, View } from "react-native";
 import { CommentItemProps } from "../types/types";
-import { isPriorityComment } from "../utils/comment";
 import { CommentCardContent } from "./comment-card-content";
 import {
   default as Animated,
@@ -29,6 +28,7 @@ const isOwnComment = (item: CommentItemProps["item"]) => {
 
 const BORDER_RADIUS = 16;
 const PULSE_DURATION = 900; // half-cycle: dim→bright→dim over 1800ms total
+const STAR_PULSE_DURATION = 700;
 
 const PriorityBorder = memo(({ children }: { children: ReactNode }) => {
   const opacity = useSharedValue(0.3);
@@ -51,6 +51,70 @@ const PriorityBorder = memo(({ children }: { children: ReactNode }) => {
   return (
     <Animated.View style={[styles.borderWrapper, animatedStyle]}>
       {children}
+    </Animated.View>
+  );
+});
+
+const PulsingStar = memo(() => {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.3, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      true,
+    );
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.45, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      true,
+    );
+  }, [opacity, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Text style={styles.starText}>★</Text>
+    </Animated.View>
+  );
+});
+
+const HotBorder = memo(({ children }: { children: ReactNode }) => {
+  const opacity = useSharedValue(0.5);
+
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.45, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+      false,
+    );
+  }, [opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    borderColor: `rgba(255, 168, 0, ${opacity.value})`,
+  }));
+
+  return (
+    <Animated.View style={[styles.hotBorderWrapper, animatedStyle]}>
+      <View style={styles.hotBadgeRow}>
+        <PulsingStar />
+        <Text style={styles.hotBadgeText}>Nổi bật</Text>
+      </View>
+      <View style={styles.hotContentRow}>{children}</View>
     </Animated.View>
   );
 });
@@ -99,7 +163,10 @@ export const CommentCardItem = memo(
       );
     }
 
-    const hasPriorityBorder = !isOwner && isPriorityComment(item);
+    // Tier theo finalScore: 25-74 border xanh nháy, >=75 border vàng + sao nháy
+    const score = Number(item.finalScore ?? 0);
+    const isHot = !isOwner && score >= 75;
+    const isPriority = !isOwner && score >= 25 && score < 75;
 
     // START create/print order UI flow
     const orderId = localOrderId || item.orderId || "";
@@ -132,7 +199,11 @@ export const CommentCardItem = memo(
       />
     );
 
-    if (hasPriorityBorder) {
+    if (isHot) {
+      return <HotBorder>{content}</HotBorder>;
+    }
+
+    if (isPriority) {
       return <PriorityBorder>{content}</PriorityBorder>;
     }
 
@@ -149,6 +220,8 @@ export const CommentCardItem = memo(
 );
 
 CommentCardItem.displayName = "CommentCardItem";
+HotBorder.displayName = "HotBorder";
+PulsingStar.displayName = "PulsingStar";
 
 const styles = createStyles(({ colors, textPresets }) => ({
   dividerRow: {
@@ -194,5 +267,42 @@ const styles = createStyles(({ colors, textPresets }) => ({
     padding: 12,
     overflow: "hidden",
     marginBottom: 8,
+  },
+  hotBorderWrapper: {
+    borderWidth: 2,
+    borderRadius: BORDER_RADIUS,
+    backgroundColor: colors.warningLight,
+    padding: 12,
+    overflow: "hidden",
+    marginBottom: 8,
+    rowGap: 8,
+  },
+  hotBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    columnGap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  hotBadgeText: {
+    color: colors.warning,
+    ...textPresets.fs12_500,
+  },
+  hotContentRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    columnGap: 16,
+  },
+  starText: {
+    color: colors.warning,
+    fontSize: 13,
+    lineHeight: 14,
+    fontWeight: "700",
   },
 }));

@@ -140,7 +140,7 @@ export function CustomersScreen() {
   }, []);
 
   const visibleCustomers = useMemo(
-    () => customers.filter((customer) => Number(customer.totalOrders || 0) >= 1),
+    () => [...customers].reverse().filter((customer) => Number(customer.totalOrders || 0) >= 1),
     [customers],
   );
 

@@ -466,6 +466,7 @@ export function useOrderManager({
 
   return {
     orders,
+    setOrders,
     filteredOrders,
     customers,
     selectedOrder,

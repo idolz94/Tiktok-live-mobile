@@ -33,6 +33,7 @@ export function TikTokLiveSocketProvider({
       socketRest.comments,
       socketRest.tiktokUsername,
       socketRest.liveError,
+      socketRest.lastEndedSessionId,
       socketRest.viewersCount,
       socketRest.latestOrderRecommendation,
       socketRest.currentLiveSession,

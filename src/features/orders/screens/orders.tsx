@@ -215,7 +215,10 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
   const keyExtractor = useCallback((item: OrderWithTikTok) => item.id, []);
 
   const listExtraData = useMemo(
-    () => ({ depositLoadingIds, orderFilter }),
+    () => ({
+      depositLoadingIds,
+      orderFilter,
+    }),
     [depositLoadingIds, orderFilter],
   );
 
