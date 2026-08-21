@@ -1,13 +1,13 @@
-import { LiveComment } from "@app-types/index";
-import { FlashList } from "@shopify/flash-list";
-import { createStyles } from "@utils/createStyles";
-import { memo, useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { LiveComment } from "@app-types/index";
+import { createStyles } from "@utils/createStyles";
 import { ConnectedLiveProps } from "../types/types";
-import { CommentCardItem } from "./comment-card-item";
-import { DevTipsPreview } from "./dev-tips-preview";
 import { useConnectedLive } from "../hooks/use-connected-live";
 import { BuyingIntentQueue } from "./buying-intent-queue";
+import { CommentCardItem } from "./comment-card-item";
+import { DevTipsPreview } from "./dev-tips-preview";
 
 const tabs = [
   { key: "all", label: "Tất cả" },
@@ -16,38 +16,39 @@ const tabs = [
 
 type LiveTab = (typeof tabs)[number]["key"];
 
-export const ConnectedLive = memo(
-  (props: ConnectedLiveProps) => {
-    const {
-      comments,
-      isConnected,
-      latestOrderRecommendation,
-      listRef,
-      isCommentOrderCreated,
-      handleCreateOrder,
-      handlePrintOrder,
-    } = useConnectedLive(props);
-    const [tab, setTab] = useState<LiveTab>("all");
+const keyExtractor = (item: LiveComment) => item.id;
 
-    const keyExtractor = useCallback((item: LiveComment) => item.id, []);
+export function ConnectedLive(props: ConnectedLiveProps) {
+  const {
+    comments,
+    isConnected,
+    latestOrderRecommendation,
+    listRef,
+    isCommentOrderCreated,
+    handleCreateOrder,
+    handlePrintOrder,
+  } = useConnectedLive(props);
+  const [tab, setTab] = useState<LiveTab>("all");
 
-    const renderItem = useCallback(
-      ({ item }: { item: LiveComment }) => (
-        <CommentCardItem
-          item={item}
-          onCreateOrder={handleCreateOrder}
-          onPrintOrder={handlePrintOrder}
-          isCommentOrderCreated={isCommentOrderCreated}
-        />
-      ),
-      [handleCreateOrder, handlePrintOrder, isCommentOrderCreated],
-    );
+  const reversedComments = useMemo(() => [...comments].reverse(), [comments]);
 
-    const renderTabs = () => (
+  const renderItem = useCallback(
+    ({ item }: { item: LiveComment }) => (
+      <CommentCardItem
+        item={item}
+        onCreateOrder={handleCreateOrder}
+        onPrintOrder={handlePrintOrder}
+        isCommentOrderCreated={isCommentOrderCreated}
+      />
+    ),
+    [handleCreateOrder, handlePrintOrder, isCommentOrderCreated],
+  );
+
+  return (
+    <View style={styles.container}>
       <View style={styles.tabs}>
         {tabs.map((item) => {
           const active = tab === item.key;
-
           return (
             <Pressable
               key={item.key}
@@ -61,70 +62,56 @@ export const ConnectedLive = memo(
           );
         })}
       </View>
-    );
 
-    const renderOrderRecommendation = () => {
-      if (!latestOrderRecommendation) return null;
-
-      const preset = latestOrderRecommendation.matchedPreset;
-
-      return (
-        <View style={styles.recommendationCard}>
-          <Text style={styles.recommendationTitle}>Gợi ý tạo đơn</Text>
-          <Text style={styles.recommendationText}>
-            {latestOrderRecommendation.displayName || latestOrderRecommendation.tiktokUsername} muốn mua {preset.name || preset.code}
-          </Text>
-          <Text style={styles.recommendationMeta}>
-            Mã {preset.code} · Độ tin cậy {latestOrderRecommendation.confidence}%
-          </Text>
-        </View>
-      );
-    };
-
-    const renderComments = () => {
-      if (isConnected && comments.length === 0) {
-        return (
+      {tab === "all" ? (
+        isConnected && comments.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" />
             <Text style={styles.loadingText}>
               Đang lấy comment, vui lòng chờ trong giây lát
             </Text>
           </View>
-        );
-      }
-
-      return (
-        <FlashList
-          ref={listRef}
-          data={[...comments].reverse()}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          contentContainerStyle={styles.listContent}
-        />
-      );
-    };
-
-    return (
-      <View style={styles.container}>
-        {renderTabs()}
-        {tab === "all" ? (
-          renderComments()
         ) : (
-          <>
-            {renderOrderRecommendation()}
-            <BuyingIntentQueue />
-          </>
-        )}
-        <DevTipsPreview />
-      </View>
-    );
-  },
-);
+          <FlashList
+            ref={listRef}
+            data={reversedComments}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            contentContainerStyle={styles.listContent}
+          />
+        )
+      ) : (
+        <>
+          {latestOrderRecommendation ? (
+            <View style={styles.recommendationCard}>
+              <Text style={styles.recommendationTitle}>Gợi ý tạo đơn</Text>
+              <Text style={styles.recommendationText}>
+                {latestOrderRecommendation.displayName ||
+                  latestOrderRecommendation.tiktokUsername}{" "}
+                muốn mua{" "}
+                {latestOrderRecommendation.matchedPreset.name ||
+                  latestOrderRecommendation.matchedPreset.code}
+              </Text>
+              <Text style={styles.recommendationMeta}>
+                Mã {latestOrderRecommendation.matchedPreset.code} · Độ tin cậy{" "}
+                {latestOrderRecommendation.confidence}%
+              </Text>
+            </View>
+          ) : null}
+          <BuyingIntentQueue />
+        </>
+      )}
+
+      <DevTipsPreview />
+    </View>
+  );
+}
 
 const styles = createStyles(({ colors, textPresets }) => ({
   container: {
     flex: 1,
     paddingTop: 12,
+    // offset for bottom tab bar + safe padding
     paddingBottom: 48 * 2 - 16,
   },
   tabs: {
