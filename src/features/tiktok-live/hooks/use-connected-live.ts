@@ -127,6 +127,7 @@ export function useConnectedLive({ orderManager, onPrintOrder }: ConnectedLivePr
     isConnected,
     latestOrderRecommendation,
     listRef,
+    scrollToBottom,
     isCommentOrderCreated,
     handleCreateOrder,
     handlePrintOrder,

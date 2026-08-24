@@ -23,6 +23,7 @@ export const ConnectedLive = memo(
       comments,
       isConnected,
       listRef,
+      scrollToBottom,
       isCommentOrderCreated,
       handleCreateOrder,
       handlePrintOrder,
@@ -97,6 +98,13 @@ export const ConnectedLive = memo(
     useEffect(() => {
       if (!hasPriority && tab === "priority") setTab("all");
     }, [hasPriority, tab]);
+
+    // ponytail: đổi tab (Tất cả <-> Ưu tiên) đổi hẳn size mảng data — FlashList giữ nguyên
+    // scroll offset cũ (đo theo list dài hơn/ngắn hơn) nên để trống 1 khoảng trên/dưới nhìn như
+    // lỗi. Reset lại vị trí cuộn mỗi lần đổi tab, không animate (không phải tin nhắn mới).
+    useEffect(() => {
+      scrollToBottom(false);
+    }, [tab, scrollToBottom]);
 
     const displayedComments = useMemo(
       () => (tab === "priority" ? comments.filter(isPriorityComment) : comments),
