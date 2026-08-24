@@ -1,5 +1,6 @@
 import type { Order } from "@app-types/index";
 import { getRequest, patchRequest } from "@utils/http/request-sse";
+import { normalizeApiOrderForUi } from "@features/orders/utils/order";
 import type { CustomerAddress, CustomerDetail } from "../types/customer-detail";
 
 type UpdateCustomerPayload = {
@@ -43,8 +44,13 @@ export function getCustomerApi(customerId: string) {
   return getRequest<{ customer: CustomerDetail }>(`/customers/${customerId}`);
 }
 
-export function getCustomerOrdersApi(customerId: string) {
-  return getRequest<{ orders: Order[] }>(`/customers/${customerId}/orders`);
+// ponytail: normalize qua normalizeApiOrderForUi (giống OrderItem/"Đơn Đã Tạo") để order.products
+// LUÔN có ít nhất 1 phần tử (fallback từ commentText nếu order không match preset nào) — OrderCard
+// trong customer-detail-sheet trước đây nhận response thô, tự chế fallback riêng dựa vào các field
+// (order.price/order.quantity) không tồn tại trên bảng orders nên luôn hiện sai/"Sản phẩm"/0đ.
+export async function getCustomerOrdersApi(customerId: string) {
+  const data = await getRequest<{ orders: Order[] }>(`/customers/${customerId}/orders`);
+  return { orders: data.orders.map((order) => normalizeApiOrderForUi(order)) };
 }
 
 export function getCustomerAddressesApi(customerId: string) {

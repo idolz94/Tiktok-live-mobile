@@ -6,7 +6,7 @@ import type {
   CustomerAddress,
   CustomerOrderItem,
 } from "@features/customers/types/customer-detail";
-import { formatMoney } from "@features/orders/utils/order";
+import { formatMoneyCompact } from "@features/orders/utils/order";
 import { useThemes } from "@hooks/use-theme";
 import { createStyles } from "@utils/createStyles";
 import { router } from "expo-router";
@@ -46,12 +46,12 @@ const OrderRow = memo(
         </View>
         <View style={styles.orderInfoRow}>
           <Text style={styles.orderLabel}>Tổng đơn</Text>
-          <Text style={styles.orderAmount}>{formatMoney(order.totalAmount)}</Text>
+          <Text style={styles.orderAmount}>{formatMoneyCompact(order.totalAmount)}</Text>
         </View>
         {!!order.codAmount && order.codAmount > 0 && (
           <View style={styles.orderInfoRow}>
             <Text style={styles.orderLabel}>COD</Text>
-            <Text style={styles.orderCod}>{formatMoney(order.codAmount)}</Text>
+            <Text style={styles.orderCod}>{formatMoneyCompact(order.codAmount)}</Text>
           </View>
         )}
       </View>
@@ -171,13 +171,13 @@ export function CustomerDetailScreen({ id }: { id: string }) {
             </View>
             <View style={styles.statRow}>
               <Text style={styles.statLabel}>Tổng chi tiêu</Text>
-              <Text style={styles.statValue}>{formatMoney(customer.totalSpent)}</Text>
+              <Text style={styles.statValue}>{formatMoneyCompact(customer.totalSpent)}</Text>
             </View>
             {!isLoadingAnalytics && analytics && (
               <>
                 <View style={styles.statRow}>
                   <Text style={styles.statLabel}>Trung bình đơn</Text>
-                  <Text style={styles.statValue}>{formatMoney(analytics.avgOrderValue)}</Text>
+                  <Text style={styles.statValue}>{formatMoneyCompact(analytics.avgOrderValue)}</Text>
                 </View>
                 {!!analytics.lastOrderAt && (
                   <View style={styles.statRow}>

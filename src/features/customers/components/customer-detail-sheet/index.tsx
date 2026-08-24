@@ -29,10 +29,15 @@ import { MergeConfirmSheet } from "@features/orders/components/merge/merge-confi
 import { MergeGroupList } from "@features/orders/components/merge/merge-group-list";
 import { useMergeDrafts } from "@features/orders/hooks/use-merge-drafts";
 import { useMergeGroups } from "@features/orders/hooks/use-merge-groups";
+import { deleteOrderApi } from "@features/orders/service/api";
+import { formatMoneyCompact } from "@features/orders/utils/order";
+import { getOrderStatusLabel } from "@features/customers/components/order-status-label";
+import type { OrderStatus } from "@features/customers/types/customer-detail";
 
 const TABS: { key: DetailTab; label: string }[] = [
   { key: "info", label: "Thông tin" },
   { key: "orders", label: "Đơn hàng" },
+  { key: "analytics", label: "Phân tích" },
 ];
 
 type Props = { customerKey: string; initialTab?: DetailTab };
@@ -75,12 +80,29 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
     setStatFilter,
     loading,
     notFound,
+    analytics,
+    analyticsLoading,
     handleSave,
     handleCancelShipment,
     cancellingId,
   } = useCustomerDetail(customerKey, initialTab);
 
   const onPressStatCard = (key: OrderStatFilter) => setStatFilter((current) => (current === key ? "all" : key));
+
+  // ponytail: đồng bộ nút xoá (X) với OrderItem ("Đơn Đã Tạo") — xoá qua API rồi cập nhật list tại
+  // chỗ, không cần reload cả trang.
+  const handleRemoveOrder = useCallback(
+    async (orderId: string) => {
+      try {
+        await deleteOrderApi(orderId);
+        setCustomerOrders((prev) => prev.filter((o) => o.id !== orderId));
+        toast.success({ title: "Đã xoá đơn hàng" });
+      } catch (err) {
+        toast.error({ title: err instanceof Error ? err.message : "Không xoá được đơn hàng" });
+      }
+    },
+    [setCustomerOrders, toast],
+  );
 
   const mergeGroups = useMergeGroups(customerOrders as unknown as import("@app-types/index").OrderWithTikTok[]);
   const mergeDrafts = useMergeDrafts({
@@ -380,7 +402,7 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                 />
               </View>
             </ScrollView>
-          ) : (
+          ) : activeTab === "orders" ? (
             <ScrollView
               style={styles.scroll}
               contentContainerStyle={styles.scrollContent}
@@ -460,6 +482,7 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                           order={order}
                           cancelling={cancellingId === order.id}
                           onCancelShipment={handleCancelShipment}
+                          onRemove={handleRemoveOrder}
                           onViewDetail={() => {
                             hide();
                             router.push({ pathname: "/order-detail", params: { id: order.id } });
@@ -468,6 +491,96 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                       ))}
                     </View>
                   ))
+                )}
+              </View>
+            </ScrollView>
+          ) : (
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.analyticsContent}>
+                {analyticsLoading && !analytics ? (
+                  <>
+                    <Skeleton height={80} borderRadius={14} style={{ marginBottom: 10 }} />
+                    <Skeleton height={80} borderRadius={14} style={{ marginBottom: 10 }} />
+                    <Skeleton height={120} borderRadius={14} style={{ marginBottom: 10 }} />
+                    <Skeleton height={160} borderRadius={14} />
+                  </>
+                ) : !analytics || analytics.totalOrders === 0 ? (
+                  <View style={styles.emptyOrders}>
+                    <Text style={styles.stateTitle}>Chưa có dữ liệu</Text>
+                    <Text style={styles.stateText}>Phân tích sẽ hiển thị khi khách có đơn hàng.</Text>
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.metricGrid}>
+                      <View style={[styles.metricCard, styles.metricCard_primary]}>
+                        <Text style={styles.metricValue}>{analytics.totalOrders}</Text>
+                        <Text style={styles.metricLabel}>Tổng đơn</Text>
+                      </View>
+                      <View style={[styles.metricCard, styles.metricCard_info]}>
+                        <Text style={styles.metricValueMoney} numberOfLines={1}>{formatMoneyCompact(analytics.totalSpent)}</Text>
+                        <Text style={styles.metricLabel}>Tổng chi tiêu</Text>
+                      </View>
+                      <View style={[styles.metricCard, styles.metricCard_success]}>
+                        <Text style={styles.metricValueMoney} numberOfLines={1}>{formatMoneyCompact(analytics.avgOrderValue)}</Text>
+                        <Text style={styles.metricLabel}>Giá trị TB/đơn</Text>
+                      </View>
+                      <View style={[styles.metricCard, styles.metricCard_muted]}>
+                        <Text style={styles.metricValueMoney} numberOfLines={1}>
+                          {analytics.lastOrderAmount != null ? formatMoneyCompact(analytics.lastOrderAmount) : "—"}
+                        </Text>
+                        <Text style={styles.metricLabel}>Đơn gần nhất</Text>
+                      </View>
+                    </View>
+
+                    {Object.keys(analytics.byStatus).length > 0 && (
+                      <View style={styles.analyticsSection}>
+                        <Text style={styles.analyticsSectionTitle}>Theo trạng thái</Text>
+                        {Object.entries(analytics.byStatus).map(([status, count]) => (
+                          <View key={status} style={styles.statusRow}>
+                            <Text style={styles.statusRowLabel}>
+                              {getOrderStatusLabel(status as OrderStatus)}
+                            </Text>
+                            <Text style={styles.statusRowValue}>{count}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {analytics.topProducts.length > 0 && (
+                      <View style={styles.analyticsSection}>
+                        <Text style={styles.analyticsSectionTitle}>Sản phẩm mua nhiều</Text>
+                        {/* ponytail: bỏ BarChart (gifted-charts) — 2 lần chỉnh vẫn lỗi label
+                            lệch/tràn khi rơi vào tay người dùng (không tự test được RN thật trong
+                            sandbox này để thấy lỗi trước). Tự dựng bar bằng View/flex — layout đơn
+                            giản, không phụ thuộc cách thư viện tự tính vị trí label, chắc chắn hơn. */}
+                        {(() => {
+                          const maxQty = Math.max(...analytics.topProducts.map((p) => p.quantity), 1);
+                          return analytics.topProducts.map((p, i) => {
+                            const name = p.productName || p.productCode || "Sản phẩm";
+                            const pct = Math.max((p.quantity / maxQty) * 100, 10);
+                            return (
+                              <View
+                                key={`${p.productCode || name}-${i}`}
+                                style={[styles.customBarRow, i > 0 && styles.customBarRowSpacing]}
+                              >
+                                <Text numberOfLines={1} style={styles.customBarLabel}>
+                                  {name}
+                                </Text>
+                                <View style={styles.customBarTrack}>
+                                  <View style={[styles.customBarFill, { width: `${pct}%` }]} />
+                                </View>
+                                <Text style={styles.customBarValue}>{p.quantity}</Text>
+                              </View>
+                            );
+                          });
+                        })()}
+                      </View>
+                    )}
+                  </>
                 )}
               </View>
             </ScrollView>
@@ -527,6 +640,54 @@ const styles = createStyles(({ colors, textPresets }) => ({
   fieldError: { marginTop: 4, color: colors.error, fontSize: 12 },
   ordersContent: { paddingTop: 16 },
   statGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  analyticsContent: { paddingTop: 18, paddingBottom: 8 },
+  metricGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  metricCard: {
+    width: "48.5%",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  metricCard_primary: { backgroundColor: colors.primaryLight },
+  metricCard_info: { backgroundColor: colors.infoLight },
+  metricCard_success: { backgroundColor: colors.successLight },
+  metricCard_muted: { backgroundColor: colors.neutral50 },
+  metricValue: { color: colors.neutral900, ...textPresets.fs20_900 },
+  // ponytail: giá tiền (VNĐ) dài hơn số đơn nhiều -> font nhỏ hơn để không bị cắt "..." trong thẻ 48.5% width.
+  metricValueMoney: { color: colors.neutral900, ...textPresets.fs14_800 },
+  metricLabel: { marginTop: 4, color: colors.neutral400, fontSize: 13, fontWeight: "500" },
+  analyticsSection: {
+    marginTop: 20,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  analyticsSectionTitle: { marginBottom: 10, color: colors.neutral900, ...textPresets.fs16_600 },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  statusRowLabel: { flex: 1, marginRight: 12, color: colors.neutral500, fontSize: 14, fontWeight: "500" },
+  statusRowValue: { color: colors.neutral900, fontSize: 14, fontWeight: "600" },
+  customBarRow: { flexDirection: "row", alignItems: "center", columnGap: 10 },
+  customBarRowSpacing: { marginTop: 14 },
+  customBarLabel: { width: 92, color: colors.neutral500, fontSize: 12, fontWeight: "500" },
+  customBarTrack: {
+    flex: 1,
+    height: 14,
+    borderRadius: 999,
+    backgroundColor: colors.neutral50,
+    overflow: "hidden",
+  },
+  customBarFill: { height: "100%", borderRadius: 999, backgroundColor: colors.primary },
+  customBarValue: { width: 20, textAlign: "right", color: colors.neutral900, fontSize: 12, fontWeight: "600" },
   orderToolbar: {
     marginTop: 18,
     marginBottom: 12,

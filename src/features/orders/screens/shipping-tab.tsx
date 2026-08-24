@@ -1,5 +1,6 @@
 import type { ShippingStatus } from "@app-types/index";
 import { useBottomSheet } from "@components/bottom-sheet/hook";
+import { formatMoneyCompact } from "@features/orders/utils/order";
 import { LinearGradient } from "@components/linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useToast } from "@components/toast";
@@ -153,7 +154,7 @@ function SummaryCard({
             { color: colors.neutral900, ...textPresets.fs16_600 },
           ]}
         >
-          {formatMoney(value)}
+          {formatMoneyCompact(value)}
         </Text>
         <Text
           style={[

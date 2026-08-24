@@ -16,7 +16,6 @@ import { useAddressPageStore } from "@features/orders/stores/address-page-store"
 import type { AddrFormValues } from "@features/orders/types/shipment";
 import { getOrderStatusLabel } from "@features/customers/components/order-status-label";
 import {
-  formatMoney,
   formatMoneyCompact,
   getOrderTotal,
   statusLabel,
@@ -306,7 +305,7 @@ function ProductRow({ product }: { product: OrderProduct }) {
       </View>
       <View style={styles.productPriceBox}>
         <Text style={styles.productQuantity}>x{product.quantity}</Text>
-        <Text style={styles.productPrice}>{formatMoney(total)}</Text>
+        <Text style={styles.productPrice}>{formatMoneyCompact(total)}</Text>
       </View>
     </View>
   );
@@ -480,7 +479,7 @@ function OrderCard({
 
       <View style={styles.orderTotalRow}>
         <Text style={styles.orderTotalLabel}>Tổng đơn hàng</Text>
-        <Text style={styles.orderTotalValue}>{formatMoney(total)}</Text>
+        <Text style={styles.orderTotalValue}>{formatMoneyCompact(total)}</Text>
       </View>
 
       <View style={styles.orderActions}>
@@ -1636,11 +1635,11 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
                       </View>
                       <View style={styles.analyticsRow}>
                         <Text style={[styles.analyticsLabel, { color: colors.neutral400 }]}>Tổng chi tiêu</Text>
-                        <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{formatMoney(analytics.totalSpent)}</Text>
+                        <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{formatMoneyCompact(analytics.totalSpent)}</Text>
                       </View>
                       <View style={styles.analyticsRow}>
                         <Text style={[styles.analyticsLabel, { color: colors.neutral400 }]}>Trung bình đơn</Text>
-                        <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{formatMoney(analytics.avgOrderValue)}</Text>
+                        <Text style={[styles.analyticsValue, { color: colors.neutral900 }]}>{formatMoneyCompact(analytics.avgOrderValue)}</Text>
                       </View>
                       {!!analytics.lastOrderAt && (
                         <View style={styles.analyticsRow}>

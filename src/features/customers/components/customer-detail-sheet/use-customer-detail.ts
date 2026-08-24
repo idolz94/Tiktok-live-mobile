@@ -74,6 +74,15 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
 
   const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  // ponytail: tên/avatar THẬT của khách từ bảng customers (khác với `customer` bên dưới — object đó
+  // chỉ suy ra từ đơn mới nhất nên sai khi đơn đó thiếu customerName/avatar chuẩn, vd đơn tạo tay
+  // hoặc comment không bắt được tên TikTok -> rơi về placeholder "Khách live"). Xem effect gọi
+  // getCustomerApi bên dưới.
+  const [realCustomer, setRealCustomer] = useState<{
+    displayName: string | null;
+    avatarUrl: string | null;
+    tiktokUsername: string | null;
+  } | null>(null);
   const [analytics, setAnalytics] = useState<CustomerAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const toast = useToast();
@@ -137,9 +146,19 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
   }, [customer?.customerId]);
 
   const latestOrder = customerOrders[0];
-  const displayName = customer?.username || latestOrder?.customerName || latestOrder?.username || "Khách hàng";
-  const avatar = customer?.avatar || latestOrder?.avatar || latestOrder?.avatarUrl || "";
-  const tiktokUsername = customer?.customerTikTokUsername || (latestOrder ? getOrderTikTokUsername(latestOrder) : "");
+  // ponytail: ưu tiên realCustomer (từ bảng customers, đúng nguồn) trước — chỉ fallback về dữ liệu
+  // suy ra từ đơn hàng khi API khách hàng chưa load xong hoặc field rỗng.
+  const displayName =
+    realCustomer?.displayName ||
+    customer?.username ||
+    latestOrder?.customerName ||
+    latestOrder?.username ||
+    "Khách hàng";
+  const avatar = realCustomer?.avatarUrl || customer?.avatar || latestOrder?.avatar || latestOrder?.avatarUrl || "";
+  const tiktokUsername =
+    realCustomer?.tiktokUsername ||
+    customer?.customerTikTokUsername ||
+    (latestOrder ? getOrderTikTokUsername(latestOrder) : "");
   const confirmedCount = customerOrders.filter((o) => o.status === "confirmed").length;
   const depositedCount = customerOrders.filter((o) => o.depositStatus === "paid" || o.depositStatus === "deposited").length;
   const unpaidCount = customerOrders.filter((o) => o.depositStatus !== "paid" && o.depositStatus !== "deposited").length;
@@ -184,6 +203,11 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
         setCustomerType(c.customerType || "Lẻ");
         if (c.phone) resetPhone(c.phone);
         if (c.referenceInfo !== undefined && c.referenceInfo !== null) setReferenceInfo(c.referenceInfo);
+        setRealCustomer({
+          displayName: c.displayName ?? null,
+          avatarUrl: c.avatarUrl ?? null,
+          tiktokUsername: c.tiktokUsername ?? null,
+        });
       })
       .catch(() => {});
   }, [customer?.customerId]);

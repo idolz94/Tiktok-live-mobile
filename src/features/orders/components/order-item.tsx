@@ -22,16 +22,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
+import { createDisplayCode, formatMoneyCompact, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
   item: Order;
   onRemove?: (orderId: string) => void;
-}
-
-function createDisplayCode(orderCode: string) {
-  const numbers = orderCode.replace(/\D/g, "");
-  return (numbers || orderCode).slice(-6).padStart(6, "0");
 }
 
 export const OrderItem = memo(
@@ -195,7 +190,7 @@ export const OrderItem = memo(
                     </Text>
                   </View>
                   <Text style={styles.txtProductPrice}>
-                    {formatMoney(
+                    {formatMoneyCompact(
                       Number(p.price || 0) * Number(p.quantity || 1),
                     )}
                   </Text>
@@ -211,7 +206,7 @@ export const OrderItem = memo(
                 {fallbackProductName}
               </Text>
               <Text style={styles.txtProductPrice}>
-                {formatMoney(
+                {formatMoneyCompact(
                   Number(item.price || 0) * Number(item.quantity || 1),
                 )}
               </Text>
@@ -234,7 +229,7 @@ export const OrderItem = memo(
 
         <View style={styles.subtotalRow}>
           <Text style={styles.txtProduct}>Tạm tính</Text>
-          <Text style={styles.txtProductPrice}>{formatMoney(total)}</Text>
+          <Text style={styles.txtProductPrice}>{formatMoneyCompact(total)}</Text>
         </View>
 
         <View style={styles.footer}>

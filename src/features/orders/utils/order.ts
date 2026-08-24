@@ -97,11 +97,17 @@ export function formatMoney(value: number) {
   return `${Number(value || 0).toLocaleString("vi-VN")} VNĐ`;
 }
 
+// ponytail: rút gọn số tiền lớn cho dễ nhìn ở các card/list — 3 mốc theo đúng yêu cầu:
+// >=1 tỷ -> "X tỷ", >=1 triệu -> "X triệu", >=1.000 -> "XK", còn lại hiện nguyên "Xđ".
+// Dùng +(n).toFixed(1) để tự bỏ ".0" thừa (vd 2.0 tỷ -> "2 tỷ", 2.7 tỷ giữ nguyên).
 export function formatMoneyCompact(value: number): string {
-  const n = Math.round(value || 0);
-  if (n >= 1_000_000_000) return `${+(n / 1_000_000_000).toFixed(1)}tỉ`;
-  if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(1)}tr`;
-  return `${n.toLocaleString("vi-VN")}đ`;
+  const n = Math.round(Number(value) || 0);
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  if (abs >= 1_000_000_000) return `${sign}${+(abs / 1_000_000_000).toFixed(1)} tỷ`;
+  if (abs >= 1_000_000) return `${sign}${+(abs / 1_000_000).toFixed(1)} triệu`;
+  if (abs >= 1_000) return `${sign}${+(abs / 1_000).toFixed(1)}K`;
+  return `${sign}${abs.toLocaleString("vi-VN")}đ`;
 }
 
 export function formatMoneyFull(value: number): string {
@@ -304,4 +310,11 @@ export function statusLabel(status: Order["status"]) {
   if (status === "confirmed") return "Đã chốt";
   if ((status as string) === "packed") return "Hoàn tất";
   return "Đơn nháp";
+}
+
+// ponytail: rút gọn orderCode/id thành 6 số cuối để hiện "OrderID: xxxxxx" gọn trên card — dùng
+// chung cho OrderItem ("Đơn Đã Tạo") và OrderCard (customer detail) để 2 nơi hiện y hệt nhau.
+export function createDisplayCode(orderCode: string) {
+  const numbers = orderCode.replace(/\D/g, "");
+  return (numbers || orderCode).slice(-6).padStart(6, "0");
 }

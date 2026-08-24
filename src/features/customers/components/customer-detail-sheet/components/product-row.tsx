@@ -1,5 +1,5 @@
 import type { OrderProduct } from "@app-types/index";
-import { formatMoney } from "@features/orders/utils/order";
+import { formatMoneyCompact } from "@features/orders/utils/order";
 import { createStyles } from "@utils/createStyles";
 import { memo } from "react";
 import { Text, View } from "react-native";
@@ -18,7 +18,7 @@ export const ProductRow = memo(({ product }: { product: OrderProduct }) => {
       </View>
       <View style={styles.productPriceBox}>
         <Text style={styles.productQuantity}>x{product.quantity}</Text>
-        <Text style={styles.productPrice}>{formatMoney(total)}</Text>
+        <Text style={styles.productPrice}>{formatMoneyCompact(total)}</Text>
       </View>
     </View>
   );
