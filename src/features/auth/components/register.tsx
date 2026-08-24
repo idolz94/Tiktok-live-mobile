@@ -9,7 +9,7 @@ import { HairlineWidth } from "@themes";
 import { createStyles } from "@utils/createStyles";
 import { useCallback, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Clipboard, Pressable, Text, TextInput, View } from "react-native";
 import { RegisterForm, RegisterSchema } from "@features/auth/schemas";
 
 export const Register = () => {
@@ -157,15 +157,20 @@ export const Register = () => {
                 )}
               />
             </View>
-            <AnimatedErrorText
-              message={
-                formMethod.formState.dirtyFields.password && formMethod.formState.errors.password
-                  ? formMethod.formState.errors.password.message
-                  : undefined
-              }
-            />
-            <Text style={[{ color: colors.neutral400 }, textPresets.fs12_400]}>
-              Tối thiểu 6 ký tự, chỉ gồm chữ cái và chữ số.
+            <Text
+              style={[
+                {
+                  color:
+                    formMethod.formState.dirtyFields.password && formMethod.formState.errors.password
+                      ? colors.error
+                      : colors.neutral400,
+                },
+                textPresets.fs12_400,
+              ]}
+            >
+              {formMethod.formState.dirtyFields.password && formMethod.formState.errors.password
+                ? formMethod.formState.errors.password.message
+                : "Tối thiểu 6 ký tự, chỉ gồm chữ cái và chữ số."}
             </Text>
           </View>
         </View>
@@ -179,6 +184,14 @@ export const Register = () => {
                 field: { onChange, value, onBlur },
                 fieldState: { isDirty, error },
               }) => {
+                const handlePasteTiktokId = async () => {
+                  try {
+                    const text = await Clipboard.getString();
+                    if (text) onChange(text.trim());
+                  } catch {
+                    // ignore clipboard read errors (permission/empty)
+                  }
+                };
                 return (
                   <>
                     <View style={styles.inputWrap}>
@@ -195,6 +208,20 @@ export const Register = () => {
                       />
                       {value.length > 0 && !error && (
                         <Text style={styles.check}>✓</Text>
+                      )}
+                      {value.length === 0 && (
+                        <Pressable
+                          onPress={handlePasteTiktokId}
+                          hitSlop={8}
+                          style={styles.pasteBtn}
+                        >
+                          <Ionicons
+                            name="clipboard-outline"
+                            size={16}
+                            color={colors.primary}
+                          />
+                          <Text style={styles.pasteText}>Dán</Text>
+                        </Pressable>
                       )}
                     </View>
                     <Text style={[styles.inputNote, isDirty && error ? styles.inputNoteError : null]}>
@@ -266,6 +293,8 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   input: { flex: 1, color: colors.neutral900, ...textPresets.fs14_400 },
   check: { color: colors.success, ...textPresets.fs14_500 },
+  pasteBtn: { flexDirection: "row", alignItems: "center", columnGap: 4 },
+  pasteText: { color: colors.primary, ...textPresets.fs12_500 },
   submitButton: {
     paddingVertical: 16,
     borderRadius: 99,

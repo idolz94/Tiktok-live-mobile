@@ -67,13 +67,6 @@ export interface CommentItemProps {
   isCommentOrderCreated: (item: LiveComment) => boolean;
 }
 
-export type ParsedCommentData = {
-  productCode: string | null;
-  color: string | null;
-  size: string | null;
-  quantity: number | null;
-};
-
 export type OrderRecommendationItem = {
   shopId: string;
   liveSessionId: string;

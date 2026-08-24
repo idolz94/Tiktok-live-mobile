@@ -26,8 +26,6 @@ import { formatMoney, getOrderTotal, statusLabel } from "../utils/order";
 
 interface OrderItemProps {
   item: Order;
-  depositLoading?: boolean;
-  onToggleDeposit: (orderId: string) => void;
   onRemove?: (orderId: string) => void;
 }
 
@@ -39,8 +37,6 @@ function createDisplayCode(orderCode: string) {
 export const OrderItem = memo(
   ({
     item,
-    depositLoading = false,
-    onToggleDeposit,
     onRemove,
   }: OrderItemProps) => {
     const { colors, shadows } = useThemes();
@@ -50,12 +46,11 @@ export const OrderItem = memo(
     const total = item.subtotalAmount || getOrderTotal(products);
     const displayName = item.customerName || item.username || "Khách live";
     const tiktokUsername = getOrderTikTokUsername(item) || item.username;
-    const isPaid =
-      item.depositStatus === "paid" || item.depositStatus === "deposited";
+    // ponytail: đơn không có order_items thì productName/comment cũng rỗng theo — tránh hiện 1
+    // dòng trống kèm "0 VNĐ" nhìn như lỗi, ẩn hẳn khối sản phẩm, chỉ còn dòng Tạm tính.
+    const fallbackProductName = item.productName || item.comment;
+    const showFallbackProductRow = products.length === 0 && Boolean(fallbackProductName);
 
-    const handleToggleDeposit = useCallback(() => {
-      onToggleDeposit(item.id);
-    }, [item.id, onToggleDeposit]);
     const onPressAvatar = useCallback(() => {
       const customerKey = item.customerTikTokUsername || item.username;
       if (customerKey)
@@ -170,6 +165,7 @@ export const OrderItem = memo(
           </View>
         </View>
 
+        {products.length > 0 || showFallbackProductRow ? (
         <Animated.View
           style={styles.productList}
           layout={LinearTransition.duration(280)}
@@ -206,13 +202,13 @@ export const OrderItem = memo(
                 </View>
               </Animated.View>
             ))
-          ) : (
+          ) : showFallbackProductRow ? (
             <View style={styles.productRow}>
               <Text
                 numberOfLines={2}
                 style={[styles.txtProduct, styles.productName]}
               >
-                {item.productName || item.comment}
+                {fallbackProductName}
               </Text>
               <Text style={styles.txtProductPrice}>
                 {formatMoney(
@@ -220,7 +216,7 @@ export const OrderItem = memo(
                 )}
               </Text>
             </View>
-          )}
+          ) : null}
           {products.length > 3 ? (
             <Pressable style={styles.expandBtn} onPress={handleToggleShowAll}>
               <Text style={styles.expandText}>
@@ -232,6 +228,7 @@ export const OrderItem = memo(
             </Pressable>
           ) : null}
         </Animated.View>
+        ) : null}
 
         <Separator type="horizontal" size={1} style={styles.separator} />
 
@@ -241,26 +238,6 @@ export const OrderItem = memo(
         </View>
 
         <View style={styles.footer}>
-          <Button
-            title={isPaid ? "Đã cọc" : "Chưa cọc"}
-            loading={depositLoading}
-            loadingType="center"
-            onPress={handleToggleDeposit}
-            txtBtnStyle={[
-              styles.txtNotPaid,
-              {
-                color: isPaid ? colors.success : colors.primary,
-              },
-            ]}
-            containerStyle={[
-              styles.btnStatus,
-              {
-                backgroundColor: isPaid
-                  ? colors.successLight
-                  : colors.primaryLight,
-              },
-            ]}
-          />
           <Button
             title="Tổng quan đơn hàng"
             loading={false}

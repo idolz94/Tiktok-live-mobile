@@ -22,6 +22,7 @@ import { useBottomSheet } from "@components/bottom-sheet/hook";
 import { useThemes } from "@hooks/use-theme";
 import type { PagerViewOnPageSelectedEvent } from "react-native-pager-view";
 import { TikTokLiveChannel } from "@features/tiktok-live/components/tiktok-page";
+import { LiveSessionSummarySheet } from "@features/tiktok-live/components/live-session-summary-sheet";
 
 const ANIMATION_DURATION = 250;
 const INITIAL_OFFSET = 48;
@@ -38,6 +39,7 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
     changeTikTokUsername,
     stopLiveSession,
     liveError,
+    liveErrorReason,
     clearLiveError,
     lastEndedSessionId,
     comments,
@@ -104,49 +106,89 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ponytail: báo cáo tự động sau live — dùng chung cho cả 2 nhánh kết thúc phiên (chủ động bấm
+  // "Kết thúc live" và bị ngắt kết nối/lỗi collector) thay vì chỉ có nhánh lỗi như trước.
+  const promptSessionEndedReport = useCallback(
+    ({
+      title,
+      message,
+      sessionId,
+      onDismiss,
+    }: {
+      title?: string;
+      message: string;
+      sessionId: string | null;
+      onDismiss?: () => void;
+    }) => {
+      const finish = () => {
+        hideConnectedView();
+        onDismiss?.();
+      };
+      const alertButtons = sessionId
+        ? [
+            {
+              text: "Xem nhận xét",
+              onPress: () => {
+                finish();
+                // ponytail: mở sheet tóm tắt nhanh (insights + số liệu cơ bản, data đã có sẵn qua
+                // useLiveSessionDetail) thay vì router.push thẳng sang LiveSessionDetailScreen —
+                // màn đó là report dày (stat grid + list đơn có filter + sub-navigation), không phù
+                // hợp làm nơi hiển thị đầu tiên ngay sau khi disconnect. Sheet có nút riêng để vào
+                // màn đầy đủ nếu seller cần drill-down.
+                show({
+                  showDragIndicator: true,
+                  content: (
+                    <LiveSessionSummarySheet sessionId={sessionId} onClose={hide} />
+                  ),
+                });
+              },
+            },
+            {
+              text: "OK",
+              style: "cancel" as const,
+              onPress: finish,
+            },
+          ]
+        : [
+            {
+              text: "OK",
+              onPress: finish,
+            },
+          ];
+      Alert.alert(title || "Phiên live kết thúc", message, alertButtons);
+    },
+    [hideConnectedView, show, hide],
+  );
+
+  // reason "not_live"/"connect_failed" = chưa từng kết nối được (phòng chưa bật live), không
+  // phải một phiên đang chạy rồi kết thúc → dùng tiêu đề riêng cho đúng ngữ cảnh.
+  const NOT_LIVE_ERROR_REASONS = useRef(new Set(["not_live", "connect_failed"])).current;
+
   useEffect(() => {
     if (!liveError || alertShownRef.current) return;
     alertShownRef.current = true;
     const canViewDetail =
       !!lastEndedSessionId &&
       liveHistory.some((session) => session.id === lastEndedSessionId);
-    const alertButtons = canViewDetail
-      ? [
-          {
-            text: "Xem nhận xét",
-            onPress: () => {
-              const sessionId = lastEndedSessionId;
-              alertShownRef.current = false;
-              clearLiveError();
-              hideConnectedView();
-              router.push({
-                pathname: "/live-session-detail",
-                params: { id: sessionId! },
-              });
-            },
-          },
-          {
-            text: "OK",
-            style: "cancel" as const,
-            onPress: () => {
-              alertShownRef.current = false;
-              clearLiveError();
-              hideConnectedView();
-            },
-          },
-        ]
-      : [
-          {
-            text: "OK",
-            onPress: () => {
-              alertShownRef.current = false;
-              clearLiveError();
-              hideConnectedView();
-            },
-          },
-        ];
-    Alert.alert("Phiên live kết thúc", liveError, alertButtons);
-  }, [liveError, clearLiveError, hideConnectedView, lastEndedSessionId, liveHistory]);
+    const isNotLiveError = !!liveErrorReason && NOT_LIVE_ERROR_REASONS.has(liveErrorReason);
+    promptSessionEndedReport({
+      title: isNotLiveError ? "Chưa thể kết nối Live" : undefined,
+      message: liveError,
+      sessionId: canViewDetail ? lastEndedSessionId : null,
+      onDismiss: () => {
+        alertShownRef.current = false;
+        clearLiveError();
+      },
+    });
+  }, [
+    liveError,
+    liveErrorReason,
+    clearLiveError,
+    lastEndedSessionId,
+    liveHistory,
+    promptSessionEndedReport,
+    NOT_LIVE_ERROR_REASONS,
+  ]);
 
   const fetchChannels = useCallback(async (): Promise<TikTokLiveChannel[]> => {
     const requestId = ++fetchRequestIdRef.current;
@@ -348,13 +390,25 @@ export function useTiktokPage(pagerRef: React.RefObject<PagerView | null>) {
   );
 
   const onDisconnectAccount = useCallback(async () => {
+    let endedSessionId: string | null = null;
     try {
-      await stopLiveSession();
+      endedSessionId = await stopLiveSession();
     } catch (error) {
       if (__DEV__) console.error("Disconnect error:", error);
     }
+
+    // ponytail: báo cáo tự động sau live — chỉ hiện khi có phiên thực sự được ghi nhận
+    // (stopLiveSession trả null nếu chưa từng có phiên hợp lệ để báo cáo).
+    if (endedSessionId) {
+      promptSessionEndedReport({
+        message: "Đã dừng nhận comment. Xem báo cáo tổng kết phiên live vừa rồi?",
+        sessionId: endedSessionId,
+      });
+      return;
+    }
+
     hideConnectedView();
-  }, [stopLiveSession, hideConnectedView]);
+  }, [stopLiveSession, promptSessionEndedReport, hideConnectedView]);
 
   const onTabPress = useCallback(
     (index: number) => {

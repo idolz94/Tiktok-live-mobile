@@ -128,7 +128,6 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     orderFilter,
     reloadOrders,
     orderLoading,
-    toggleDepositStatus,
     depositLoadingIds,
     deleteOrder,
   } = orderManager;
@@ -226,15 +225,13 @@ export const Orders = memo(({ orderManager }: OrdersProps) => {
     ({ item }: { item: OrderWithTikTok }) => (
       <OrderItem
         item={item}
-        depositLoading={depositLoadingIds.has(item.id)}
-        onToggleDeposit={toggleDepositStatus}
         onRemove={async (id) => {
           await deleteOrder(id);
           toast.success({ title: "Đã xoá đơn hàng" });
         }}
       />
     ),
-    [depositLoadingIds, toggleDepositStatus, deleteOrder, toast],
+    [deleteOrder, toast],
   );
 
   useEffect(() => {

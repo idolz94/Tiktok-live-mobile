@@ -90,7 +90,7 @@ export const ConnectedLive = memo(
     const hasPriority = useMemo(() => comments.some(isPriorityComment), [comments]);
 
     const visibleTabs = useMemo(
-      () => tabs.filter((t) => t.key !== "priority" || hasPriority),
+      () => tabs.filter((t) => (t.key === "priority" ? hasPriority : true)),
       [hasPriority],
     );
 

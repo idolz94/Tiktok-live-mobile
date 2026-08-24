@@ -163,11 +163,7 @@ export const LiveSessionDetailScreen = memo(({ sessionId }: Props) => {
   const renderItem = useCallback(
     ({ item }: { item: OrderWithTikTok }) => (
       // ponytail: no onRemove — history is readonly
-      <OrderItem
-        item={item}
-        depositLoading={false}
-        onToggleDeposit={() => undefined}
-      />
+      <OrderItem item={item} />
     ),
     [],
   );

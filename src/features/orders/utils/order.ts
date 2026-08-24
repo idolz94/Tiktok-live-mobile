@@ -43,6 +43,7 @@ export function normalizeProductForUi(product: any, order?: any): OrderProduct {
     product?.product_name,
     order?.productName,
     order?.product_name,
+    order?.commentText,
     order?.comment,
     order?.comment_text,
   ].find((v) => v != null && String(v).trim() !== "");
@@ -124,7 +125,12 @@ export function getOrderTotal(products: OrderProduct[] = []) {
 }
 
 function buildFallbackProduct(order: any): OrderProduct {
-  const comment = String(order?.comment || order?.comment_text || "Sản phẩm");
+  // ponytail: phải check order?.commentText (camelCase — tên field thật trên API/DB) trước —
+  // thiếu nhánh này khiến order không match preset luôn rơi về literal "Sản phẩm" dù API đã trả
+  // đúng nội dung comment (order?.comment/order?.comment_text hầu như không bao giờ có key này).
+  const comment = String(
+    order?.commentText || order?.comment || order?.comment_text || "Sản phẩm",
+  );
 
   return normalizeProductForUi(
     {

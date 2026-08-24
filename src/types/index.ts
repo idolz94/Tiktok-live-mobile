@@ -7,10 +7,14 @@ export type CommentPriorityLevel = "high" | "medium" | "low" | "normal";
 export type CommentIntent =
   | "buying"
   | "buy"
+  | "already_ordered"
   | "ask_price"
   | "ask_stock"
   | "ask_shipping"
   | "ask_product"
+  | "ask_product_demo"
+  | "ask_how_to_buy"
+  | "undecided"
   | "provide_phone"
   | "provide_address"
   | "contact"
@@ -42,6 +46,9 @@ export type LiveComment = {
   aiModel?: string;
   matchedReasons?: string[];
   missingInfo?: string[];
+  // ponytail: mã sản phẩm đã match lúc phân loại (Backend gửi kèm COMMENT event) —
+  // tạo nhanh truyền lại làm override để đơn khớp đúng cái seller nhìn thấy.
+  matchedProductCode?: string | null;
   isOrderCreated?: boolean;
   orderId?: string;
   dbId?: string;

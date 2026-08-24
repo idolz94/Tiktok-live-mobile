@@ -78,18 +78,11 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
     handleSave,
     handleCancelShipment,
     cancellingId,
-    loadDevMergeMockOrders,
   } = useCustomerDetail(customerKey, initialTab);
 
   const onPressStatCard = (key: OrderStatFilter) => setStatFilter((current) => (current === key ? "all" : key));
 
-  const isDevMockActive = __DEV__ && customerOrders.some((o) => String(o.id).startsWith("dev-"));
   const mergeGroups = useMergeGroups(customerOrders as unknown as import("@app-types/index").OrderWithTikTok[]);
-  const handleLoadDevMock = useCallback(() => {
-    if (!__DEV__) return;
-    loadDevMergeMockOrders();
-    setActiveTab("orders");
-  }, [loadDevMergeMockOrders, setActiveTab]);
   const mergeDrafts = useMergeDrafts({
     groups: mergeGroups,
     setOrders: setCustomerOrders as unknown as React.Dispatch<React.SetStateAction<import("@app-types/index").OrderWithTikTok[]>>,
@@ -99,7 +92,8 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
   });
 
   const [mergeMode, setMergeMode] = useState(false);
-  const mergeActive = mergeGroups.mergeable.length > 0;
+  // ponytail: nút "Gộp đơn" chỉ hiện khi khách có ≥2 đơn nháp — cần tối thiểu 2 đơn mới có gì để gộp.
+  const mergeActive = draftCount >= 2;
 
   const handleToggleMergeMode = useCallback(() => {
     setMergeMode((prev) => {
@@ -286,25 +280,6 @@ export function CustomerDetailSheet({ customerKey, initialTab }: Props) {
               );
             })}
           </View>
-
-          {__DEV__ && !isDevMockActive && (
-            <View style={styles.devPreviewBar}>
-              <Text style={styles.devPreviewLabel}>Xem trước gộp 3+2+1</Text>
-              <Pressable style={styles.devPreviewButton} onPress={handleLoadDevMock}>
-                <Text style={styles.devPreviewButtonText}>Nạp 6 đơn mẫu</Text>
-              </Pressable>
-            </View>
-          )}
-          {__DEV__ && isDevMockActive && (
-            <View style={styles.devPreviewBar}>
-              <View style={styles.devBadge}>
-                <Text style={styles.devBadgeText}>DEV preview · 6 đơn (3A+2B+1C)</Text>
-              </View>
-              <Pressable style={styles.devPreviewGhost} onPress={reloadCustomerOrders}>
-                <Text style={styles.devPreviewGhostText}>Tải lại thật</Text>
-              </Pressable>
-            </View>
-          )}
 
           {activeTab === "info" ? (
             <ScrollView
@@ -546,14 +521,6 @@ const styles = createStyles(({ colors, textPresets }) => ({
   tabItemActive: { borderBottomColor: colors.primary },
   tabText: { color: colors.neutral300, fontSize: 15, fontWeight: "600" },
   tabTextActive: { color: colors.primary },
-  devPreviewBar: { marginHorizontal: 16, marginTop: 10, padding: 10, borderRadius: 12, borderWidth: 1, borderStyle: "dashed", borderColor: colors.primary, backgroundColor: colors.primaryLight, flexDirection: "row", alignItems: "center", justifyContent: "space-between", columnGap: 10 },
-  devPreviewLabel: { flex: 1, color: colors.primary, ...textPresets.fs12_500 },
-  devPreviewButton: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.primary },
-  devPreviewButtonText: { color: colors.white, ...textPresets.fs12_500 },
-  devBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.white },
-  devBadgeText: { color: colors.neutral500, ...textPresets.fs11_400 },
-  devPreviewGhost: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.border10, backgroundColor: colors.white },
-  devPreviewGhostText: { color: colors.neutral900, ...textPresets.fs12_500 },
   infoContent: { paddingTop: 18 },
   fieldGroup: { marginBottom: 16 },
   fieldLabel: { marginBottom: 8, color: colors.neutral400, fontSize: 14, fontWeight: "600" },

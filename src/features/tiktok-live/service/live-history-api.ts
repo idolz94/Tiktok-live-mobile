@@ -9,7 +9,7 @@ import {
   LiveSessionMetricsReport,
 } from "@features/tiktok-live/types/types";
 import { normalizeApiOrderForUi } from "@features/orders/utils/order";
-import { getRequest, postRequest } from "@utils/http/request-sse";
+import { getRequest, patchRequest, postRequest } from "@utils/http/request-sse";
 import { normalizeAtUsername } from "@utils/tiktok";
 
 function toNumber(value: unknown) {
@@ -241,4 +241,45 @@ export async function getLiveSessionMetricsApi(
     if (__DEV__) console.error("getLiveSessionMetricsApi error:", error);
     return null;
   }
+}
+
+
+// ── pinned product (sản phẩm đang giới thiệu trên live) ──────────────────────────────────
+export type LiveSessionPinnedProduct = {
+  id: string;
+  code: string;
+  name: string | null;
+  color: string | null;
+  price: number;
+};
+
+export async function getLiveSessionPinnedProductApi(
+  sessionId: string,
+): Promise<LiveSessionPinnedProduct | null> {
+  const trimmed = String(sessionId || "").trim();
+  if (!trimmed) return null;
+
+  try {
+    const data = await getRequest<{ pinnedPreset: LiveSessionPinnedProduct | null }>(
+      `/live-sessions/${trimmed}/pinned-product`,
+    );
+    return data?.pinnedPreset ?? null;
+  } catch (error) {
+    if (__DEV__) console.error("getLiveSessionPinnedProductApi error:", error);
+    return null;
+  }
+}
+
+export async function setLiveSessionPinnedProductApi(
+  sessionId: string,
+  presetId: string | null,
+): Promise<LiveSessionPinnedProduct | null> {
+  const trimmed = String(sessionId || "").trim();
+  if (!trimmed) throw new Error("Thiếu sessionId.");
+
+  const data = await patchRequest<{ pinnedPreset: LiveSessionPinnedProduct | null }>(
+    `/live-sessions/${trimmed}/pinned-product`,
+    { presetId },
+  );
+  return data?.pinnedPreset ?? null;
 }

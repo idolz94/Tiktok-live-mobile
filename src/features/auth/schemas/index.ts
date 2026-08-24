@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const fullNamePattern = /^[\p{L}\s]+$/u;
 const usernamePattern = /^[\p{L}\p{N}]+$/u;
+const passwordPattern = /^[\p{L}\p{N}]+$/u;
 const tiktokIdPattern = /^[A-Za-z0-9._]+$/;
 
 export type Mode = "login" | "register" | "forgot";
@@ -25,7 +26,10 @@ export const RegisterSchema = z.object({
     .trim()
     .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự")
     .regex(usernamePattern, "Tên đăng nhập chỉ được gồm chữ cái và số"),
-  password: z.string().min(5, "Mật khẩu phải có ít nhất 5 ký tự"),
+  password: z
+    .string()
+    .min(6, "Mật khẩu phải có ít nhất 6 ký tự")
+    .regex(passwordPattern, "Mật khẩu chỉ được gồm chữ cái và số"),
   tiktokId: z
     .string()
     .trim()

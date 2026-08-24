@@ -311,9 +311,13 @@ export function useOrderManager({
   const createOrderFromComment = useCallback(
     async (item: LiveComment) => {
       try {
+        // ponytail: comment đã được pipeline match sẵn mã sản phẩm → truyền làm override
+        // để Backend dùng đúng preset seller nhìn thấy trên thẻ comment, không fuzzy đoán lại.
+        const matchedCode = item.matchedProductCode?.trim();
         const result = await createOrderFromCommentApi({
           comment: item,
           liveSessionId,
+          ...(matchedCode ? { productCode: matchedCode } : {}),
         });
 
         await reloadOrders();

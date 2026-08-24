@@ -114,6 +114,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const RETRY_DELAYS = [1000, 2000, 5000, 10000, 30000];
+  // ponytail: SSE watchdog — server gửi PING mỗi 25s; nếu >65s (2 ping + margin) không nhận
+  // BẤT KỲ event nào thì stream đã chết im lặng (đổi mạng wifi↔4G không bắn error trên RN)
+  // → chủ động abort + reconnect thay vì ngồi chờ một error không bao giờ tới.
+  const SSE_STALE_MS = 65_000;
+  const SSE_WATCHDOG_INTERVAL_MS = 20_000;
+  const lastSseEventAtRef = useRef(0);
   const FIRST_COMMENT_TIMEOUT_MS = 30_000;
   const firstCommentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasReceivedFirstCommentRef = useRef(false);
@@ -131,6 +137,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     initialUsername || TIKTOK_USERNAME,
   );
   const [liveError, setLiveError] = useState<string | null>(null);
+  // reason đi kèm LIVE_ERROR (vd "not_live") — để UI chọn tiêu đề Alert phù hợp thay vì luôn
+  // dùng chung "Phiên live kết thúc" (sai ngữ cảnh khi phòng chưa từng live).
+  const [liveErrorReason, setLiveErrorReason] = useState<string | null>(null);
   // Lưu id của session vừa kết thúc/lỗi để Alert có thể dẫn sang màn chi tiết.
   // Tại thời điểm alert hiện, currentLiveSessionId đã bị set null nên không dùng trực tiếp được.
   const [lastEndedSessionId, setLastEndedSessionId] = useState<string | null>(null);
@@ -192,6 +201,37 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
         setIsConnected(true);
         if (typeof payload.viewersCount === "number")
           setViewersCount(payload.viewersCount);
+        return;
+      }
+
+      // ponytail: collector đang tự nối lại TikTok trong grace window — KHÔNG wipe state,
+      // chỉ báo trạng thái. Phiên live vẫn sống, comment/queue giữ nguyên.
+      if (type === "LIVE_RECONNECTING") {
+        const attempt = typeof payload.attempt === "number" ? payload.attempt : 1;
+        setStatus(`Mất kết nối TikTok, đang nối lại (lần ${attempt})...`);
+        return;
+      }
+
+      if (type === "LIVE_RECONNECTED") {
+        setStatus("Đã nối lại TikTok Live, tiếp tục nhận comment.");
+        return;
+      }
+
+      // ponytail: tầng auto (score ≥ 90) — Backend đã tự tạo đơn nháp cho comment này.
+      // Đánh dấu comment "đã tạo đơn" để thẻ comment hiện đúng badge.
+      if (type === "ORDER_AUTO_CREATED") {
+        if (payload.commentId) {
+          updateCommentInList(String(payload.commentId), {
+            isOrderCreated: true,
+            orderId: payload.orderId ? String(payload.orderId) : undefined,
+          });
+        }
+        const who = payload.displayName || payload.tiktokUsername || "khách";
+        setStatus(
+          payload.merged
+            ? `Đã tự ghép sản phẩm vào đơn ${payload.orderCode || ""} của ${who}.`
+            : `Đã tự tạo đơn nháp ${payload.orderCode || ""} cho ${who}.`,
+        );
         return;
       }
 
@@ -354,6 +394,9 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
             ? String(payload.message)
             : "Phiên live đã kết thúc";
         setLiveError(errorMsg);
+        setLiveErrorReason(
+          type === "LIVE_ERROR" && payload.reason ? String(payload.reason) : null,
+        );
         setStatus(errorMsg);
         return;
       }
@@ -494,10 +537,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
           isResuming: isResumingRef.current,
         });
         retryCountRef.current = 0;
+        lastSseEventAtRef.current = Date.now();
         setIsConnected(true);
         setStatus("Đã kết nối Backend SSE");
       },
       onEvent: (type, data) => {
+        lastSseEventAtRef.current = Date.now();
         try {
           const payload = JSON.parse(data || "{}");
           handleServerEvent(type, payload);
@@ -628,6 +673,15 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       if (__DEV__) console.error("STOP LIVE STREAM ERROR:", error);
     }
 
+    // ponytail: báo cáo tự động sau live — chụp lại id phiên TRƯỚC khi finalize xoá currentLiveSession.
+    // Chỉ coi là "có báo cáo" khi phiên thực sự có startedAt, khớp điều kiện finalizeCurrentSessionLocally
+    // dùng để quyết định có ghi vào liveHistory hay không (tránh trả id của phiên chưa từng được lưu).
+    const endedSessionId = currentLiveSession?.startedAt ? currentLiveSession.id : null;
+    if (endedSessionId) {
+      lastEndedSessionIdRef.current = endedSessionId;
+      setLastEndedSessionId(endedSessionId);
+    }
+
     finalizeCurrentSessionLocally("manual_stop");
     clearResumeUsername();
 
@@ -644,11 +698,12 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
       firstCommentTimerRef.current = null;
     }
 
-    return true;
-  }, [finalizeCurrentSessionLocally]);
+    return endedSessionId;
+  }, [finalizeCurrentSessionLocally, currentLiveSession]);
 
   const clearLiveError = useCallback(() => {
     setLiveError(null);
+    setLiveErrorReason(null);
     lastEndedSessionIdRef.current = null;
     setLastEndedSessionId(null);
   }, []);
@@ -796,6 +851,35 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   }, [connectSse]);
   // ---end: connectSseRef---
 
+  // ---start: SSE watchdog — phát hiện stream chết im lặng (không error, không event)---
+  useEffect(() => {
+    const watchdog = setInterval(() => {
+      if (isManualCloseRef.current) return;
+      if (isAuthFailedRef.current) return;
+      if (!isConnectedRef.current) return;
+      if (!lastSseEventAtRef.current) return;
+      if (Date.now() - lastSseEventAtRef.current < SSE_STALE_MS) return;
+
+      debugLiveLifecycle("SSE_WATCHDOG_STALE_RECONNECT", {
+        lastEventAgoMs: Date.now() - lastSseEventAtRef.current,
+        currentUsername: tiktokUsernameRef.current,
+      });
+      // ponytail: reset mốc trước khi reconnect để watchdog không bắn liên tục trong lúc đang nối lại.
+      lastSseEventAtRef.current = Date.now();
+      try {
+        abortControllerRef.current?.abort();
+      } catch {}
+      abortControllerRef.current = null;
+      setIsConnected(false);
+      connectSseRef.current();
+    }, SSE_WATCHDOG_INTERVAL_MS);
+
+    return () => clearInterval(watchdog);
+  // ponytail: refs only — chạy đúng 1 lần cho cả vòng đời hook
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // ---end: SSE watchdog---
+
   // ---start: restoreOrClearRef — đảm bảo foreground luôn dùng closure mới nhất có currentLiveSession đúng ---
   const restoreOrClearRef = useRef(restoreOrClearSessionOnForeground);
   useEffect(() => {
@@ -930,7 +1014,6 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
   }, []);
   // ---end: setup effect---
 
-
   // ---start: logout cleanup — clear live state khi user logout---
   useEffect(() => {
     if (hasAuthUser) return;
@@ -973,6 +1056,7 @@ export function useTikTokLiveSocket(options: UseTikTokLiveSocketOptions = {}) {
     comments,
     tiktokUsername,
     liveError,
+    liveErrorReason,
     lastEndedSessionId,
     viewersCount,
     latestOrderRecommendation,

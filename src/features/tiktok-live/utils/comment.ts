@@ -1,6 +1,7 @@
 import { LiveComment } from "@app-types/index";
 import { createId } from "@utils/id";
 import { getCommentTikTokUsername } from "@utils/tiktok";
+import { getIntentGroup } from "../constants/intent";
 
 export function detectIntent(comment: string): "buying" | "normal" {
   const text = comment.toLowerCase();
@@ -214,19 +215,11 @@ export function isPriorityComment(comment: LiveComment) {
   const score = Number(comment.finalScore || 0);
   const intent = String(comment.intent || "").toLowerCase();
   const priorityLevel = String(comment.priorityLevel || "").toLowerCase();
+  // ponytail: dùng getIntentGroup thay vì 1 mảng intent liệt kê tay — tránh lặp lại bug
+  // "list bị lag so với Backend" (thiếu already_ordered/ask_product_demo/ask_how_to_buy/undecided).
+  const group = getIntentGroup(intent);
 
-  const priorityIntents = [
-    "buy",
-    "buying",
-    "ask_price",
-    "ask_stock",
-    "ask_shipping",
-    "ask_product",
-    "contact",
-    "question",
-  ];
-
-  const ignoredIntents = ["normal", "spam", "unknown"];
+  const ignoredIntents = ["normal", "spam", "unknown", "user"];
 
   if (ignoredIntents.includes(intent) && score < 25) {
     return false;
@@ -234,7 +227,7 @@ export function isPriorityComment(comment: LiveComment) {
 
   return (
     score >= 25 ||
-    priorityIntents.includes(intent) ||
+    group !== "none" ||
     priorityLevel === "high" ||
     priorityLevel === "medium" ||
     priorityLevel === "low"

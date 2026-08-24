@@ -58,46 +58,6 @@ export function groupOrdersByDate(orders: Order[]) {
   }, []);
 }
 
-function devProduct(p: Pick<OrderProduct, "id" | "name" | "quantity" | "price">): OrderProduct {
-  return { code: p.id, color: "", size: "", variantName: "", totalAmount: p.price * p.quantity, rawCommentText: "", ...p };
-}
-
-function devOrder(o: {
-  id: string; orderCode: string; customerId: string; customerName: string; username: string;
-  totalAmount: number; subtotalAmount: number; products: OrderProduct[]; createdAt: string;
-  shippingStatus?: Order["shippingStatus"]; trackingCode?: string;
-}): Order {
-  return {
-    comment: "",
-    commentId: o.id,
-    productName: o.products[0]?.name ?? "",
-    quantity: o.products.reduce((s, pr) => s + pr.quantity, 0),
-    size: "",
-    color: "",
-    price: o.products[0]?.price ?? 0,
-    avatar: "",
-    avatarUrl: "",
-    status: "draft",
-    shippingStatus: "not_shipped",
-    trackingCode: "",
-    depositStatus: "unpaid",
-    ...o,
-    customerPhone: "",
-    customerAddress: "",
-    note: "",
-    updatedAt: o.createdAt,
-  };
-}
-
-const DEV_MERGE_ORDERS: Order[] = [
-  devOrder({ id: "dev-a1", orderCode: "DH-A1", customerId: "cus-a", customerName: "Nguyễn Văn A", username: "nguyenvana", totalAmount: 120000, subtotalAmount: 120000, products: [devProduct({ id: "dev-a1-p1", name: "Áo thun", quantity: 1, price: 120000 })], createdAt: "2026-08-19T08:00:00.000Z" }),
-  devOrder({ id: "dev-a2", orderCode: "DH-A2", customerId: "cus-a", customerName: "Nguyễn Văn A", username: "nguyenvana", totalAmount: 180000, subtotalAmount: 180000, products: [devProduct({ id: "dev-a2-p1", name: "Quần jean", quantity: 1, price: 180000 })], createdAt: "2026-08-19T08:05:00.000Z" }),
-  devOrder({ id: "dev-a3", orderCode: "DH-A3", customerId: "cus-a", customerName: "Nguyễn Văn A", username: "nguyenvana", totalAmount: 90000, subtotalAmount: 90000, products: [devProduct({ id: "dev-a3-p1", name: "Socks", quantity: 3, price: 30000 })], createdAt: "2026-08-19T08:10:00.000Z" }),
-  devOrder({ id: "dev-b1", orderCode: "DH-B1", customerId: "cus-b", customerName: "Trần Thị B", username: "tranthib", totalAmount: 250000, subtotalAmount: 250000, products: [devProduct({ id: "dev-b1-p1", name: "Váy", quantity: 1, price: 250000 })], createdAt: "2026-08-19T08:15:00.000Z" }),
-  devOrder({ id: "dev-b2", orderCode: "DH-B2", customerId: "cus-b", customerName: "Trần Thị B", username: "tranthib", totalAmount: 150000, subtotalAmount: 150000, products: [devProduct({ id: "dev-b2-p1", name: "Áo khoác", quantity: 1, price: 150000 })], createdAt: "2026-08-19T08:20:00.000Z" }),
-  devOrder({ id: "dev-c1", orderCode: "DH-C1", customerId: "cus-c", customerName: "Lê Văn C", username: "levanc", totalAmount: 80000, subtotalAmount: 80000, products: [devProduct({ id: "dev-c1-p1", name: "Mũ", quantity: 1, price: 80000 })], createdAt: "2026-08-19T08:25:00.000Z" }),
-];
-
 export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "info") {
   const mountedRef = useRef(true);
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
@@ -117,11 +77,6 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
   const [analytics, setAnalytics] = useState<CustomerAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const toast = useToast();
-  const loadDevMergeMockOrders = useCallback(() => {
-    if (!__DEV__) return;
-    setCustomerOrders(DEV_MERGE_ORDERS);
-    setOrdersLoading(false);
-  }, []);
 
   const reloadCustomerOrders = useCallback(async () => {
     if (!customerKey) return;
@@ -350,6 +305,5 @@ export function useCustomerDetail(customerKey: string, initialTab: DetailTab = "
     handleSave,
     handleCancelShipment,
     cancellingId,
-    loadDevMergeMockOrders,
   };
 }

@@ -1,16 +1,17 @@
 import { Separator } from "@components/separator";
 import { createStyles } from "@utils/createStyles";
-import { memo, useEffect, useState, type ReactNode } from "react";
-import { Text, View } from "react-native";
+import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
+import { StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
+import { Rect, Svg } from "react-native-svg";
 import { CommentItemProps } from "../types/types";
-import { CommentCardContent } from "./comment-card-content";
+import { getIntentBadgeLabel, getIntentGroup } from "../constants/intent";
+import { CommentCardContent, type CommentBadge } from "./comment-card-content";
 import {
   default as Animated,
   Easing,
-  useAnimatedStyle,
+  runOnJS,
+  useAnimatedProps,
   useSharedValue,
-  withRepeat,
-  withSequence,
   withTiming,
 } from "react-native-reanimated";
 
@@ -27,95 +28,110 @@ const isOwnComment = (item: CommentItemProps["item"]) => {
 };
 
 const BORDER_RADIUS = 16;
-const PULSE_DURATION = 900; // half-cycle: dim→bright→dim over 1800ms total
-const STAR_PULSE_DURATION = 700;
+const PULSE_DURATION = 500; // half-cycle: dim→bright→dim over 1000ms total
 
-const PriorityBorder = memo(({ children }: { children: ReactNode }) => {
-  const opacity = useSharedValue(0.3);
+const PriorityBorder = memo(({ children }: { children: ReactNode }) => (
+  <View style={styles.borderWrapper}>{children}</View>
+));
 
-  useEffect(() => {
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.3, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-  }, [opacity]);
+const ConsultBorder = memo(({ children }: { children: ReactNode }) => (
+  <View style={styles.consultBorderWrapper}>{children}</View>
+));
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    borderColor: `rgba(44, 168, 123, ${opacity.value})`,
-  }));
-
-  return (
-    <Animated.View style={[styles.borderWrapper, animatedStyle]}>
-      {children}
-    </Animated.View>
-  );
-});
-
-const PulsingStar = memo(() => {
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
-
-  useEffect(() => {
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.3, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.45, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: STAR_PULSE_DURATION, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
-  }, [opacity, scale]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View style={animatedStyle}>
-      <Text style={styles.starText}>★</Text>
-    </Animated.View>
-  );
-});
+// ponytail: tier "sẵn sàng chốt" (score>=75) — viền không còn nháy đổi màu (opacity fade) mà là
+// 1 đoạn sáng "chạy đuổi" quanh viền card, vẽ bằng SVG Rect bo góc + strokeDasharray/strokeDashoffset
+// animate liên tục. Cần đo width/height thật của card qua onLayout vì chiều cao đổi theo độ dài comment.
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+const SWEEP_STROKE_WIDTH = 2;
+const SWEEP_DASH_RATIO = 0.28; // đoạn sáng chiếm ~28% chu vi, còn lại trong suốt
+const SWEEP_DURATION = 1500; // ms cho 1 vòng chạy hết chu vi
 
 const HotBorder = memo(({ children }: { children: ReactNode }) => {
-  const opacity = useSharedValue(0.5);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  // ponytail: chỉ flash 1 lần lúc card mới lên tier đỏ (~SWEEP_DURATION), xong tự chuyển về viền đỏ
+  // tĩnh — tránh nhiều card cùng chạy đuổi liên tục gây rối mắt khi live đông + nhẹ hiệu năng hơn hẳn
+  // so với animate vô hạn trên nhiều item cùng lúc.
+  const [settled, setSettled] = useState(false);
+  const offset = useSharedValue(0);
+
+  const perimeter = useMemo(() => {
+    if (!size.width || !size.height) return 0;
+    const r = Math.min(BORDER_RADIUS, size.width / 2, size.height / 2);
+    return 2 * (size.width + size.height) - 8 * r + 2 * Math.PI * r;
+  }, [size.width, size.height]);
 
   useEffect(() => {
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.45, { duration: PULSE_DURATION, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
+    if (!perimeter || settled) return;
+    offset.value = 0;
+    offset.value = withTiming(
+      -perimeter,
+      { duration: SWEEP_DURATION, easing: Easing.linear },
+      (finished) => {
+        if (finished) runOnJS(setSettled)(true);
+      },
     );
-  }, [opacity]);
+  }, [perimeter, offset, settled]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    borderColor: `rgba(255, 168, 0, ${opacity.value})`,
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: offset.value,
   }));
 
-  return (
-    <Animated.View style={[styles.hotBorderWrapper, animatedStyle]}>
-      <View style={styles.hotBadgeRow}>
-        <PulsingStar />
-        <Text style={styles.hotBadgeText}>Nổi bật</Text>
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+  };
+
+  if (settled) {
+    return (
+      <View style={styles.hotBorderSettledWrapper} onLayout={onLayout}>
+        {children}
       </View>
-      <View style={styles.hotContentRow}>{children}</View>
-    </Animated.View>
+    );
+  }
+
+  const dash = perimeter * SWEEP_DASH_RATIO;
+  const rectWidth = Math.max(size.width - SWEEP_STROKE_WIDTH, 0);
+  const rectHeight = Math.max(size.height - SWEEP_STROKE_WIDTH, 0);
+  const rectRadius = Math.max(BORDER_RADIUS - SWEEP_STROKE_WIDTH / 2, 0);
+
+  return (
+    <View style={styles.hotBorderWrapper} onLayout={onLayout}>
+      {children}
+      {perimeter > 0 && (
+        <Svg
+          width={size.width}
+          height={size.height}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        >
+          <Rect
+            x={SWEEP_STROKE_WIDTH / 2}
+            y={SWEEP_STROKE_WIDTH / 2}
+            width={rectWidth}
+            height={rectHeight}
+            rx={rectRadius}
+            ry={rectRadius}
+            fill="none"
+            stroke="rgba(255, 66, 66, 0.18)"
+            strokeWidth={SWEEP_STROKE_WIDTH}
+          />
+          <AnimatedRect
+            x={SWEEP_STROKE_WIDTH / 2}
+            y={SWEEP_STROKE_WIDTH / 2}
+            width={rectWidth}
+            height={rectHeight}
+            rx={rectRadius}
+            ry={rectRadius}
+            fill="none"
+            stroke="rgba(255, 66, 66, 1)"
+            strokeWidth={SWEEP_STROKE_WIDTH}
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${Math.max(perimeter - dash, 0)}`}
+            animatedProps={animatedProps}
+          />
+        </Svg>
+      )}
+    </View>
   );
 });
 
@@ -163,10 +179,27 @@ export const CommentCardItem = memo(
       );
     }
 
-    // Tier theo finalScore: 25-74 border xanh nháy, >=75 border vàng + sao nháy
+    // Tier theo intent group + finalScore:
+    // - ready (buy/already_ordered, hoặc intent lạ/không rõ) + score>=75 -> viền đỏ "chạy đuổi" (SVG)
+    // - consult (undecided/ask_product_demo) + score>=25 -> border xanh dương tĩnh, không nháy
+    // - còn lại (question: ask_price/ask_stock/ask_shipping/ask_how_to_buy/ask_product, hoặc score
+    //   25-74 không rõ intent) -> border xanh lá nháy (giữ nguyên hành vi cũ)
+    // Badge intent (nếu có) được render ở góc dưới-phải, ngay dưới nút "Tạo đơn" — xem CommentCardContent.
     const score = Number(item.finalScore ?? 0);
-    const isHot = !isOwner && score >= 75;
-    const isPriority = !isOwner && score >= 25 && score < 75;
+    const intentGroup = getIntentGroup(item.intent);
+    const isReady = !isOwner && score >= 75 && (intentGroup === "ready" || intentGroup === "none");
+    const isConsult = !isOwner && !isReady && score >= 25 && intentGroup === "consult";
+    const isQuestion = !isOwner && !isReady && !isConsult && score >= 25;
+
+    let badge: CommentBadge | null = null;
+    if (isReady) {
+      badge = { label: getIntentBadgeLabel(item.intent) || "Nổi bật", variant: "ready" };
+    } else if (isConsult) {
+      badge = { label: getIntentBadgeLabel(item.intent) || "Cần tư vấn", variant: "consult" };
+    } else if (isQuestion && intentGroup === "question") {
+      const label = getIntentBadgeLabel(item.intent);
+      if (label) badge = { label, variant: "question" };
+    }
 
     // START create/print order UI flow
     const orderId = localOrderId || item.orderId || "";
@@ -196,14 +229,19 @@ export const CommentCardItem = memo(
         isCreatingOrder={isCreatingOrder}
         onCreateOrder={createOrderFromItem}
         onPrintOrder={onPrintOrder ? printOrderFromItem : undefined}
+        badge={badge}
       />
     );
 
-    if (isHot) {
+    if (isReady) {
       return <HotBorder>{content}</HotBorder>;
     }
 
-    if (isPriority) {
+    if (isConsult) {
+      return <ConsultBorder>{content}</ConsultBorder>;
+    }
+
+    if (isQuestion) {
       return <PriorityBorder>{content}</PriorityBorder>;
     }
 
@@ -220,8 +258,9 @@ export const CommentCardItem = memo(
 );
 
 CommentCardItem.displayName = "CommentCardItem";
+PriorityBorder.displayName = "PriorityBorder";
+ConsultBorder.displayName = "ConsultBorder";
 HotBorder.displayName = "HotBorder";
-PulsingStar.displayName = "PulsingStar";
 
 const styles = createStyles(({ colors, textPresets }) => ({
   dividerRow: {
@@ -258,6 +297,7 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   borderWrapper: {
     borderWidth: 2,
+    borderColor: colors.success,
     borderRadius: BORDER_RADIUS,
     backgroundColor: colors.neutral100,
     flexDirection: "row",
@@ -270,39 +310,41 @@ const styles = createStyles(({ colors, textPresets }) => ({
   },
   hotBorderWrapper: {
     borderWidth: 2,
+    borderColor: "transparent",
     borderRadius: BORDER_RADIUS,
-    backgroundColor: colors.warningLight,
-    padding: 12,
-    overflow: "hidden",
-    marginBottom: 8,
-    rowGap: 8,
-  },
-  hotBadgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    columnGap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.warning,
-  },
-  hotBadgeText: {
-    color: colors.warning,
-    ...textPresets.fs12_500,
-  },
-  hotContentRow: {
+    backgroundColor: colors.neutral100,
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
     columnGap: 16,
+    padding: 12,
+    overflow: "hidden",
+    marginBottom: 8,
   },
-  starText: {
-    color: colors.warning,
-    fontSize: 13,
-    lineHeight: 14,
-    fontWeight: "700",
+  hotBorderSettledWrapper: {
+    borderWidth: 2,
+    borderColor: colors.error,
+    borderRadius: BORDER_RADIUS,
+    backgroundColor: colors.neutral100,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    columnGap: 16,
+    padding: 12,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  consultBorderWrapper: {
+    borderWidth: 2,
+    borderColor: colors.info,
+    borderRadius: BORDER_RADIUS,
+    backgroundColor: colors.infoLight,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    columnGap: 16,
+    padding: 12,
+    overflow: "hidden",
+    marginBottom: 8,
   },
 }));

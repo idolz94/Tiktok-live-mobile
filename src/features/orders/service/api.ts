@@ -14,6 +14,11 @@ type CreateOrderFromCommentPayload = {
   price?: number;
   quantity?: number;
   note?: string;
+  // ponytail: override từ sheet xác nhận (rule/AI) — seller đã chọn lại trong catalog thật,
+  // gửi thẳng thay vì để Backend tự parse lại từ comment text.
+  productCode?: string;
+  color?: string;
+  size?: string;
 };
 
 const DEFAULT_PRICE = 20000;
@@ -99,6 +104,9 @@ export async function createOrderFromCommentApi({
   price = DEFAULT_PRICE,
   quantity,
   note = "",
+  productCode,
+  color,
+  size,
 }: CreateOrderFromCommentPayload): Promise<CreateOrderFromCommentResult> {
   const data = await postRequest<any>("/orders/from-comment", {
     comment,
@@ -106,6 +114,9 @@ export async function createOrderFromCommentApi({
     price,
     ...(quantity !== undefined ? { quantity } : {}),
     note,
+    ...(productCode !== undefined ? { productCode } : {}),
+    ...(color !== undefined ? { color } : {}),
+    ...(size !== undefined ? { size } : {}),
   });
 
   const result = data?.data ?? data;
